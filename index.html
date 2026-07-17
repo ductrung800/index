@@ -418,10 +418,14 @@
 
  
 
-  <!-- ================= TOP THEMATIC SECTORS ================= -->
+<!-- ================= TOP THEMATIC SECTORS ================= -->
   <div class="section">
     <div class="section-head"><h2>Top Thematic Sectors</h2><div class="note">Ranked by % Daily Change</div></div>
-    <table id="tblThematic"></table>
+    <div class="three-col compact-panels" style="background:var(--panel2); padding:14px; gap:16px; border:1px solid var(--line); border-top:none; border-radius:0 0 10px 10px;">
+      <table id="tblThematic1" style="border-radius:6px;"></table>
+      <table id="tblThematic2" style="border-radius:6px;"></table>
+      <table id="tblThematic3" style="border-radius:6px;"></table>
+    </div>
   </div>
 
   <!-- ================= LEGEND ================= -->
@@ -613,8 +617,21 @@ function renderAll(){
   buildTable("tblSubMarket", DATA.subMarket);
   buildTable("tblSubSector", DATA.subSector);
   buildTable("tblEwSector", DATA.ewSector);
-  buildTable("tblThematic", DATA.thematic.slice().sort((a,b)=>b[2]-a[2]));
-  // Trend Status
+
+  // Thematic Sectors - Split into 3 columns
+  const thematicSorted = DATA.thematic.slice().sort((a,b) => b[2] - a[2]);
+  const third = Math.ceil(thematicSorted.length / 3);
+  
+  const elThem1 = document.getElementById("tblThematic1");
+  if(elThem1) buildTable("tblThematic1", thematicSorted.slice(0, third));
+  
+  const elThem2 = document.getElementById("tblThematic2");
+  if(elThem2) buildTable("tblThematic2", thematicSorted.slice(third, third * 2));
+  
+  const elThem3 = document.getElementById("tblThematic3");
+  if(elThem3) buildTable("tblThematic3", thematicSorted.slice(third * 2));
+  
+   // Trend Status
   (function(){
     const cols = DATA.trendStatus.cols;
     let h = `<thead><tr><th style="text-align:left">Metric</th>${cols.map(c=>`<th>${c}</th>`).join("")}</tr></thead><tbody>`;
