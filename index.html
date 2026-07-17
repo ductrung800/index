@@ -280,7 +280,7 @@
 
   <header class="top">
     <div>
-      <div class="brand-eyebrow"> Now Market Monitor </div>
+      <div class="brand-eyebrow">Daily Market Plan · Stockbee-style Monitor</div>
       <h1>Market Monitor</h1>
       <div class="subline" id="dateLine">7/16/2026 · Benchmark: RSP</div>
     </div>
@@ -293,6 +293,12 @@
       </div>
     </div>
   </header>
+
+  <!-- ================= LIVE REFRESH STATUS ================= -->
+  <div style="display:flex; justify-content:flex-end; margin-bottom:8px;">
+    <span class="status-msg" id="statusMsg"></span>
+  </div>
+  <div class="import-report" id="importReport" style="display:none; margin-bottom:22px;"></div>
 
   <!-- ================= GAUGE STRIP ================= -->
   <div class="gauge-strip">
@@ -1244,124 +1250,16 @@ ${d.nasi.current},${d.nasi.prevClose},${d.nasi.chg},${d.nasi.chgPct},${d.nasi.sm
 `;
 }
 
-document.getElementById("formatRef").textContent =
-`Rows per ticker table (SUBMARKET / SUBSECTOR / EWSECTOR / THEMATIC):
-TICKER,Name,%Daily,%P5D,%OffHigh,%YTD,RS%,Thrust%
-
-##VIX line: level,20-SMA,trend word,trend label,1Y percentile
-##MACRO line: 10Y yield,trend word
-##BREADTH line: SPX20,SPX50,SPX200,NDX20,NDX50,NDX200,Sector20,Sector50,Sector200
-##NASI line: current,prevClose,change,change%,50-DMA,status word
-
-Click "Load Current Data as Template" to see a full working example.`;
-
 /* ============================================================
    WIRE UP UI
    ============================================================ */
 const statusMsg = document.getElementById("statusMsg");
 function setStatus(msg, isErr){
+  if(!statusMsg) return;
   statusMsg.textContent = msg;
   statusMsg.className = "status-msg" + (isErr ? " err" : "");
   if(msg) setTimeout(()=>{ statusMsg.textContent=""; }, 4000);
 }
-
-document.getElementById("toggleDataPanel").addEventListener("click", ()=>{
-  const body = document.getElementById("dataPanelBody");
-  const btn = document.getElementById("toggleDataPanel");
-  body.classList.toggle("open");
-  btn.textContent = body.classList.contains("open") ? "Close ▴" : "Open ▾";
-});
-
-document.getElementById("btnLoadCurrent").addEventListener("click", ()=>{
-  document.getElementById("csvInput").value = serializeToCSV(DATA);
-});
-
-document.getElementById("btnUpdatePaste").addEventListener("click", async ()=>{
-  const raw = document.getElementById("csvInput").value;
-  if(!raw.trim()){ setStatus("Paste a CSV block first.", true); return; }
-  try{
-    const parsed = parseCSVBlock(raw);
-    DATA = parsed;
-    renderAll();
-    try{ await window.storage.set('market-monitor-data', JSON.stringify(DATA)); }catch(e){}
-    setStatus("✓ Dashboard updated and saved.");
-  }catch(e){
-    console.error(e);
-    setStatus("Couldn't parse that text — check the format reference.", true);
-  }
-});
-
-document.getElementById("btnReset").addEventListener("click", async ()=>{
-  DATA = JSON.parse(JSON.stringify(DEFAULT_DATA));
-  document.getElementById("csvInput").value = "";
-  document.getElementById("importReport").style.display = "none";
-  renderAll();
-  try{ await window.storage.delete('market-monitor-data'); }catch(e){}
-  setStatus("Reset to sample data.");
-});
-
-/* ---------- FILE UPLOAD ---------- */
-let pendingFileText = null;
-const dropzone = document.getElementById("dropzone");
-const fileInput = document.getElementById("fileInput");
-const fileNameLabel = document.getElementById("fileNameLabel");
-const btnImport = document.getElementById("btnImport");
-
-function readFile(file){
-  if(!file){ return; }
-  if(!/\.csv$/i.test(file.name) && file.type !== "text/csv"){
-    setStatus("That doesn't look like a .csv file.", true);
-    return;
-  }
-  const reader = new FileReader();
-  reader.onload = e=>{
-    pendingFileText = e.target.result;
-    fileNameLabel.textContent = `Loaded: ${file.name} (${(file.size/1024).toFixed(1)} KB) — click Import to apply`;
-    btnImport.disabled = false;
-    setStatus("File loaded — click Import CSV File.");
-  };
-  reader.onerror = ()=> setStatus("Couldn't read that file.", true);
-  reader.readAsText(file);
-}
-
-dropzone.addEventListener("click", ()=> fileInput.click());
-fileInput.addEventListener("change", e=> readFile(e.target.files[0]));
-["dragenter","dragover"].forEach(evt=>{
-  dropzone.addEventListener(evt, e=>{ e.preventDefault(); dropzone.classList.add("drag"); });
-});
-["dragleave","drop"].forEach(evt=>{
-  dropzone.addEventListener(evt, e=>{ e.preventDefault(); dropzone.classList.remove("drag"); });
-});
-dropzone.addEventListener("drop", e=>{
-  const file = e.dataTransfer.files[0];
-  if(file) readFile(file);
-});
-
-btnImport.addEventListener("click", async ()=>{
-  if(!pendingFileText){ setStatus("Choose a CSV file first.", true); return; }
-  try{
-    const {data, report} = smartImport(pendingFileText);
-    DATA = data;
-    renderAll();
-    renderImportReport(report);
-    try{ await window.storage.set('market-monitor-data', JSON.stringify(DATA)); }catch(e){}
-    const okCount = report.filter(r=>r[1]).length;
-    setStatus(`✓ Imported — ${okCount}/${report.length} sections updated.`);
-  }catch(e){
-    console.error(e);
-    setStatus("Import failed — the file layout may differ from what the importer expects. Send me the file and I'll tune it.", true);
-  }
-});
-
-document.getElementById("btnDownload").addEventListener("click", ()=>{
-  const csv = serializeToCSV(DATA);
-  const blob = new Blob([csv], {type:"text/csv"});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url; a.download = `market-monitor-${DATA.date.replace(/\//g,'-')}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
-});
 
 /* ---------- THEME ---------- */
 function updateThemeToggleUI(){
