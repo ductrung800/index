@@ -1355,7 +1355,7 @@ async function fetchLiveMarketData() {
 
     DATA = data;
     renderAll();
-    renderImportReport(report);
+  
 
     try { await window.storage.set('market-monitor-data', JSON.stringify(DATA)); } catch(e) {}
 
