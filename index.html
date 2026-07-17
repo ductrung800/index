@@ -51,6 +51,25 @@
   }
   .wrap{max-width:1760px; margin:0 auto;}
 
+  /* ---------- COMPACT 3-COLUMN TABLES ---------- */
+  .compact-panels table th, .compact-panels table td {
+    padding: 5px 4px;
+    font-size: 10px;
+    letter-spacing: -0.03em;
+  }
+  /* Hide the lengthy 'Name' column (2nd column) so 3 tables can fit side-by-side */
+  .compact-panels table th:nth-child(2),
+  .compact-panels table td:nth-child(2) {
+    display: none; 
+  }
+  .compact-panels .bartrack {
+    width: 24px;
+    height: 5px;
+  }
+  .compact-panels .barcell {
+    gap: 4px;
+  }
+
   /* ---------- HEADER ---------- */
   header.top{
     display:flex; justify-content:space-between; align-items:flex-end;
@@ -280,7 +299,7 @@
 
   <header class="top">
     <div>
-      <div class="brand-eyebrow">Daily Market Plan · Stockbee-style Monitor</div>
+      <div class="brand-eyebrow">Daily Market Plan</div>
       <h1>Market Monitor</h1>
       <div class="subline" id="dateLine">7/16/2026 · Benchmark: RSP</div>
     </div>
@@ -373,23 +392,28 @@
       <div style="background:var(--panel2); border:1px solid var(--line); border-radius:0 0 10px 10px; padding:6px 14px;" id="factorsList"></div>
     </div>
   </div>
-  <!-- ================= SUB-MARKET PERFORMANCE ================= -->
-  <div class="section">
-    <div class="section-head"><h2>S&amp;P 500 Sub-Market Performance</h2><div class="note">Cap × Style</div></div>
-    <table id="tblSubMarket"></table>
-  </div>
+  
+  <!-- ================= 3-COLUMN COMPACT PERFORMANCE TABLES ================= -->
+  <div class="three-col compact-panels" style="margin-bottom:26px;">
 
+    <!-- SUB-MARKET PERFORMANCE -->
+    <div class="section" style="margin-bottom:0;">
+      <div class="section-head"><h2>Sub-Market</h2><div class="note">Cap × Style</div></div>
+      <table id="tblSubMarket"></table>
+    </div>
 
-  <!-- ================= SUB-SECTOR PERFORMANCE (CAP) ================= -->
-  <div class="section">
-    <div class="section-head"><h2>S&amp;P 500 Sub-Sector Performance</h2><div class="note">Cap-Weighted (XL_)</div></div>
-    <table id="tblSubSector"></table>
-  </div>
+    <!-- SUB-SECTOR PERFORMANCE (CAP) -->
+    <div class="section" style="margin-bottom:0;">
+      <div class="section-head"><h2>Sub-Sector</h2><div class="note">Cap-Weighted</div></div>
+      <table id="tblSubSector"></table>
+    </div>
 
-  <!-- ================= SUB-SECTOR PERFORMANCE (EW) ================= -->
-  <div class="section">
-    <div class="section-head"><h2>S&amp;P 500 Equal-Weight Sub-Sector Performance</h2><div class="note">Equal-Weighted (RSP_)</div></div>
-    <table id="tblEwSector"></table>
+    <!-- SUB-SECTOR PERFORMANCE (EW) -->
+    <div class="section" style="margin-bottom:0;">
+      <div class="section-head"><h2>EW Sub-Sector</h2><div class="note">Equal-Weight</div></div>
+      <table id="tblEwSector"></table>
+    </div>
+
   </div>
 
  
