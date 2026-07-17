@@ -294,45 +294,6 @@
     </div>
   </header>
 
-  <!-- ================= DATA INPUT PANEL ================= -->
-  <div class="data-panel">
-    <div class="data-panel-head" id="dataPanelHead">
-      <div>
-        <h2>Update Today's Data</h2>
-        <div class="sub">Upload the CSV you download from your Google Sheet — the importer scans for your section labels (Ticker / Name, Trend Status, $NASI, etc.) so it doesn't need an exact layout match. Your last upload is remembered on this device.</div>
-      </div>
-      <button class="btn" id="toggleDataPanel">Open ▾</button>
-    </div>
-    <div class="data-panel-body" id="dataPanelBody">
-
-      <div class="dropzone" id="dropzone">
-        <input type="file" id="fileInput" accept=".csv,text/csv" style="display:none;">
-        <div class="dz-icon">⇪</div>
-        <div class="dz-text"><b>Click to choose a CSV file</b> or drag it in here</div>
-        <div class="dz-sub" id="fileNameLabel">No file selected — File &gt; Download &gt; Comma-separated values (.csv) from your Google Sheet</div>
-      </div>
-
-      <div class="data-panel-actions">
-        <button class="btn primary" id="btnImport" disabled>Import CSV File</button>
-        <button class="btn" id="btnDownload">Download Current Data as .csv</button>
-        <button class="btn" id="btnReset">Reset to Sample</button>
-        <span class="status-msg" id="statusMsg"></span>
-      </div>
-
-      <div class="import-report" id="importReport" style="display:none;"></div>
-
-      <details class="howto">
-        <summary>Prefer to paste text instead?</summary>
-        <textarea id="csvInput" spellcheck="false" placeholder="Paste a CSV block here (see format below)…" style="margin-top:10px;"></textarea>
-        <div class="data-panel-actions">
-          <button class="btn primary" id="btnUpdatePaste">Update from Pasted Text</button>
-          <button class="btn" id="btnLoadCurrent">Load Current Data as Template</button>
-        </div>
-        <pre id="formatRef"></pre>
-      </details>
-    </div>
-  </div>
-
   <!-- ================= GAUGE STRIP ================= -->
   <div class="gauge-strip">
 
