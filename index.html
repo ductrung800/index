@@ -1432,8 +1432,14 @@ document.getElementById("btnAutoRefresh")?.addEventListener("click", fetchLiveMa
 (async function init(){
   try{
     const savedTheme = await window.storage.get('market-monitor-theme');
-    if(savedTheme && savedTheme.value){ document.documentElement.setAttribute("data-theme", savedTheme.value); }
-  }catch(e){}
+    // FIX: If a preference is saved, use it; otherwise, default strictly to "light"
+    const finalTheme = (savedTheme && savedTheme.value) ? savedTheme.value : "light";
+    document.documentElement.setAttribute("data-theme", finalTheme);
+  }catch(e){
+    // Fallback if local storage fails completely
+    document.documentElement.setAttribute("data-theme", "light");
+  }
+  
   try{
     const savedData = await window.storage.get('market-monitor-data');
     if(savedData && savedData.value){ DATA = JSON.parse(savedData.value); }
