@@ -892,7 +892,8 @@ if(vixTooltipEl) {
   })();
 
 // $NASI card + detail panel
-  (function(){
+ 
+(function(){
     const n = DATA.nasi;
     const belowSma = n.current < n.sma50;
     document.getElementById("nasiBig").textContent = n.current.toFixed(2);
@@ -912,11 +913,10 @@ if(vixTooltipEl) {
       statusEl.className = "nasi-status bull";
       statusEl.textContent = "✓ Constructive — above 50-DMA";
     }
-  })();
+  })(); 
 
   updateThemeToggleUI();
 }
-
 /* ============================================================
    SMART CSV IMPORTER — for raw multi-panel sheet exports.
    Scans for your section labels instead of relying on fixed
