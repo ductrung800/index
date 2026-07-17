@@ -177,6 +177,21 @@
   .nasi-tooltip b{color:var(--amber);}
   .nasi-tooltip-wrap:hover .nasi-tooltip{opacity:1; visibility:visible; transform:translateY(0);}
 
+  .vix-tooltip-wrap{position:relative; cursor:help;}
+  .vix-tooltip{
+    position:absolute; bottom:calc(100% + 10px); left:0; width:360px;
+    background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:10px 12px;
+    font-size:11px; line-height:1.5; color:var(--text-dim); font-family:'Inter',sans-serif; font-weight:400;
+    opacity:0; visibility:hidden; transform:translateY(4px); transition:opacity .15s ease, transform .15s ease;
+    z-index:30; box-shadow:0 10px 28px rgba(0,0,0,.4); pointer-events:none;
+  }
+  .vix-tooltip-wrap:hover .vix-tooltip{opacity:1; visibility:visible; transform:translateY(0);}
+  .vix-tooltip table{width:100%; border-collapse:collapse; background:transparent; border:none; border-radius:0;}
+  .vix-tooltip thead th{font-size:9px; padding:3px 6px; border-bottom:1px solid var(--line-soft); text-align:left; color:var(--text-faint);}
+  .vix-tooltip tbody td{font-family:'JetBrains Mono',monospace; font-size:10.5px; padding:4px 6px; text-align:left; border-bottom:1px solid var(--line-soft); color:var(--text-dim); white-space:normal;}
+  .vix-tooltip tbody tr:last-child td{border-bottom:none;}
+  .vix-tooltip tr.zone-current td{background:rgba(32,217,184,.12); color:var(--text) !important; font-weight:700;}
+
   /* ---------- SECTION ---------- */
   .section{margin-bottom:26px;}
   .section-head{
@@ -328,7 +343,7 @@
       <div class="watchlist-tags" id="watchlistTags"></div>
     </div>
 
-    <div class="card">
+    <div class="card vix-tooltip-wrap" id="vixCard">
       <div class="label">VIX Level</div>
       <div class="big" style="color:var(--teal)" id="vixBig">16.73</div>
       <div class="cap" id="vixCap">20 SMA 17.03 </div>
@@ -337,6 +352,7 @@
       <div class="cap" style="margin-top:6px; display:flex; justify-content:space-between; font-family:'JetBrains Mono',monospace; font-size:9.5px;">
         <span>&lt;15</span><span>15–25</span><span>25–35</span><span>&gt;35</span>
       </div>
+      <div class="vix-tooltip" id="vixTooltip"></div>
     </div>
 
     <div class="card">
@@ -370,14 +386,6 @@
 
   </div>
  
- <!-- ================= VOLATILITY ZONE + BREADTH DETAIL ================= -->
-<!-- ================= VOLATILITY ZONE & ACTION PLAN ================= -->
-  <div class="section" style="margin-bottom:26px;">
-    <div class="section-head"><h2>Volatility Zone &amp; Action Plan</h2><div class="note">VIX-based playbook</div></div>
-    <table class="zone-table" id="tblVixZones"></table>
-
-  </div>
-
   <!-- ================= TREND STATUS + POWER TREND + FACTORS ================= -->
   <div class="three-col" style="margin-bottom:26px;">
     <div class="section" style="margin-bottom:0;">
@@ -667,13 +675,14 @@ function renderAll(){
     document.getElementById("vixMarker").style.left = pct+"%";
 
     let currentZoneIdx = vix>35?0 : vix>=25?1 : vix>=15?2 : 3;
-    let h = `<thead><tr><th style="text-align:left">VIX Level</th><th style="text-align:left">Zone</th><th style="text-align:left">Action</th><th style="text-align:left">Priority Allocation</th></tr></thead><tbody>`;
+    let h = `<thead><tr><th>VIX Level</th><th>Zone</th><th>Action</th><th>Priority Allocation</th></tr></thead><tbody>`;
     vixZonesTemplate.forEach(([lvl,zone,action,alloc],i)=>{
       const isCurrent = i===currentZoneIdx;
-      h += `<tr class="${isCurrent?'zone-current':''}"><td style="text-align:left; font-weight:700;">${lvl}</td><td style="text-align:left;">${zone}</td><td style="text-align:left; font-weight:700; color:${isCurrent?'var(--teal)':'var(--text-dim)'}">${action}</td><td style="text-align:left; color:var(--text-dim); font-family:Inter,sans-serif;">${alloc}</td></tr>`;
+      h += `<tr class="${isCurrent?'zone-current':''}"><td style="font-weight:700;">${lvl}</td><td>${zone}</td><td style="font-weight:700;">${action}</td><td>${alloc}</td></tr>`;
     });
     h += "</tbody>";
-    document.getElementById("tblVixZones").innerHTML = h;
+    const vixTooltipEl = document.getElementById("vixTooltip");
+    if(vixTooltipEl) vixTooltipEl.innerHTML = `<table>${h}</table>`;
 
     const zoneLabels = ["Extreme Panic","Fear & Volatility","Normal / Stable","High Complacency"];
     const actionLabels = ["Buy aggressively","Scale in (DCA)","Hold positions","Reduce exposure"];
