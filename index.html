@@ -696,6 +696,22 @@ function renderAll(){
     }
   })();
 
+  // Update Put-Call dynamic caption
+  const pcVal = DATA.putcall.value;
+  const pcCap = document.getElementById("pcCap");
+  if (pcCap) {
+    if (pcVal < 0.7) {
+      pcCap.textContent = "Spiking — extreme fear";
+      pcCap.style.color = "var(--red)";
+    } else if (pcVal > 1.1) {
+      pcCap.textContent = "Elevated — complacency risk";
+      pcCap.style.color = "var(--amber)";
+    } else {
+      pcCap.textContent = "Neutral range";
+      pcCap.style.color = "var(--text-dim)";
+    }
+  }
+
   // VIX card + zones
   (function(){
     const v = DATA.vix;
@@ -1124,15 +1140,24 @@ function smartImport(rawText){
   } else {
     report.push(["Market Breadth", false, "headers not found"]);
   }
-
-  // Put/Call
-  const pcAnchor = findLabel(grid, "Put/Call Ratio");
+ 
+// Put/Call Ratio
+  // Use fuzzy matching to find the label regardless of formatting
+  const pcAnchor = findLabelContains(grid, "Put/Call"); 
   if(pcAnchor){
-    const pv = scanRightValue(grid, pcAnchor.r, pcAnchor.c+1, 2);
-    const val = gnum(pv[0]);
-    if(val!==null){ newData.putcall = {value:val, note: pv[1] || newData.putcall.note}; report.push(["Put/Call Ratio", true, `${val}`]); }
-    else report.push(["Put/Call Ratio", false, "kept previous"]);
-  } else report.push(["Put/Call Ratio", false, "kept previous"]);
+    const row = grid[pcAnchor.r];
+    // Look for the first number after the label in the same row
+    const val = scanRightNumber(grid, pcAnchor.r, pcAnchor.c + 1, 3);
+    
+    if(val !== null){ 
+      newData.putcall = { value: val, note: newData.putcall.note }; 
+      report.push(["Put/Call Ratio", true, `${val}`]); 
+    } else {
+      report.push(["Put/Call Ratio", false, "Value not found"]);
+    }
+  } else {
+    report.push(["Put/Call Ratio", false, "Label not found"]);
+  }
 
   // $NASI
   const nasiAnchor = findLabel(grid, "$NASI");
