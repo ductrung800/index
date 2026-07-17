@@ -1141,22 +1141,20 @@ function smartImport(rawText){
     report.push(["Market Breadth", false, "headers not found"]);
   }
  
-// Put/Call Ratio
-  // Use fuzzy matching to find the label regardless of formatting
-  const pcAnchor = findLabelContains(grid, "Put/Call Ratio"); 
+
+// Put/Call Ratio - Target the row exactly as it appears in your sheet
+  const pcAnchor = findLabel(grid, "Put/Call Ratio");
   if(pcAnchor){
-    const row = grid[pcAnchor.r];
-    // Look for the first number after the label in the same row
+    // Scan the next cell in that same row for the value
     const val = scanRightNumber(grid, pcAnchor.r, pcAnchor.c + 1, 3);
-    
     if(val !== null){ 
-      newData.putcall = { value: val, note: newData.putcall.note }; 
+      newData.putcall.value = val; 
       report.push(["Put/Call Ratio", true, `${val}`]); 
     } else {
       report.push(["Put/Call Ratio", false, "Value not found"]);
     }
   } else {
-    report.push(["Put/Call Ratio", false, "Label not found"]);
+    report.push(["Put/Call Ratio", false, "Label 'Put/Call Ratio' not found"]);
   }
 
   // $NASI
