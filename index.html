@@ -720,7 +720,7 @@ function renderAll(){
   (function(){
     const v = DATA.vix;
     document.getElementById("vixBig").textContent = v.level.toFixed(2);
-    document.getElementById("vixCap").textContent = `20 SMA ${v.sma20.toFixed(2)} · ${v.trend==="Falling"?"Subdued":"Elevated"} (${v.trend}/${v.trendLabel})`;
+    document.getElementById("vixCap").textContent = `20 SMA ${v.sma20.toFixed(2)} · ${v.trendLabel}`;
 
     let pct;
     const vix = v.level;
@@ -740,10 +740,20 @@ function renderAll(){
     const vixTooltipEl = document.getElementById("vixTooltip");
     if(vixTooltipEl) vixTooltipEl.innerHTML = `<table>${h}</table>`;
 
+ 
+
     const zoneLabels = ["Extreme Panic","Fear & Volatility","Normal / Stable","High Complacency"];
     const actionLabels = ["Buy aggressively","Scale in (DCA)","Hold positions","Reduce exposure"];
+    
     document.getElementById("masterText").textContent = `${actionLabels[currentZoneIdx].toUpperCase()} — ${zoneLabels[currentZoneIdx]}`;
-    document.getElementById("masterDot").className = "dot " + (currentZoneIdx<=1 ? "" : currentZoneIdx===2 ? "" : "amber");
+    
+    // Fix: Red for index 0/1 (Panic/Fear), Teal for index 2 (Stable), Amber for index 3 (Complacency)
+    let dotClass = "dot";
+    if (currentZoneIdx <= 1) dotClass = "dot red";      // Panic/Fear -> Red dot
+    else if (currentZoneIdx === 2) dotClass = "dot";    // Normal/Stable -> Teal dot
+    else dotClass = "dot amber";                        // Complacency -> Amber dot
+    
+    document.getElementById("masterDot").className = dotClass;
   })();
 
 
