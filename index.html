@@ -353,7 +353,7 @@
       <div class="big" style="color:var(--amber)" id="yieldBig">4.55%</div>
       <div class="cap" id="yieldCap">Rising</div>
       <div class="big" style="color:var(--red); font-size:20px; margin-top:10px;" id="pcBig">0.55</div>
-      <div class="cap" id="pcCap">Spiking — extreme fear</div>
+      <div class="cap pc-status" id="pcCap">Spiking — extreme fear</div>
     </div>
 
     <div class="card nasi-tooltip-wrap" id="nasiCard">
@@ -698,7 +698,11 @@ function renderAll(){
 
   // Update Put-Call dynamic caption
   const pcVal = DATA.putcall.value;
-  const pcCap = document.getElementById("pcCap");
+  const pcBig = document.getElementById("pcBig");
+  const pcCap = document.getElementById("pcCap"); // This finds the element by ID
+
+  if (pcBig) pcBig.textContent = pcVal.toFixed(2); // Updates the number dynamically
+  
   if (pcCap) {
     if (pcVal < 0.7) {
       pcCap.textContent = "Spiking — extreme fear";
