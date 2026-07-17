@@ -917,6 +917,7 @@ if(vixTooltipEl) {
 
   updateThemeToggleUI();
 }
+}
 /* ============================================================
    SMART CSV IMPORTER — for raw multi-panel sheet exports.
    Scans for your section labels instead of relying on fixed
@@ -1245,10 +1246,10 @@ function smartImport(rawText){
   }
 
 // $NASI
+ 
   const nasiAnchor = findLabel(grid, "$NASI");
   if(nasiAnchor){
     const row = grid[nasiAnchor.r] || [];
-    // Ensure you are closing this logic correctly
     const current = gnum(grid[nasiAnchor.r][nasiAnchor.c + 2]); 
     const sma50 = gnum(grid[nasiAnchor.r][nasiAnchor.c + 4]); 
     
@@ -1260,6 +1261,11 @@ function smartImport(rawText){
       report.push(["$NASI", true, `${current}`]);
     } else report.push(["$NASI", false, "kept previous"]);
   }  
+
+  return {data:newData, report}; // <-- ADD THIS to return the imported data
+}  
+
+function renderImportReport(report){ 
 
 function renderImportReport(report){
   const el = document.getElementById("importReport");
