@@ -158,7 +158,7 @@
   .gauge-strip {
     display: grid; 
     /* Updated to 6 columns for an even layout */
-    grid-template-columns: repeat(7, 1fr); 
+    grid-template-columns: repeat(6, 1fr); 
     gap: 12px; 
     margin-bottom: 20px;
   }
@@ -390,20 +390,25 @@
       <div class="nasi-tooltip" id="nasiTooltip"></div>
     </div>
 
-    <div class="card">
-      <div class="label">Factors vs SPY (extremes)</div>
-      <div class="checklist" style="grid-template-columns:1fr;" id="factorsExtremesList"></div>
-    </div>
+<!-- Breadth & Factors Row -->
+<div class="gauge-strip" style="grid-template-columns: 1fr 1fr 1fr; margin-bottom: 26px;">
+  
+  <div class="card">
+    <div class="label">Factors vs SPY (Extremes)</div>
+    <div class="checklist" style="grid-template-columns:1fr;" id="factorsExtremesList"></div>
+  </div>
 
-    <div class="card">
-      <div class="label">Market Breadth · % of stocks above key MAs</div>
-      <div class="breadth-row" id="breadthRow"></div>
-    </div>
+  <div class="card">
+    <div class="label">Market Breadth (% above MAs)</div>
+    <div class="breadth-row" id="breadthRow"></div>
+  </div>
 
-    <div class="card">
-      <div class="label">Sector Breadth · % of sector above key MAs</div>
-      <div class="breadth-row" id="sectorBreadthRow"></div>
-    </div>
+  <div class="card">
+    <div class="label">Sector Breadth (% above MAs)</div>
+    <div class="breadth-row" id="sectorBreadthRow"></div>
+  </div>
+
+</div>
 
   </div>
  
@@ -805,8 +810,21 @@ if (spread > 1.05) {
       h += `<tr class="${isCurrent?'zone-current':''}"><td style="font-weight:700;">${lvl}</td><td>${zone}</td><td style="font-weight:700;">${action}</td><td>${alloc}</td></tr>`;
     });
     h += "</tbody>";
-    const vixTooltipEl = document.getElementById("vixTooltip");
-    if(vixTooltipEl) vixTooltipEl.innerHTML = `<table>${h}</table>`;
+// Replace the existing vixTooltipEl.innerHTML block in your script:
+const vixTooltipEl = document.getElementById("vixTooltip");
+if(vixTooltipEl) {
+  let h = `<thead><tr><th>VIX</th><th>Zone</th><th>Action</th></tr></thead><tbody>`;
+  vixZonesTemplate.forEach(([lvl, zone, action], i) => {
+    const isCurrent = i === currentZoneIdx;
+    h += `<tr class="${isCurrent ? 'zone-current' : ''}">
+            <td style="font-weight:700;">${lvl}</td>
+            <td>${zone}</td>
+            <td style="font-weight:700;">${action}</td>
+          </tr>`;
+  });
+  h += "</tbody>";
+  vixTooltipEl.innerHTML = `<table>${h}</table>`;
+}
 
  
 
