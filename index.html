@@ -154,11 +154,13 @@
   }
 
   /* ---------- GAUGE STRIP ---------- */
-.gauge-strip{
-    display:grid; 
-    grid-template-columns: 1.1fr 0.9fr 0.9fr 1fr 1fr 1.1fr 1.1fr; 
-    gap:14px; 
-    margin-bottom:20px;
+/* ---------- GAUGE STRIP ---------- */
+  .gauge-strip {
+    display: grid; 
+    /* Updated to 6 columns for an even layout */
+    grid-template-columns: repeat(6, 1fr); 
+    gap: 14px; 
+    margin-bottom: 20px;
   }
   .card{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:14px 16px;}
   .card .label{font-size:10.5px; text-transform:uppercase; letter-spacing:.1em; color:var(--text-faint); font-weight:600;}
@@ -333,13 +335,6 @@
 
   <!-- ================= GAUGE STRIP ================= -->
   <div class="gauge-strip">
-
-    <div class="card">
-      <div class="label">Buy Signals</div>
-      <div class="checklist" id="buySignalsChecklist"></div>
-      <div class="label" style="margin-top:12px;">Primary Watchlist</div>
-      <div class="watchlist-tags" id="watchlistTags"></div>
-    </div>
 
     <div class="card vix-tooltip-wrap" id="vixCard">
       <div class="label">VIX Level</div>
@@ -625,7 +620,7 @@ function buildTable(elId, rows){
 function renderAll(){
   document.getElementById("dateLine").textContent = `${DATA.date} · Benchmark: ${DATA.benchmark}`;
 
-  document.getElementById("watchlistTags").innerHTML = DATA.watchlist.map(t=>`<span class="tag">${t}</span>`).join("");
+  
   buildTable("tblSubMarket", DATA.subMarket);
   buildTable("tblSubSector", DATA.subSector);
   buildTable("tblEwSector", DATA.ewSector);
