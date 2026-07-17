@@ -1398,46 +1398,96 @@ document.getElementById("optDark").addEventListener("click", ()=>setTheme("dark"
 document.getElementById("optLight").addEventListener("click", ()=>setTheme("light"));
 
 /* ============================================================
-   LIVE GOOGLE SHEET AUTO-LOADER (FINAL FIX)
+   LIVE GOOGLE SHEET AUTO-LOADER
    ============================================================ */
 // Paste your NEW link (the one with single=true) between the quotes below:
 const PUBLISHED_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vStHHISoCKgIkrMzx45EZPPL8kJEOucskS2mcfRJ5pdhmLIhDFxyq8czbcZ2bzEPBBDCJf21ccYJc2K/pub?gid=0&single=true&output=csv';
+
+// Google's published-CSV endpoint redirects to a googleusercontent.com URL that
+// doesn't send Access-Control-Allow-Origin, so a direct fetch() from a different
+// origin (like github.io) is blocked by CORS. There's no way to add that header
+// ourselves without a backend, so we try direct first and fall back to a public
+// CORS proxy that relays the response with the header added.
+const CORS_PROXIES = [
+  url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+  url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
+];
+
+async function fetchCSVText(url, label){
+  const res = await fetch(url, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`${label}: HTTP ${res.status}`);
+  const text = await res.text();
+  if (!text || text.trim().startsWith('<')) {
+    throw new Error(`${label}: got a webpage instead of CSV — make sure the sheet is Published to the web (File > Share > Publish to web), not just Shared.`);
+  }
+  if (text.toLowerCase().includes('does not exist')) {
+    throw new Error(`${label}: link is invalid or no longer published.`);
+  }
+  return text;
+}
 
 async function fetchLiveMarketData() {
   const btn = document.getElementById("btnAutoRefresh");
   if (btn) btn.textContent = "↻ Fetching...";
   setStatus("Fetching live data from Google Sheets...");
 
+  // Cache-bust so we don't get a stale copy from the browser or any proxy cache.
+  const bust = (PUBLISHED_CSV_URL.includes('?') ? '&' : '?') + 'cachebust=' + Date.now();
+  const freshUrl = PUBLISHED_CSV_URL + bust;
+
+  let text = null, lastErr = null, source = null;
+
+  // 1) Try direct (works fine when this page is served from the same context
+  //    Google allows, or in environments without strict CORS enforcement).
   try {
-    const res = await fetch(PUBLISHED_CSV_URL, { cache: 'no-store' });
-    if (!res.ok) throw new Error("HTTP error! Status: " + res.status);
-    
-    const text = await res.text();
-    
-    // Safety checks to ensure we got text and not a ZIP or HTML page
-    if (!text || text.trim().startsWith('<')) throw new Error("Received HTML or ZIP instead of CSV.");
-    if (text.includes("does not exist")) throw new Error("Link is invalid or no longer published.");
-    
-    // Process the data
+    text = await fetchCSVText(freshUrl, "Direct");
+    source = "direct";
+  } catch (err) {
+    lastErr = err;
+    console.warn("Direct fetch failed (likely CORS) — trying proxy fallback:", err.message);
+  }
+
+  // 2) Fall back to CORS proxies in order until one works.
+  if (!text) {
+    for (const buildProxyUrl of CORS_PROXIES) {
+      try {
+        text = await fetchCSVText(buildProxyUrl(freshUrl), "Proxy");
+        source = "proxy";
+        break;
+      } catch (err) {
+        lastErr = err;
+        console.warn("Proxy attempt failed, trying next:", err.message);
+      }
+    }
+  }
+
+  if (!text) {
+    console.error("All fetch attempts failed:", lastErr);
+    setStatus(`Auto-load failed: ${lastErr ? lastErr.message : 'unknown error'}`, true);
+    if (btn) btn.textContent = "↻ Refresh Failed";
+    return;
+  }
+
+  try {
     const { data, report } = smartImport(text);
-    
+
     if (!data.subMarket || data.subMarket.length === 0) {
       console.warn("Could not find 'Ticker / Name' headers in the data. Make sure the correct tab is published.");
     }
 
     DATA = data;
-    renderAll(); 
+    renderAll();
     renderImportReport(report);
-    
+
     try { await window.storage.set('market-monitor-data', JSON.stringify(DATA)); } catch(e) {}
-    
+
     const okCount = report.filter(r => r[1]).length;
-    setStatus(`✓ Live Sheet Loaded — ${okCount}/${report.length} sections updated.`);
+    setStatus(`✓ Live sheet loaded via ${source} — ${okCount}/${report.length} sections updated.`);
     if (btn) btn.textContent = "↻ Refresh Live Data";
 
   } catch (err) {
-    console.error("Fetch Error:", err);
-    setStatus("Auto-load failed. Check the Console (F12) for the exact error.", true);
+    console.error("Parse error:", err);
+    setStatus("Fetched the sheet, but couldn't parse it — check the console (F12).", true);
     if (btn) btn.textContent = "↻ Refresh Failed";
   }
 }
