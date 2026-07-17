@@ -1230,7 +1230,7 @@ function smartImport(rawText){
   }
  
 // Dedicated Feed Parser for Put/Call
-  const feedAnchor = findLabel(grid, "Put/Call Ratio");
+  const feedAnchor = findLabel(grid, "Put/Call");
   if(feedAnchor){
     // This looks exactly at the cell to the right (Column B)
     const val = gnum(grid[feedAnchor.r][feedAnchor.c + 1]); 
