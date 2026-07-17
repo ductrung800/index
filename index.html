@@ -891,26 +891,28 @@ if(vixTooltipEl) {
     }
   })();
 
-  // $NASI card + detail panel
+// $NASI card + detail panel
   (function(){
     const n = DATA.nasi;
     const belowSma = n.current < n.sma50;
-    const bullish = n.current > 0 && !belowSma;
     document.getElementById("nasiBig").textContent = n.current.toFixed(2);
     document.getElementById("nasiBig").style.color = belowSma ? "var(--red)" : "var(--teal)";
-    document.getElementById("nasiCap").textContent = `Prev ${n.prevClose.toFixed(2)} (${pctStr(n.chgPct)}) · 50-DMA ${n.sma50.toFixed(2)}`;
+    
+    // Updated caption to show only 50-DMA
+    document.getElementById("nasiCap").textContent = `50-DMA ${n.sma50.toFixed(2)}`;
 
     const statusEl = document.getElementById("nasiStatus");
-    if(belowSma && n.current>0){
+    if(belowSma && n.current > 0){
       statusEl.className = "nasi-status warn";
       statusEl.textContent = "⚠ Warning — below 50-DMA";
-    } else if(n.current<0){
+    } else if(n.current < 0){
       statusEl.className = "nasi-status bear";
       statusEl.textContent = "🔻 Bearish — below zero line";
     } else {
       statusEl.className = "nasi-status bull";
       statusEl.textContent = "✓ Constructive — above 50-DMA";
     }
+  })();
 
     const tooltipEl = document.getElementById("nasiTooltip");
     if(tooltipEl){
@@ -1248,38 +1250,23 @@ function smartImport(rawText){
     report.push(["Put/Call Ratio", false, "Put/Call tag missing in sheet"]);
   }
 
-  // $NASI
+// $NASI
   const nasiAnchor = findLabel(grid, "$NASI");
   if(nasiAnchor){
     const row = grid[nasiAnchor.r] || [];
-    let current=null, sma50=null, status="";
-    for(let cc=nasiAnchor.c; cc<row.length; cc++){
-      const cell = glc(row[cc]);
-      if(cell.includes("current") ){ const v = scanRightValue(grid, nasiAnchor.r, cc+1, 1)[0]; current = gnum(v); }
-      if(cell.includes("50-dma") || cell.includes("50 dma")){ const v = scanRightValue(grid, nasiAnchor.r, cc+1, 1)[0]; sma50 = gnum(v); }
-    }
-    if(current===null){
-      // fallback: first two numbers on the row
-      const nums = row.map(gnum).filter(v=>v!==null);
-      if(nums.length){ current = nums[0]; sma50 = nums[1] ?? newData.nasi.sma50; }
-    }
-    const lastCell = row.map(gnorm).filter(v=>v && gnum(v)===null).pop();
-    if(lastCell) status = lastCell;
-    if(current!==null){
-      const prevClose = newData.nasi.prevClose;
+    // Just find the Current and 50-DMA values by their position in your sheet
+    // Current is index 1, 50-DMA is index 3 relative to the label
+    const current = gnum(grid[nasiAnchor.r][nasiAnchor.c + 2]); 
+    const sma50 = gnum(grid[nasiAnchor.r][nasiAnchor.c + 4]); 
+    
+    if(current !== null){
       newData.nasi = {
-        current, prevClose,
-        chg: +(current - prevClose).toFixed(2),
-        chgPct: prevClose ? +(((current-prevClose)/prevClose)*100).toFixed(2) : newData.nasi.chgPct,
-        sma50: sma50 ?? newData.nasi.sma50,
-        status: status || newData.nasi.status
+        current,
+        sma50: sma50 ?? newData.nasi.sma50
       };
       report.push(["$NASI", true, `${current}`]);
     } else report.push(["$NASI", false, "kept previous"]);
-  } else report.push(["$NASI", false, "kept previous"]);
-
-  return {data:newData, report};
-}
+  }
 
 function renderImportReport(report){
   const el = document.getElementById("importReport");
