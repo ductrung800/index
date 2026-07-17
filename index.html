@@ -349,6 +349,15 @@
     </div>
 
     <div class="card">
+      <div class="label">Credit Spreads (SHY/HYG)</div>
+      <div class="big" style="color:var(--teal)" id="spreadBig">1.03</div>
+      <div class="cap" id="spreadCap">Widening (Risk-off)</div>
+      <div class="strategy-note" style="margin-top:10px; font-size:10px;">
+        <b>Rising = Risk-off.</b> Widening spreads suggest investors are fleeing high-yield debt for safety.
+      </div>
+    </div>
+
+    <div class="card">
       <div class="label">10Y Yield / Put-Call</div>
       <div class="big" style="color:var(--amber)" id="yieldBig">4.55%</div>
       <div class="cap" id="yieldCap">Rising</div>
@@ -717,7 +726,17 @@ function renderAll(){
       pcCap.style.color = "var(--text-dim)";
     }
   }
-
+  // Credit Spreads
+const spread = DATA.creditSpreads || 1.03; // Ensure your parser pulls this
+document.getElementById("spreadBig").textContent = spread.toFixed(2);
+const capEl = document.getElementById("spreadCap");
+if (spread > 1.05) {
+  capEl.textContent = "Widening (Risk-off)";
+  capEl.style.color = "var(--red)";
+} else {
+  capEl.textContent = "Tightening (Risk-on)";
+  capEl.style.color = "var(--teal)";
+}
   // VIX card + zones
   (function(){
     const v = DATA.vix;
