@@ -158,8 +158,8 @@
   .gauge-strip {
     display: grid; 
     /* Updated to 6 columns for an even layout */
-    grid-template-columns: repeat(6, 1fr); 
-    gap: 14px; 
+    grid-template-columns: repeat(7, 1fr); 
+    gap: 12px; 
     margin-bottom: 20px;
   }
   .card{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:14px 16px;}
@@ -357,12 +357,24 @@
       </div>
     </div>
 
+    <!-- 10Y Yield Card -->
     <div class="card">
-      <div class="label">10Y Yield / Put-Call</div>
+      <div class="label">10Y Treasury Yield</div>
       <div class="big" style="color:var(--amber)" id="yieldBig">4.55%</div>
       <div class="cap" id="yieldCap">Rising</div>
+      <div class="strategy-note" style="margin-top:10px; font-size:10px;">
+        <b>Rates & Equities:</b> Rising yields pressure growth stock valuations. A steady, moderate climb is usually tolerable, but spikes often trigger market rotation.
+      </div>
+    </div>
+    
+    <!-- Put-Call Ratio Card -->
+    <div class="card">
+      <div class="label">Put/Call Ratio</div>
       <div class="big" style="color:var(--red); font-size:20px; margin-top:10px;" id="pcBig">0.55</div>
-      <div class="cap pc-status" id="pcCap">Spiking — extreme fear</div>
+      <div class="cap pc-status" id="pcCap">Neutral</div>
+      <div class="strategy-note" style="margin-top:10px; font-size:10px;">
+        <b>Sentiment Gauge:</b> High ratios (fear) often signal bottoms; low ratios (complacency) often precede market pullbacks. Extremes are key.
+      </div>
     </div>
 
     <div class="card nasi-tooltip-wrap" id="nasiCard">
@@ -707,25 +719,59 @@ function renderAll(){
     }
   })();
 
-  // Update Put-Call dynamic caption
-  const pcVal = DATA.putcall.value;
-  const pcBig = document.getElementById("pcBig");
-  const pcCap = document.getElementById("pcCap"); // This finds the element by ID
+const y = macro.yield10y;
+const trend = macro.yieldTrend; // "up" | "down" | "flat"
 
-  if (pcBig) pcBig.textContent = pcVal.toFixed(2); // Updates the number dynamically
-  
-  if (pcCap) {
-    if (pcVal < 0.7) {
-      pcCap.textContent = "Spiking — extreme fear";
-      pcCap.style.color = "var(--red)";
-    } else if (pcVal > 1.1) {
-      pcCap.textContent = "Elevated — complacency risk";
-      pcCap.style.color = "var(--amber)";
-    } else {
-      pcCap.textContent = "Neutral range";
-      pcCap.style.color = "var(--text-dim)";
-    }
+let yieldLabel, yieldColor;
+
+if (y < 3.5) {
+  yieldLabel = "Risk-On / Easy Money";
+  yieldColor = "var(--green)";
+} else if (y < 4.25) {
+  yieldLabel = "Neutral / Wait-and-See";
+  yieldColor = "var(--text-dim)";
+} else if (y < 5.0) {
+  yieldLabel = "Caution / Tightening";
+  yieldColor = "var(--amber)";
+} else {
+  yieldLabel = "Risk-Off / Stress";
+  yieldColor = "var(--red)";
+}
+
+// Optionally refine with trend:
+if (trend === "up" && y > 4.5) {
+  yieldLabel = "Risk-Off / Yields Rising";
+} else if (trend === "down" && y > 4.0) {
+  yieldLabel = "Caution / Yields Falling";
+}
+
+document.getElementById("yieldCap").textContent = yieldLabel;
+document.getElementById("yieldCap").style.color = yieldColor;
+
+  // Put-Call Logic
+const pcVal = DATA.putcall.value;
+const pcBig = document.getElementById("pcBig");
+const pcCap = document.getElementById("pcCap");
+
+if (pcBig) pcBig.textContent = pcVal.toFixed(2);
+
+if (pcCap) {
+  let label, color;
+
+  if (pcVal < 0.6) {
+    label = "Complacent / Greed";
+    color = "var(--red)";        // warning: speculative top risk
+  } else if (pcVal > 0.95) {
+    label = "Fearful / Hedged";
+    color = "var(--green)";      // contrarian: potential bottom
+  } else {
+    label = "Neutral";
+    color = "var(--text-dim)";
   }
+
+  pcCap.textContent = label;
+  pcCap.style.color = color;
+}
   // Credit Spreads
 const spread = DATA.creditSpreads || 1.03; // Ensure your parser pulls this
 document.getElementById("spreadBig").textContent = spread.toFixed(2);
