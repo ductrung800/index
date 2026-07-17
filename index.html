@@ -1185,41 +1185,33 @@ function smartImport(rawText){
   } else report.push(["10Y Yield", false, "kept previous"]);
 
 // Breadth
-  const spxAnchor = findLabel(grid, "S&P 500 Market Breadth");
+
   const mbRowAnchor = findLabel(grid, "Market Breadth");
   const secRowAnchor = findLabel(grid, "Sector Breadth");
   
-  if(spxAnchor && mbRowAnchor){
-    const rowLen = (grid[mbRowAnchor.r]||[]).length;
-    const spxVals = scanRightNumbers(grid, mbRowAnchor.r, spxAnchor.c, rowLen, 3);
+  if(mbRowAnchor){
+    // Look for numbers in the same row as the label
+    const spxVals = scanRightNumbers(grid, mbRowAnchor.r, mbRowAnchor.c + 1, mbRowAnchor.c + 4, 3);
     
     let secVals = [];
     if(secRowAnchor){
-      const secRowLen = (grid[secRowAnchor.r]||[]).length;
-      // FIX: Use secRowAnchor.c instead of spxAnchor.c to align with the row's actual left edge
-      secVals = scanRightNumbers(grid, secRowAnchor.r, secRowAnchor.c, secRowLen, 3);
+      secVals = scanRightNumbers(grid, secRowAnchor.r, secRowAnchor.c + 1, secRowAnchor.c + 4, 3);
     }
     
-    if(spxVals.length===3){
+    // Only update if we actually found data
+    if(spxVals.length >= 3){
       newData.breadth = {
         spx20: spxVals[0], spx50: spxVals[1], spx200: spxVals[2],
-        sec20: secVals[0] ?? newData.breadth.sec20, 
-        sec50: secVals[1] ?? newData.breadth.sec50, 
-        sec200: secVals[2] ?? newData.breadth.sec200,
+        sec20: secVals.length >= 3 ? secVals[0] : newData.breadth.sec20, 
+        sec50: secVals.length >= 3 ? secVals[1] : newData.breadth.sec50, 
+        sec200: secVals.length >= 3 ? secVals[2] : newData.breadth.sec200,
       };
-      // FIX: Only log a true success if both datasets extracted clean arrays
-      const isSecValid = secVals.length === 3;
       report.push(["Market Breadth", true, `SPX ${spxVals.join('/')}`]);
-      if(isSecValid) {
-        report.push(["Sector Breadth", true, `SEC ${secVals.join('/')}`]);
-      } else {
-        report.push(["Sector Breadth", false, "aligned to fallback layout"]);
-      }
     } else {
-      report.push(["Market Breadth", false, "kept previous"]);
+      report.push(["Market Breadth", false, "Could not read numbers"]);
     }
   } else {
-    report.push(["Market Breadth", false, "headers not found"]);
+    report.push(["Market Breadth", false, "Label not found"]);
   }
  
 // Dedicated Feed Parser for Put/Call
