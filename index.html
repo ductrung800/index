@@ -70,6 +70,12 @@
     gap: 4px;
   }
 
+  /* ---------- APP TABS ---------- */
+  .app-tabs { display: flex; gap: 4px; margin-bottom: 24px; border-bottom: 1px solid var(--line); padding-bottom: 0; }
+  .app-tabs a { padding: 10px 22px; text-decoration: none; color: var(--text-dim); font-size: 13px; font-weight: 600; font-family: 'Inter', sans-serif; border: 1px solid transparent; border-bottom: none; border-radius: 8px 8px 0 0; text-transform: uppercase; letter-spacing: 0.05em; transition: all 0.15s;}
+  .app-tabs a.active { background: var(--panel); color: var(--teal); border-color: var(--line); border-bottom-color: var(--panel); margin-bottom: -1px; }
+  .app-tabs a:hover:not(.active) { color: var(--text); background: rgba(255,255,255,0.03); }
+
   /* ---------- HEADER ---------- */
   header.top{
     display:flex; justify-content:space-between; align-items:flex-end;
@@ -296,6 +302,12 @@
 </head>
 <body>
 <div class="wrap">
+
+  <!-- ================= APP TABS ================= -->
+  <div class="app-tabs">
+    <a href="index.html" class="active">Daily Market Plan</a>
+    <a href="stockbee.html">Stockbee Monitor</a>
+  </div>
 
   <header class="top">
     <div>
