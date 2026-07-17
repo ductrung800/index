@@ -375,6 +375,11 @@
     </div>
 
     <div class="card">
+      <div class="label">Factors vs SPY (extremes)</div>
+      <div class="checklist" style="grid-template-columns:1fr;" id="factorsExtremesList"></div>
+    </div>
+
+    <div class="card">
       <div class="label">Market Breadth · % of stocks above key MAs</div>
       <div class="breadth-row" id="breadthRow"></div>
     </div>
@@ -658,6 +663,22 @@ function renderAll(){
       h += `<div class="factor-row"><span><span class="sq" style="background:${color}"></span>${label}</span><span class="factor-val" style="color:${color}">${pctStr(val)}</span></div>`;
     });
     document.getElementById("factorsList").innerHTML = h;
+
+    // Gauge-strip "extremes" card: top 2 leaders, top 2 laggards
+    const extremesEl = document.getElementById("factorsExtremesList");
+    if(extremesEl){
+      const sorted = DATA.factors.slice().sort((a,b)=>b[1]-a[1]);
+      const leaders = sorted.slice(0,2);
+      const laggards = sorted.slice(-2).reverse();
+      let eh = "";
+      leaders.forEach(([label,val])=>{
+        eh += `<div class="chk-item"><span class="tick yes">▲</span>${label}&nbsp; ${pctStr(val)}</div>`;
+      });
+      laggards.forEach(([label,val])=>{
+        eh += `<div class="chk-item"><span class="tick no">▼</span>${label}&nbsp; ${pctStr(val)}</div>`;
+      });
+      extremesEl.innerHTML = eh;
+    }
   })();
 
   // VIX card + zones
