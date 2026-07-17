@@ -914,12 +914,6 @@ if(vixTooltipEl) {
     }
   })();
 
-    const tooltipEl = document.getElementById("nasiTooltip");
-    if(tooltipEl){
-      tooltipEl.innerHTML = `<b>Reading:</b> $NASI tracks the cumulative advance/decline trend on the Nasdaq — a proxy for how many stocks are actually participating, independent of index-level moves from a handful of mega-caps. At ${n.current.toFixed(2)}, it is ${n.current>0?'still above the zero line (long-term trend intact)':'below zero (broad-based weakness)'} but has crossed ${belowSma?'below':'above'} its 50-DMA (${n.sma50.toFixed(2)}) — ${belowSma?'a signal that breadth momentum is fading even if headline index levels hold up':'a signal that internal breadth momentum is improving'}.`;
-    }
-
-
   updateThemeToggleUI();
 }
 
