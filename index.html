@@ -732,7 +732,7 @@ function renderAll(){
 
   if (y < 3.5) {
     yieldLabel = "Risk-On / Easy Money";
-    yieldColor = "var(--green)";
+    yieldColor = "var(--teal)";
   } else if (y < 4.25) {
     yieldLabel = "Neutral / Wait-and-See";
     yieldColor = "var(--text-dim)";
@@ -769,7 +769,7 @@ if (pcCap) {
     color = "var(--red)";        // warning: speculative top risk
   } else if (pcVal > 0.95) {
     label = "Fearful / Hedged";
-    color = "var(--green)";      // contrarian: potential bottom
+    color = "var(--teal)";      // contrarian: potential bottom
   } else {
     label = "Neutral";
     color = "var(--text-dim)";
@@ -917,7 +917,6 @@ if(vixTooltipEl) {
 
   updateThemeToggleUI();
 }
-
 /* ============================================================
    SMART CSV IMPORTER — for raw multi-panel sheet exports.
    Scans for your section labels instead of relying on fixed
@@ -1231,7 +1230,7 @@ function smartImport(rawText){
   }
  
 // Dedicated Feed Parser for Put/Call
-  const feedAnchor = findLabel(grid, "Put/Call");
+  const feedAnchor = findLabel(grid, "Put/Call Ratio");
   if(feedAnchor){
     // This looks exactly at the cell to the right (Column B)
     const val = gnum(grid[feedAnchor.r][feedAnchor.c + 1]); 
@@ -1246,26 +1245,28 @@ function smartImport(rawText){
   }
 
 // $NASI
- 
   const nasiAnchor = findLabel(grid, "$NASI");
   if(nasiAnchor){
     const row = grid[nasiAnchor.r] || [];
-    const current = gnum(grid[nasiAnchor.r][nasiAnchor.c + 2]); 
-    const sma50 = gnum(grid[nasiAnchor.r][nasiAnchor.c + 4]); 
-    
+    const current = gnum(grid[nasiAnchor.r][nasiAnchor.c + 2]);
+    const sma50 = gnum(grid[nasiAnchor.r][nasiAnchor.c + 4]);
+
     if(current !== null){
+      const prevClose = newData.nasi.prevClose; // keep prior close on record so chg/chgPct stay meaningful
       newData.nasi = {
         current,
-        sma50: sma50 ?? newData.nasi.sma50
+        prevClose,
+        chg: +(current - prevClose).toFixed(2),
+        chgPct: prevClose ? +(((current - prevClose) / prevClose) * 100).toFixed(2) : newData.nasi.chgPct,
+        sma50: sma50 ?? newData.nasi.sma50,
+        status: newData.nasi.status
       };
       report.push(["$NASI", true, `${current}`]);
     } else report.push(["$NASI", false, "kept previous"]);
-  }  
+  }
 
-  return {data:newData, report}; // <-- ADD THIS to return the imported data
-}  
-
-function renderImportReport(report){ 
+  return { data: newData, report };
+}
 
 function renderImportReport(report){
   const el = document.getElementById("importReport");
