@@ -1060,27 +1060,36 @@ function smartImport(rawText){
   
   if(spxAnchor && mbRowAnchor){
     const rowLen = (grid[mbRowAnchor.r]||[]).length;
-    
-    // COMPLETELY REMOVED NDXANCHOR HERE:
     const spxVals = scanRightNumbers(grid, mbRowAnchor.r, spxAnchor.c, rowLen, 3);
     
     let secVals = [];
     if(secRowAnchor){
       const secRowLen = (grid[secRowAnchor.r]||[]).length;
-      // COMPLETELY REMOVED NDXANCHOR HERE:
-      secVals = scanRightNumbers(grid, secRowAnchor.r, spxAnchor.c, secRowLen, 3);
+      // FIX: Use secRowAnchor.c instead of spxAnchor.c to align with the row's actual left edge
+      secVals = scanRightNumbers(grid, secRowAnchor.r, secRowAnchor.c, secRowLen, 3);
     }
     
     if(spxVals.length===3){
       newData.breadth = {
-        spx20:spxVals[0], spx50:spxVals[1], spx200:spxVals[2],
+        spx20: spxVals[0], spx50: spxVals[1], spx200: spxVals[2],
         sec20: secVals[0] ?? newData.breadth.sec20, 
         sec50: secVals[1] ?? newData.breadth.sec50, 
         sec200: secVals[2] ?? newData.breadth.sec200,
       };
+      // FIX: Only log a true success if both datasets extracted clean arrays
+      const isSecValid = secVals.length === 3;
       report.push(["Market Breadth", true, `SPX ${spxVals.join('/')}`]);
-    } else report.push(["Market Breadth", false, "kept previous"]);
-  } else report.push(["Market Breadth", false, "kept previous"]);
+      if(isSecValid) {
+        report.push(["Sector Breadth", true, `SEC ${secVals.join('/')}`]);
+      } else {
+        report.push(["Sector Breadth", false, "aligned to fallback layout"]);
+      }
+    } else {
+      report.push(["Market Breadth", false, "kept previous"]);
+    }
+  } else {
+    report.push(["Market Breadth", false, "headers not found"]);
+  }
 
   // Put/Call
   const pcAnchor = findLabel(grid, "Put/Call Ratio");
