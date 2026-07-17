@@ -1316,7 +1316,7 @@ function setStatus(msg, isErr){
 
 /* ---------- THEME ---------- */
 function updateThemeToggleUI(){
-  const theme = document.documentElement.getAttribute("data-theme") || "dark";
+  const theme = document.documentElement.getAttribute("data-theme") || "light";
   document.getElementById("optDark").classList.toggle("active", theme==="dark");
   document.getElementById("optLight").classList.toggle("active", theme==="light");
 }
