@@ -719,31 +719,32 @@ function renderAll(){
     }
   })();
 
-const y = macro.yield10y;
-const trend = macro.yieldTrend; // "up" | "down" | "flat"
+  const macro = DATA.macro; // Ensure this line exists to define the variable
+  const y = macro.yield10y;
+  const trend = macro.yieldTrend; 
 
-let yieldLabel, yieldColor;
+  let yieldLabel, yieldColor;
 
-if (y < 3.5) {
-  yieldLabel = "Risk-On / Easy Money";
-  yieldColor = "var(--green)";
-} else if (y < 4.25) {
-  yieldLabel = "Neutral / Wait-and-See";
-  yieldColor = "var(--text-dim)";
-} else if (y < 5.0) {
-  yieldLabel = "Caution / Tightening";
-  yieldColor = "var(--amber)";
-} else {
-  yieldLabel = "Risk-Off / Stress";
-  yieldColor = "var(--red)";
-}
-
-// Optionally refine with trend:
-if (trend === "up" && y > 4.5) {
-  yieldLabel = "Risk-Off / Yields Rising";
-} else if (trend === "down" && y > 4.0) {
-  yieldLabel = "Caution / Yields Falling";
-}
+  if (y < 3.5) {
+    yieldLabel = "Risk-On / Easy Money";
+    yieldColor = "var(--green)";
+  } else if (y < 4.25) {
+    yieldLabel = "Neutral / Wait-and-See";
+    yieldColor = "var(--text-dim)";
+  } else if (y < 5.0) {
+    yieldLabel = "Caution / Tightening";
+    yieldColor = "var(--amber)";
+  } else {
+    yieldLabel = "Risk-Off / Stress";
+    yieldColor = "var(--red)";
+  }
+  
+  // Optionally refine with trend:
+  if (trend === "up" && y > 4.5) {
+    yieldLabel = "Risk-Off / Yields Rising";
+  } else if (trend === "down" && y > 4.0) {
+    yieldLabel = "Caution / Yields Falling";
+  }
 
 document.getElementById("yieldCap").textContent = yieldLabel;
 document.getElementById("yieldCap").style.color = yieldColor;
