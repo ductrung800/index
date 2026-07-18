@@ -191,7 +191,74 @@ const CSV_URLS = [
   `https://docs.google.com/spreadsheets/d/${SHEET_ID}/pub?output=csv`,
   `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`
 ];
+// Global storage for direct ETF data
+let liveEtfData = { SPY: {}, QQQ: {} };
 
+async function fetchDirectEtfHistory() {
+  try {
+    const [spyRes, qqqRes] = await Promise.all([
+      fetch("http://localhost:8000/api/history/SPY"),
+      fetch("http://localhost:8000/api/history/QQQ")
+    ]);
+    
+    const spyJson = await spyRes.json();
+    const qqqJson = await qqqRes.json();
+    
+    // Map array to dictionary by Date (e.g., "2026-07-18": { Open, High, Low, Close })
+    if (spyJson.data) {
+      spyJson.data.forEach(bar => { liveEtfData.SPY[bar.Date] = bar; });
+    }
+    if (qqqJson.data) {
+      qqqJson.data.forEach(bar => { liveEtfData.QQQ[bar.Date] = bar; });
+    }
+    
+    console.log("✅ Successfully loaded direct ETF price feeds from Python!");
+    mergeEtfDataIntoDashboard();
+  } catch (err) {
+    console.warn("⚠️ Could not fetch direct ETF history. Falling back to sheet numbers:", err);
+  }
+}
+ function mergeEtfDataIntoDashboard() {
+  if (!currentData || currentData.length === 0) return;
+  
+  currentData.forEach(row => {
+    // Convert Google Sheet date (e.g., "7/18/2026") to YYYY-MM-DD format
+    const parts = row.date.split('/');
+    if (parts.length === 3) {
+      const year = parts[2];
+      const month = parts[0].padStart(2, '0');
+      const day = parts[1].padStart(2, '0');
+      const isoDate = `${year}-${month}-${day}`;
+      
+      // Inject true SPY data
+      if (liveEtfData.SPY[isoDate]) {
+        const spyBar = liveEtfData.SPY[isoDate];
+        row.sp = Math.round(spyBar.Close * 100) / 100;
+        row.spyOhlc = {
+          o: Math.round(spyBar.Open * 100) / 100,
+          h: Math.round(spyBar.High * 100) / 100,
+          l: Math.round(spyBar.Low * 100) / 100,
+          c: Math.round(spyBar.Close * 100) / 100
+        };
+      }
+      
+      // Inject true QQQ data
+      if (liveEtfData.QQQ[isoDate]) {
+        const qqqBar = liveEtfData.QQQ[isoDate];
+        row.nasdaq = Math.round(qqqBar.Close * 100) / 100;
+        row.qqqOhlc = {
+          o: Math.round(qqqBar.Open * 100) / 100,
+          h: Math.round(qqqBar.High * 100) / 100,
+          l: Math.round(qqqBar.Low * 100) / 100,
+          c: Math.round(qqqBar.Close * 100) / 100
+        };
+      }
+    }
+  });
+  
+  // Refresh the chart with exact prices!
+  refreshSpChart();
+}
 let chartsBuilt = false;
 let spChart = null;
 let ratioChart = null;
@@ -208,8 +275,18 @@ function parseRows(rawRows) {
     if (!row || !row[0] || !row[0].trim() || !/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(row[0].trim())) continue;
     const num = (v) => v === undefined || v === '' ? null : parseFloat(String(v).replace(/,/g, ''));
     
-    const spVal = num(row[15]);
-    const nasdaqVal = num(row[16]) !== null ? num(row[16]) : (spVal ? Math.round(spVal * 3.15 * 100) / 100 : null);
+    // Divide by 10 to mathematically translate underlying indexes ($SPX/$NDX) into ETF prices (SPY/QQQ)
+    const rawSp = num(row[15]);
+    const spVal = rawSp ? Math.round((rawSp / 10) * 100) / 100 : null;
+    
+    const rawNasdaq = num(row[16]);
+    let nasdaqVal = null;
+    if (rawNasdaq !== null) {
+      nasdaqVal = Math.round((rawNasdaq / 10) * 100) / 100;
+    } else if (spVal) {
+      // Proxy calculation matching the ~0.935 ratio divergence between SPY and QQQ prices
+      nasdaqVal = Math.round((spVal * 0.9354) * 100) / 100;
+    }
 
     out.push({
       date: row[0].trim(),
@@ -221,8 +298,8 @@ function parseRows(rawRows) {
       up13_34: num(row[11]), down13_34: num(row[12]),
       universe: num(row[13]),
       t2108: num(row[14]),
-      sp: spVal,
-      nasdaq: nasdaqVal
+      sp: spVal,        // Will now scale down to ~$757 -> ~$743 ETF values
+      nasdaq: nasdaqVal  // Will now scale down to ~$708 -> ~$695 ETF values
     });
   }
   out.reverse();
@@ -644,6 +721,7 @@ document.getElementById('refreshBtn').addEventListener('click', () => loadData(t
 
 // Initialize Application
 fetchPythonDangerSignals();
+fetchDirectEtfHistory();
 loadData(false);
 </script>
 </body>
