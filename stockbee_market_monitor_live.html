@@ -360,9 +360,14 @@ function updateMainLegend() {
   updateSmaLegend();
 }
 
+// Change chart scaling parameters inside refreshSpChart()
 function refreshSpChart() {
   const { datasets } = buildSpDatasets();
-  spChart.data.labels = currentData.map(d => d.date);
+  
+  // Create labels array and append 4 blank spaces for right-side breathing room
+  const paddedLabels = currentData.map(d => d.date).concat(["", "", "", ""]);
+  
+  spChart.data.labels = paddedLabels;
   spChart.data.datasets = datasets;
   
   spChart.options.scales.y.title.text = indexMode === 'nasdaq' ? 'QQQ Price' : 'SPY Price';
@@ -450,10 +455,14 @@ function buildSpDatasets() {
 
 function buildOrUpdateCharts() {
   ensureNasdaqData();
+  
+  // Create 4 blank trailing labels for right-side padding
+  const paddedLabels = currentData.map(d => d.date).concat(["", "", "", ""]);
+
   if (!chartsBuilt) {
     updateMainLegend();
     spChart = new Chart(document.getElementById('spChart'), {
-      data: { labels: currentData.map(d => d.date), datasets: buildSpDatasets().datasets },
+      data: { labels: paddedLabels, datasets: buildSpDatasets().datasets },
       options: {
         responsive: true, maintainAspectRatio: false,
         interaction: { mode: 'index', intersect: false },
@@ -472,7 +481,7 @@ function buildOrUpdateCharts() {
 
     ratioChart = new Chart(document.getElementById('ratioChart'), {
       type: 'line',
-      data: { labels: currentData.map(d => d.date), datasets: [
+      data: { labels: paddedLabels, datasets: [
         { label: '5 day ratio', data: currentData.map(d => d.r5), borderColor: '#1baf7a', pointRadius: 0, borderWidth: 2, tension: 0.15 },
         { label: '10 day ratio', data: currentData.map(d => d.r10), borderColor: '#e34948', borderDash: [5,3], pointRadius: 0, borderWidth: 2, tension: 0.15 },
         { label: 'Ratio = 1', data: currentData.map(() => 1), borderColor: '#898781', borderWidth: 1, borderDash: [2,3], pointRadius: 0 }
@@ -487,7 +496,7 @@ function buildOrUpdateCharts() {
     chartsBuilt = true;
   } else {
     refreshSpChart();
-    ratioChart.data.labels = currentData.map(d => d.date);
+    ratioChart.data.labels = paddedLabels;
     ratioChart.data.datasets[0].data = currentData.map(d => d.r5);
     ratioChart.data.datasets[1].data = currentData.map(d => d.r10);
     ratioChart.data.datasets[2].data = currentData.map(() => 1);
