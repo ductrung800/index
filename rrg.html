@@ -5,122 +5,123 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sector Rotation Map</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap');
         
         body {
-            font-family: 'Inter', system_ui, sans-serif;
+            font-family: 'Inter', system-ui, sans-serif;
         }
         
-        .rrg-chart {
-            background: #f8fafc;
+        .app-tabs a {
+            padding: 10px 22px;
+            text-decoration: none;
+            color: #64748b;
+            font-size: 13px;
+            font-weight: 600;
+            border-radius: 8px 8px 0 0;
+            transition: all 0.15s;
+        }
+        
+        .app-tabs a.active {
+            background: white;
+            color: #14b8a6;
             border: 1px solid #e2e8f0;
-        }
-        
-        .sector-row {
-            transition: background-color 0.1s ease;
+            border-bottom: 1px solid white;
+            margin-bottom: -1px;
         }
         
         .sector-row:hover {
-            background-color: #f1f5f9;
-        }
-        
-        .quadrant-label {
-            font-size: 11px;
-            font-weight: 600;
-            letter-spacing: 0.5px;
+            background-color: #f8fafc;
         }
     </style>
 </head>
-<body class="bg-slate-100 text-slate-900">
-    <div class="max-w-[1480px] mx-auto">
-        
-        <!-- Top Navigation Bar -->
-        <div class="bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-between">
-            <div class="flex items-center gap-x-8">
-                <div class="flex items-center gap-x-3">
-                    <div class="w-8 h-8 bg-emerald-600 rounded-xl flex items-center justify-center">
-                        <span class="text-white font-bold text-lg">S</span>
-                    </div>
-                    <div>
-                        <span class="font-semibold text-xl tracking-tight">Sector Rotation Map</span>
-                    </div>
-                </div>
+<body class="bg-slate-100">
 
-                <!-- Benchmark Tabs -->
-                <div class="flex items-center bg-slate-100 rounded-2xl p-1 text-sm">
-                    <button onclick="switchBenchmark('SPY')" class="px-4 py-1.5 rounded-2xl font-medium transition-all active-benchmark" id="bench-SPY">SPY</button>
-                    <button onclick="switchBenchmark('VTI')" class="px-4 py-1.5 rounded-2xl font-medium text-slate-600 hover:text-slate-900" id="bench-VTI">VTI</button>
-                    <button onclick="switchBenchmark('QQQ')" class="px-4 py-1.5 rounded-2xl font-medium text-slate-600 hover:text-slate-900" id="bench-QQQ">QQQ</button>
-                    <button onclick="switchBenchmark('DIA')" class="px-4 py-1.5 rounded-2xl font-medium text-slate-600 hover:text-slate-900" id="bench-DIA">DIA</button>
-                </div>
+<div class="max-w-[1480px] mx-auto px-6">
+
+    <!-- ================= APP TABS ================= -->
+    <div class="app-tabs flex gap-1 border-b border-slate-200 mb-6 pt-4">
+        <a href="index.html">DAILY MARKET PLAN</a>
+        <a href="stockbee_market_monitor_live.html">STOCKBEE MONITOR</a>
+        <a href="rrg.html" class="active">SECTOR ROTATION</a>
+    </div>
+
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-x-3">
+            <div class="w-9 h-9 bg-emerald-600 rounded-2xl flex items-center justify-center">
+                <span class="text-white font-bold text-2xl">S</span>
             </div>
-
-            <div class="flex items-center gap-x-4 text-sm">
-                <!-- Tail Length -->
-                <div class="flex items-center gap-x-1 bg-white border border-slate-200 rounded-2xl p-1">
-                    <span class="px-3 text-slate-500 text-xs font-medium">TAIL LENGTH</span>
-                    <button onclick="changeTailLength(6)" class="px-3 py-1 text-xs font-medium rounded-xl hover:bg-slate-100" id="tail-6">6w</button>
-                    <button onclick="changeTailLength(8)" class="px-3 py-1 text-xs font-medium rounded-xl hover:bg-slate-100" id="tail-8">8w</button>
-                    <button onclick="changeTailLength(12)" class="px-3 py-1 text-xs font-medium rounded-xl bg-slate-900 text-white" id="tail-12">12w</button>
-                    <button onclick="changeTailLength(16)" class="px-3 py-1 text-xs font-medium rounded-xl hover:bg-slate-100" id="tail-16">16w</button>
-                </div>
-
-                <div class="text-xs text-slate-500">
-                    LAST UPDATED <span class="font-medium text-slate-700">Jul 18, 2026</span>
-                </div>
+            <div>
+                <h1 class="text-2xl font-semibold tracking-tight">Sector Rotation Map</h1>
+                <p class="text-sm text-slate-500">S&amp;P 500 Sectors vs Benchmark</p>
             </div>
         </div>
 
-        <div class="flex">
-            
-            <!-- Main Chart Area -->
-            <div class="flex-1 p-6">
-                <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
-                    <div class="flex justify-between items-center mb-4">
-                        <div>
-                            <div class="font-semibold text-lg">S&amp;P 500 Sector Rotation</div>
-                            <div class="text-sm text-slate-500">vs Benchmark • 12 sectors tracked</div>
-                        </div>
-                        
-                        <!-- Quadrant Legend -->
-                        <div class="flex gap-x-4 text-xs">
-                            <div class="flex items-center gap-x-1.5"><span class="w-2.5 h-2.5 bg-emerald-500 rounded-full"></span> <span class="font-medium">Leading</span></div>
-                            <div class="flex items-center gap-x-1.5"><span class="w-2.5 h-2.5 bg-amber-500 rounded-full"></span> <span class="font-medium">Weakening</span></div>
-                            <div class="flex items-center gap-x-1.5"><span class="w-2.5 h-2.5 bg-red-500 rounded-full"></span> <span class="font-medium">Lagging</span></div>
-                            <div class="flex items-center gap-x-1.5"><span class="w-2.5 h-2.5 bg-violet-500 rounded-full"></span> <span class="font-medium">Improving</span></div>
-                        </div>
-                    </div>
-
-                    <!-- Chart -->
-                    <div class="relative h-[620px]">
-                        <canvas id="rrgChart"></canvas>
-                    </div>
-                </div>
+        <!-- Controls -->
+        <div class="flex items-center gap-x-4">
+            <!-- Benchmark -->
+            <div class="flex bg-white border border-slate-200 rounded-3xl p-1 text-sm">
+                <button onclick="switchBenchmark(this, 'SPY')" class="px-4 py-1.5 rounded-3xl font-medium bg-white shadow-sm border border-slate-200" id="bench-SPY">SPY</button>
+                <button onclick="switchBenchmark(this, 'VTI')" class="px-4 py-1.5 rounded-3xl font-medium text-slate-600 hover:bg-slate-50" id="bench-VTI">VTI</button>
+                <button onclick="switchBenchmark(this, 'QQQ')" class="px-4 py-1.5 rounded-3xl font-medium text-slate-600 hover:bg-slate-50" id="bench-QQQ">QQQ</button>
+                <button onclick="switchBenchmark(this, 'DIA')" class="px-4 py-1.5 rounded-3xl font-medium text-slate-600 hover:bg-slate-50" id="bench-DIA">DIA</button>
             </div>
 
-            <!-- Right Sidebar: Sector List -->
-            <div class="w-80 border-l border-slate-200 bg-white p-4 overflow-auto" style="max-height: calc(100vh - 60px);">
-                <div class="flex items-center justify-between mb-3 px-1">
-                    <div class="font-semibold text-sm">SECTORS <span class="text-slate-400">(12)</span></div>
-                    <button class="text-xs px-3 py-1 bg-slate-100 hover:bg-slate-200 rounded-xl text-slate-600">+ Add</button>
-                </div>
-
-                <div id="sectorList" class="space-y-1 text-sm">
-                    <!-- Populated by JavaScript -->
-                </div>
+            <!-- Tail Length -->
+            <div class="flex items-center gap-x-1 bg-white border border-slate-200 rounded-3xl px-2 py-1 text-sm">
+                <span class="px-3 text-xs font-medium text-slate-500">TAIL LENGTH</span>
+                <button onclick="changeTail(6, this)" class="px-3 py-1 rounded-2xl text-xs font-medium" id="tail-6">6w</button>
+                <button onclick="changeTail(8, this)" class="px-3 py-1 rounded-2xl text-xs font-medium" id="tail-8">8w</button>
+                <button onclick="changeTail(12, this)" class="px-3 py-1 rounded-2xl text-xs font-medium bg-slate-900 text-white" id="tail-12">12w</button>
+                <button onclick="changeTail(16, this)" class="px-3 py-1 rounded-2xl text-xs font-medium" id="tail-16">16w</button>
             </div>
-            
+
+            <div class="text-xs text-slate-500">
+                LAST UPDATED <span class="font-medium text-slate-700">Jul 18, 2026</span>
+            </div>
         </div>
     </div>
 
-    <script>
-        // Tailwind script
-        function initTailwind() {
-            document.documentElement.style.setProperty('--accent', '#0f766e');
-        }
+    <div class="flex gap-6">
+        
+        <!-- Chart -->
+        <div class="flex-1 bg-white border border-slate-200 rounded-3xl p-6">
+            <div class="flex justify-between items-center mb-4">
+                <div>
+                    <div class="font-semibold">S&amp;P 500 Sector Rotation</div>
+                    <div class="text-sm text-slate-500">12 sectors tracked</div>
+                </div>
+                
+                <!-- Legend -->
+                <div class="flex gap-x-4 text-xs">
+                    <div class="flex items-center gap-x-1.5"><span class="w-2 h-2 bg-emerald-500 rounded-full"></span> Leading</div>
+                    <div class="flex items-center gap-x-1.5"><span class="w-2 h-2 bg-amber-500 rounded-full"></span> Weakening</div>
+                    <div class="flex items-center gap-x-1.5"><span class="w-2 h-2 bg-red-500 rounded-full"></span> Lagging</div>
+                    <div class="flex items-center gap-x-1.5"><span class="w-2 h-2 bg-violet-500 rounded-full"></span> Improving</div>
+                </div>
+            </div>
 
-        // Sector data (approximated from your screenshot + realistic positions)
-        let sectors = [
-            { ticker: "XLC", name: "Communication Services", x: 93.8, y: 103.1, status: "IMPROVING", color: "#7c3aed",
+            <div style="height: 620px;">
+                <canvas id="rrgChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Right Sidebar -->
+        <div class="w-80 bg-white border border-slate-200 rounded-3xl p-4">
+            <div class="flex justify-between items-center mb-3 px-2">
+                <div class="font-semibold text-sm">SECTORS <span class="text-slate-400">(12)</span></div>
+                <button class="text-xs px-3 py-1 bg-slate-100 hover:bg-slate-200 rounded-2xl">+ Add</button>
+            </div>
+            <div id="sectorList" class="space-y-1"></div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+// ================== DATA ==================
+const sectorsData = [
+    { ticker: "XLC", name: "Communication Services", x: 93.8, y: 103.1, status: "IMPROVING", color: "#7c3aed" },
+    { ticker: "XLY", name: "Consumer Discretionary", x: 95.2, y:
