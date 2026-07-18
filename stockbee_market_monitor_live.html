@@ -532,17 +532,64 @@ function renderAll() {
   renderSummary();
 }
 
-async function fetchPythonDangerSignals() {
-  try {
-    const response = await fetch("http://localhost:8000/api/danger-signals");
-    const data = await response.json();
-    if (data && data.signals) {
-      renderSpyDangerSignals(data.signals);
-    }
-  } catch (err) {
-    console.warn("Could not reach Python danger signals endpoint:", err);
+// Generic dynamic renderer for both panels
+function renderDangerPanel(prefix, signals) {
+  const count = signals && Array.isArray(signals) ? signals.length : 0;
+  const countEl = document.getElementById(`${prefix}DangerCount`);
+  const badgeEl = document.getElementById(`${prefix}DangerBadge`);
+  const listEl = document.getElementById(`${prefix}DangerList`);
+
+  if (!countEl || !badgeEl || !listEl) return;
+
+  countEl.textContent = count;
+
+  if (count >= 3) {
+    badgeEl.textContent = `${count} Active — Negative`;
+    badgeEl.style.background = "rgba(227,73,72,.15)";
+    badgeEl.style.color = "#e34948";
+  } else if (count >= 1) {
+    badgeEl.textContent = `${count} Active — Caution`;
+    badgeEl.style.background = "rgba(237,161,0,.15)";
+    badgeEl.style.color = "#eda100";
+  } else {
+    badgeEl.textContent = "0 Active — Healthy";
+    badgeEl.style.background = "rgba(27,175,122,.15)";
+    badgeEl.style.color = "#1baf7a";
   }
+
+  if (count === 0) {
+    listEl.innerHTML = `<li style="color:#898781; font-style:italic; padding:4px 0;">No active danger signals. Price action is constructive.</li>`;
+    return;
+  }
+
+  listEl.innerHTML = signals.map(sig => `
+    <li style="display:flex; justify-content:space-between; align-items:center; background:#f8f8f6; padding:8px 12px; border:1px solid #e1e0d9; border-radius:6px; color:#0b0b0b;">
+      <span>${sig}</span>
+      <span style="width:7px; height:7px; border-radius:50%; background:#e34948; box-shadow:0 0 8px #e34948; flex-shrink:0; margin-left:12px;"></span>
+    </li>
+  `).join("");
 }
+
+// Revised fetching sequence reading both matrices
+async function fetchPythonDangerSignals() {
+  // Fetch SPY
+  try {
+    const res = await fetch("http://localhost:8000/api/danger-signals");
+    const data = await res.json();
+    if (data && data.signals) renderDangerPanel("spy", data.signals);
+  } catch (err) {
+    console.warn("Could not reach SPY danger signals endpoint:", err);
+  }
+
+  // Fetch QQQ
+  try {
+    const res = await fetch("http://localhost:8000/api/danger-signals-qqq");
+    const data = await res.json();
+    if (data && data.signals) renderDangerPanel("qqq", data.signals);
+  } catch (err) {
+    console.warn("Could not reach QQQ danger signals endpoint:", err);
+  }
+} 
 
 async function loadData(isManualRefresh) {
   const btn = document.getElementById('refreshBtn');
