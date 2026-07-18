@@ -275,18 +275,9 @@ function parseRows(rawRows) {
     if (!row || !row[0] || !row[0].trim() || !/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(row[0].trim())) continue;
     const num = (v) => v === undefined || v === '' ? null : parseFloat(String(v).replace(/,/g, ''));
     
-    // Divide by 10 to mathematically translate underlying indexes ($SPX/$NDX) into ETF prices (SPY/QQQ)
-    const rawSp = num(row[15]);
-    const spVal = rawSp ? Math.round((rawSp / 10) * 100) / 100 : null;
-    
-    const rawNasdaq = num(row[16]);
-    let nasdaqVal = null;
-    if (rawNasdaq !== null) {
-      nasdaqVal = Math.round((rawNasdaq / 10) * 100) / 100;
-    } else if (spVal) {
-      // Proxy calculation matching the ~0.935 ratio divergence between SPY and QQQ prices
-      nasdaqVal = Math.round((spVal * 0.9354) * 100) / 100;
-    }
+    // Read raw numbers cleanly as initial fallbacks (to be overwritten by the direct Python ETF feed)
+    const spVal = num(row[15]);
+    const nasdaqVal = num(row[16]);
 
     out.push({
       date: row[0].trim(),
@@ -298,8 +289,8 @@ function parseRows(rawRows) {
       up13_34: num(row[11]), down13_34: num(row[12]),
       universe: num(row[13]),
       t2108: num(row[14]),
-      sp: spVal,        // Will now scale down to ~$757 -> ~$743 ETF values
-      nasdaq: nasdaqVal  // Will now scale down to ~$708 -> ~$695 ETF values
+      sp: spVal,         // Initial fallback before Python ETF merge
+      nasdaq: nasdaqVal  // Initial fallback before Python ETF merge
     });
   }
   out.reverse();
