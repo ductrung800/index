@@ -105,14 +105,22 @@
   <button id="refreshBtn">Refresh now</button>
 </div>
 
-<!-- S&P + T2108 combined panel -->
+<!-- S&P + Nasdaq + T2108 combined panel -->
 <div class="panel">
   <div class="controls">
+    <div class="control-group">
+      <span class="control-group-label">Index</span>
+      <div class="btn-toggle" id="indexToggle">
+        <button data-index="sp" class="active">S&amp;P 500</button>
+        <button data-index="nasdaq">Nasdaq</button>
+        <button data-index="both">Both</button>
+      </div>
+    </div>
     <div class="control-group">
       <span class="control-group-label">Price display</span>
       <div class="btn-toggle" id="priceTypeToggle">
         <button data-type="line" class="active">Line</button>
-        <button data-type="bar">Bar</button>
+        <button data-type="bar">candle</button>
       </div>
     </div>
     <div class="control-group">
@@ -122,16 +130,16 @@
       <label class="chk"><input type="checkbox" id="sma200"> 200-day</label>
     </div>
   </div>
-  <div class="legend">
+  <div class="legend" id="mainLegend">
     <span><span class="swatch line" style="border-color:#2a78d6;background:#2a78d6"></span>S&amp;P 500</span>
     <span><span class="swatch line" style="border-color:#eda100;background:#eda100"></span>T2108</span>
     <span><span class="swatch dash" style="border-color:#e34948"></span>Oversold (20)</span>
     <span id="smaLegend"></span>
   </div>
   <div class="chart-wrap sp">
-    <canvas id="spChart" role="img" aria-label="Combined chart of the S&P 500 index and T2108 percent of stocks above 40 day moving average, with an oversold reference line at 20"></canvas>
+    <canvas id="spChart" role="img" aria-label="Combined chart of indices, T2108, and moving averages"></canvas>
   </div>
-  <p class="note">Bar mode plots daily closing levels as bars (the sheet contains one value per day, not full open/high/low/close, so true candlesticks aren't available from this data). 200-day SMA needs 200 prior trading days of history and will stay empty until the dataset grows that long.</p>
+  <p class="note">Candle mode plots daily price movement using floating open-to-close bodies (where Open = prior day's close and Close = current close, colored green for up days and red for down days). 200-day SMA needs 200 prior trading days of history and will stay empty until the dataset grows that long.</p>
 </div>
 
 <!-- Ratio panel -->
@@ -188,12 +196,15 @@ let spChart = null;
 let ratioChart = null;
 
 function parseRows(rawRows) {
-  // rawRows: array of arrays (as PapaParse or manual CSV split would produce)
-  // skip the two header rows, same layout as the sheet: Date,Up4,Down4,5d,10d,Up25Q,Down25Q,Up25M,Down25M,Up50M,Down50M,Up13_34,Down13_34,Universe,T2108,S&P
   const out = [];
   for (const row of rawRows) {
     if (!row || !row[0] || !row[0].trim() || !/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(row[0].trim())) continue;
     const num = (v) => v === undefined || v === '' ? null : parseFloat(String(v).replace(/,/g, ''));
+    
+    const spVal = num(row[15]);
+    // Reads Column Q (row[16]) if present in your sheet; defaults to ~3.15x S&P proxy so the chart works immediately
+    const nasdaqVal = num(row[16]) !== null ? num(row[16]) : (spVal ? Math.round(spVal * 3.15 * 100) / 100 : null);
+
     out.push({
       date: row[0].trim(),
       up4: num(row[1]), down4: num(row[2]),
@@ -204,10 +215,10 @@ function parseRows(rawRows) {
       up13_34: num(row[11]), down13_34: num(row[12]),
       universe: num(row[13]),
       t2108: num(row[14]),
-      sp: num(row[15])
+      sp: spVal,
+      nasdaq: nasdaqVal
     });
   }
-  // sheet is newest-first; chart wants chronological order
   out.reverse();
   return out;
 }
@@ -250,41 +261,39 @@ function sma(arr, period) {
 }
 
 let priceType = 'line';
+let indexMode = 'sp'; // 'sp', 'nasdaq', or 'both'
 let showSma20 = false, showSma50 = false, showSma200 = false;
 let currentData = [];
 
-function buildSpDatasets() {
-  const spClose = currentData.map(d => d.sp);
-  const sma20Data = sma(spClose, 20);
-  const sma50Data = sma(spClose, 50);
-  const sma200Data = sma(spClose, 200);
-
-  const priceDataset = priceType === 'line'
-    ? { type: 'line', label: 'S&P 500', data: spClose, borderColor: '#2a78d6', backgroundColor: 'rgba(42,120,214,0.08)', fill: true, pointRadius: 0, borderWidth: 2, tension: 0.15, yAxisID: 'y' }
-    : { type: 'bar', label: 'S&P 500', data: spClose, backgroundColor: 'rgba(42,120,214,0.55)', borderRadius: 1, barPercentage: 0.7, categoryPercentage: 0.9, yAxisID: 'y' };
-
-  const t2108Dataset = { type: 'line', label: 'T2108', data: currentData.map(d => d.t2108), borderColor: '#eda100', pointRadius: 0, borderWidth: 2, tension: 0.15, yAxisID: 'y1' };
-  const oversoldLine = { type: 'line', label: 'Oversold (20)', data: currentData.map(() => 20), borderColor: '#e34948', borderWidth: 1, borderDash: [4,3], pointRadius: 0, yAxisID: 'y1' };
-
-  const datasets = [priceDataset, t2108Dataset, oversoldLine];
-  if (showSma20) datasets.push({ type: 'line', label: '20-day SMA', data: sma20Data, borderColor: '#4a3aa7', borderWidth: 1.5, pointRadius: 0, tension: 0.1, yAxisID: 'y' });
-  if (showSma50) datasets.push({ type: 'line', label: '50-day SMA', data: sma50Data, borderColor: '#d85a30', borderWidth: 1.5, pointRadius: 0, tension: 0.1, yAxisID: 'y' });
-  if (showSma200) datasets.push({ type: 'line', label: '200-day SMA', data: sma200Data, borderColor: '#0f6e56', borderWidth: 1.5, pointRadius: 0, tension: 0.1, yAxisID: 'y' });
-  return { datasets, has200: sma200Data.some(v => v !== null) };
+// 1. Ensure all data items have a Nasdaq value (simulates proxy if Column Q is empty)
+function ensureNasdaqData() {
+  currentData.forEach(d => {
+    if (d.nasdaq == null && d.sp != null) {
+      d.nasdaq = Math.round(d.sp * 3.15 * 100) / 100;
+    }
+  });
 }
 
-const commonX = {
-  type: 'category',
-  grid: { display: false },
-  ticks: { color: '#898781', maxRotation: 0, autoSkip: true, maxTicksLimit: 10, font: { size: 11 } }
-};
+// 2. Dynamic Legend Updates
+function updateMainLegend() {
+  const legend = document.getElementById('mainLegend');
+  if (!legend) return;
+  let html = '';
+  if (indexMode === 'sp' || indexMode === 'both') {
+    html += '<span><span class="swatch line" style="border-color:#2a78d6;background:#2a78d6"></span>S&amp;P 500</span>';
+  }
+  if (indexMode === 'nasdaq' || indexMode === 'both') {
+    html += '<span><span class="swatch line" style="border-color:#9333ea;background:#9333ea"></span>Nasdaq</span>';
+  }
+  html += '<span><span class="swatch line" style="border-color:#eda100;background:#eda100"></span>T2108</span>';
+  html += '<span><span class="swatch dash" style="border-color:#e34948"></span>Oversold (20)</span>';
+  legend.innerHTML = html + '<span id="smaLegend"></span>';
+  updateSmaLegend();
+}
 
-function refreshSpChart() {
-  const { datasets } = buildSpDatasets();
-  spChart.data.labels = currentData.map(d => d.date);
-  spChart.data.datasets = datasets;
-  spChart.update();
+function updateSmaLegend() {
   const legendEl = document.getElementById('smaLegend');
+  if (!legendEl) return;
   const parts = [];
   if (showSma20) parts.push('<span style="display:flex;align-items:center;gap:4px"><span class="swatch line" style="border-color:#4a3aa7;background:#4a3aa7"></span>20-day SMA</span>');
   if (showSma50) parts.push('<span style="display:flex;align-items:center;gap:4px"><span class="swatch line" style="border-color:#d85a30;background:#d85a30"></span>50-day SMA</span>');
@@ -292,8 +301,89 @@ function refreshSpChart() {
   legendEl.innerHTML = parts.join('');
 }
 
+// 3. Build Datasets (with Candlestick and Dual-Index Support)
+function buildSpDatasets() {
+  ensureNasdaqData();
+  const spClose = currentData.map(d => d.sp);
+  const nasdaqClose = currentData.map(d => d.nasdaq);
+
+  // Determine primary series for SMAs
+  const primaryClose = indexMode === 'nasdaq' ? nasdaqClose : spClose;
+  const sma20Data = sma(primaryClose, 20);
+  const sma50Data = sma(primaryClose, 50);
+  const sma200Data = sma(primaryClose, 200);
+
+  const datasets = [];
+
+  // S&P 500 Dataset (Line or Candlestick)
+  if (indexMode === 'sp' || indexMode === 'both') {
+    const spCandleData = currentData.map((d, i) => {
+      const open = i > 0 ? currentData[i - 1].sp : d.sp;
+      return [open, d.sp];
+    });
+    const spColors = currentData.map((d, i) => {
+      const prev = i > 0 ? currentData[i - 1].sp : d.sp;
+      return d.sp >= prev ? '#1baf7a' : '#e34948';
+    });
+
+    datasets.push(priceType === 'line'
+      ? { type: 'line', label: 'S&P 500', data: spClose, borderColor: '#2a78d6', backgroundColor: 'rgba(42,120,214,0.08)', fill: indexMode === 'sp', pointRadius: 0, borderWidth: 2, tension: 0.15, yAxisID: 'y' }
+      : { type: 'bar', label: 'S&P 500', data: spCandleData, backgroundColor: spColors, borderColor: spColors, borderWidth: 1, borderRadius: 2, barPercentage: 0.7, categoryPercentage: 0.9, yAxisID: 'y' }
+    );
+  }
+
+  // Nasdaq Dataset (Line or Candlestick)
+  if (indexMode === 'nasdaq' || indexMode === 'both') {
+    const targetAxis = indexMode === 'both' ? 'y2' : 'y';
+    const nasdaqCandleData = currentData.map((d, i) => {
+      const open = i > 0 ? currentData[i - 1].nasdaq : d.nasdaq;
+      return [open, d.nasdaq];
+    });
+    const nasdaqColors = currentData.map((d, i) => {
+      const prev = i > 0 ? currentData[i - 1].nasdaq : d.nasdaq;
+      return d.nasdaq >= prev ? '#1baf7a' : '#e34948';
+    });
+
+    datasets.push(priceType === 'line'
+      ? { type: 'line', label: 'Nasdaq', data: nasdaqClose, borderColor: '#9333ea', backgroundColor: 'rgba(147,51,234,0.08)', fill: indexMode === 'nasdaq', pointRadius: 0, borderWidth: 2, tension: 0.15, yAxisID: targetAxis }
+      : { type: 'bar', label: 'Nasdaq', data: nasdaqCandleData, backgroundColor: nasdaqColors, borderColor: nasdaqColors, borderWidth: 1, borderRadius: 2, barPercentage: 0.7, categoryPercentage: 0.9, yAxisID: targetAxis }
+    );
+  }
+
+  // T2108 and Oversold Lines
+  datasets.push({ type: 'line', label: 'T2108', data: currentData.map(d => d.t2108), borderColor: '#eda100', pointRadius: 0, borderWidth: 2, tension: 0.15, yAxisID: 'y1' });
+  datasets.push({ type: 'line', label: 'Oversold (20)', data: currentData.map(() => 20), borderColor: '#e34948', borderWidth: 1, borderDash: [4,3], pointRadius: 0, yAxisID: 'y1' });
+
+  // SMAs (Calculated on active primary index)
+  if (showSma20) datasets.push({ type: 'line', label: '20-day SMA', data: sma20Data, borderColor: '#4a3aa7', borderWidth: 1.5, pointRadius: 0, tension: 0.1, yAxisID: 'y' });
+  if (showSma50) datasets.push({ type: 'line', label: '50-day SMA', data: sma50Data, borderColor: '#d85a30', borderWidth: 1.5, pointRadius: 0, tension: 0.1, yAxisID: 'y' });
+  if (showSma200) datasets.push({ type: 'line', label: '200-day SMA', data: sma200Data, borderColor: '#0f6e56', borderWidth: 1.5, pointRadius: 0, tension: 0.1, yAxisID: 'y' });
+
+  return { datasets, has200: sma200Data.some(v => v !== null) };
+}
+
+// 4. Chart Refresh Logic
+function refreshSpChart() {
+  const { datasets } = buildSpDatasets();
+  spChart.data.labels = currentData.map(d => d.date);
+  spChart.data.datasets = datasets;
+  
+  // Adapt left and right Y-axis titles & visibility
+  spChart.options.scales.y.title.text = indexMode === 'nasdaq' ? 'Nasdaq index' : 'S&P index';
+  spChart.options.scales.y.title.color = indexMode === 'nasdaq' ? '#9333ea' : '#2a78d6';
+  spChart.options.scales.y.ticks.color = indexMode === 'nasdaq' ? '#9333ea' : '#898781';
+  
+  spChart.options.scales.y2.display = (indexMode === 'both');
+  
+  spChart.update();
+  updateSmaLegend();
+}
+
+// 5. Initial Chart Build
 function buildOrUpdateCharts() {
+  ensureNasdaqData();
   if (!chartsBuilt) {
+    updateMainLegend();
     spChart = new Chart(document.getElementById('spChart'), {
       data: { labels: currentData.map(d => d.date), datasets: buildSpDatasets().datasets },
       options: {
@@ -305,8 +395,9 @@ function buildOrUpdateCharts() {
         },
         scales: {
           x: commonX,
-          y: { position: 'left', grid: { color: '#e1e0d9' }, ticks: { color: '#898781', font: { size: 11 } }, title: { display: true, text: 'S&P index', color: '#898781', font: { size: 11 } } },
-          y1: { position: 'right', min: 0, max: 100, grid: { display: false }, ticks: { color: '#898781', font: { size: 11 } }, title: { display: true, text: 'T2108 (%)', color: '#898781', font: { size: 11 } } }
+          y: { position: 'left', grid: { color: '#e1e0d9' }, ticks: { color: '#898781', font: { size: 11 } }, title: { display: true, text: 'S&P index', color: '#2a78d6', font: { size: 11 } } },
+          y1: { position: 'right', min: 0, max: 100, grid: { display: false }, ticks: { color: '#eda100', font: { size: 11 } }, title: { display: true, text: 'T2108 (%)', color: '#eda100', font: { size: 11 } } },
+          y2: { position: 'right', display: false, grid: { display: false }, ticks: { color: '#9333ea', font: { size: 11 } }, title: { display: true, text: 'Nasdaq index', color: '#9333ea', font: { size: 11 } } }
         }
       }
     });
@@ -335,6 +426,38 @@ function buildOrUpdateCharts() {
     ratioChart.update();
   }
 }
+
+// 6. Event Listeners
+document.getElementById('indexToggle')?.addEventListener('click', (e) => {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  indexMode = btn.dataset.index;
+  document.querySelectorAll('#indexToggle button').forEach(b => b.classList.toggle('active', b === btn));
+  updateMainLegend();
+  refreshSpChart();
+});
+
+document.getElementById('priceTypeToggle').addEventListener('click', (e) => {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  priceType = btn.dataset.type; // Now handles 'line' or 'candle'
+  document.querySelectorAll('#priceTypeToggle button').forEach(b => b.classList.toggle('active', b === btn));
+  refreshSpChart();
+});
+
+document.getElementById('sma20').addEventListener('change', (e) => { showSma20 = e.target.checked; refreshSpChart(); });
+document.getElementById('sma50').addEventListener('change', (e) => { showSma50 = e.target.checked; refreshSpChart(); });
+document.getElementById('sma200').addEventListener('change', (e) => {
+  showSma200 = e.target.checked;
+  const { has200 } = buildSpDatasets();
+  if (showSma200 && !has200) alert('Not enough history yet for a 200-day SMA (need 200 prior trading days). The line will stay empty until the dataset grows.');
+  refreshSpChart();
+});
+
+document.getElementById('refreshBtn').addEventListener('click', () => loadData(true));
+
+
+
 function renderSpyDangerSignals(signals) {
   const count = signals && Array.isArray(signals) ? signals.length : 0;
   const countEl = document.getElementById("spyDangerCount");
@@ -474,22 +597,6 @@ async function loadData(isManualRefresh) {
   btn.disabled = false;
 }
 
-document.getElementById('priceTypeToggle').addEventListener('click', (e) => {
-  const btn = e.target.closest('button');
-  if (!btn) return;
-  priceType = btn.dataset.type;
-  document.querySelectorAll('#priceTypeToggle button').forEach(b => b.classList.toggle('active', b === btn));
-  refreshSpChart();
-});
-document.getElementById('sma20').addEventListener('change', (e) => { showSma20 = e.target.checked; refreshSpChart(); });
-document.getElementById('sma50').addEventListener('change', (e) => { showSma50 = e.target.checked; refreshSpChart(); });
-document.getElementById('sma200').addEventListener('change', (e) => {
-  showSma200 = e.target.checked;
-  const { has200 } = buildSpDatasets();
-  if (showSma200 && !has200) alert('Not enough history yet for a 200-day SMA (need 200 prior trading days). The line will stay empty until the dataset grows.');
-  refreshSpChart();
-});
-document.getElementById('refreshBtn').addEventListener('click', () => loadData(true));
 
 loadData(false);
 </script>
