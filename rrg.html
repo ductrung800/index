@@ -13,10 +13,6 @@
         .app-tabs a.active { background: #fff; color: #2a78d6; border-color: #e1e0d9; border-bottom-color: #fff; margin-bottom: -1px; }
         .app-tabs a:hover:not(.active) { color: #0b0b0b; background: rgba(0,0,0,0.03); }
         .panel { background: #fff; border: 1px solid #e1e0d9; border-radius: 12px; padding: 16px 18px; }
-        .btn-toggle { display: flex; border: 1px solid #d3d1c7; border-radius: 6px; overflow: hidden; background: #fff; }
-        .btn-toggle button { border: none; background: #fff; padding: 5px 12px; font-size: 12px; cursor: pointer; color: #52514e; text-transform: uppercase; font-weight: 600; }
-        .btn-toggle button.active { background: #2a78d6; color: #fff; }
-        .btn-toggle button:not(:last-child) { border-right: 1px solid #d3d1c7; }
         .status-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; font-size: 12px; color: #52514e; margin-bottom: 20px; padding: 8px 12px; background: #fff; border: 1px solid #e1e0d9; border-radius: 8px; }
         .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #b0aea5; flex-shrink: 0; }
         .status-dot.live { background: #1baf7a; }
@@ -41,27 +37,10 @@
             <p class="text-xs text-[#52514e] mt-1 font-mono">Relative Strength Analysis vs Core Market Metrics</p>
         </div>
 
-        <!-- Controls Vector -->
-        <div class="flex flex-wrap items-center gap-4 text-xs">
-            <div class="flex items-center gap-2">
-                <span class="text-[#898781] font-semibold uppercase tracking-wider font-mono">Benchmark</span>
-                <div class="btn-toggle" id="benchmarkToggle">
-                    <button data-bench="SPY" class="active">SPY</button>
-                    <button data-bench="QQQ">QQQ</button>
-                    <button data-bench="VTI">VTI</button>
-                    <button data-bench="DIA">DIA</button>
-                </div>
-            </div>
-
-            <div class="flex items-center gap-2">
-                <span class="text-[#898781] font-semibold uppercase tracking-wider font-mono">Tail Length</span>
-                <div class="btn-toggle" id="tailToggle">
-                    <button data-tail="6">6W</button>
-                    <button data-tail="8">8W</button>
-                    <button data-tail="12" class="active">12W</button>
-                    <button data-tail="16">16W</button>
-                </div>
-            </div>
+        <!-- Fixed Configuration Badges (Simplified UI) -->
+        <div class="flex items-center gap-3 text-xs font-mono">
+            <span class="px-3 py-1.5 bg-white border border-[#e1e0d9] rounded-md font-bold text-[#2a78d6] shadow-sm">BENCHMARK: SPY</span>
+            <span class="px-3 py-1.5 bg-white border border-[#e1e0d9] rounded-md font-bold text-[#52514e] shadow-sm">TAIL: 6 WEEKS</span>
         </div>
     </header>
 
@@ -79,7 +58,7 @@
             <div class="flex flex-wrap justify-between items-center mb-4 pb-2 border-b border-[#f1efe8]">
                 <div>
                     <h2 class="text-sm font-bold text-[#0b0b0b] uppercase tracking-wide">Rotation Canvas</h2>
-                    <p id="canvasSubtitle" class="text-xs text-[#898781] font-mono mt-0.5">Tracking rotation pathways</p>
+                    <p id="canvasSubtitle" class="text-xs text-[#898781] font-mono mt-0.5">Tracking rotation pathways vs SPY (6W Tail)</p>
                 </div>
                 <div class="flex flex-wrap gap-3 text-[11px] font-mono font-semibold">
                     <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 bg-[#1baf7a] rounded-sm"></span> LEADING</span>
@@ -116,11 +95,11 @@
     </div>
 
 <script>
-let activeBenchmark = "SPY";
-let tailLength = 12;
+// Hardcoded core constants for simplified execution
+const activeBenchmark = "SPY";
+const tailLength = 6;
 let rrgChartInstance = null;
 
-// Default 12 Sectors
 let trackedTickers = ["XLC", "XLY", "XLP", "XLE", "XLF", "XLV", "XLI", "XLB", "XLRE", "XLK", "XLU", "BTC-USD"];
 
 const sectorNames = {
@@ -181,6 +160,7 @@ async function fetchAssetHistory(ticker) {
         }
     }
 }
+
 function calculateRrgMatrix(tickerHistory, benchHistory) {
     if (!tickerHistory || !benchHistory) return null;
     const benchMap = new Map(benchHistory.map(b => [b.Date || b.date, b.Close || b.close]));
@@ -199,7 +179,7 @@ function calculateRrgMatrix(tickerHistory, benchHistory) {
     // 1. Calculate raw Relative Strength (RS)
     let rawRS = matched.map(m => m.close / m.benchClose);
     
-    // 2. Smooth RS with a 14-period Exponential Moving Average (EMA) to remove noise
+    // 2. Smooth RS with a 14-period EMA to remove market noise
     const period = 14;
     const alpha = 2 / (period + 1);
     let smoothedRS = new Array(rawRS.length).fill(rawRS[0]);
@@ -210,25 +190,22 @@ function calculateRrgMatrix(tickerHistory, benchHistory) {
     let rsRatio = new Array(smoothedRS.length).fill(100);
     let rsMomentum = new Array(smoothedRS.length).fill(100);
 
-    // 3. Calculate RS-Ratio using rolling Z-Score (INCLUDING current bar i)
+    // 3. Calculate RS-Ratio using rolling Z-Score (INCLUDING current trading week)
     for (let i = period - 1; i < smoothedRS.length; i++) {
-        // Fix: slice to i + 1 ensures the current trading week is included in the window
         let windowSlice = smoothedRS.slice(i - period + 1, i + 1);
         let mean = windowSlice.reduce((a, b) => a + b, 0) / period;
         let variance = windowSlice.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / period;
         let stdDev = Math.sqrt(variance);
-        // Scale Z-score by 5 so 1 standard deviation = 5 index points from 100
         rsRatio[i] = stdDev !== 0 ? 100 + ((smoothedRS[i] - mean) / stdDev) * 5 : 100;
     }
 
-    // 4. Calculate RS-Momentum as the standardized Rate of Change (ROC) of RS-Ratio
+    // 4. Calculate RS-Momentum as standardized Rate of Change
     for (let i = (period * 2) - 1; i < rsRatio.length; i++) {
         let windowSlice = rsRatio.slice(i - period + 1, i + 1);
         let mean = windowSlice.reduce((a, b) => a + b, 0) / period;
         let variance = windowSlice.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / period;
         let stdDev = Math.sqrt(variance);
         let rateOfChange = rsRatio[i] - rsRatio[i - 1];
-        // Scale momentum sensitivity by 10 to capture rotational velocity
         rsMomentum[i] = stdDev !== 0 ? 100 + (rateOfChange / stdDev) * 10 : 100;
     }
 
@@ -248,9 +225,6 @@ function evaluateQuadrant(x, y) {
 
 async function updateRotationMap() {
     renderSidebarControls([]);
-    
-    const subEl = document.getElementById("canvasSubtitle");
-    if (subEl) subEl.textContent = `Tracking Matrix vs ${activeBenchmark} | Tail: ${tailLength} Weeks`;
     setStatus('stale', `Fetching data for ${trackedTickers.length} tickers from Python backend...`);
     
     const benchData = await fetchAssetHistory(activeBenchmark);
@@ -308,7 +282,7 @@ async function updateRotationMap() {
     await Promise.all(processingPool);
     renderRrgChart(chartDatasets);
     renderSidebarControls(chartDatasets.filter(d => d.type === 'scatter'));
-    setStatus('live', `✅ Connected to Python engine. Loaded ${trackedTickers.length} tickers vs ${activeBenchmark}.`);
+    setStatus('live', `✅ Connected to Python engine. Loaded ${trackedTickers.length} tickers vs ${activeBenchmark} (6W Tail).`);
 }
 
 // Inline Plugin to Draw Ticker Names Next to Dots
@@ -338,6 +312,25 @@ function renderRrgChart(datasets) {
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (rrgChartInstance) rrgChartInstance.destroy();
+
+    // 1. DYNAMIC SYMMETRIC AUTO-SCALING LOGIC
+    // Scan all coordinates to find the absolute maximum distance from the 100 centerline
+    let maxDeviation = 6; // Guaranteed minimum bounds of 94 to 106
+    datasets.forEach(ds => {
+        if (ds.data && ds.data.length > 0) {
+            ds.data.forEach(pt => {
+                if (pt && pt.x !== undefined && pt.y !== undefined) {
+                    const devX = Math.abs(pt.x - 100);
+                    const devY = Math.abs(pt.y - 100);
+                    maxDeviation = Math.max(maxDeviation, devX, devY);
+                }
+            });
+        }
+    });
+    // Add 1.5 units of padding so dots and text labels never touch the canvas border
+    const boundLimit = Math.ceil(maxDeviation + 1.5);
+    const minBound = 100 - boundLimit;
+    const maxBound = 100 + boundLimit;
 
     datasets.forEach(ds => {
         if (ds.opacityAlpha !== undefined && ds.borderColor) {
@@ -370,19 +363,19 @@ function renderRrgChart(datasets) {
             },
             scales: {
                 x: {
-                    type: 'linear', min: 94, max: 106, grid: { color: '#e1e0d9' }, border: { dash: [4, 4] },
+                    type: 'linear', min: minBound, max: maxBound, grid: { color: '#e1e0d9' }, border: { dash: [4, 4] },
                     ticks: { color: '#898781', font: { size: 10, family: 'JetBrains Mono' } },
                     title: { display: true, text: 'RS-RATIO', color: '#52514e', font: { size: 11, weight: 'bold', family: 'JetBrains Mono' } }
                 },
                 y: {
-                    type: 'linear', min: 94, max: 106, grid: { color: '#e1e0d9' }, border: { dash: [4, 4] },
+                    type: 'linear', min: minBound, max: maxBound, grid: { color: '#e1e0d9' }, border: { dash: [4, 4] },
                     ticks: { color: '#898781', font: { size: 10, family: 'JetBrains Mono' } },
                     title: { display: true, text: 'RS-MOMENTUM', color: '#52514e', font: { size: 11, weight: 'bold', family: 'JetBrains Mono' } }
                 }
             }
         },
         plugins: [
-            rrgLabelPlugin, // <-- Fully injected dot naming plugin!
+            rrgLabelPlugin,
             {
                 id: 'quadrantLabels',
                 beforeDraw: (chart) => {
@@ -401,7 +394,6 @@ function renderRrgChart(datasets) {
     });
 }
 
-// Single, Cleanly Merged Sidebar Rendering & Sorting Function
 function renderSidebarControls(activeScatterSets) {
     const countEl = document.getElementById("tickerCount");
     if (countEl) countEl.textContent = trackedTickers.length;
@@ -412,10 +404,9 @@ function renderSidebarControls(activeScatterSets) {
     let positions = {};
     activeScatterSets.forEach(s => { positions[s.label] = s; });
 
-    // Define Sort Order Priority: Leading -> Improving -> Weakening -> Lagging
+    // Sort priority: Leading -> Improving -> Weakening -> Lagging
     const statusPriority = { 'LEADING': 1, 'IMPROVING': 2, 'WEAKENING': 3, 'LAGGING': 4 };
 
-    // Create a sorted copy of trackedTickers so the UI aligns with quadrant status
     const sortedTickers = [...trackedTickers].sort((tickerA, tickerB) => {
         const quadA = positions[tickerA]?.currentQuad?.name || 'Z_UNKNOWN';
         const quadB = positions[tickerB]?.currentQuad?.name || 'Z_UNKNOWN';
@@ -441,10 +432,6 @@ function renderSidebarControls(activeScatterSets) {
             valuesHtml = `<span class="font-mono text-[#52514e]">${pos.x.toFixed(1)} / ${pos.y.toFixed(1)}</span>`;
         }
 
-        if (ticker === activeBenchmark) {
-            quadBadgeHtml = `<span style="padding:2px 6px; border-radius:4px; font-size:9px; font-weight:bold; background:rgba(42,120,214,0.15); color:#2a78d6;">BENCHMARK</span>`;
-        }
-
         item.innerHTML = `
             <div class="flex items-center gap-2">
                 <span style="width:4px; height:16px; background:${getColor(ticker)}; border-radius:2px;"></span>
@@ -458,7 +445,7 @@ function renderSidebarControls(activeScatterSets) {
                     ${quadBadgeHtml}
                     ${valuesHtml}
                 </div>
-                ${ticker !== activeBenchmark ? `<button onclick="removeTrackingVector('${ticker}')" class="text-[#e34948] font-bold text-sm hover:bg-rgba(227,73,72,0.1) px-1 rounded transition-colors">&times;</button>` : `<span class="w-3 text-center text-[#b0aea5] font-mono">-</span>`}
+                <button onclick="removeTrackingVector('${ticker}')" class="text-[#e34948] font-bold text-sm hover:bg-rgba(227,73,72,0.1) px-1 rounded transition-colors">&times;</button>
             </div>
         `;
         container.appendChild(item);
@@ -469,22 +456,6 @@ function removeTrackingVector(ticker) {
     trackedTickers = trackedTickers.filter(t => t !== ticker);
     updateRotationMap();
 }
-
-document.getElementById("benchmarkToggle")?.addEventListener("click", (e) => {
-    const btn = e.target.closest("button");
-    if (!btn) return;
-    activeBenchmark = btn.dataset.bench;
-    document.querySelectorAll("#benchmarkToggle button").forEach(b => b.classList.toggle("active", b === btn));
-    updateRotationMap();
-});
-
-document.getElementById("tailToggle")?.addEventListener("click", (e) => {
-    const btn = e.target.closest("button");
-    if (!btn) return;
-    tailLength = parseInt(btn.dataset.tail);
-    document.querySelectorAll("#tailToggle button").forEach(b => b.classList.toggle("active", b === btn));
-    updateRotationMap();
-});
 
 document.getElementById("addTickerForm")?.addEventListener("submit", (e) => {
     e.preventDefault();
@@ -498,7 +469,6 @@ document.getElementById("addTickerForm")?.addEventListener("submit", (e) => {
     }
 });
 
-// Run execution on startup
 updateRotationMap();
 </script>
 </body>
