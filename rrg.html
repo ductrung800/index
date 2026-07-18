@@ -17,7 +17,11 @@
         .btn-toggle button { border: none; background: #fff; padding: 5px 12px; font-size: 12px; cursor: pointer; color: #52514e; text-transform: uppercase; font-weight: 600; }
         .btn-toggle button.active { background: #2a78d6; color: #fff; }
         .btn-toggle button:not(:last-child) { border-right: 1px solid #d3d1c7; }
-        .quad-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
+        .status-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; font-size: 12px; color: #52514e; margin-bottom: 20px; padding: 8px 12px; background: #fff; border: 1px solid #e1e0d9; border-radius: 8px; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #b0aea5; flex-shrink: 0; }
+        .status-dot.live { background: #1baf7a; }
+        .status-dot.stale { background: #eda100; }
+        .status-dot.error { background: #e34948; }
     </style>
 </head>
 <body class="p-6 max-w-[1400px] mx-auto">
@@ -39,7 +43,6 @@
 
         <!-- Controls Vector -->
         <div class="flex flex-wrap items-center gap-4 text-xs">
-            <!-- Benchmark Control -->
             <div class="flex items-center gap-2">
                 <span class="text-[#898781] font-semibold uppercase tracking-wider font-mono">Benchmark</span>
                 <div class="btn-toggle" id="benchmarkToggle">
@@ -50,7 +53,6 @@
                 </div>
             </div>
 
-            <!-- Tail Control -->
             <div class="flex items-center gap-2">
                 <span class="text-[#898781] font-semibold uppercase tracking-wider font-mono">Tail Length</span>
                 <div class="btn-toggle" id="tailToggle">
@@ -63,6 +65,12 @@
         </div>
     </header>
 
+    <!-- Status Bar -->
+    <div class="status-bar">
+        <span class="status-dot stale" id="statusDot"></span>
+        <span id="statusText">Connecting to Python engine at http://localhost:8000...</span>
+    </div>
+
     <!-- Main Workspace -->
     <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
         
@@ -73,7 +81,6 @@
                     <h2 class="text-sm font-bold text-[#0b0b0b] uppercase tracking-wide">Rotation Canvas</h2>
                     <p id="canvasSubtitle" class="text-xs text-[#898781] font-mono mt-0.5">Tracking rotation pathways</p>
                 </div>
-                <!-- Legend Matrix -->
                 <div class="flex flex-wrap gap-3 text-[11px] font-mono font-semibold">
                     <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 bg-[#1baf7a] rounded-sm"></span> LEADING</span>
                     <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 bg-[#eda100] rounded-sm"></span> WEAKENING</span>
@@ -83,48 +90,38 @@
             </div>
 
             <div class="relative flex-1 min-h-[580px] bg-[#fafafa] border border-[#e1e0d9] rounded-lg overflow-hidden">
-                <!-- Background Quadrant Color Overlays -->
                 <div class="absolute inset-0 grid grid-cols-2 grid-rows-2 pointer-events-none opacity-[0.035]">
-                    <div class="bg-[#9333ea]"></div><!-- Top Left: Improving -->
-                    <div class="bg-[#1baf7a]"></div><!-- Top Right: Leading -->
-                    <div class="bg-[#e34948]"></div><!-- Bottom Left: Lagging -->
-                    <div class="bg-[#eda100]"></div><!-- Bottom Right: Weakening -->
+                    <div class="bg-[#9333ea]"></div><!-- Improving -->
+                    <div class="bg-[#1baf7a]"></div><!-- Leading -->
+                    <div class="bg-[#e34948]"></div><!-- Lagging -->
+                    <div class="bg-[#eda100]"></div><!-- Weakening -->
                 </div>
-                
                 <canvas id="rrgChart" class="z-10 relative"></canvas>
             </div>
-            <p class="text-[11px] text-[#b0aea5] mt-2 font-sans">Relative Rotation Graph plots instrument pathways using an annualized standardization structure. The center crosshair (100, 100) maps directly to the tracking index model benchmark.</p>
         </div>
 
         <!-- Right Side Configuration Matrix -->
         <div class="panel flex flex-col h-full">
             <div class="flex justify-between items-center pb-2 border-b border-[#e1e0d9] mb-3">
-                <span class="text-xs font-bold font-mono tracking-wide text-[#898781]">TRACKED TICKERS (<span id="tickerCount">0</span>)</span>
+                <span class="text-xs font-bold font-mono tracking-wide text-[#898781]">TRACKED TICKERS (<span id="tickerCount">12</span>)</span>
             </div>
             
-            <!-- Dynamic Input Vector -->
             <form id="addTickerForm" class="flex gap-2 mb-3">
-                <input type="text" id="tickerInput" placeholder="e.g. NVDA" class="flex-1 px-3 py-1.5 text-xs border border-[#d3d1c7] rounded-md focus:outline-none focus:border-[#2a78d6] font-mono uppercase" required>
+                <input type="text" id="tickerInput" placeholder="e.g. PENG" class="flex-1 px-3 py-1.5 text-xs border border-[#d3d1c7] rounded-md focus:outline-none focus:border-[#2a78d6] font-mono uppercase" required>
                 <button type="submit" class="px-3 py-1.5 text-xs font-bold text-white bg-[#2a78d6] hover:bg-[#1e61b3] rounded-md transition-colors font-sans">+ Add</button>
             </form>
 
-            <!-- Scrollable Monitor Window -->
-            <div id="tickerList" class="flex-1 overflow-y-auto max-h-[480px] space-y-1 pr-1">
-                <!-- Javascript maps items inject here -->
-            </div>
+            <div id="tickerList" class="flex-1 overflow-y-auto max-h-[480px] space-y-1 pr-1"></div>
         </div>
     </div>
 
 <script>
-// ============================================================================
-// STATE STORAGE AND PARAMETERS
-// ============================================================================
 let activeBenchmark = "SPY";
 let tailLength = 12;
 let rrgChartInstance = null;
 let historicalCache = {};
 
-// 12 Default Sectors + Asset Allocation Proxies matching specified layout
+// Default 12 Sectors
 let trackedTickers = ["XLC", "XLY", "XLP", "XLE", "XLF", "XLV", "XLI", "XLB", "XLRE", "XLK", "XLU", "BTC-USD"];
 
 const sectorNames = {
@@ -142,7 +139,6 @@ const uniqueColors = {
 
 function getColor(ticker) {
     if (!uniqueColors[ticker]) {
-        // Generate random clean color if dynamic ticker is input by user
         let hash = 0;
         for (let i = 0; i < ticker.length; i++) hash = ticker.charCodeAt(i) + ((hash << 5) - hash);
         let c = (hash & 0x00FFFFFF).toString(16).toUpperCase();
@@ -151,26 +147,33 @@ function getColor(ticker) {
     return uniqueColors[ticker];
 }
 
-// ============================================================================
-// DATA ENGINE & MATHEMATICAL PIPELINE
-// ============================================================================
+function setStatus(kind, text) {
+    const dot = document.getElementById('statusDot');
+    const label = document.getElementById('statusText');
+    if (dot && label) {
+        dot.className = 'status-dot ' + kind;
+        label.textContent = text;
+    }
+}
+
 async function fetchAssetHistory(ticker) {
     if (historicalCache[ticker]) return historicalCache[ticker];
     try {
         const res = await fetch(`http://localhost:8000/api/history/${ticker}`);
+        if (!res.ok) throw new Error("HTTP error " + res.status);
         const json = await res.json();
         if (json && json.data && json.data.length > 0) {
             historicalCache[ticker] = json.data;
             return json.data;
         }
     } catch (err) {
-        console.warn(`Could not load price vector for ticker target: ${ticker}`, err);
+        console.warn(`Could not load price vector for: ${ticker}`, err);
     }
     return null;
 }
 
 function calculateRrgMatrix(tickerHistory, benchHistory) {
-    // Intersect array sets matching shared trading days
+    if (!tickerHistory || !benchHistory) return null;
     const benchMap = new Map(benchHistory.map(b => [b.Date, b.Close]));
     let matched = [];
     
@@ -182,13 +185,9 @@ function calculateRrgMatrix(tickerHistory, benchHistory) {
 
     if (matched.length < 30) return null;
 
-    // 1. Generate Raw Relative Strength Vector
     let rsValues = matched.map(m => m.close / m.benchClose);
-
-    // 2. Compute standard rolling arithmetic parameters (14-period standard baseline modeling)
     let rsRatio = new Array(rsValues.length).fill(100);
     let rsMomentum = new Array(rsValues.length).fill(100);
-
     const checkPeriod = 14;
 
     for (let i = checkPeriod; i < rsValues.length; i++) {
@@ -196,8 +195,6 @@ function calculateRrgMatrix(tickerHistory, benchHistory) {
         let mean = windowSlice.reduce((a, b) => a + b, 0) / checkPeriod;
         let variance = windowSlice.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / checkPeriod;
         let stdDev = Math.sqrt(variance);
-        
-        // Calculate standard RS-Ratio vector
         rsRatio[i] = stdDev !== 0 ? 100 + ((rsValues[i] - mean) / stdDev) * 2 : 100;
     }
 
@@ -206,77 +203,15 @@ function calculateRrgMatrix(tickerHistory, benchHistory) {
         let mean = windowSlice.reduce((a, b) => a + b, 0) / checkPeriod;
         let variance = windowSlice.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / checkPeriod;
         let stdDev = Math.sqrt(variance);
-
-        // Calculate rate-of-change trend vectors (RS-Momentum)
         let rateOfChange = rsRatio[i] - rsRatio[i - 1];
         rsMomentum[i] = stdDev !== 0 ? 100 + (rateOfChange / stdDev) * 3 : 100;
     }
 
-    // Build finalized RRG coordinate structures
     return matched.map((m, idx) => ({
         date: m.date,
         x: Math.round(rsRatio[idx] * 100) / 100,
         y: Math.round(rsMomentum[idx] * 100) / 100
     })).slice(checkPeriod + 2);
-}
-
-// ============================================================================
-// GRAPH AND VISUAL MANAGEMENT PIPELINE
-// ============================================================================
-async function updateRotationMap() {
-    document.getElementById("canvasSubtitle").textContent = `Tracking Matrix vs ${activeBenchmark} | Scaling Active Window`;
-    
-    const benchData = await fetchAssetHistory(activeBenchmark);
-    if (!benchData) return;
-
-    let chartDatasets = [];
-    let processingPool = trackedTickers.map(async (ticker) => {
-        if (ticker === activeBenchmark) return;
-        const tickData = await fetchAssetHistory(ticker);
-        if (!tickData) return;
-
-        const coords = calculateRrgMatrix(tickData, benchData);
-        if (!coords || coords.length === 0) return;
-
-        // Clip trailing tracking lengths based on interactive input frame limits
-        const tailCoords = coords.slice(-tailLength);
-        if (tailCoords.length === 0) return;
-
-        const baseColor = getColor(ticker);
-        const currentPosition = tailCoords[tailCoords.length - 1];
-
-        // Process line segments to generate standard fading trails backward in time
-        for (let j = 0; j < tailCoords.length - 1; j++) {
-            let opacity = ((j + 1) / tailCoords.length) * 0.45;
-            chartDatasets.push({
-                type: 'line',
-                data: [tailCoords[j], tailCoords[j + 1]],
-                borderColor: baseColor,
-                borderWidth: 1.5,
-                pointRadius: 0,
-                showLine: true,
-                label: `${ticker}_trail_${j}`,
-                opacityAlpha: opacity
-            });
-        }
-
-        // Add prominent focal node at the front edge of the coordinate block
-        chartDatasets.push({
-            type: 'scatter',
-            label: ticker,
-            data: [currentPosition],
-            backgroundColor: baseColor,
-            borderColor: '#fff',
-            borderWidth: 1.5,
-            pointRadius: 6,
-            pointHoverRadius: 8,
-            currentQuad: evaluateQuadrant(currentPosition.x, currentPosition.y)
-        });
-    });
-
-    await Promise.all(processingPool);
-    renderRrgChart(chartDatasets);
-    renderSidebarControls(chartDatasets.filter(d => d.type === 'scatter'));
 }
 
 function evaluateQuadrant(x, y) {
@@ -286,14 +221,78 @@ function evaluateQuadrant(x, y) {
     return { name: "IMPROVING", style: "background:rgba(147,51,234,0.15); color:#9333ea;" };
 }
 
-function renderRrgChart(datasets) {
-    const ctx = document.getElementById("rrgChart").getContext("2d");
+async function updateRotationMap() {
+    // 1. Immediately draw the sidebar on load so UI is never empty!
+    renderSidebarControls([]);
     
-    if (rrgChartInstance) {
-        rrgChartInstance.destroy();
+    const subEl = document.getElementById("canvasSubtitle");
+    if (subEl) subEl.textContent = `Tracking Matrix vs ${activeBenchmark} | Tail: ${tailLength} Weeks`;
+    setStatus('stale', `Fetching data for ${trackedTickers.length} tickers from Python backend...`);
+    
+    const benchData = await fetchAssetHistory(activeBenchmark);
+    if (!benchData) {
+        setStatus('error', '❌ Could not connect to Python backend at http://localhost:8000. Please ensure dangers.py is running locally!');
+        return;
     }
 
-    // Process alpha values inside color strings manually for historical segment visibility loops
+    let chartDatasets = [];
+    let processingPool = trackedTickers.map(async (ticker) => {
+        if (ticker === activeBenchmark) return;
+        try {
+            const tickData = await fetchAssetHistory(ticker);
+            if (!tickData) return;
+
+            const coords = calculateRrgMatrix(tickData, benchData);
+            if (!coords || coords.length === 0) return;
+
+            const tailCoords = coords.slice(-tailLength);
+            if (tailCoords.length === 0) return;
+
+            const baseColor = getColor(ticker);
+            const currentPosition = tailCoords[tailCoords.length - 1];
+
+            for (let j = 0; j < tailCoords.length - 1; j++) {
+                let opacity = ((j + 1) / tailCoords.length) * 0.45;
+                chartDatasets.push({
+                    type: 'line',
+                    data: [tailCoords[j], tailCoords[j + 1]],
+                    borderColor: baseColor,
+                    borderWidth: 1.5,
+                    pointRadius: 0,
+                    showLine: true,
+                    label: `${ticker}_trail_${j}`,
+                    opacityAlpha: opacity
+                });
+            }
+
+            chartDatasets.push({
+                type: 'scatter',
+                label: ticker,
+                data: [currentPosition],
+                backgroundColor: baseColor,
+                borderColor: '#fff',
+                borderWidth: 1.5,
+                pointRadius: 6,
+                pointHoverRadius: 8,
+                currentQuad: evaluateQuadrant(currentPosition.x, currentPosition.y)
+            });
+        } catch (e) {
+            console.error(`Error processing ${ticker}:`, e);
+        }
+    });
+
+    await Promise.all(processingPool);
+    renderRrgChart(chartDatasets);
+    renderSidebarControls(chartDatasets.filter(d => d.type === 'scatter'));
+    setStatus('live', `✅ Connected to Python engine. Loaded ${trackedTickers.length} tickers vs ${activeBenchmark}.`);
+}
+
+function renderRrgChart(datasets) {
+    const canvas = document.getElementById("rrgChart");
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (rrgChartInstance) rrgChartInstance.destroy();
+
     datasets.forEach(ds => {
         if (ds.opacityAlpha !== undefined && ds.borderColor) {
             let color = ds.borderColor;
@@ -309,14 +308,12 @@ function renderRrgChart(datasets) {
     rrgChartInstance = new Chart(ctx, {
         data: { datasets: datasets },
         options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            animation: false,
+            responsive: true, maintainAspectRatio: false, animation: false,
             plugins: {
                 legend: { display: false },
                 tooltip: {
                     callbacks: {
-                        label: function(context) {
+                        label: (context) => {
                             const ticker = context.dataset.label;
                             if (ticker.includes('_trail')) return null;
                             const p = context.raw;
@@ -327,18 +324,12 @@ function renderRrgChart(datasets) {
             },
             scales: {
                 x: {
-                    type: 'linear',
-                    min: 94, max: 106,
-                    grid: { color: '#e1e0d9' },
-                    border: { dash: [4, 4] },
+                    type: 'linear', min: 94, max: 106, grid: { color: '#e1e0d9' }, border: { dash: [4, 4] },
                     ticks: { color: '#898781', font: { size: 10, family: 'JetBrains Mono' } },
                     title: { display: true, text: 'RS-RATIO', color: '#52514e', font: { size: 11, weight: 'bold', family: 'JetBrains Mono' } }
                 },
                 y: {
-                    type: 'linear',
-                    min: 94, max: 106,
-                    grid: { color: '#e1e0d9' },
-                    border: { dash: [4, 4] },
+                    type: 'linear', min: 94, max: 106, grid: { color: '#e1e0d9' }, border: { dash: [4, 4] },
                     ticks: { color: '#898781', font: { size: 10, family: 'JetBrains Mono' } },
                     title: { display: true, text: 'RS-MOMENTUM', color: '#52514e', font: { size: 11, weight: 'bold', family: 'JetBrains Mono' } }
                 }
@@ -347,12 +338,10 @@ function renderRrgChart(datasets) {
         plugins: [{
             id: 'quadrantLabels',
             beforeDraw: (chart) => {
-                const { ctx, chartArea: { top, bottom, left, right, width, height } } = chart;
+                const { ctx, chartArea: { top, bottom, left, right } } = chart;
                 ctx.save();
                 ctx.font = "bold 13px 'JetBrains Mono', monospace";
                 ctx.fillStyle = "rgba(0,0,0,0.2)";
-                
-                // Print explicit matrix labels into corners matching standard quadrant vectors
                 ctx.fillText("LEADING", right - 90, top + 25);
                 ctx.fillText("IMPROVING", left + 20, top + 25);
                 ctx.fillText("LAGGING", left + 20, bottom - 20);
@@ -363,15 +352,13 @@ function renderRrgChart(datasets) {
     });
 }
 
-// ============================================================================
-// SIDEBAR CONTROL MATRIX INTERFACES
-// ============================================================================
 function renderSidebarControls(activeScatterSets) {
-    document.getElementById("tickerCount").textContent = trackedTickers.length;
+    const countEl = document.getElementById("tickerCount");
+    if (countEl) countEl.textContent = trackedTickers.length;
     const container = document.getElementById("tickerList");
+    if (!container) return;
     container.innerHTML = "";
 
-    // Generate indexing dictionary out of scatter arrays
     let positions = {};
     activeScatterSets.forEach(s => { positions[s.label] = s; });
 
@@ -379,11 +366,11 @@ function renderSidebarControls(activeScatterSets) {
         const item = document.createElement("div");
         item.className = "flex justify-between items-center p-2 bg-[#f8f8f6] border border-[#e1e0d9] rounded-md text-xs font-sans hover:bg-[#f1efe8] transition-colors";
         
-        let labelDesc = sectorNames[ticker] || "Custom Instrument";
-        let quadBadgeHtml = `<span style="padding:2px 6px; border-radius:4px; font-size:9px; font-weight:bold; background:#e1e0d9; color:#52514e;">OFFLINE</span>`;
+        let labelDesc = sectorNames[ticker] || "Custom Symbol";
+        let quadBadgeHtml = `<span style="padding:2px 6px; border-radius:4px; font-size:9px; font-weight:bold; background:#e1e0d9; color:#52514e;">LOADING...</span>`;
         let valuesHtml = `<span class="text-[#898781] font-mono">-- / --</span>`;
 
-        if (positions[ticker]) {
+        if (positions[ticker] && positions[ticker].data && positions[ticker].data[0]) {
             const pos = positions[ticker].data[0];
             const quad = positions[ticker].currentQuad;
             quadBadgeHtml = `<span style="padding:2px 6px; border-radius:4px; font-size:9px; font-weight:bold; ${quad.style}">${quad.name}</span>`;
@@ -419,10 +406,7 @@ function removeTrackingVector(ticker) {
     updateRotationMap();
 }
 
-// ============================================================================
-// SYSTEM EVENT INTERFACES & RUNTIME INITIALIZATION
-// ============================================================================
-document.getElementById("benchmarkToggle").addEventListener("click", (e) => {
+document.getElementById("benchmarkToggle")?.addEventListener("click", (e) => {
     const btn = e.target.closest("button");
     if (!btn) return;
     activeBenchmark = btn.dataset.bench;
@@ -430,7 +414,7 @@ document.getElementById("benchmarkToggle").addEventListener("click", (e) => {
     updateRotationMap();
 });
 
-document.getElementById("tailToggle").addEventListener("click", (e) => {
+document.getElementById("tailToggle")?.addEventListener("click", (e) => {
     const btn = e.target.closest("button");
     if (!btn) return;
     tailLength = parseInt(btn.dataset.tail);
@@ -438,9 +422,10 @@ document.getElementById("tailToggle").addEventListener("click", (e) => {
     updateRotationMap();
 });
 
-document.getElementById("addTickerForm").addEventListener("submit", (e) => {
+document.getElementById("addTickerForm")?.addEventListener("submit", (e) => {
     e.preventDefault();
     const input = document.getElementById("tickerInput");
+    if (!input) return;
     const ticker = input.value.trim().toUpperCase();
     if (ticker && !trackedTickers.includes(ticker)) {
         trackedTickers.push(ticker);
@@ -449,7 +434,7 @@ document.getElementById("addTickerForm").addEventListener("submit", (e) => {
     }
 });
 
-// Run execution matrix on system startup
+// Run execution on startup
 updateRotationMap();
 </script>
 </body>
