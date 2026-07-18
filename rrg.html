@@ -161,7 +161,7 @@ async function fetchAssetHistory(ticker) {
 }
 
 // ============================================================================
-// TRUE INSTITUTIONAL RRG MATHEMATICAL ENGINE (OPTUMA / JDK STANDARD)
+// OPTUMA / JDK INSTITUTIONAL RRG MATHEMATICAL ENGINE
 // ============================================================================
 function calculateRrgMatrix(tickerHistory, benchHistory) {
     if (!tickerHistory || !benchHistory) return null;
@@ -176,44 +176,64 @@ function calculateRrgMatrix(tickerHistory, benchHistory) {
         }
     });
 
-    // 1. CRITICAL FIX: Strictly sort chronologically (OLDEST first, NEWEST last)
+    // Enforce strict chronological order (oldest -> newest)
     matched.sort((a, b) => new Date(a.date) - new Date(b.date));
 
     const period = 14;
-    if (matched.length < period * 2) return null;
+    const emaShort = 10;
+    const emaMom = 4;
+    if (matched.length < (period * 2) + emaShort) return null;
 
-    // 2. Calculate raw Relative Strength (RS)
+    // Stage 1: Raw Relative Strength (RS)
     let rawRS = matched.map(m => 100 * (m.close / m.benchClose));
-    
-    let rsRatio = new Array(rawRS.length).fill(100);
-    let rsMomentum = new Array(rawRS.length).fill(100);
 
-    // 3. Stage 1: Calculate JdK RS-Ratio (Z-Score of RS relative to its 14-period SMA)
-    for (let i = period - 1; i < rawRS.length; i++) {
-        let windowSlice = rawRS.slice(i - period + 1, i + 1);
-        let mean = windowSlice.reduce((a, b) => a + b, 0) / period;
-        let variance = windowSlice.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / period;
-        let stdDev = Math.sqrt(variance);
-        // Standard institutional multiplier: 2.5x standard deviation
-        rsRatio[i] = stdDev !== 0 ? 100 + ((rawRS[i] - mean) / stdDev) * 2.5 : 100;
+    // Stage 2: Pre-smooth RS with a 10-period EMA (Optuma standard input filter)
+    let smoothedRS = new Array(rawRS.length).fill(rawRS[0]);
+    const alphaRS = 2 / (emaShort + 1);
+    for (let i = 1; i < rawRS.length; i++) {
+        smoothedRS[i] = (rawRS[i] * alphaRS) + (smoothedRS[i - 1] * (1 - alphaRS));
     }
 
-    // 4. Stage 2: Calculate JdK RS-Momentum (Z-Score of RS-Ratio relative to its own 14-period SMA)
-    // This removes 1-period noise and creates the smooth, elliptical loops seen in Optuma!
-    for (let i = (period * 2) - 2; i < rsRatio.length; i++) {
-        let windowSlice = rsRatio.slice(i - period + 1, i + 1);
-        let mean = windowSlice.reduce((a, b) => a + b, 0) / period;
-        let variance = windowSlice.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / period;
+    // Stage 3: RS-Ratio = Rolling 14-period Z-Score of Smoothed RS
+    let rsRatio = new Array(smoothedRS.length).fill(100);
+    for (let i = period - 1; i < smoothedRS.length; i++) {
+        let slice = smoothedRS.slice(i - period + 1, i + 1);
+        let mean = slice.reduce((a, b) => a + b, 0) / period;
+        let variance = slice.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / period;
         let stdDev = Math.sqrt(variance);
-        rsMomentum[i] = stdDev !== 0 ? 100 + ((rsRatio[i] - mean) / stdDev) * 2.5 : 100;
+        rsRatio[i] = stdDev !== 0 ? 100 + ((smoothedRS[i] - mean) / stdDev) * 2.0 : 100;
     }
 
-    // Return only the valid calculated range where both Ratio and Momentum are stable
+    // Stage 4: Calculate Raw Velocity (1-period rate of change of RS-Ratio)
+    let rawVelocity = new Array(rsRatio.length).fill(0);
+    for (let i = 1; i < rsRatio.length; i++) {
+        rawVelocity[i] = rsRatio[i] - rsRatio[i - 1];
+    }
+
+    // Stage 5: Smooth Velocity with a 4-period EMA to eliminate daily/weekly noise spikes
+    let smoothedVelocity = new Array(rawVelocity.length).fill(0);
+    const alphaVel = 2 / (emaMom + 1);
+    for (let i = 1; i < rawVelocity.length; i++) {
+        smoothedVelocity[i] = (rawVelocity[i] * alphaVel) + (smoothedVelocity[i - 1] * (1 - alphaVel));
+    }
+
+    // Stage 6: RS-Momentum = Rolling 14-period Z-Score of Smoothed Velocity
+    let rsMomentum = new Array(smoothedVelocity.length).fill(100);
+    for (let i = (period * 2) - 1; i < smoothedVelocity.length; i++) {
+        let slice = smoothedVelocity.slice(i - period + 1, i + 1);
+        let mean = slice.reduce((a, b) => a + b, 0) / period;
+        let variance = slice.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / period;
+        let stdDev = Math.sqrt(variance);
+        rsMomentum[i] = stdDev !== 0 ? 100 + ((smoothedVelocity[i] - mean) / stdDev) * 2.5 : 100;
+    }
+
+    // Strip out initialization buildup so only fully stabilized data is charted
+    const warmup = (period * 2) + emaShort;
     return matched.map((m, idx) => ({
         date: m.date,
         x: Math.round(rsRatio[idx] * 100) / 100,
         y: Math.round(rsMomentum[idx] * 100) / 100
-    })).slice((period * 2) - 2);
+    })).slice(warmup);
 }
 
 function evaluateQuadrant(x, y) {
