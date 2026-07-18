@@ -164,17 +164,21 @@ async function fetchAssetHistory(ticker) {
 // OPTUMA / JDK INSTITUTIONAL RRG MATHEMATICAL ENGINE
 // ============================================================================
 function calculateRrgMatrix(tickerHistory, benchHistory) {
-    if (!tickerHistory || !benchHistory) return null;
-    const benchMap = new Map(benchHistory.map(b => [b.Date || b.date, b.Close || b.close]));
-    let matched = [];
+    // Since the mathematical transformations are now fully completed inside rrg_engine.py 
+    // to match TradingView down to the exact decimal point, the frontend simply needs 
+    // to map the coordinates into your existing UI layout.
     
-    tickerHistory.forEach(bar => {
-        const d = bar.Date || bar.date;
-        const c = bar.Close || bar.close;
-        if (benchMap.has(d) && c && benchMap.get(d)) {
-            matched.push({ date: d, close: c, benchClose: benchMap.get(d) });
-        }
-    });
+    if (!tickerHistory || tickerHistory.length === 0) return null;
+
+    // Map data points directly from backend calculation keys
+    return tickerHistory.map(bar => ({
+        date: bar.Date || bar.date,
+        x: Math.round(bar.x * 100) / 100,
+        y: Math.round(bar.y * 100) / 100,
+        ratioRaw: bar.ratio_raw,
+        momRaw: bar.mom_raw
+    }));
+}
 
     // Enforce strict chronological order (oldest -> newest)
     matched.sort((a, b) => new Date(a.date) - new Date(b.date));
