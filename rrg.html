@@ -231,7 +231,7 @@ async function updateRotationMap() {
     
     const benchData = await fetchAssetHistory(activeBenchmark);
     if (!benchData) {
-        setStatus('error', '❌ Could not connect to Python backend at http://localhost:8000. Please ensure dangers.py is running locally!');
+        setStatus('error', '❌ Could not connect to Python backend at http://localhost:8000. Please ensure rrg_engine.py is running locally!');
         return;
     }
 
