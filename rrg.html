@@ -119,7 +119,6 @@
 let activeBenchmark = "SPY";
 let tailLength = 12;
 let rrgChartInstance = null;
-let historicalCache = {};
 
 // Default 12 Sectors
 let trackedTickers = ["XLC", "XLY", "XLP", "XLE", "XLF", "XLV", "XLI", "XLB", "XLRE", "XLK", "XLU", "BTC-USD"];
@@ -157,7 +156,6 @@ function setStatus(kind, text) {
 }
 
 async function fetchAssetHistory(ticker) {
-    // Explicitly use 127.0.0.1 to prevent macOS browsers from dropping packets on IPv6 localhost
     const primaryUrl = `http://127.0.0.1:8000/api/history/${ticker}`;
     const fallbackUrl = `http://localhost:8000/api/history/${ticker}`;
     
@@ -165,9 +163,7 @@ async function fetchAssetHistory(ticker) {
         method: 'GET',
         mode: 'cors',
         cache: 'no-cache',
-        headers: {
-            'Accept': 'application/json'
-        }
+        headers: { 'Accept': 'application/json' }
     };
 
     try {
@@ -175,7 +171,6 @@ async function fetchAssetHistory(ticker) {
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         return await response.json();
     } catch (primaryError) {
-        console.warn(`Primary IPv4 fetch failed for ${ticker}, attempting fallback...`, primaryError);
         try {
             const fallbackResponse = await fetch(fallbackUrl, fetchOptions);
             if (!fallbackResponse.ok) throw new Error(`HTTP error! status: ${fallbackResponse.status}`);
@@ -189,12 +184,14 @@ async function fetchAssetHistory(ticker) {
 
 function calculateRrgMatrix(tickerHistory, benchHistory) {
     if (!tickerHistory || !benchHistory) return null;
-    const benchMap = new Map(benchHistory.map(b => [b.Date, b.Close]));
+    const benchMap = new Map(benchHistory.map(b => [b.Date || b.date, b.Close || b.close]));
     let matched = [];
     
     tickerHistory.forEach(bar => {
-        if (benchMap.has(bar.Date)) {
-            matched.push({ date: bar.Date, close: bar.Close, benchClose: benchMap.get(bar.Date) });
+        const d = bar.Date || bar.date;
+        const c = bar.Close || bar.close;
+        if (benchMap.has(d)) {
+            matched.push({ date: d, close: c, benchClose: benchMap.get(d) });
         }
     });
 
@@ -237,7 +234,6 @@ function evaluateQuadrant(x, y) {
 }
 
 async function updateRotationMap() {
-    // 1. Immediately draw the sidebar on load so UI is never empty!
     renderSidebarControls([]);
     
     const subEl = document.getElementById("canvasSubtitle");
@@ -285,7 +281,7 @@ async function updateRotationMap() {
                 label: ticker,
                 data: [currentPosition],
                 backgroundColor: baseColor,
-                borderColor: '#fff',
+                borderColor: baseColor,
                 borderWidth: 1.5,
                 pointRadius: 6,
                 pointHoverRadius: 8,
@@ -302,29 +298,21 @@ async function updateRotationMap() {
     setStatus('live', `✅ Connected to Python engine. Loaded ${trackedTickers.length} tickers vs ${activeBenchmark}.`);
 }
 
-function renderRrgChart(datasets) {
-    const canvas = document.getElementById("rrgChart");
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (rrgChartInstance) rrgChartInstance.destroy();
-    // 1. Define the inline plugin to draw ticker names next to scatter dots
+// Inline Plugin to Draw Ticker Names Next to Dots
 const rrgLabelPlugin = {
     id: 'rrgLabelPlugin',
     afterDatasetsDraw(chart) {
         const { ctx } = chart;
         ctx.save();
-        ctx.font = '600 12px Inter, sans-serif';
+        ctx.font = 'bold 11px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
 
         chart.data.datasets.forEach((dataset, i) => {
-            // Only label the current active dot (scatter type), not the trail lines
             if (dataset.type === 'scatter' && chart.isDatasetVisible(i)) {
                 const meta = chart.getDatasetMeta(i);
                 const point = meta.data[0];
                 if (point) {
-                    // Match text color to the dot color for seamless visual grouping
-                    ctx.fillStyle = dataset.borderColor || '#cbd5e1';
-                    // Draw text 10 pixels to the right of the dot center
-                    ctx.fillText(dataset.label, point.x + 10, point.y + 4);
+                    ctx.fillStyle = dataset.borderColor || '#0b0b0b';
+                    ctx.fillText(dataset.label, point.x + 8, point.y + 4);
                 }
             }
         });
@@ -332,22 +320,11 @@ const rrgLabelPlugin = {
     }
 };
 
-// 2. Register the plugin inside your Chart creation block
-function renderRrgChart(chartDatasets) {
-    const ctx = document.getElementById('rrgChart').getContext('2d');
-    
-    // Destroy existing chart instance if re-rendering
-    if (window.myRrgChart) window.myRrgChart.destroy();
-
-    window.myRrgChart = new Chart(ctx, {
-        type: 'scatter',
-        data: { datasets: chartDatasets },
-        options: {
-            // ... your existing scales and options ...
-        },
-        plugins: [rrgLabelPlugin] // <-- INJECT PLUGIN HERE
-    });
-}
+function renderRrgChart(datasets) {
+    const canvas = document.getElementById("rrgChart");
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (rrgChartInstance) rrgChartInstance.destroy();
 
     datasets.forEach(ds => {
         if (ds.opacityAlpha !== undefined && ds.borderColor) {
@@ -391,77 +368,28 @@ function renderRrgChart(chartDatasets) {
                 }
             }
         },
-        plugins: [{
-            id: 'quadrantLabels',
-            beforeDraw: (chart) => {
-                const { ctx, chartArea: { top, bottom, left, right } } = chart;
-                ctx.save();
-                ctx.font = "bold 13px 'JetBrains Mono', monospace";
-                ctx.fillStyle = "rgba(0,0,0,0.2)";
-                ctx.fillText("LEADING", right - 90, top + 25);
-                ctx.fillText("IMPROVING", left + 20, top + 25);
-                ctx.fillText("LAGGING", left + 20, bottom - 20);
-                ctx.fillText("WEAKENING", right - 90, bottom - 20);
-                ctx.restore();
+        plugins: [
+            rrgLabelPlugin, // <-- Fully injected dot naming plugin!
+            {
+                id: 'quadrantLabels',
+                beforeDraw: (chart) => {
+                    const { ctx, chartArea: { top, bottom, left, right } } = chart;
+                    ctx.save();
+                    ctx.font = "bold 13px 'JetBrains Mono', monospace";
+                    ctx.fillStyle = "rgba(0,0,0,0.2)";
+                    ctx.fillText("LEADING", right - 90, top + 25);
+                    ctx.fillText("IMPROVING", left + 20, top + 25);
+                    ctx.fillText("LAGGING", left + 20, bottom - 20);
+                    ctx.fillText("WEAKENING", right - 90, bottom - 20);
+                    ctx.restore();
+                }
             }
-        }]
+        ]
     });
 }
-function renderSidebarControls(scatterDatasets) {
-    const container = document.getElementById('sectorList');
-    if (!container) return;
 
-    // Define the exact sort priority requested: Leading -> Improving -> Weakening -> Lagging
-    const statusPriority = {
-        'LEADING': 1,
-        'IMPROVING': 2,
-        'WEAKENING': 3,
-        'LAGGING': 4
-    };
-
-    // Sort the dataset array before generating the UI cards
-    const sortedData = [...scatterDatasets].sort((a, b) => {
-        const priorityA = statusPriority[a.status] || 99;
-        const priorityB = statusPriority[b.status] || 99;
-        
-        // If they share the same status, sort alphabetically by ticker name
-        if (priorityA === priorityB) {
-            return a.label.localeCompare(b.label);
-        }
-        return priorityA - priorityB;
-    });
-
-    // Clear existing list and render sorted cards
-    container.innerHTML = '';
-    
-    sortedData.forEach(item => {
-        const ticker = item.label;
-        const rsRatio = item.data[0].x.toFixed(2);
-        const rsMom = item.data[0].y.toFixed(2);
-        const status = item.status || 'UNKNOWN';
-        const badgeColor = getStatusBadgeColor(status); // Your existing color helper
-
-        const cardHtml = `
-            <div class="flex items-center justify-between p-2.5 rounded-xl border border-slate-700/50 bg-slate-800/40 hover:bg-slate-800 transition-all">
-                <div class="flex items-center gap-x-3">
-                    <span class="w-2 h-2 rounded-full" style="background-color: ${item.borderColor};"></span>
-                    <div>
-                        <div class="font-bold text-sm text-slate-200">${ticker}</div>
-                        <div class="text-[11px] text-slate-400">${item.name || 'Sector ETF'}</div>
-                    </div>
-                </div>
-                <div class="text-right">
-                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase ${badgeColor}">${status}</span>
-                    <div class="text-xs font-mono text-slate-300 mt-1">${rsRatio} / ${rsMom}</div>
-                </div>
-            </div>
-        `;
-        container.insertAdjacentHTML('beforeend', cardHtml);
-    });
-}
+// Single, Cleanly Merged Sidebar Rendering & Sorting Function
 function renderSidebarControls(activeScatterSets) {
-
-    
     const countEl = document.getElementById("tickerCount");
     if (countEl) countEl.textContent = trackedTickers.length;
     const container = document.getElementById("tickerList");
@@ -471,7 +399,21 @@ function renderSidebarControls(activeScatterSets) {
     let positions = {};
     activeScatterSets.forEach(s => { positions[s.label] = s; });
 
-    trackedTickers.forEach(ticker => {
+    // Define Sort Order Priority: Leading -> Improving -> Weakening -> Lagging
+    const statusPriority = { 'LEADING': 1, 'IMPROVING': 2, 'WEAKENING': 3, 'LAGGING': 4 };
+
+    // Create a sorted copy of trackedTickers so the UI aligns with quadrant status
+    const sortedTickers = [...trackedTickers].sort((tickerA, tickerB) => {
+        const quadA = positions[tickerA]?.currentQuad?.name || 'Z_UNKNOWN';
+        const quadB = positions[tickerB]?.currentQuad?.name || 'Z_UNKNOWN';
+        const priorityA = statusPriority[quadA] || 99;
+        const priorityB = statusPriority[quadB] || 99;
+
+        if (priorityA === priorityB) return tickerA.localeCompare(tickerB);
+        return priorityA - priorityB;
+    });
+
+    sortedTickers.forEach(ticker => {
         const item = document.createElement("div");
         item.className = "flex justify-between items-center p-2 bg-[#f8f8f6] border border-[#e1e0d9] rounded-md text-xs font-sans hover:bg-[#f1efe8] transition-colors";
         
