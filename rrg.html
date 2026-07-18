@@ -34,10 +34,10 @@
         <div>
             <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .18em; color: #1baf7a; text-transform: uppercase;">Stockbee Engine</div>
             <h1 class="text-2xl font-extrabold tracking-tight mt-0.5">Sector Rotation Map (RRG)</h1>
-            <p class="text-xs text-[#52514e] mt-1 font-mono">Relative Strength Analysis vs Core Market Metrics</p>
+            <p class="text-xs text-[#52514e] mt-1 font-mono">Institutional JdK Z-Score Analysis vs SPY</p>
         </div>
 
-        <!-- Fixed Configuration Badges (Simplified UI) -->
+        <!-- Fixed Configuration Badges -->
         <div class="flex items-center gap-3 text-xs font-mono">
             <span class="px-3 py-1.5 bg-white border border-[#e1e0d9] rounded-md font-bold text-[#2a78d6] shadow-sm">BENCHMARK: SPY</span>
             <span class="px-3 py-1.5 bg-white border border-[#e1e0d9] rounded-md font-bold text-[#52514e] shadow-sm">TAIL: 6 WEEKS</span>
@@ -95,7 +95,6 @@
     </div>
 
 <script>
-// Hardcoded core constants for simplified execution
 const activeBenchmark = "SPY";
 const tailLength = 6;
 let rrgChartInstance = null;
@@ -161,6 +160,9 @@ async function fetchAssetHistory(ticker) {
     }
 }
 
+// ============================================================================
+// TRUE INSTITUTIONAL RRG MATHEMATICAL ENGINE (OPTUMA / JDK STANDARD)
+// ============================================================================
 function calculateRrgMatrix(tickerHistory, benchHistory) {
     if (!tickerHistory || !benchHistory) return null;
     const benchMap = new Map(benchHistory.map(b => [b.Date || b.date, b.Close || b.close]));
@@ -169,51 +171,49 @@ function calculateRrgMatrix(tickerHistory, benchHistory) {
     tickerHistory.forEach(bar => {
         const d = bar.Date || bar.date;
         const c = bar.Close || bar.close;
-        if (benchMap.has(d)) {
+        if (benchMap.has(d) && c && benchMap.get(d)) {
             matched.push({ date: d, close: c, benchClose: benchMap.get(d) });
         }
     });
 
-    if (matched.length < 35) return null;
+    // 1. CRITICAL FIX: Strictly sort chronologically (OLDEST first, NEWEST last)
+    matched.sort((a, b) => new Date(a.date) - new Date(b.date));
 
-    // 1. Calculate raw Relative Strength (RS)
-    let rawRS = matched.map(m => m.close / m.benchClose);
-    
-    // 2. Smooth RS with a 14-period EMA to remove market noise
     const period = 14;
-    const alpha = 2 / (period + 1);
-    let smoothedRS = new Array(rawRS.length).fill(rawRS[0]);
-    for (let i = 1; i < rawRS.length; i++) {
-        smoothedRS[i] = (rawRS[i] * alpha) + (smoothedRS[i - 1] * (1 - alpha));
-    }
+    if (matched.length < period * 2) return null;
 
-    let rsRatio = new Array(smoothedRS.length).fill(100);
-    let rsMomentum = new Array(smoothedRS.length).fill(100);
+    // 2. Calculate raw Relative Strength (RS)
+    let rawRS = matched.map(m => 100 * (m.close / m.benchClose));
+    
+    let rsRatio = new Array(rawRS.length).fill(100);
+    let rsMomentum = new Array(rawRS.length).fill(100);
 
-    // 3. Calculate RS-Ratio using rolling Z-Score (INCLUDING current trading week)
-    for (let i = period - 1; i < smoothedRS.length; i++) {
-        let windowSlice = smoothedRS.slice(i - period + 1, i + 1);
+    // 3. Stage 1: Calculate JdK RS-Ratio (Z-Score of RS relative to its 14-period SMA)
+    for (let i = period - 1; i < rawRS.length; i++) {
+        let windowSlice = rawRS.slice(i - period + 1, i + 1);
         let mean = windowSlice.reduce((a, b) => a + b, 0) / period;
         let variance = windowSlice.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / period;
         let stdDev = Math.sqrt(variance);
-        rsRatio[i] = stdDev !== 0 ? 100 + ((smoothedRS[i] - mean) / stdDev) * 5 : 100;
+        // Standard institutional multiplier: 2.5x standard deviation
+        rsRatio[i] = stdDev !== 0 ? 100 + ((rawRS[i] - mean) / stdDev) * 2.5 : 100;
     }
 
-    // 4. Calculate RS-Momentum as standardized Rate of Change
-    for (let i = (period * 2) - 1; i < rsRatio.length; i++) {
+    // 4. Stage 2: Calculate JdK RS-Momentum (Z-Score of RS-Ratio relative to its own 14-period SMA)
+    // This removes 1-period noise and creates the smooth, elliptical loops seen in Optuma!
+    for (let i = (period * 2) - 2; i < rsRatio.length; i++) {
         let windowSlice = rsRatio.slice(i - period + 1, i + 1);
         let mean = windowSlice.reduce((a, b) => a + b, 0) / period;
         let variance = windowSlice.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / period;
         let stdDev = Math.sqrt(variance);
-        let rateOfChange = rsRatio[i] - rsRatio[i - 1];
-        rsMomentum[i] = stdDev !== 0 ? 100 + (rateOfChange / stdDev) * 10 : 100;
+        rsMomentum[i] = stdDev !== 0 ? 100 + ((rsRatio[i] - mean) / stdDev) * 2.5 : 100;
     }
 
+    // Return only the valid calculated range where both Ratio and Momentum are stable
     return matched.map((m, idx) => ({
         date: m.date,
         x: Math.round(rsRatio[idx] * 100) / 100,
         y: Math.round(rsMomentum[idx] * 100) / 100
-    })).slice((period * 2) - 1);
+    })).slice((period * 2) - 2);
 }
 
 function evaluateQuadrant(x, y) {
@@ -314,8 +314,7 @@ function renderRrgChart(datasets) {
     if (rrgChartInstance) rrgChartInstance.destroy();
 
     // 1. DYNAMIC SYMMETRIC AUTO-SCALING LOGIC
-    // Scan all coordinates to find the absolute maximum distance from the 100 centerline
-    let maxDeviation = 6; // Guaranteed minimum bounds of 94 to 106
+    let maxDeviation = 5; // Guaranteed minimum bounds of 95 to 105
     datasets.forEach(ds => {
         if (ds.data && ds.data.length > 0) {
             ds.data.forEach(pt => {
