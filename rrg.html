@@ -307,6 +307,47 @@ function renderRrgChart(datasets) {
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (rrgChartInstance) rrgChartInstance.destroy();
+    // 1. Define the inline plugin to draw ticker names next to scatter dots
+const rrgLabelPlugin = {
+    id: 'rrgLabelPlugin',
+    afterDatasetsDraw(chart) {
+        const { ctx } = chart;
+        ctx.save();
+        ctx.font = '600 12px Inter, sans-serif';
+
+        chart.data.datasets.forEach((dataset, i) => {
+            // Only label the current active dot (scatter type), not the trail lines
+            if (dataset.type === 'scatter' && chart.isDatasetVisible(i)) {
+                const meta = chart.getDatasetMeta(i);
+                const point = meta.data[0];
+                if (point) {
+                    // Match text color to the dot color for seamless visual grouping
+                    ctx.fillStyle = dataset.borderColor || '#cbd5e1';
+                    // Draw text 10 pixels to the right of the dot center
+                    ctx.fillText(dataset.label, point.x + 10, point.y + 4);
+                }
+            }
+        });
+        ctx.restore();
+    }
+};
+
+// 2. Register the plugin inside your Chart creation block
+function renderRrgChart(chartDatasets) {
+    const ctx = document.getElementById('rrgChart').getContext('2d');
+    
+    // Destroy existing chart instance if re-rendering
+    if (window.myRrgChart) window.myRrgChart.destroy();
+
+    window.myRrgChart = new Chart(ctx, {
+        type: 'scatter',
+        data: { datasets: chartDatasets },
+        options: {
+            // ... your existing scales and options ...
+        },
+        plugins: [rrgLabelPlugin] // <-- INJECT PLUGIN HERE
+    });
+}
 
     datasets.forEach(ds => {
         if (ds.opacityAlpha !== undefined && ds.borderColor) {
@@ -366,8 +407,61 @@ function renderRrgChart(datasets) {
         }]
     });
 }
+function renderSidebarControls(scatterDatasets) {
+    const container = document.getElementById('sectorList');
+    if (!container) return;
 
+    // Define the exact sort priority requested: Leading -> Improving -> Weakening -> Lagging
+    const statusPriority = {
+        'LEADING': 1,
+        'IMPROVING': 2,
+        'WEAKENING': 3,
+        'LAGGING': 4
+    };
+
+    // Sort the dataset array before generating the UI cards
+    const sortedData = [...scatterDatasets].sort((a, b) => {
+        const priorityA = statusPriority[a.status] || 99;
+        const priorityB = statusPriority[b.status] || 99;
+        
+        // If they share the same status, sort alphabetically by ticker name
+        if (priorityA === priorityB) {
+            return a.label.localeCompare(b.label);
+        }
+        return priorityA - priorityB;
+    });
+
+    // Clear existing list and render sorted cards
+    container.innerHTML = '';
+    
+    sortedData.forEach(item => {
+        const ticker = item.label;
+        const rsRatio = item.data[0].x.toFixed(2);
+        const rsMom = item.data[0].y.toFixed(2);
+        const status = item.status || 'UNKNOWN';
+        const badgeColor = getStatusBadgeColor(status); // Your existing color helper
+
+        const cardHtml = `
+            <div class="flex items-center justify-between p-2.5 rounded-xl border border-slate-700/50 bg-slate-800/40 hover:bg-slate-800 transition-all">
+                <div class="flex items-center gap-x-3">
+                    <span class="w-2 h-2 rounded-full" style="background-color: ${item.borderColor};"></span>
+                    <div>
+                        <div class="font-bold text-sm text-slate-200">${ticker}</div>
+                        <div class="text-[11px] text-slate-400">${item.name || 'Sector ETF'}</div>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase ${badgeColor}">${status}</span>
+                    <div class="text-xs font-mono text-slate-300 mt-1">${rsRatio} / ${rsMom}</div>
+                </div>
+            </div>
+        `;
+        container.insertAdjacentHTML('beforeend', cardHtml);
+    });
+}
 function renderSidebarControls(activeScatterSets) {
+
+    
     const countEl = document.getElementById("tickerCount");
     if (countEl) countEl.textContent = trackedTickers.length;
     const container = document.getElementById("tickerList");
