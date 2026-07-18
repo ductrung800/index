@@ -97,7 +97,6 @@
 <!-- S&P + Nasdaq + T2108 combined panel -->
 <div class="panel">
   <div class="controls">
-   <!-- Update the Index Toggle buttons -->
     <div class="control-group">
       <span class="control-group-label">Index</span>
       <div class="btn-toggle" id="indexToggle">
@@ -106,7 +105,7 @@
         <button data-index="both">Both</button>
       </div>
     </div>
-     
+      
     <div class="control-group">
       <span class="control-group-label">Price display</span>
       <div class="btn-toggle" id="priceTypeToggle">
@@ -122,7 +121,7 @@
     </div>
   </div>
   <div class="legend" id="mainLegend">
-    <span><span class="swatch line" style="border-color:#2a78d6;background:#2a78d6"></span>S&amp;P 500</span>
+    <span><span class="swatch line" style="border-color:#2a78d6;background:#2a78d6"></span>SPY</span>
     <span><span class="swatch line" style="border-color:#eda100;background:#eda100"></span>T2108</span>
     <span><span class="swatch dash" style="border-color:#e34948"></span>Oversold (20)</span>
     <span id="smaLegend"></span>
@@ -191,6 +190,7 @@ const CSV_URLS = [
   `https://docs.google.com/spreadsheets/d/${SHEET_ID}/pub?output=csv`,
   `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`
 ];
+
 // Global storage for direct ETF data
 let liveEtfData = { SPY: {}, QQQ: {} };
 
@@ -204,7 +204,6 @@ async function fetchDirectEtfHistory() {
     const spyJson = await spyRes.json();
     const qqqJson = await qqqRes.json();
     
-    // Map array to dictionary by Date (e.g., "2026-07-18": { Open, High, Low, Close })
     if (spyJson.data) {
       spyJson.data.forEach(bar => { liveEtfData.SPY[bar.Date] = bar; });
     }
@@ -214,15 +213,16 @@ async function fetchDirectEtfHistory() {
     
     console.log("✅ Successfully loaded direct ETF price feeds from Python!");
     mergeEtfDataIntoDashboard();
+    renderAll();
   } catch (err) {
     console.warn("⚠️ Could not fetch direct ETF history. Falling back to sheet numbers:", err);
   }
 }
- function mergeEtfDataIntoDashboard() {
+
+function mergeEtfDataIntoDashboard() {
   if (!currentData || currentData.length === 0) return;
   
   currentData.forEach(row => {
-    // Convert Google Sheet date (e.g., "7/18/2026") to YYYY-MM-DD format
     const parts = row.date.split('/');
     if (parts.length === 3) {
       const year = parts[2];
@@ -230,7 +230,6 @@ async function fetchDirectEtfHistory() {
       const day = parts[1].padStart(2, '0');
       const isoDate = `${year}-${month}-${day}`;
       
-      // Inject true SPY data
       if (liveEtfData.SPY[isoDate]) {
         const spyBar = liveEtfData.SPY[isoDate];
         row.sp = Math.round(spyBar.Close * 100) / 100;
@@ -242,7 +241,6 @@ async function fetchDirectEtfHistory() {
         };
       }
       
-      // Inject true QQQ data
       if (liveEtfData.QQQ[isoDate]) {
         const qqqBar = liveEtfData.QQQ[isoDate];
         row.nasdaq = Math.round(qqqBar.Close * 100) / 100;
@@ -255,10 +253,8 @@ async function fetchDirectEtfHistory() {
       }
     }
   });
-  
-  // Refresh the chart with exact prices!
-  refreshSpChart();
 }
+
 let chartsBuilt = false;
 let spChart = null;
 let ratioChart = null;
@@ -275,7 +271,6 @@ function parseRows(rawRows) {
     if (!row || !row[0] || !row[0].trim() || !/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(row[0].trim())) continue;
     const num = (v) => v === undefined || v === '' ? null : parseFloat(String(v).replace(/,/g, ''));
     
-    // Read raw numbers cleanly as initial fallbacks (to be overwritten by the direct Python ETF feed)
     const spVal = num(row[15]);
     const nasdaqVal = num(row[16]);
 
@@ -289,8 +284,8 @@ function parseRows(rawRows) {
       up13_34: num(row[11]), down13_34: num(row[12]),
       universe: num(row[13]),
       t2108: num(row[14]),
-      sp: spVal,         // Initial fallback before Python ETF merge
-      nasdaq: nasdaqVal  // Initial fallback before Python ETF merge
+      sp: spVal,
+      nasdaq: nasdaqVal
     });
   }
   out.reverse();
@@ -342,12 +337,13 @@ let currentData = [];
 function ensureNasdaqData() {
   currentData.forEach(d => {
     if (d.nasdaq == null && d.sp != null) {
-      d.nasdaq = Math.round(d.sp * 3.15 * 100) / 100;
+      // Use ETF ratio if sp looks like SPY (<1500), otherwise use index ratio
+      const multiplier = d.sp < 1500 ? 0.9354 : 3.15;
+      d.nasdaq = Math.round(d.sp * multiplier * 100) / 100;
     }
   });
 }
 
-// Change labels in updateMainLegend()
 function updateMainLegend() {
   const legend = document.getElementById('mainLegend');
   if (!legend) return;
@@ -364,7 +360,6 @@ function updateMainLegend() {
   updateSmaLegend();
 }
 
-// Change chart scaling parameters inside refreshSpChart()
 function refreshSpChart() {
   const { datasets } = buildSpDatasets();
   spChart.data.labels = currentData.map(d => d.date);
@@ -402,38 +397,42 @@ function buildSpDatasets() {
 
   const datasets = [];
 
-  // S&P 500 Dataset
+  // SPY Dataset
   if (indexMode === 'sp' || indexMode === 'both') {
     const spCandleData = currentData.map((d, i) => {
+      if (d.spyOhlc) return [d.spyOhlc.o, d.spyOhlc.c];
       const open = i > 0 ? currentData[i - 1].sp : d.sp;
       return [open, d.sp];
     });
     const spColors = currentData.map((d, i) => {
+      if (d.spyOhlc) return d.spyOhlc.c >= d.spyOhlc.o ? '#1baf7a' : '#e34948';
       const prev = i > 0 ? currentData[i - 1].sp : d.sp;
       return d.sp >= prev ? '#1baf7a' : '#e34948';
     });
 
     datasets.push(priceType === 'line'
-      ? { type: 'line', label: 'S&P 500', data: spClose, borderColor: '#2a78d6', backgroundColor: 'rgba(42,120,214,0.08)', fill: indexMode === 'sp', pointRadius: 0, borderWidth: 2, tension: 0.15, yAxisID: 'y' }
-      : { type: 'bar', label: 'S&P 500', data: spCandleData, backgroundColor: spColors, borderColor: spColors, borderWidth: 1, borderRadius: 2, barPercentage: 0.7, categoryPercentage: 0.9, yAxisID: 'y' }
+      ? { type: 'line', label: 'SPY', data: spClose, borderColor: '#2a78d6', backgroundColor: 'rgba(42,120,214,0.08)', fill: indexMode === 'sp', pointRadius: 0, borderWidth: 2, tension: 0.15, yAxisID: 'y' }
+      : { type: 'bar', label: 'SPY', data: spCandleData, backgroundColor: spColors, borderColor: spColors, borderWidth: 1, borderRadius: 2, barPercentage: 0.7, categoryPercentage: 0.9, yAxisID: 'y' }
     );
   }
 
-  // Nasdaq Dataset
+  // QQQ Dataset
   if (indexMode === 'nasdaq' || indexMode === 'both') {
     const targetAxis = indexMode === 'both' ? 'y2' : 'y';
     const nasdaqCandleData = currentData.map((d, i) => {
+      if (d.qqqOhlc) return [d.qqqOhlc.o, d.qqqOhlc.c];
       const open = i > 0 ? currentData[i - 1].nasdaq : d.nasdaq;
       return [open, d.nasdaq];
     });
     const nasdaqColors = currentData.map((d, i) => {
+      if (d.qqqOhlc) return d.qqqOhlc.c >= d.qqqOhlc.o ? '#1baf7a' : '#e34948';
       const prev = i > 0 ? currentData[i - 1].nasdaq : d.nasdaq;
       return d.nasdaq >= prev ? '#1baf7a' : '#e34948';
     });
 
     datasets.push(priceType === 'line'
-      ? { type: 'line', label: 'Nasdaq', data: nasdaqClose, borderColor: '#9333ea', backgroundColor: 'rgba(147,51,234,0.08)', fill: indexMode === 'nasdaq', pointRadius: 0, borderWidth: 2, tension: 0.15, yAxisID: targetAxis }
-      : { type: 'bar', label: 'Nasdaq', data: nasdaqCandleData, backgroundColor: nasdaqColors, borderColor: nasdaqColors, borderWidth: 1, borderRadius: 2, barPercentage: 0.7, categoryPercentage: 0.9, yAxisID: targetAxis }
+      ? { type: 'line', label: 'QQQ', data: nasdaqClose, borderColor: '#9333ea', backgroundColor: 'rgba(147,51,234,0.08)', fill: indexMode === 'nasdaq', pointRadius: 0, borderWidth: 2, tension: 0.15, yAxisID: targetAxis }
+      : { type: 'bar', label: 'QQQ', data: nasdaqCandleData, backgroundColor: nasdaqColors, borderColor: nasdaqColors, borderWidth: 1, borderRadius: 2, barPercentage: 0.7, categoryPercentage: 0.9, yAxisID: targetAxis }
     );
   }
 
@@ -448,8 +447,6 @@ function buildSpDatasets() {
 
   return { datasets, has200: sma200Data.some(v => v !== null) };
 }
-
-
 
 function buildOrUpdateCharts() {
   ensureNasdaqData();
@@ -466,9 +463,9 @@ function buildOrUpdateCharts() {
         },
         scales: {
           x: commonX,
-          y: { position: 'left', grid: { color: '#e1e0d9' }, ticks: { color: '#898781', font: { size: 11 } }, title: { display: true, text: 'S&P index', color: '#2a78d6', font: { size: 11 } } },
+          y: { position: 'left', grid: { color: '#e1e0d9' }, ticks: { color: '#898781', font: { size: 11 } }, title: { display: true, text: 'SPY Price', color: '#2a78d6', font: { size: 11 } } },
           y1: { position: 'right', min: 0, max: 100, grid: { display: false }, ticks: { color: '#eda100', font: { size: 11 } }, title: { display: true, text: 'T2108 (%)', color: '#eda100', font: { size: 11 } } },
-          y2: { position: 'right', display: false, grid: { display: false }, ticks: { color: '#9333ea', font: { size: 11 } }, title: { display: true, text: 'Nasdaq index', color: '#9333ea', font: { size: 11 } } }
+          y2: { position: 'right', display: false, grid: { display: false }, ticks: { color: '#9333ea', font: { size: 11 } }, title: { display: true, text: 'QQQ Price', color: '#9333ea', font: { size: 11 } } }
         }
       }
     });
@@ -498,49 +495,12 @@ function buildOrUpdateCharts() {
   }
 }
 
-function renderSpyDangerSignals(signals) {
-  const count = signals && Array.isArray(signals) ? signals.length : 0;
-  const countEl = document.getElementById("spyDangerCount");
-  const badgeEl = document.getElementById("spyDangerBadge");
-  const listEl = document.getElementById("spyDangerList");
-
-  if (!countEl || !badgeEl || !listEl) return;
-
-  countEl.textContent = count;
-
-  if (count >= 3) {
-    badgeEl.textContent = `${count} Active — Negative`;
-    badgeEl.style.background = "rgba(227,73,72,.15)";
-    badgeEl.style.color = "#e34948";
-  } else if (count >= 1) {
-    badgeEl.textContent = `${count} Active — Caution`;
-    badgeEl.style.background = "rgba(237,161,0,.15)";
-    badgeEl.style.color = "#eda100";
-  } else {
-    badgeEl.textContent = "0 Active — Healthy";
-    badgeEl.style.background = "rgba(27,175,122,.15)";
-    badgeEl.style.color = "#1baf7a";
-  }
-
-  if (count === 0) {
-    listEl.innerHTML = `<li style="color:#898781; font-style:italic; padding:4px 0;">No active danger signals. Price action is constructive.</li>`;
-    return;
-  }
-
-  listEl.innerHTML = signals.map(sig => `
-    <li style="display:flex; justify-content:space-between; align-items:center; background:#f8f8f6; padding:8px 12px; border:1px solid #e1e0d9; border-radius:6px; color:#0b0b0b;">
-      <span>${sig}</span>
-      <span style="width:7px; height:7px; border-radius:50%; background:#e34948; box-shadow:0 0 8px #e34948; flex-shrink:0; margin-left:12px;"></span>
-    </li>
-  `).join("");
-}
-
 function renderSummary() {
   const n = currentData.length;
   const today = currentData[n - 1];
   const prior = currentData[n - 2];
 
-  document.getElementById('asOf').textContent = 'As of ' + today.date + ' (S&P 500: ' + today.sp.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}) + ')';
+  document.getElementById('asOf').textContent = 'As of ' + today.date + ' (SPY: ' + today.sp.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}) + ')';
 
   const shortTermThrust = today.up4 > 400 ? 'bullish thrust' : (today.down4 > 400 ? 'bearish thrust' : 'no thrust');
   const shortTermTone = today.up4 > today.down4 ? 'pos' : 'neg';
@@ -591,7 +551,7 @@ function renderSummary() {
     <p><strong>Breadth ratios:</strong> the 5-day ratio sits at ${today.r5.toFixed(2)} and the 10-day at ${today.r10.toFixed(2)}. ${ratioTone === 'pos' ? 'Both are above 1.0, meaning advancing volume has outweighed declining volume over the past one to two weeks — conditions favor long swing setups.' : ratioTone === 'neg' ? 'Both are below 1.0, meaning declining stocks have outweighed advancers over the past one to two weeks. The Stockbee playbook calls for defensiveness here: avoid or downsize new long swing trades until the 10-day ratio reclaims 1.0.' : 'They disagree on direction (one above 1.0, one below), a mixed read that usually argues for smaller size and tighter risk control rather than a clear directional stance.'}</p>
     <p><strong>Structural trend:</strong> ${today.up25q.toLocaleString()} stocks are up 25%+ over the quarter versus ${today.down25q.toLocaleString()} down 25%+, ${quarterlyBull ? 'keeping the intermediate-term structure bullish even while the short-term ratios chop' : 'putting the intermediate-term structure on the bearish side'}.</p>
     <p><strong>T2108:</strong> at ${today.t2108.toFixed(2)}%, the percent of stocks above their 40-day moving average is in ${t2108Tone === 'neu' ? 'neutral territory — neither an oversold buy zone (below 20) nor an overbought warning zone (above 80)' : t2108Tone === 'pos' ? 'the oversold zone (below 20), the kind of washed-out reading that has historically preceded sharp bounces' : 'the overbought zone (above 80), where the Stockbee approach is to tighten stops and hold off on new long entries'}.</p>
-    <p>S&amp;P 500 closed at ${today.sp.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}${prior ? ', ' + (spChange >= 0 ? 'up' : 'down') + ' ' + Math.abs(spChange) + '% from the prior session' : ''}. <strong>Bottom line:</strong> ${overallTone === 'bull' ? 'both the short-term ratios and the longer structural breadth are aligned bullish — this favors staying aggressive on breakouts.' : overallTone === 'bear' ? 'the short-term breadth ratios argue for caution even though the structural quarterly trend remains intact — a defensive-to-neutral stance on new longs makes sense until the ratios turn back above 1.0.' : 'signals are mixed across timeframes, which typically argues for smaller position sizing and waiting for confirmation before committing capital aggressively in either direction.'}</p>
+    <p>SPY closed at ${today.sp.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}${prior ? ', ' + (spChange >= 0 ? 'up' : 'down') + ' ' + Math.abs(spChange) + '% from the prior session' : ''}. <strong>Bottom line:</strong> ${overallTone === 'bull' ? 'both the short-term ratios and the longer structural breadth are aligned bullish — this favors staying aggressive on breakouts.' : overallTone === 'bear' ? 'the short-term breadth ratios argue for caution even though the structural quarterly trend remains intact — a defensive-to-neutral stance on new longs makes sense until the ratios turn back above 1.0.' : 'signals are mixed across timeframes, which typically argues for smaller position sizing and waiting for confirmation before committing capital aggressively in either direction.'}</p>
   `;
 }
 
@@ -640,7 +600,6 @@ function renderDangerPanel(prefix, signals) {
 
 // Revised fetching sequence reading both matrices
 async function fetchPythonDangerSignals() {
-  // Fetch SPY
   try {
     const res = await fetch("http://localhost:8000/api/danger-signals");
     const data = await res.json();
@@ -649,7 +608,6 @@ async function fetchPythonDangerSignals() {
     console.warn("Could not reach SPY danger signals endpoint:", err);
   }
 
-  // Fetch QQQ
   try {
     const res = await fetch("http://localhost:8000/api/danger-signals-qqq");
     const data = await res.json();
@@ -669,10 +627,12 @@ async function loadData(isManualRefresh) {
 
   if (live && live.length > 0) {
     currentData = live;
+    mergeEtfDataIntoDashboard(); // Re-merge ETF data over the fresh sheet numbers
     renderAll();
     setStatus('live', 'Live data loaded from the published sheet · ' + now);
   } else if (currentData.length === 0) {
     currentData = SEED_DATA;
+    mergeEtfDataIntoDashboard();
     renderAll();
     setStatus('error', 'Could not reach the live sheet. Showing last saved snapshot through ' + SEED_DATA[SEED_DATA.length - 1].date + '.');
   } else {
@@ -708,7 +668,10 @@ document.getElementById('sma200').addEventListener('change', (e) => {
   refreshSpChart();
 });
 
-document.getElementById('refreshBtn').addEventListener('click', () => loadData(true));
+document.getElementById('refreshBtn').addEventListener('click', () => {
+  fetchDirectEtfHistory();
+  loadData(true);
+});
 
 // Initialize Application
 fetchPythonDangerSignals();
