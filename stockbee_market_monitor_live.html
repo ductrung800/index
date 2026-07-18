@@ -97,14 +97,16 @@
 <!-- S&P + Nasdaq + T2108 combined panel -->
 <div class="panel">
   <div class="controls">
+   <!-- Update the Index Toggle buttons -->
     <div class="control-group">
       <span class="control-group-label">Index</span>
       <div class="btn-toggle" id="indexToggle">
-        <button data-index="sp" class="active">S&amp;P 500</button>
-        <button data-index="nasdaq">Nasdaq</button>
+        <button data-index="sp" class="active">SPY</button>
+        <button data-index="nasdaq">QQQ</button>
         <button data-index="both">Both</button>
       </div>
     </div>
+     
     <div class="control-group">
       <span class="control-group-label">Price display</span>
       <div class="btn-toggle" id="priceTypeToggle">
@@ -153,6 +155,20 @@
     <span id="spyDangerBadge" style="padding:3px 10px; border-radius:100px; font-size:11px; font-family:'JetBrains Mono',monospace; font-weight:700; background:rgba(27,175,122,.15); color:#1baf7a;">0 Active — Healthy</span>
   </div>
   <ul id="spyDangerList" style="list-style:none; display:flex; flex-direction:column; gap:8px; font-family:'JetBrains Mono',monospace; font-size:11.5px; margin:0; padding:0;">
+    <li style="color:#898781; font-style:italic;">Scanning for active signals...</li>
+  </ul>
+</div>
+
+<!-- ================= QQQ DANGER SIGNALS PANEL ================= -->
+<div class="panel" id="qqqDangerPanel" style="margin-bottom: 16px;">
+  <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e1e0d9; padding-bottom:10px; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
+    <div style="display:flex; align-items:center; gap:8px;">
+      <span style="color:#eda100; font-weight:800; font-size:14px;">⚠</span>
+      <span class="panel-label" style="margin:0;">QQQ DANGER SIGNALS (<span id="qqqDangerCount">0</span>)</span>
+    </div>
+    <span id="qqqDangerBadge" style="padding:3px 10px; border-radius:100px; font-size:11px; font-family:'JetBrains Mono',monospace; font-weight:700; background:rgba(27,175,122,.15); color:#1baf7a;">0 Active — Healthy</span>
+  </div>
+  <ul id="qqqDangerList" style="list-style:none; display:flex; flex-direction:column; gap:8px; font-family:'JetBrains Mono',monospace; font-size:11.5px; margin:0; padding:0;">
     <li style="color:#898781; font-style:italic;">Scanning for active signals...</li>
   </ul>
 </div>
@@ -263,19 +279,36 @@ function ensureNasdaqData() {
   });
 }
 
+// Change labels in updateMainLegend()
 function updateMainLegend() {
   const legend = document.getElementById('mainLegend');
   if (!legend) return;
   let html = '';
   if (indexMode === 'sp' || indexMode === 'both') {
-    html += '<span><span class="swatch line" style="border-color:#2a78d6;background:#2a78d6"></span>S&amp;P 500</span>';
+    html += '<span><span class="swatch line" style="border-color:#2a78d6;background:#2a78d6"></span>SPY</span>';
   }
   if (indexMode === 'nasdaq' || indexMode === 'both') {
-    html += '<span><span class="swatch line" style="border-color:#9333ea;background:#9333ea"></span>Nasdaq</span>';
+    html += '<span><span class="swatch line" style="border-color:#9333ea;background:#9333ea"></span>QQQ</span>';
   }
   html += '<span><span class="swatch line" style="border-color:#eda100;background:#eda100"></span>T2108</span>';
   html += '<span><span class="swatch dash" style="border-color:#e34948"></span>Oversold (20)</span>';
   legend.innerHTML = html + '<span id="smaLegend"></span>';
+  updateSmaLegend();
+}
+
+// Change chart scaling parameters inside refreshSpChart()
+function refreshSpChart() {
+  const { datasets } = buildSpDatasets();
+  spChart.data.labels = currentData.map(d => d.date);
+  spChart.data.datasets = datasets;
+  
+  spChart.options.scales.y.title.text = indexMode === 'nasdaq' ? 'QQQ Price' : 'SPY Price';
+  spChart.options.scales.y.title.color = indexMode === 'nasdaq' ? '#9333ea' : '#2a78d6';
+  spChart.options.scales.y.ticks.color = indexMode === 'nasdaq' ? '#9333ea' : '#898781';
+  spChart.options.scales.y2.title.text = 'QQQ Price';
+  spChart.options.scales.y2.display = (indexMode === 'both');
+  
+  spChart.update();
   updateSmaLegend();
 }
 
@@ -348,19 +381,7 @@ function buildSpDatasets() {
   return { datasets, has200: sma200Data.some(v => v !== null) };
 }
 
-function refreshSpChart() {
-  const { datasets } = buildSpDatasets();
-  spChart.data.labels = currentData.map(d => d.date);
-  spChart.data.datasets = datasets;
-  
-  spChart.options.scales.y.title.text = indexMode === 'nasdaq' ? 'Nasdaq index' : 'S&P index';
-  spChart.options.scales.y.title.color = indexMode === 'nasdaq' ? '#9333ea' : '#2a78d6';
-  spChart.options.scales.y.ticks.color = indexMode === 'nasdaq' ? '#9333ea' : '#898781';
-  spChart.options.scales.y2.display = (indexMode === 'both');
-  
-  spChart.update();
-  updateSmaLegend();
-}
+
 
 function buildOrUpdateCharts() {
   ensureNasdaqData();
