@@ -333,24 +333,32 @@ const rrgLabelPlugin = {
 
 function renderRrgChart(datasets) {
     const canvas = document.getElementById("rrgChart");
-    if (!canvas) return;
+    // This return is valid because it is at the function level
+    if (!canvas) return; 
+
     const ctx = canvas.getContext("2d");
-    if (rrgChartInstance) rrgChartInstance.destroy();
+    if (typeof rrgChartInstance !== 'undefined' && rrgChartInstance) {
+        rrgChartInstance.destroy();
+    }
 
     // 1. DYNAMIC SYMMETRIC AUTO-SCALING LOGIC
-    let maxDeviation = 5; // Guaranteed minimum bounds of 95 to 105
-    datasets.forEach(ds => {
+    let maxDeviation = 5; 
+    
+    // Use a standard for-loop or ensure the forEach block doesn't contain a 'return'
+    for (let i = 0; i < datasets.length; i++) {
+        let ds = datasets[i];
         if (ds.data && ds.data.length > 0) {
-            ds.data.forEach(pt => {
+            for (let j = 0; j < ds.data.length; j++) {
+                let pt = ds.data[j];
                 if (pt && pt.x !== undefined && pt.y !== undefined) {
                     const devX = Math.abs(pt.x - 100);
                     const devY = Math.abs(pt.y - 100);
                     maxDeviation = Math.max(maxDeviation, devX, devY);
                 }
-            });
+            }
         }
-    });
-    // Add 1.5 units of padding so dots and text labels never touch the canvas border
+    }
+
     const boundLimit = Math.ceil(maxDeviation + 1.5);
     const minBound = 100 - boundLimit;
     const maxBound = 100 + boundLimit;
