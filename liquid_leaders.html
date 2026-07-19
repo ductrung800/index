@@ -320,7 +320,7 @@ function renderTable(){
   }).join("") + "</tr></thead>";
 
   let body = "<tbody>" + rows.map(r=>`<tr>
-    <td>${r.ticker}</td>
+    <td onclick="openStandaloneChart('${r.ticker}')" style="cursor:pointer; color:var(--teal); text-decoration:underline; text-underline-offset:3px;">${r.ticker}</td>
     <td title="${r.company}">${r.company}</td>
     <td>${r.sector}</td>
     <td>${r.industry}</td>
@@ -455,7 +455,237 @@ async function refreshLiveData(){
   }
   btn.textContent = "↻ Refresh Live Data";
 }
+/* ============================================================
+   STANDALONE CHART POPUP ENGINE
+   ============================================================ */
+function openStandaloneChart(ticker) {
+  const currentTheme = document.documentElement.getAttribute("data-theme") || "dark";
+  const isDark = currentTheme === "dark";
 
+  const win = window.open("", `_blank_${ticker}`, "width=960,height=700,resizable=yes,scrollbars=yes");
+  if (!win) {
+    alert("Popup blocked! Please allow popups for this dashboard.");
+    return;
+  }
+
+  const htmlContent = `<!DOCTYPE html>
+<html lang="en" data-theme="${currentTheme}">
+<head>
+<meta charset="UTF-8">
+<title>${ticker} — Institutional HLC Chart</title>
+<script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"><\/script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&display=swap');
+  :root {
+    --bg: #0a0e16; --panel: #101625; --text: #e7ebf3; --line: #212a3d; --text-dim: #8b93a8;
+  }
+  html[data-theme="light"] {
+    --bg: #f4f6fa; --panel: #ffffff; --text: #151b2c; --line: #dde2ec; --text-dim: #5b6478;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--text); font-family: 'JetBrains Mono', monospace;
+    padding: 16px; display: flex; flex-direction: column; height: 100vh; overflow: hidden;
+  }
+  header {
+    display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px;
+    border-bottom: 1px solid var(--line); margin-bottom: 16px; flex-shrink: 0;
+  }
+  .title { font-size: 18px; font-weight: 700; letter-spacing: -0.02em; }
+  .badge {
+    background: var(--panel); border: 1px solid var(--line); padding: 4px 10px;
+    border-radius: 4px; font-size: 11px; color: var(--text-dim);
+  }
+  #chart-container { flex: 1; width: 100%; position: relative; }
+  .loading {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    font-size: 13px; color: var(--text-dim);
+  }
+</style>
+</head>
+<body>
+  <header>
+    <div class="title">${ticker} <span style="font-size:12px; font-weight:400; color:var(--text-dim);">· Daily HLC</span></div>
+    <div class="badge" id="status-badge">FETCHING LIVE DATA...</div>
+  </header>
+  <div id="chart-container"><div class="loading" id="loader">Ingesting live HLC feed for ${ticker}...</div></div>
+
+<script>
+  const ticker = "${ticker}";
+  const isDark = "${currentTheme}" === "dark";
+  const chartBg = isDark ? '#0a0e16' : '#f4f6fa';
+  const textColor = isDark ? '#8b93a8' : '#5b6478';
+  const gridColor = isDark ? 'rgba(33, 42, 61, 0.4)' : 'rgba(221, 226, 236, 0.6)';
+
+  // Initialize Lightweight Chart
+  const container = document.getElementById('chart-container');
+  const chart = LightweightCharts.createChart(container, {
+    layout: { background: { type: 'solid', color: chartBg }, textColor: textColor, fontFamily: "'JetBrains Mono', monospace" },
+    grid: { vertLines: { color: gridColor }, horzLines: { color: gridColor } },
+    rightPriceScale: { borderColor: gridColor },
+    timeScale: { borderColor: gridColor, timeVisible: false },
+    crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+  });
+
+  new ResizeObserver(entries => {
+    if (entries.length === 0 || entries[0].target !== container) return;
+    const newRect = entries[0].contentRect;
+    chart.applyOptions({ width: newRect.width, height: newRect.height });
+  }).observe(container);
+
+  // Math Engine: Exponential Moving Average
+  function calculateEMA(data, period, key) {
+    const k = 2 / (period + 1);
+    let ema = 0;
+    let started = false;
+    const result = [];
+    for (let i = 0; i < data.length; i++) {
+      const val = data[i][key];
+      if (!started) {
+        ema = val;
+        started = true;
+      } else {
+        ema = (val - ema) * k + ema;
+      }
+      result.push({ time: data[i].time, value: ema });
+    }
+    return result;
+  }
+
+  // Fetch Live Data (Yahoo Finance Multi-Proxy Relay)
+  async function loadData() {
+    const targetUrl = \`https://query1.finance.yahoo.com/v8/finance/chart/\${ticker}?interval=1d&range=1y\`;
+    const proxies = [
+      url => \`https://api.allorigins.win/raw?url=\${encodeURIComponent(url)}\`,
+      url => \`https://corsproxy.io/?url=\${encodeURIComponent(url)}\`,
+    ];
+
+    let json = null;
+    for (const buildProxy of proxies) {
+      try {
+        const res = await fetch(buildProxy(targetUrl));
+        if (res.ok) {
+          json = await res.json();
+          break;
+        }
+      } catch (e) { console.warn("Proxy fallback triggered..."); }
+    }
+
+    if (!json || !json.chart || !json.chart.result) {
+      document.getElementById('loader').textContent = 'Failed to load market data for ' + ticker;
+      document.getElementById('status-badge').textContent = 'DATA ERROR';
+      return;
+    }
+
+    const result = json.chart.result[0];
+    const timestamps = result.timestamp || [];
+    const quote = result.indicators.quote[0] || {};
+    const rawData = [];
+
+    for (let i = 0; i < timestamps.length; i++) {
+      if (quote.open[i] != null && quote.high[i] != null && quote.low[i] != null && quote.close[i] != null) {
+        const dateStr = new Date(timestamps[i] * 1000).toISOString().split('T')[0];
+        rawData.push({ time: dateStr, open: quote.open[i], high: quote.high[i], low: quote.low[i], close: quote.close[i] });
+      }
+    }
+
+    // Timestamp Deduplication & Sorting
+    const uniqueMap = new Map();
+    rawData.forEach(bar => uniqueMap.set(bar.time, bar));
+    const cleanData = Array.from(uniqueMap.values()).sort((a, b) => a.time.localeCompare(b.time));
+
+    if (cleanData.length === 0) {
+      document.getElementById('loader').textContent = 'No historical bars found.';
+      return;
+    }
+
+    // 1. Calculate 21 EMAs
+    const maHighData = calculateEMA(cleanData, 21, 'high');
+    const maLowData = calculateEMA(cleanData, 21, 'low');
+    const ema21Data = calculateEMA(cleanData, 21, 'close');
+
+    // 2. Calculate 100-Period Donchian Channel (Offset +2)
+    const dcLength = 100;
+    const dcOffset = 2;
+    const dcUpperData = [], dcLowerData = [], dcBasisData = [];
+
+    for (let i = 0; i < cleanData.length; i++) {
+      if (i >= dcLength - 1) {
+        const windowBars = cleanData.slice(i - dcLength + 1, i + 1);
+        const highestHigh = Math.max(...windowBars.map(b => b.high));
+        const lowestLow = Math.min(...windowBars.map(b => b.low));
+        const basisValue = (highestHigh + lowestLow) / 2;
+
+        if (i + dcOffset < cleanData.length) {
+          const targetTime = cleanData[i + dcOffset].time;
+          dcUpperData.push({ time: targetTime, value: highestHigh });
+          dcLowerData.push({ time: targetTime, value: lowestLow });
+          dcBasisData.push({ time: targetTime, value: basisValue });
+        }
+      }
+    }
+
+    // 3. Render Layers in Strict Z-Index Order
+    // Layer 1: EMA High Cloud
+    const cloudHighSeries = chart.addAreaSeries({
+      topColor: isDark ? 'rgba(200, 200, 205, 0.08)' : 'rgba(160, 160, 165, 0.12)',
+      bottomColor: isDark ? 'rgba(200, 200, 205, 0.08)' : 'rgba(160, 160, 165, 0.12)',
+      lineColor: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)',
+      lineWidth: 1, priceLineVisible: false, lastValueVisible: false,
+    });
+    cloudHighSeries.setData(maHighData);
+
+    // Layer 2: EMA Low Cloud Mask
+    const cloudLowMaskSeries = chart.addAreaSeries({
+      topColor: chartBg, bottomColor: chartBg,
+      lineColor: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)',
+      lineWidth: 1, priceLineVisible: false, lastValueVisible: false,
+    });
+    cloudLowMaskSeries.setData(maLowData);
+
+    // Layer 3: EMA 21 Center Line
+    const ema21Series = chart.addLineSeries({
+      color: isDark ? '#64748b' : '#94a3b8', lineWidth: 1, priceLineVisible: false, lastValueVisible: false,
+    });
+    ema21Series.setData(ema21Data);
+
+    // Layer 4: Donchian Channels (Dashed Amber)
+    const dcLineColor = isDark ? 'rgba(245, 185, 66, 0.5)' : 'rgba(185, 120, 26, 0.5)';
+    const dcUpperSeries = chart.addLineSeries({ color: dcLineColor, lineWidth: 1, lineStyle: 2, priceLineVisible: false, lastValueVisible: false });
+    const dcLowerSeries = chart.addLineSeries({ color: dcLineColor, lineWidth: 1, lineStyle: 2, priceLineVisible: false, lastValueVisible: false });
+    const dcBasisSeries = chart.addLineSeries({ color: dcLineColor, lineWidth: 1, lineStyle: 2, priceLineVisible: false, lastValueVisible: false });
+    dcUpperSeries.setData(dcUpperData);
+    dcLowerSeries.setData(dcLowerData);
+    dcBasisSeries.setData(dcBasisData);
+
+    // Layer 5: Dynamic Monochrome/Magenta HLC Price Bars
+    const maHighMap = new Map(maHighData.map(item => [item.time, item.value]));
+    const coloredBars = cleanData.map(bar => {
+      const currentMAHigh = maHighMap.get(bar.time);
+      let standardColor = isDark ? "#f8fafc" : "#000000";
+      let barColor = (currentMAHigh !== undefined && bar.close < currentMAHigh) ? "#e600e6" : standardColor;
+      return { ...bar, color: barColor };
+    });
+
+    const barSeries = chart.addBarSeries({ thinBars: false, openVisible: false });
+    barSeries.setData(coloredBars);
+
+    document.getElementById('loader').style.display = 'none';
+    document.getElementById('status-badge').textContent = 'LIVE YAHOO DATA';
+    document.getElementById('status-badge').style.color = '#20d9b8';
+    document.getElementById('status-badge').style.borderColor = 'rgba(32,217,184,0.3)';
+    chart.timeScale().fitContent();
+  }
+
+  loadData();
+<\/script>
+</body>
+</html>`;
+
+  win.document.open();
+  win.document.write(htmlContent);
+  win.document.close();
+}
 /* ============================================================
    UI WIRING
    ============================================================ */
