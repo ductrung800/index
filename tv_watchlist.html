@@ -644,9 +644,9 @@ function renderChartGrid(tickers) {
     return;
   }
 
-  const activeBatch = tickers.slice(0, 15);
+  const activeBatch = tickers.slice(0, 30);
   body.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-    <span style="font-size:11px; color:var(--text-faint); font-style:italic;">Showing top ${activeBatch.length} charts with monochrome HLC bars & 21 EMA Cloud</span>
+    <span style="font-size:11px; color:var(--text-faint); font-style:italic;">Showing top ${activeBatch.length} charts with monochrome HLC bars, Donchian channel & 21 EMA Cloud</span>
     <div class="captured-badge" style="margin-bottom:0;">Captured: ${tickers.length} Stocks</div>
   </div>
   <div class="charts-grid-container" id="tvChartGrid"></div>`;
