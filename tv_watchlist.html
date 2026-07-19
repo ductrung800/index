@@ -500,6 +500,36 @@ async function buildLightweightChartCard(symbol, idx, grid, isDark) {
   const maLowData = calculateEMA(data, 21, 'low');
   const ema21Data = calculateEMA(data, 21, 'close');
 
+  // ==========================================
+// NEW: 100-PERIOD DONCHIAN CHANNEL CALCULATION (WITH 2-PERIOD OFFSET)
+// ==========================================
+const dcLength = 100;
+const dcOffset = 2;
+
+const dcUpperData = [];
+const dcLowerData = [];
+const dcBasisData = [];
+
+for (let i = 0; i < data.length; i++) {
+  // We need at least 100 bars of historical context to start calculating the channel
+  if (i >= dcLength - 1) {
+    const windowBars = data.slice(i - dcLength + 1, i + 1);
+    const highestHigh = Math.max(...windowBars.map(b => b.high));
+    const lowestLow = Math.min(...windowBars.map(b => b.low));
+    const basisValue = (highestHigh + lowestLow) / 2;
+
+    // Apply the 2-period shift forward into the future timeline
+    // Ensure we don't map out-of-bounds bars past the end of the array
+    if (i + dcOffset < data.length) {
+      const targetTime = data[i + dcOffset].time;
+      
+      dcUpperData.push({ time: targetTime, value: highestHigh });
+      dcLowerData.push({ time: targetTime, value: lowestLow });
+      dcBasisData.push({ time: targetTime, value: basisValue });
+    }
+  }
+}
+
   const cloudHighSeries = chart.addAreaSeries({
     topColor: isDark ? 'rgba(148, 163, 184, 0.32)' : 'rgba(148, 163, 184, 0.38)',
     bottomColor: isDark ? 'rgba(148, 163, 184, 0.32)' : 'rgba(148, 163, 184, 0.38)',
@@ -527,6 +557,38 @@ async function buildLightweightChartCard(symbol, idx, grid, isDark) {
     lastValueVisible: false,
   });
   ema21Series.setData(ema21Data);
+
+  // ==========================================
+// NEW: PLOT DONCHIAN CHANNEL BANDS
+// ==========================================
+const dcLineColor = isDark ? 'rgba(245, 185, 66, 0.6)' : 'rgba(185, 120, 26, 0.6)'; // Amber line to distinguish from cloud
+
+const dcUpperSeries = chart.addLineSeries({
+  color: dcLineColor,
+  lineWidth: 1,
+  lineStyle: 2, // 2 converts the solid line to a dashed line style
+  priceLineVisible: false,
+  lastValueVisible: false,
+});
+dcUpperSeries.setData(dcUpperData);
+
+const dcLowerSeries = chart.addLineSeries({
+  color: dcLineColor,
+  lineWidth: 1,
+  lineStyle: 2,
+  priceLineVisible: false,
+  lastValueVisible: false,
+});
+dcLowerSeries.setData(dcLowerData);
+
+const dcBasisSeries = chart.addLineSeries({
+  color: dcLineColor,
+  lineWidth: 1,
+  lineStyle: 2,
+  priceLineVisible: false,
+  lastValueVisible: false,
+});
+dcBasisSeries.setData(dcBasisData);
 
   const barSeries = chart.addBarSeries({
     upColor: barColor,
