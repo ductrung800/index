@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Liquid Leaders · Stage Analysis</title>
+<!-- Lightweight Charts v4 Library for Standalone Modal -->
+<script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+  :root{
+    --bg:#0a0e16; --panel:#101625; --panel2:#0d1220; --line:#212a3d; --line-soft:#1a2233;
+    --text:#e7ebf3; --text-dim:#8b93a8; --text-faint:#59617a;
+    --teal:#20d9b8; --amber:#f5b942; --red:#ff5c72; --purple:#a855f7;
+    --navy-head:#131c33; --heat-text:#12161f; --input-bg:#0d1220;
+    
+    /* Kell Stage Colors */
+    --kell-1a:#f97316; --kell-1b:#facc15; --kell-2a:#34d399; --kell-2b:#16a34a; --kell-2c:#a855f7;
+    --kell-3a:#3b82f6; --kell-3b:#1d4ed8; --kell-4a:#ef4444; --kell-4b:#f43f5e;
+  }
+  html[data-theme="light"]{
+    --bg:#f4f6fa; --panel:#ffffff; --panel2:#ffffff; --line:#dde2ec; --line-soft:#e9edf4;
+    --text:#151b2c; --text-dim:#5b6478; --text-faint:#8a92a6;
+    --teal:#0b9c82; --amber:#b9781a; --red:#c93a51; --purple:#8b5cf6;
+    --navy-head:#eef1f8; --heat-text:#12161f; --input-bg:#f4f6fa;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:
+      radial-gradient(ellipse 1200px 500px at 15% -5%, rgba(52,211,153,.06), transparent 60%),
+      radial-gradient(ellipse 900px 500px at 100% 0%, rgba(249,115,22,.05), transparent 55%),
+      var(--bg);
+    color:var(--text); font-family:'Inter',sans-serif; padding:22px 26px 60px; transition:background .2s ease, color .2s ease;
+  }
+  .wrap{max-width:1820px; margin:0 auto;}
+
+  .app-tabs{display:flex; gap:4px; margin-bottom:24px; border-bottom:1px solid var(--line); flex-wrap:wrap;}
+  .app-tabs a{padding:10px 22px; text-decoration:none; color:var(--text-dim); font-size:13px; font-weight:600; border:1px solid transparent; border-bottom:none; border-radius:8px 8px 0 0; text-transform:uppercase; letter-spacing:.05em; transition:all .15s; cursor:pointer;}
+  .app-tabs a.active{background:var(--panel); color:var(--teal); border-color:var(--line); border-bottom-color:var(--panel); margin-bottom:-1px;}
+  .app-tabs a:hover:not(.active){color:var(--text); background:rgba(255,255,255,.03);}
+
+  header.top{display:flex; justify-content:space-between; align-items:flex-end; border-bottom:2px solid var(--line); padding-bottom:14px; margin-bottom:22px; gap:16px; flex-wrap:wrap;}
+  .brand-eyebrow{font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.18em; color:var(--teal); text-transform:uppercase;}
+  h1{font-size:26px; font-weight:800; letter-spacing:-.02em; margin-top:2px;}
+  .subline{color:var(--text-dim); font-size:12.5px; margin-top:4px; font-family:'JetBrains Mono',monospace;}
+  .header-right{display:flex; align-items:center; gap:12px; flex-wrap:wrap;}
+  .theme-toggle{display:flex; align-items:center; gap:8px; background:var(--panel); border:1px solid var(--line); border-radius:100px; padding:6px 6px; cursor:pointer;}
+  .theme-toggle .opt{font-size:14px; padding:5px 11px; border-radius:100px; color:var(--text-faint); font-weight:600;}
+  .theme-toggle .opt.active{background:var(--teal); color:#04150f;}
+
+  .btn{background:var(--panel); border:1px solid var(--line); color:var(--text); font-family:'JetBrains Mono',monospace; font-size:11.5px; padding:8px 14px; border-radius:7px; cursor:pointer; font-weight:600; transition:all .15s;}
+  .btn:hover{border-color:var(--teal); color:var(--teal);}
+
+  .data-panel{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:16px 18px; margin-bottom:20px;}
+  .data-panel-head{display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;}
+  .data-panel-head h2{font-size:13px; text-transform:uppercase; letter-spacing:.05em; font-weight:700;}
+  .data-panel-head .sub{font-size:11.5px; color:var(--text-dim); margin-top:2px; font-weight:400; text-transform:none; letter-spacing:0;}
+  .data-panel-body{margin-top:14px; display:none;}
+  .data-panel-body.open{display:block;}
+  .status-msg{font-size:11.5px; color:var(--teal); font-family:'JetBrains Mono',monospace;}
+  .status-msg.err{color:var(--red);}
+  .dropzone{border:2px dashed var(--line); border-radius:10px; padding:20px 16px; text-align:center; cursor:pointer; transition:all .15s; background:var(--input-bg); margin-top:12px;}
+  .dropzone:hover{border-color:var(--teal); background:rgba(32,217,184,.06);}
+
+  .toolbar{display:flex; gap:12px; margin-bottom:14px; flex-wrap:wrap; align-items:center;}
+  .search-input{background:var(--input-bg); border:1px solid var(--line); color:var(--text); padding:9px 12px; border-radius:7px; font-family:'JetBrains Mono',monospace; font-size:12px; min-width:220px;}
+  .search-input:focus{outline:none; border-color:var(--teal);}
+  select.sector-filter{background:var(--input-bg); border:1px solid var(--line); color:var(--text); padding:9px 10px; border-radius:7px; font-family:'Inter',sans-serif; font-size:12px; cursor:pointer;}
+  .row-count{font-size:11.5px; color:var(--text-faint); font-family:'JetBrains Mono',monospace; margin-left:auto;}
+
+  /* ================= STAGE ANALYSIS SUMMARY BAR ================= */
+  .stage-macro-container {
+    display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; justify-content: space-between;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 18px;
+  }
+  .macro-title { font-size: 13px; font-weight: 800; text-transform: uppercase; font-family: 'JetBrains Mono', monospace; }
+  .macro-sub { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+  .stage-ribbon { display: flex; height: 32px; border-radius: 6px; overflow: hidden; border: 1px solid var(--line); font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; flex: 1; min-width: 450px; max-width: 800px; }
+  .stage-segment { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #000; transition: filter 0.15s; overflow: hidden; line-height: 1.1; }
+  .stage-segment:hover { filter: brightness(1.15); }
+  .stage-seg-label { font-size: 9px; text-transform: uppercase; font-weight: 800; opacity: 0.85; }
+  
+  /* ================= 9-COLUMN KANBAN STAGE BOARD ================= */
+  .kanban-grid {
+    display: grid; grid-template-columns: repeat(9, minmax(175px, 1fr)); gap: 10px;
+    overflow-x: auto; padding-bottom: 16px; align-items: start;
+  }
+  .kanban-col {
+    background: var(--panel2); border: 1px solid var(--line); border-radius: 10px;
+    display: flex; flex-direction: column; min-height: 520px; overflow: hidden;
+  }
+  .kanban-head {
+    padding: 10px 8px; text-align: center; border-bottom: 1px solid var(--line);
+    display: flex; flex-direction: column; gap: 4px; font-family: 'JetBrains Mono', monospace;
+  }
+  .kanban-count { font-size: 17px; font-weight: 800; }
+  .kanban-label { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; }
+  .kanban-rule { font-size: 9.5px; font-family: 'Inter', sans-serif; font-weight: 600; line-height: 1.2; padding: 0 2px; min-height: 22px; display: flex; align-items: center; justify-content: center; }
+  
+  .kanban-body { padding: 8px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+  .kanban-card {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px;
+    cursor: pointer; display: flex; justify-content: space-between; align-items: center;
+    transition: all 0.15s; font-family: 'JetBrains Mono', monospace; border-left-width: 4px;
+  }
+  .kanban-card:hover { transform: translateY(-2px); border-color: var(--teal); box-shadow: 0 4px 12px rgba(0,0,0,0.35); }
+  .card-ticker { font-weight: 800; font-size: 13px; color: var(--text); }
+  .card-meta { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
+  .card-rs-badge {
+    font-size: 10px; padding: 3px 6px; border-radius: 100px; font-weight: 800;
+    background: var(--input-bg); color: var(--text); border: 1px solid var(--line);
+  }
+
+  /* ================= IN-PAGE CHART MODAL STYLES ================= */
+  .chart-modal-backdrop {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(4px);
+    display: none; justify-content: center; align-items: center; z-index: 9999; padding: 24px;
+  }
+  .chart-modal {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+    width: 100%; max-width: 1100px; height: 720px; display: flex; flex-direction: column;
+    box-shadow: 0 24px 48px rgba(0,0,0,0.6); overflow: hidden;
+  }
+  .chart-modal-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 14px 20px; border-bottom: 1px solid var(--line); background: var(--panel2);
+  }
+  .modal-title { font-size: 16px; font-weight: 800; font-family: 'JetBrains Mono', monospace; }
+  .modal-status { font-size: 11px; font-family: 'JetBrains Mono', monospace; font-weight: 700; padding: 4px 10px; border-radius: 4px; background: rgba(32, 217, 184, 0.1); color: var(--teal); border: 1px solid rgba(32, 217, 184, 0.2); }
+  .modal-close { background: transparent; border: 1px solid var(--line); color: var(--text-dim); font-size: 14px; font-weight: 700; width: 30px; height: 30px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .modal-close:hover { border-color: var(--red); color: var(--red); background: rgba(255, 92, 114, 0.1); }
+  .chart-modal-body { flex: 1; width: 100%; position: relative; }
+
+  footer{margin-top:30px; text-align:center; color:var(--text-faint); font-size:10.5px; font-family:'JetBrains Mono',monospace;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- UNIVERSAL NAVIGATION TABS -->
+  <div class="app-tabs">
+    <a href="index.html">Daily Market Plan</a>
+    <a href="stockbee_market_monitor_live.html">Stockbee Monitor</a>
+    <a href="liquid_leaders.html">Liquid Leaders</a>
+    <a href="PriceStructure.html">Price Structure Board</a>
+    <a href="StageAnalysis.html" class="active">Stage Analysis</a>
+    <a href="tv_watchlist.html">TradingView Watchlist</a>
+  </div>
+
+  <header class="top">
+    <div>
+      <div class="brand-eyebrow">Oliver Kell Cycle · Swing Trading Adaptation</div>
+      <h1>Stage Analysis Board</h1>
+      <div class="subline" id="subline">Loading…</div>
+    </div>
+    <div class="header-right">
+      <button class="btn" id="btnRefresh">↻ Refresh Live Data</button>
+      <div class="theme-toggle" id="themeToggle">
+        <span class="opt" id="optDark">Dark</span>
+        <span class="opt" id="optLight">Light</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="data-panel">
+    <div class="data-panel-head" id="dataPanelHead">
+      <div>
+        <h2>Data Source</h2>
+        <div class="sub">Pulls live from your "Leader Hunter" Google Sheet. If sharing settings block a direct fetch, upload the CSV export manually below.</div>
+      </div>
+      <button class="btn" id="toggleDataPanel">Open ▾</button>
+    </div>
+    <div class="data-panel-body" id="dataPanelBody">
+      <div class="dropzone" id="dropzone">
+        <input type="file" id="fileInput" accept=".csv,text/csv" style="display:none;">
+        <div style="font-weight:700; font-size:12px; text-transform:uppercase;">Click to choose a CSV file, or drag it in here</div>
+        <div class="dz-sub">File &gt; Download &gt; Comma-separated values (.csv) from the Leader Hunter sheet</div>
+      </div>
+      <div style="margin-top:10px;"><span class="status-msg" id="statusMsg"></span></div>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <input class="search-input" id="searchInput" placeholder="Search ticker or company…">
+    <select class="sector-filter" id="sectorFilter"><option value="">All Sectors</option></select>
+    <span class="row-count" id="rowCount"></span>
+  </div>
+
+  <div class="section">
+    <!-- Macroeconomic Stage Summary Ribbon -->
+    <div class="stage-macro-container">
+      <div>
+        <div class="macro-title">Macro Stage Distribution</div>
+        <div class="macro-sub">Aggregated breadth across Oliver Kell's 4 core market cycles</div>
+      </div>
+      <div id="stageRibbon" class="stage-ribbon"></div>
+    </div>
+
+    <!-- 9-Column Kell Stage Board -->
+    <div id="kanbanGrid" class="kanban-grid"></div>
+  </div>
+
+  <footer>Data reflects your Leader Hunter sheet · Click any card to open standalone institutional HLC chart.</footer>
+</div>
+
+<!-- ================= IN-PAGE STANDALONE CHART MODAL ================= -->
+<div id="chartModalBackdrop" class="chart-modal-backdrop" onclick="closeChartModal(event)">
+  <div class="chart-modal" onclick="event.stopPropagation()">
+    <div class="chart-modal-header">
+      <div id="modalTitle" class="modal-title">TICKER</div>
+      <div style="display: flex; gap: 12px; align-items: center;">
+        <span id="modalStatus" class="modal-status">CONNECTING...</span>
+        <button class="modal-close" onclick="closeChartModal()">✕</button>
+      </div>
+    </div>
+    <div id="modalChartContainer" class="chart-modal-body"></div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   CONFIG & STATE
+   ============================================================ */
+const SHEET_ID = "1DcWbr8T5lTIgSrpoqVteg7ar_H466KZSvZ4p_Eksa1s";
+const SHEET_GID = "592218882";
+const EXPORT_CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${SHEET_GID}`;
+const CORS_PROXIES = [
+  url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
+  url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+];
+
+let sortKey = "p6m", sortDir = -1;
+let dataSourceLabel = "sample data (bundled)";
+
+/* ============================================================
+   SAMPLE DATA
+   ============================================================ */
+const DEFAULT_ROWS = [
+["AGL","Agilon Health Inc","Healthcare","Medical Care Facilities",531.70,458.80,114.79,1,1,0,100,4.0,"$41.1M"],
+["ACHC","Acadia Healthcare Company Inc","Healthcare","Medical Care Facilities",242.28,123.92,136.85,1,0,0,100,6.3,"$115.0M"],
+["DAVE","Dave Inc","Technology","Software - Application",237.72,164.72,142.20,0,0,1,100,7.8,"$266.3M"],
+["DK","Delek US Holdings Inc","Energy","Oil & Gas Refining & Marketing",237.07,166.45,147.50,0,0,1,100,7.5,"$77.3M"],
+["DVA","DaVita Inc","Healthcare","Medical Care Facilities",228.01,158.69,113.02,1,0,0,100,5.0,"$191.2M"],
+["PANW","Palo Alto Networks Inc","Technology","Software - Infrastructure",194.87,211.54,125.24,0,1,0,100,5.7,"$2.8B"],
+["MAN","ManpowerGroup","Industrials","Staffing & Employment Services",178.76,164.23,167.06,1,0,0,100,10.2,"$71.7M"],
+["RHI","Robert Half Inc","Industrials","Staffing & Employment Services",153.56,149.18,143.59,1,0,0,100,8.1,"$100.1M"],
+["PRGS","Progress Software Corp","Technology","Software - Infrastructure",105.05,129.47,146.60,0,0,1,100,5.4,"$36.2M"],
+["GWRE","Guidewire Software Inc","Technology","Software - Application",96.51,104.91,146.09,0,0,1,100,2.6,"$296.4M"],
+["LCID","Lucid Group Inc","Consumer Cyclical","Auto Manufacturers",75.64,109.04,142.64,0,0,1,100,2.4,"$159.8M"],
+["VEEE","Twin Vee PowerCats Co","Consumer Cyclical","Recreational Vehicles",69.73,457.99,684.96,0,1,1,100,17.1,"$159.5M"],
+["FSLY","Fastly Inc","Technology","Software - Application",235.99,81.54,120.68,1,0,0,95,1.5,"$117.0M"],
+["XMTR","Xometry Inc","Industrials","Industrial Distribution",162.58,197.99,107.62,0,1,0,95,2.0,"$76.5M"],
+["VRNS","Varonis Systems Inc","Technology","Software - Infrastructure",145.92,194.76,145.34,0,1,0,95,6.5,"$105.8M"],
+["BILL","BILL Holdings Inc","Technology","Software - Application",99.36,112.82,139.89,0,0,1,95,4.7,"$118.6M"],
+["OKTA","Okta Inc","Technology","Software - Infrastructure",170.28,197.14,128.82,0,1,0,91,5.2,"$526.5M"],
+["QLYS","Qualys Inc","Technology","Software - Infrastructure",120.76,194.43,146.93,0,1,0,91,7.1,"$127.6M"],
+["RPD","Rapid7 Inc","Technology","Software - Infrastructure",97.52,209.26,192.43,0,1,0,91,7.2,"$30.9M"],
+["ALIT","Alight Inc","Technology","Software - Application",71.05,165.95,197.64,0,0,1,91,4.2,"$32.5M"],
+["FTNT","Fortinet Inc","Technology","Software - Infrastructure",214.17,195.65,111.16,0,1,0,86,3.4,"$999.5M"],
+["LQDA","Liquidia Corp","Healthcare","Drug Manufacturers - Specialty & Generic",203.10,212.27,105.89,0,1,0,86,3.3,"$184.9M"],
+["BAND","Bandwidth Inc","Technology","Software - Infrastructure",543.19,297.60,141.30,1,1,0,81,2.4,"$105.9M"],
+["TENB","Tenable Holdings Inc","Technology","Software - Infrastructure",182.43,204.30,151.40,0,1,1,76,5.7,"$139.1M"],
+["CLRO","ClearOne Inc","Technology","Communication Equipment",106.26,224.62,215.98,0,1,1,76,2.3,"$47.3M"],
+["PTRN","Pattern Group Inc","Technology","Software - Application",208.84,203.99,133.73,0,1,0,67,6.5,"$68.9M"],
+["SDOT","Sadot Group Inc","Consumer Defensive","Farm Products",37.44,82.68,273.51,0,0,1,67,1.1,"$142.8M"],
+["DDOG","Datadog Inc","Technology","Software - Application",221.10,199.39,116.86,0,1,0,62,2.1,"$1.3B"],
+["SEZL","Sezzle Inc","Financial","Credit Services",265.33,203.89,111.63,1,1,0,57,3.8,"$120.0M"],
+["ATEX","Anterix Inc","Communication Services","Telecom Services",399.01,235.56,130.29,1,0,0,52,4.1,"$55.9M"],
+["IRDM","Iridium Communications Inc","Communication Services","Telecom Services",244.40,111.84,107.81,1,0,0,43,-0.2,"$145.2M"],
+["AEHR","Aehr Test Systems","Technology","Semiconductor Equipment & Materials",278.91,89.91,71.52,1,0,0,38,-1.0,"$191.9M"],
+["CDNL","Cardinal Infrastructure Group Inc","Industrials","Engineering & Construction",265.59,136.61,90.05,1,0,0,38,0.9,"$57.7M"],
+["AMPG","Amplitech Group Inc","Technology","Communication Equipment",188.64,332.00,78.58,0,1,0,38,1.1,"$36.3M"],
+["FROG","JFrog Ltd","Technology","Software - Application",158.39,194.34,110.83,0,1,0,38,1.7,"$277.5M"],
+["BLZE","Backblaze Inc","Technology","Software - Infrastructure",281.28,320.10,162.81,1,1,0,29,2.8,"$54.2M"],
+["BB","BlackBerry Ltd","Technology","Software - Infrastructure",234.73,163.45,102.28,1,0,0,14,-0.1,"$344.7M"],
+["DELL","Dell Technologies Inc","Technology","Computer Hardware",356.84,194.06,94.66,1,0,0,10,1.0,"$3.4B"],
+["AAOI","Applied Optoelectronics Inc","Technology","Communication Equipment",260.85,62.65,59.81,1,0,0,5,-2.2,"$1.3B"],
+["ARM","Arm Holdings Plc ADR","Technology","Semiconductors",249.31,152.59,65.53,1,0,0,5,-1.4,"$2.6B"],
+["STX","Seagate Technology Holdings Plc","Technology","Computer Hardware",241.62,145.93,72.00,1,0,0,5,-1.0,"$3.7B"],
+["DOCN","DigitalOcean Holdings Inc","Technology","Software - Infrastructure",237.68,132.76,71.53,1,0,0,5,-2.2,"$425.9M"],
+["VPG","Vishay Precision Group Inc","Technology","Scientific & Technical Instruments",237.63,195.43,73.72,1,1,0,5,-1.0,"$62.3M"],
+["MRVL","Marvell Technology Inc","Technology","Semiconductors",236.44,127.62,61.29,1,0,0,5,-1.7,"$10.3B"],
+["MU","Micron Technology Inc","Technology","Semiconductors",232.59,189.32,70.08,1,0,0,5,-0.9,"$45.2B"],
+["FCEL","Fuelcell Energy Inc","Industrials","Electrical Equipment & Parts",214.12,213.87,75.85,0,1,0,5,-0.6,"$257.5M"],
+["MXL","MaxLinear Inc","Technology","Semiconductors",370.88,226.41,74.49,1,0,0,0,-1.3,"$264.0M"],
+["SNDK","Sandisk Corp","Technology","Computer Hardware",299.00,148.39,59.59,1,0,0,0,-1.4,"$16.8B"],
+["ICHR","Ichor Holdings Ltd","Technology","Semiconductor Equipment & Materials",271.08,128.56,83.19,0,0,0,0,0.1,"$102.1M"],
+["SIMO","Silicon Motion Technology Corp ADR","Technology","Semiconductors",233.90,190.58,78.46,1,0,0,0,-0.8,"$227.0M"],
+["STM","ST Microelectronics","Technology","Semiconductors",228.83,139.59,77.66,1,0,0,0,-1.5,"$797.2M"],
+["AMBQ","Ambiq Micro Inc","Technology","Semiconductors",219.35,206.24,81.79,0,1,0,0,-0.5,"$51.1M"],
+];
+
+let ROWS = DEFAULT_ROWS.map(toRowObj);
+
+function toRowObj(r){
+  return { ticker:r[0], company:r[1], sector:r[2], industry:r[3], p6m:r[4], p3m:r[5], p1m:r[6], c6m:r[7], c3m:r[8], c1m:r[9], rs:r[10], ext:r[11], vol:r[12] };
+}
+
+/* ============================================================
+   OLIVER KELL STAGE CLASSIFICATION ENGINE
+   ============================================================ */
+const KELL_STAGES = [
+  { id: "1A", label: "Upward Pivot - 1A",      color: "#f97316", bg: "rgba(249, 115, 22, 0.15)", rule: "Stage 1 · Pivot Up",       stage: 1 },
+  { id: "1B", label: "Mean Reversion - 1B",    color: "#facc15", bg: "rgba(250, 204, 21, 0.15)", rule: "Stage 1 · Reverting",      stage: 1 },
+  { id: "2A", label: "Bullish Trend - 2A",     color: "#34d399", bg: "rgba(52, 211, 153, 0.15)", rule: "Stage 2 · Advancing",      stage: 2 },
+  { id: "2B", label: "Breakout Confirm - 2B",  color: "#16a34a", bg: "rgba(22, 163, 74, 0.15)",  rule: "Stage 2 · Confirming",     stage: 2 },
+  { id: "2C", label: "Extended Bullish - 2C",  color: "#a855f7", bg: "rgba(168, 85, 247, 0.15)", rule: "Stage 2 · Parabolic",      stage: 2 },
+  { id: "3A", label: "Bullish Fade - 3A",      color: "#3b82f6", bg: "rgba(59, 130, 246, 0.15)", rule: "Stage 3 · Topping",        stage: 3 },
+  { id: "3B", label: "Fade Confirmation - 3B", color: "#1d4ed8", bg: "rgba(29, 78, 216, 0.15)",  rule: "Stage 3 · Breaking",       stage: 3 },
+  { id: "4A", label: "Bearish Trend - 4A",     color: "#ef4444", bg: "rgba(239, 68, 68, 0.15)",  rule: "Stage 4 · Declining",      stage: 4 },
+  { id: "4B", label: "Breakdown Confirm - 4B", color: "#f43f5e", bg: "rgba(244, 63, 94, 0.15)",  rule: "Stage 4 · Capitulation",   stage: 4 }
+];
+
+function classifyKellStage(r) {
+  // 2C: Extended Bullish (Parabolic extension above moving averages)
+  if (r.ext >= 6.0 || r.p1m >= 140) return 4;
+  
+  // 2A: Bullish Trend (Strong upward momentum, price above 10 EMA > 20 EMA)
+  if (r.p1m >= 105 && r.ext >= 1.5 && r.c1m === 1) return 2;
+  
+  // 2B: Breakout Confirm (Healthy pullback to 20 EMA during structural uptrend)
+  if (r.p1m >= 95 && r.ext >= 0 && r.ext < 1.5) return 3;
+  
+  // 1B: Mean Reversion (Early recovery from base, price crossing back over MAs)
+  if (r.p1m >= 90 && r.p3m < 100 && r.ext > 0) return 1;
+  
+  // 1A: Upward Pivot (Initial structure reversal point)
+  if (r.c1m === 1 && r.p1m < 95 && r.ext >= -1.0) return 0;
+  
+  // 3A: Bullish Fade (Loss of momentum while extended, early stage distribution)
+  if (r.p1m < 90 && r.p3m >= 110 && r.ext < 0) return 5;
+  
+  // 3B: Fade Confirmation (Price violating key 20 EMA trend support)
+  if (r.p1m < 85 && r.p3m >= 100 && r.ext < -2.0) return 6;
+  
+  // 4A: Bearish Trend (Established downward structure below MAs)
+  if (r.p1m < 80 && r.ext < -3.0) return 7;
+  
+  // 4B: Breakdown Confirm / Capitulation
+  return 8;
+}
+
+/* ============================================================
+   RENDERING
+   ============================================================ */
+function populateSectorFilter(){
+  const sectors = [...new Set(ROWS.map(r=>r.sector).filter(Boolean))].sort();
+  const sel = document.getElementById("sectorFilter");
+  const current = sel.value;
+  sel.innerHTML = `<option value="">All Sectors</option>` + sectors.map(s=>`<option value="${s}">${s}</option>`).join("");
+  sel.value = current;
+}
+
+function getFilteredSorted(){
+  const q = document.getElementById("searchInput").value.trim().toUpperCase();
+  const sector = document.getElementById("sectorFilter").value;
+  let rows = ROWS.filter(r=>{
+    if(sector && r.sector !== sector) return false;
+    if(q && !(r.ticker.toUpperCase().includes(q) || r.company.toUpperCase().includes(q))) return false;
+    return true;
+  });
+  rows.sort((a,b)=>{
+    const av = a[sortKey], bv = b[sortKey];
+    if(typeof av === "string") return sortDir * av.localeCompare(bv);
+    return sortDir * ((av??-Infinity) - (bv??-Infinity));
+  });
+  return rows;
+}
+
+function renderStageBoard(rows){
+  const buckets = Array.from({length: 9}, () => []);
+  rows.forEach(r => { buckets[classifyKellStage(r)].push(r); });
+
+  // 1. Render Macro 4-Stage Distribution Ribbon
+  const total = rows.length || 1;
+  const stageCounts = { 1: 0, 2: 0, 3: 0, 4: 0 };
+  KELL_STAGES.forEach((s, idx) => { stageCounts[s.stage] += buckets[idx].length; });
+  
+  const macroColors = { 1: "#facc15", 2: "#34d399", 3: "#3b82f6", 4: "#ef4444" };
+  const macroLabels = { 1: "Stage 1 · Base/Revert", 2: "Stage 2 · Bull Trend", 3: "Stage 3 · Topping", 4: "Stage 4 · Bear Trend" };
+  
+  const ribbonHtml = [1, 2, 3, 4].map(stg => {
+    const count = stageCounts[stg];
+    const pct = (count / total) * 100;
+    if (pct === 0) return "";
+    return `<div class="stage-segment" style="width:${pct}%; background:${macroColors[stg]};" title="${macroLabels[stg]}: ${count} stocks (${pct.toFixed(1)}%)">
+      <span style="font-size:13px;">${pct.toFixed(0)}%</span>
+      <span class="stage-seg-label">Stage ${stg}</span>
+    </div>`;
+  }).join("");
+  document.getElementById("stageRibbon").innerHTML = ribbonHtml || `<div style="padding:8px 12px; color:var(--text-dim);">No stocks matching filter</div>`;
+
+  // 2. Render 9 Kell Stage Columns
+  const gridHtml = KELL_STAGES.map((s, idx) => {
+    const colRows = buckets[idx];
+    const cardsHtml = colRows.map(r => `
+      <div class="kanban-card" style="border-left-color:${s.color};" onclick="openStandaloneChart('${r.ticker}')">
+        <div>
+          <div class="card-ticker">${r.ticker}</div>
+          <div class="card-meta">EXT ${r.ext > 0 ? '+' : ''}${r.ext.toFixed(1)}</div>
+        </div>
+        <span class="card-rs-badge" title="Relative Strength Ranking">${r.rs}</span>
+      </div>`).join("");
+
+    return `
+      <div class="kanban-col">
+        <div class="kanban-head" style="border-top: 3px solid ${s.color}; background:${s.bg};">
+          <div class="kanban-count" style="color:${s.color};">${colRows.length}</div>
+          <div class="kanban-label" style="color:${s.color};">${s.label}</div>
+          <div class="kanban-rule" style="color:${s.color};">${s.rule}</div>
+        </div>
+        <div class="kanban-body">${cardsHtml || `<div style="text-align:center; font-size:11px; color:var(--text-faint); margin-top:24px;">Empty</div>`}</div>
+      </div>`;
+  }).join("");
+  document.getElementById("kanbanGrid").innerHTML = gridHtml;
+}
+
+function renderAll(){
+  populateSectorFilter();
+  const rows = getFilteredSorted();
+  document.getElementById("rowCount").textContent = `${rows.length} of ${ROWS.length} tickers`;
+  document.getElementById("subline").textContent = `${ROWS.length} tickers · Source: ${dataSourceLabel}`;
+  renderStageBoard(rows);
+}
+
+/* ============================================================
+   DATA FETCH & PARSER
+   ============================================================ */
+const statusMsg = document.getElementById("statusMsg");
+function setStatus(msg, isErr){ statusMsg.textContent = msg; statusMsg.className = "status-msg" + (isErr ? " err" : ""); }
+
+function parseCSVGrid(text){
+  const rows = []; let row = [], field = '', inQuotes = false;
+  for(let i=0;i<text.length;i++){
+    const ch = text[i], next = text[i+1];
+    if(inQuotes){
+      if(ch === '"' && next === '"'){ field+='"'; i++; } else if(ch === '"'){ inQuotes=false; } else field += ch;
+    } else {
+      if(ch === '"'){ inQuotes = true; } else if(ch === ','){ row.push(field); field=''; }
+      else if(ch === '\n'){ row.push(field); field=''; rows.push(row); row=[]; } else if(ch === '\r'){} else field += ch;
+    }
+  }
+  if(field.length || row.length){ row.push(field); rows.push(row); }
+  return rows;
+}
+
+function num(v){ const n = parseFloat(String(v).replace('%','').replace(/,/g,'').trim()); return isNaN(n) ? 0 : n; }
+function bool(v){ return String(v).trim() !== "" ? 1 : 0; }
+
+function parseSheetCSV(text){
+  const grid = parseCSVGrid(text).filter(r => r.some(c=>c.trim()!==""));
+  if(grid.length < 2) throw new Error("CSV looks empty.");
+  const header = grid[0].map(h=>h.trim().toLowerCase());
+  const idx = name => header.findIndex(h=>h===name);
+  const cTicker = idx("ticker"), cCompany = idx("company"), cSector = idx("sector"), cIndustry = idx("industry");
+  const cP6 = idx("% 6m"), cP3 = idx("% 3m"), cP1 = idx("% 1m"), c6 = idx("6m"), c3 = idx("3m"), c1 = idx("1m");
+  const cRS = idx("rs"), cEXT = idx("ext"), cVol = idx("avg $ vol");
+  if(cTicker === -1) throw new Error("Couldn't find a 'Ticker' column.");
+
+  return grid.slice(1).filter(r => (r[cTicker]||"").trim()).map(r => ({
+    ticker: (r[cTicker]||"").trim().toUpperCase(), company: (r[cCompany]||"").trim(), sector: (r[cSector]||"").trim(), industry: (r[cIndustry]||"").trim(),
+    p6m: num(r[cP6]), p3m: num(r[cP3]), p1m: num(r[cP1]), c6m: bool(r[c6]), c3m: bool(r[c3]), c1m: bool(r[c1]),
+    rs: num(r[cRS]), ext: num(r[cEXT]), vol: (r[cVol]||"").trim(),
+  }));
+}
+
+async function refreshLiveData(){
+  const btn = document.getElementById("btnRefresh"); btn.textContent = "↻ Fetching…"; setStatus("Fetching live sheet…");
+  const freshUrl = EXPORT_CSV_URL + (EXPORT_CSV_URL.includes('?') ? '&' : '?') + 'cachebust=' + Date.now();
+  let text = null, lastErr = null, source = null;
+
+  try{ const res = await fetch(freshUrl, {cache:"no-store"}); if(res.ok){ text = await res.text(); source = "direct"; } }catch(e){ lastErr = e; }
+  if(!text || text.trim().startsWith('<')){
+    for(const build of CORS_PROXIES){
+      try{ const res = await fetch(build(freshUrl)); if(res.ok){ text = await res.text(); source = "proxy"; break; } }catch(e){ lastErr = e; }
+    }
+  }
+
+  if(!text || text.trim().startsWith('<')){
+    setStatus(`Live fetch blocked by browser — please use CSV upload below.`, true);
+    btn.textContent = "↻ Refresh Live Data"; return;
+  }
+
+  try{ ROWS = parseSheetCSV(text); dataSourceLabel = `live sheet (via ${source})`; renderAll(); setStatus(`✓ Loaded ${ROWS.length} tickers via ${source}.`); }
+  catch(e){ setStatus(`Parse error: ${e.message}`, true); }
+  btn.textContent = "↻ Refresh Live Data";
+}
+
+/* ============================================================
+   STANDALONE MODAL ENGINE
+   ============================================================ */
+let currentModalChart = null, modalResizeObserver = null;
+function closeChartModal(e) {
+  if (!e || e.target.id === 'chartModalBackdrop' || !e.target) {
+    document.getElementById('chartModalBackdrop').style.display = 'none';
+    if (currentModalChart) { currentModalChart.remove(); currentModalChart = null; }
+    if (modalResizeObserver) { modalResizeObserver.disconnect(); modalResizeObserver = null; }
+  }
+}
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeChartModal(); });
+
+function openStandaloneChart(ticker) {
+  const backdrop = document.getElementById('chartModalBackdrop');
+  const container = document.getElementById('modalChartContainer');
+  const titleEl = document.getElementById('modalTitle');
+  const statusEl = document.getElementById('modalStatus');
+
+  titleEl.innerHTML = `${ticker} <span style="font-size:12px; font-weight:400; color:var(--text-dim);">· Institutional Daily HLC</span>`;
+  statusEl.textContent = 'FETCHING LIVE DATA...'; statusEl.style.color = 'var(--amber)'; backdrop.style.display = 'flex';
+  if (currentModalChart) { currentModalChart.remove(); currentModalChart = null; }
+  if (modalResizeObserver) { modalResizeObserver.disconnect(); }
+  container.innerHTML = '';
+
+  const isDark = (document.documentElement.getAttribute("data-theme") || "dark") === "dark";
+  const chartBg = isDark ? '#101625' : '#ffffff', textColor = isDark ? '#8b93a8' : '#5b6478', gridColor = isDark ? 'rgba(33, 42, 61, 0.4)' : 'rgba(221, 226, 236, 0.6)';
+
+  currentModalChart = LightweightCharts.createChart(container, {
+    layout: { background: { type: 'solid', color: chartBg }, textColor: textColor, fontFamily: "'JetBrains Mono', monospace" },
+    grid: { vertLines: { color: gridColor }, horzLines: { color: gridColor } },
+    rightPriceScale: { borderColor: gridColor }, timeScale: { borderColor: gridColor, timeVisible: false },
+    crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+  });
+
+  modalResizeObserver = new ResizeObserver(entries => {
+    if (entries.length === 0 || entries[0].target !== container || !currentModalChart) return;
+    currentModalChart.applyOptions({ width: container.clientWidth, height: container.clientHeight });
+  });
+  modalResizeObserver.observe(container);
+
+  function calculateEMA(data, period, key) {
+    const k = 2 / (period + 1); let ema = 0, started = false; const result = [];
+    for (let i = 0; i < data.length; i++) {
+      const val = data[i][key];
+      if (!started) { ema = val; started = true; } else { ema = (val - ema) * k + ema; }
+      result.push({ time: data[i].time, value: ema });
+    }
+    return result;
+  }
+
+  async function loadModalData() {
+    const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=1y`;
+    const proxies = [ url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`, url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`, url => url ];
+    let json = null;
+    for (const buildProxy of proxies) {
+      try { const res = await fetch(buildProxy(targetUrl)); if (res.ok) { json = await res.json(); break; } } catch (e) {}
+    }
+
+    if (!json || !json.chart || !json.chart.result) { statusEl.textContent = 'DATA ERROR'; statusEl.style.color = 'var(--red)'; return; }
+    const result = json.chart.result[0], timestamps = result.timestamp || [], quote = result.indicators.quote[0] || {}, rawData = [];
+    for (let i = 0; i < timestamps.length; i++) {
+      if (quote.open[i] != null && quote.high[i] != null && quote.low[i] != null && quote.close[i] != null) {
+        rawData.push({ time: new Date(timestamps[i] * 1000).toISOString().split('T')[0], open: quote.open[i], high: quote.high[i], low: quote.low[i], close: quote.close[i] });
+      }
+    }
+
+    const uniqueMap = new Map(); rawData.forEach(bar => uniqueMap.set(bar.time, bar));
+    const cleanData = Array.from(uniqueMap.values()).sort((a, b) => a.time.localeCompare(b.time));
+    if (cleanData.length === 0) { statusEl.textContent = 'NO BARS FOUND'; return; }
+
+    const maHighData = calculateEMA(cleanData, 21, 'high'), maLowData = calculateEMA(cleanData, 21, 'low'), ema21Data = calculateEMA(cleanData, 21, 'close');
+    const dcLength = 100, dcOffset = 2, dcUpperData = [], dcLowerData = [], dcBasisData = [];
+    for (let i = 0; i < cleanData.length; i++) {
+      if (i >= dcLength - 1) {
+        const win = cleanData.slice(i - dcLength + 1, i + 1), hh = Math.max(...win.map(b => b.high)), ll = Math.min(...win.map(b => b.low));
+        if (i + dcOffset < cleanData.length) {
+          const tTime = cleanData[i + dcOffset].time;
+          dcUpperData.push({ time: tTime, value: hh }); dcLowerData.push({ time: tTime, value: ll }); dcBasisData.push({ time: tTime, value: (hh + ll) / 2 });
+        }
+      }
+    }
+
+    const cloudHighSeries = currentModalChart.addAreaSeries({ topColor: isDark ? 'rgba(200, 200, 205, 0.08)' : 'rgba(160, 160, 165, 0.12)', bottomColor: isDark ? 'rgba(200, 200, 205, 0.08)' : 'rgba(160, 160, 165, 0.12)', lineColor: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)', lineWidth: 1, priceLineVisible: false, lastValueVisible: false });
+    cloudHighSeries.setData(maHighData);
+    const cloudLowMaskSeries = currentModalChart.addAreaSeries({ topColor: chartBg, bottomColor: chartBg, lineColor: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)', lineWidth: 1, priceLineVisible: false, lastValueVisible: false });
+    cloudLowMaskSeries.setData(maLowData);
+    const ema21Series = currentModalChart.addLineSeries({ color: isDark ? '#64748b' : '#94a3b8', lineWidth: 1, priceLineVisible: false, lastValueVisible: false });
+    ema21Series.setData(ema21Data);
+
+    const dcLineColor = isDark ? 'rgba(245, 185, 66, 0.5)' : 'rgba(185, 120, 26, 0.5)';
+    currentModalChart.addLineSeries({ color: dcLineColor, lineWidth: 1, lineStyle: 2, priceLineVisible: false, lastValueVisible: false }).setData(dcUpperData);
+    currentModalChart.addLineSeries({ color: dcLineColor, lineWidth: 1, lineStyle: 2, priceLineVisible: false, lastValueVisible: false }).setData(dcLowerData);
+    currentModalChart.addLineSeries({ color: dcLineColor, lineWidth: 1, lineStyle: 2, priceLineVisible: false, lastValueVisible: false }).setData(dcBasisData);
+
+    const maHighMap = new Map(maHighData.map(item => [item.time, item.value]));
+    const coloredBars = cleanData.map(bar => {
+      const currentMAHigh = maHighMap.get(bar.time);
+      return { ...bar, color: (currentMAHigh !== undefined && bar.close < currentMAHigh) ? "#e600e6" : (isDark ? "#f8fafc" : "#000000") };
+    });
+    currentModalChart.addBarSeries({ thinBars: false, openVisible: false }).setData(coloredBars);
+
+    statusEl.textContent = 'LIVE YAHOO DATA'; statusEl.style.color = 'var(--teal)'; currentModalChart.timeScale().fitContent();
+  }
+  loadModalData();
+}
+
+/* ============================================================
+   UI WIRING & INIT
+   ============================================================ */
+document.getElementById("btnRefresh").addEventListener("click", refreshLiveData);
+document.getElementById("searchInput").addEventListener("input", renderAll);
+document.getElementById("sectorFilter").addEventListener("change", renderAll);
+document.getElementById("toggleDataPanel").addEventListener("click", ()=>{
+  const body = document.getElementById("dataPanelBody"), btn = document.getElementById("toggleDataPanel");
+  body.classList.toggle("open"); btn.textContent = body.classList.contains("open") ? "Close ▴" : "Open ▾";
+});
+
+const dropzone = document.getElementById("dropzone"), fileInput = document.getElementById("fileInput");
+function readFile(file){
+  if(!file || !/\.csv$/i.test(file.name)){ setStatus("Please choose a valid .csv file.", true); return; }
+  const reader = new FileReader();
+  reader.onload = e=>{
+    try{ ROWS = parseSheetCSV(e.target.result); dataSourceLabel = `uploaded file (${file.name})`; renderAll(); setStatus(`✓ Loaded ${ROWS.length} tickers from ${file.name}.`); }
+    catch(err){ setStatus(`Parse error: ${err.message}`, true); }
+  };
+  reader.readAsText(file);
+}
+dropzone.addEventListener("click", ()=> fileInput.click());
+fileInput.addEventListener("change", e=> readFile(e.target.files[0]));
+["dragenter","dragover"].forEach(evt=> dropzone.addEventListener(evt, e=>{ e.preventDefault(); dropzone.classList.add("drag"); }));
+["dragleave","drop"].forEach(evt=> dropzone.addEventListener(evt, e=>{ e.preventDefault(); dropzone.classList.remove("drag"); }));
+dropzone.addEventListener("drop", e=>{ const f = e.dataTransfer.files[0]; if(f) readFile(f); });
+
+function updateThemeToggleUI(){
+  const theme = document.documentElement.getAttribute("data-theme") || "dark";
+  document.getElementById("optDark").classList.toggle("active", theme==="dark");
+  document.getElementById("optLight").classList.toggle("active", theme==="light");
+}
+function setTheme(theme){
+  document.documentElement.setAttribute("data-theme", theme); updateThemeToggleUI();
+  try{ localStorage.setItem('market-monitor-theme', theme); }catch(e){}
+}
+document.getElementById("optDark").addEventListener("click", ()=>setTheme("dark"));
+document.getElementById("optLight").addEventListener("click", ()=>setTheme("light"));
+
+(function init(){
+  try{ const saved = localStorage.getItem('market-monitor-theme'); if(saved) document.documentElement.setAttribute("data-theme", saved); }catch(e){}
+  updateThemeToggleUI(); renderAll(); refreshLiveData();
+})();
+</script>
+</body>
+</html>
