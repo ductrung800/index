@@ -73,53 +73,27 @@
   .theme-toggle .opt{ font-size:14px; padding:5px 11px; border-radius:100px; color:var(--text-faint); font-weight:600; }
   .theme-toggle .opt.active{background:var(--teal); color:#04150f;}
 
-  .btn{
-    background:var(--panel); border:1px solid var(--line); color:var(--text); font-family:'JetBrains Mono',monospace;
-    font-size:11.5px; padding:8px 14px; border-radius:7px; cursor:pointer; font-weight:600; transition:all .15s;
-  }
-  .btn:hover{border-color:var(--teal); color:var(--teal);}
-  .btn.primary{background:var(--teal); color:#04150f; border-color:var(--teal);}
-  .btn.primary:hover{filter:brightness(1.08); color:#04150f;}
-  .btn.amber{background:var(--amber); color:#1a1204; border-color:var(--amber);}
-  .btn.amber:hover{filter:brightness(1.08); color:#1a1204;}
-  .btn.small{padding:6px 12px; font-size:11px;}
-  .btn:disabled{opacity:.55; cursor:not-allowed;}
-
   .card{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:16px 18px;}
   .card-label{font-size:10.5px; text-transform:uppercase; letter-spacing:.1em; color:var(--text-faint); font-weight:700; margin-bottom:12px;}
 
   /* ---------- LAYOUT ---------- */
-  .tv-layout{ display:grid; grid-template-columns: 340px 1fr; gap:18px; align-items:start; }
+  .tv-layout{ display:grid; grid-template-columns: 320px 1fr; gap:18px; align-items:start; }
   @media(max-width:900px){ .tv-layout{ grid-template-columns:1fr; } }
 
-  .left-col{ display:flex; flex-direction:column; gap:16px; }
+  .left-col{ display:flex; flex-direction:column; gap:16px; height: calc(100vh - 180px); min-height: 560px; }
+  .left-col .card { display: flex; flex-direction: column; height: 100%; }
 
-  select.preset-select{
-    width:100%; background:var(--input-bg); border:1px solid var(--line); color:var(--text);
-    padding:9px 10px; border-radius:7px; font-family:'JetBrains Mono',monospace; font-size:11.5px; font-weight:600;
-    outline:none; cursor:pointer;
-  }
-  select.preset-select:focus{border-color:var(--teal);}
-  .field-label{font-size:10px; text-transform:uppercase; letter-spacing:.08em; color:var(--text-faint); font-weight:700; margin-bottom:6px; display:block;}
-
-  .dropzone{
-    border:2px dashed var(--line); border-radius:10px; padding:22px 16px; text-align:center;
-    cursor:pointer; transition:all .15s; background:var(--input-bg); margin-top:14px;
-  }
-  .dropzone:hover, .dropzone.drag{border-color:var(--amber); background:rgba(245,185,66,.06);}
-  .dz-title{font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; margin-bottom:6px;}
-  .dz-sub{font-size:10.5px; color:var(--text-faint); line-height:1.5; margin-bottom:14px;}
-
-  .strategy-grid-wrap{ max-height:420px; overflow-y:auto; padding-right:4px; }
-  .strategy-grid{ display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+  /* ---------- STRATEGY ARRAY SUMMARY (SINGLE COLUMN & VERTICAL) ---------- */
+  .strategy-grid-wrap{ flex: 1; overflow-y:auto; padding-right:6px; }
+  .strategy-grid{ display:grid; grid-template-columns: 1fr; gap:6px; }
   .strategy-item{
     display:flex; justify-content:space-between; align-items:center; gap:6px;
-    padding:7px 9px; border-radius:6px; border:1px solid var(--line); background:var(--input-bg);
-    font-size:10.5px; font-weight:600; cursor:pointer; transition:all .15s; color:var(--text-dim);
+    padding:8px 10px; border-radius:6px; border:1px solid var(--line); background:var(--input-bg);
+    font-size:11px; font-weight:600; cursor:pointer; transition:all .15s; color:var(--text-dim);
   }
   .strategy-item span.name{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .strategy-item span.count{
-    font-family:'JetBrains Mono',monospace; font-size:9.5px; font-weight:700; padding:1px 6px; border-radius:100px;
+    font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; padding:2px 7px; border-radius:100px;
     background:var(--line-soft); color:var(--text-faint); flex-shrink:0;
   }
   .strategy-item.has-data{ border-color:rgba(32,217,184,.35); color:var(--text); }
@@ -127,8 +101,13 @@
   .strategy-item.selected{ border-color:var(--teal); background:rgba(32,217,184,.1); color:var(--teal); }
   .strategy-item:hover{ border-color:var(--teal); }
 
+  /* Slim scrollbar for Strategy Array */
+  .strategy-grid-wrap::-webkit-scrollbar { width: 5px; }
+  .strategy-grid-wrap::-webkit-scrollbar-thumb { background: var(--line); border-radius: 4px; }
+  .strategy-grid-wrap::-webkit-scrollbar-track { background: transparent; }
+
   /* ---------- RIGHT PANEL ---------- */
-  .right-panel{ min-height:560px; display:flex; flex-direction:column; }
+  .right-panel{ min-height: calc(100vh - 180px); display:flex; flex-direction:column; }
   .rp-head{ display:flex; justify-content:space-between; align-items:flex-start; border-bottom:1px solid var(--line); padding-bottom:14px; margin-bottom:16px; gap:12px; flex-wrap:wrap; }
   .rp-pill{ display:inline-block; font-size:9.5px; font-weight:800; text-transform:uppercase; letter-spacing:.06em; color:var(--teal); background:rgba(32,217,184,.12); padding:3px 8px; border-radius:5px; margin-bottom:6px; }
   .rp-title{ font-size:15px; font-weight:800; text-transform:uppercase; letter-spacing:.02em; }
@@ -139,6 +118,7 @@
     letter-spacing:.05em; color:var(--text-faint); border-radius:6px; cursor:pointer; font-family:'Inter',sans-serif; transition:all .15s;
   }
   .view-toggle button.active{ background:var(--panel); color:var(--teal); box-shadow:0 1px 3px rgba(0,0,0,.2); }
+  .view-toggle button.accent.active { background: var(--teal); color: #04150f; }
 
   .captured-badge{ font-size:10.5px; font-weight:700; background:var(--input-bg); border:1px solid var(--line); padding:4px 10px; border-radius:6px; color:var(--text-dim); align-self:flex-end; margin-bottom:10px; }
 
@@ -154,7 +134,7 @@
   table.tv-table{ width:100%; border-collapse:collapse; }
   table.tv-table thead th{
     background:var(--navy-head); text-align:left; font-size:9.5px; text-transform:uppercase; letter-spacing:.06em;
-    color:var(--text-faint); padding:9px 12px; position:sticky; top:0;
+    color:var(--text-faint); padding:9px 12px; position:sticky; top:0; z-index: 2;
   }
   table.tv-table tbody td{ padding:9px 12px; border-bottom:1px solid var(--line-soft); font-size:12px; }
   table.tv-table tbody tr:hover{ background:var(--line-soft); }
@@ -163,7 +143,7 @@
     display:inline-block; background:rgba(32,217,184,.1); border:1px solid rgba(32,217,184,.35); color:var(--teal);
     font-weight:800; font-family:'JetBrains Mono',monospace; font-size:11.5px; padding:3px 9px; border-radius:5px;
   }
-  .table-scroll{ flex:1; overflow-y:auto; border:1px solid var(--line); border-radius:8px; max-height:600px; }
+  .table-scroll{ flex:1; overflow-y:auto; border:1px solid var(--line); border-radius:8px; max-height: calc(100vh - 280px); }
 
   .hot-tickers-box{
     background:var(--input-bg); border:1px solid var(--line); border-radius:8px; padding:12px 14px; min-height:44px;
@@ -173,10 +153,30 @@
   .hot-tickers-box .empty{ font-size:11.5px; color:var(--text-faint); font-style:italic; }
   .section-heading{ display:flex; justify-content:space-between; font-size:11.5px; font-weight:700; color:var(--text-dim); margin-bottom:8px; border-left:2px solid var(--teal); padding-left:8px; }
 
-  .master-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(230px,1fr)); gap:14px; overflow-y:auto; padding-right:4px; }
+  .master-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(230px,1fr)); gap:14px; overflow-y:auto; padding-right:4px; max-height: calc(100vh - 340px); }
   .master-card{ background:var(--panel2); border:1px solid var(--line); border-radius:8px; padding:12px 14px; }
   .master-card .chips{ display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
   .master-card .chips span{ font-family:'JetBrains Mono',monospace; font-size:10.5px; font-weight:700; color:var(--text); }
+
+  /* ---------- CHART GRID VIEW (TRADERSLAB STYLE) ---------- */
+  .charts-grid-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 16px;
+    padding-top: 8px;
+    overflow-y: auto;
+    max-height: calc(100vh - 260px);
+    padding-right: 6px;
+  }
+  .chart-card-wrapper {
+    background: var(--input-bg);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+    height: 320px;
+    position: relative;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
 </style>
 </head>
 <body>
@@ -193,7 +193,7 @@
     <div>
       <div class="brand-eyebrow">Pine Screener Import</div>
       <h1>TradingView Watchlist</h1>
-      <div class="subline">Drop a TradingView screener CSV or watchlist .txt export into any of the 37 preset slots below.</div>
+      <div class="subline">Sync your Pine Screener scans directly via Chrome Extension into any of the 37 preset slots below.</div>
     </div>
     <div class="header-right">
       <div class="theme-toggle" id="themeToggle">
@@ -207,28 +207,12 @@
 
     <!-- ================= LEFT COLUMN ================= -->
     <div class="left-col">
-
-      <div class="card">
-        <div class="card-label">Pine Screener Dropzone</div>
-
-        <label class="field-label">Select Active Preset Slot</label>
-        <select class="preset-select" id="presetSelect"></select>
-
-        <div class="dropzone" id="dropzone">
-          <input type="file" id="fileInput" accept=".csv,.txt" style="display:none;">
-          <div class="dz-title" id="dzTitle">Load Data</div>
-          <div class="dz-sub">Run your scan on TradingView, click "Export to CSV" or copy your watchlist, and drop the file here.</div>
-          <button class="btn amber small" id="btnSelectFile" type="button">Select Target File</button>
-        </div>
-      </div>
-
       <div class="card">
         <div class="card-label">Strategy Array Summary</div>
         <div class="strategy-grid-wrap">
           <div class="strategy-grid" id="strategyGrid"></div>
         </div>
       </div>
-
     </div>
 
     <!-- ================= RIGHT COLUMN ================= -->
@@ -241,6 +225,7 @@
         <div class="view-toggle">
           <button id="btnSingle" class="active">Single List</button>
           <button id="btnGrid">Master Grid</button>
+          <button id="btnChart" class="accent">Chart Grid</button>
         </div>
       </div>
 
@@ -281,79 +266,10 @@ function loadPresets(){
   PRESETS_LIST.forEach(p => empty[p] = []);
   return empty;
 }
-function savePresets(presets){
-  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(presets)); }
-  catch(e){ console.warn("Couldn't save presets:", e); }
-}
 
 let presets = loadPresets();
 let selectedPreset = PRESETS_LIST[0];
-let viewMode = "single"; // "single" | "grid"
-
-/* ============================================================
-   PARSER — ports the Python /api/import-tv-screener logic to
-   the browser, since a static GitHub Pages site has no backend.
-   ============================================================ */
-function parseSimpleCSV(text){
-  // Minimal CSV line parser (handles quoted fields with embedded commas)
-  const rows = [];
-  let row = [], field = '', inQuotes = false;
-  for(let i=0;i<text.length;i++){
-    const ch = text[i], next = text[i+1];
-    if(inQuotes){
-      if(ch === '"' && next === '"'){ field+='"'; i++; }
-      else if(ch === '"'){ inQuotes=false; }
-      else field += ch;
-    } else {
-      if(ch === '"'){ inQuotes = true; }
-      else if(ch === ','){ row.push(field); field=''; }
-      else if(ch === '\n'){ row.push(field); field=''; rows.push(row); row=[]; }
-      else if(ch === '\r'){ /* skip */ }
-      else field += ch;
-    }
-  }
-  if(field.length || row.length){ row.push(field); rows.push(row); }
-  return rows;
-}
-
-function extractTickersFromText(text){
-  text = text.replace(/^\uFEFF/, '').trim(); // strip BOM if present
-  let rawTokens = [];
-
-  // 1) TradingView screener CSV export — has a "Ticker" or "Symbol" column
-  if(text.toLowerCase().includes('ticker') || text.toLowerCase().includes('symbol')){
-    try{
-      const grid = parseSimpleCSV(text);
-      if(grid.length > 1){
-        const header = grid[0].map(h => h.trim().toLowerCase().replace(/"/g,''));
-        let colIdx = header.indexOf('ticker');
-        if(colIdx === -1) colIdx = header.indexOf('symbol');
-        if(colIdx !== -1){
-          rawTokens = grid.slice(1).map(r => (r[colIdx]||'').trim()).filter(Boolean);
-        }
-      }
-    }catch(e){ /* fall through to flat-text parsing below */ }
-  }
-
-  // 2) TradingView watchlist .txt export — flat comma/tab/newline separated
-  if(rawTokens.length === 0){
-    const flattened = text.replace(/,/g, '\n').replace(/\t/g, '\n');
-    rawTokens = flattened.split('\n')
-      .map(l => l.trim())
-      .filter(l => l && !l.startsWith('#') && !l.startsWith('//'));
-  }
-
-  // 3) Clean, strip exchange prefixes, dedupe
-  const tickers = [];
-  rawTokens.forEach(token => {
-    let clean = String(token).trim().replace(/"/g,'').replace(/'/g,'');
-    if(!clean || ['ticker','symbol'].includes(clean.toLowerCase())) return;
-    let symbol = clean.split(':').pop().trim().toUpperCase();
-    symbol = symbol.replace(/[^A-Z0-9.\-]/g, '');
-    if(symbol && !tickers.includes(symbol)) tickers.push(symbol);
-  });
-  return tickers;
-}
+let viewMode = "single"; // "single" | "grid" | "chart"
 
 function getHotTickers(){
   const counts = {};
@@ -365,21 +281,82 @@ function getHotTickers(){
 }
 
 /* ============================================================
-   RENDER
+   TRADINGVIEW EMBEDDED WIDGET LOADER
    ============================================================ */
-function renderPresetSelect(){
-  const sel = document.getElementById("presetSelect");
-  sel.innerHTML = PRESETS_LIST.map(p =>
-    `<option value="${p}" ${p===selectedPreset?'selected':''}>${p} (${presets[p].length} stocks logged)</option>`
-  ).join('');
+function loadTradingViewScript(callback) {
+  if (window.TradingView) { callback(); return; }
+  const script = document.createElement("script");
+  script.src = "https://s3.tradingview.com/tv.js";
+  script.async = true;
+  script.onload = callback;
+  document.head.appendChild(script);
 }
 
+function renderChartGrid(tickers) {
+  const body = document.getElementById("rpBody");
+  if (tickers.length === 0) {
+    body.innerHTML = `<div class="empty-state">
+      <div class="emoji">📈</div>
+      <div class="title">No Tickers to Render</div>
+      <p>Select a preset with captured symbols to generate live candlestick grids.</p>
+    </div>`;
+    return;
+  }
+
+  // Limit to top 15 tickers to prevent browser lag from rendering too many simultaneous iframes
+  const activeBatch = tickers.slice(0, 15);
+  body.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+    <span style="font-size:11px; color:var(--text-faint); font-style:italic;">Showing top ${activeBatch.length} charts with 50 SMA and 10/30 WMA overlays</span>
+    <div class="captured-badge" style="margin-bottom:0;">Captured: ${tickers.length} Stocks</div>
+  </div>
+  <div class="charts-grid-container" id="tvChartGrid"></div>`;
+  
+  const grid = document.getElementById("tvChartGrid");
+  const isDark = document.documentElement.getAttribute("data-theme") !== "light";
+
+  loadTradingViewScript(() => {
+    activeBatch.forEach((symbol, idx) => {
+      const cardId = `tv-widget-${idx}`;
+      const card = document.createElement("div");
+      card.className = "chart-card-wrapper";
+      card.id = cardId;
+      grid.appendChild(card);
+
+      const cleanSymbol = symbol.includes(":") ? symbol.split(":")[1] : symbol;
+
+      new TradingView.widget({
+        "container_id": cardId,
+        "autosize": true,
+        "symbol": cleanSymbol,
+        "interval": "D",
+        "timezone": "Etc/UTC",
+        "theme": isDark ? "dark" : "light",
+        "style": "1",
+        "locale": "en",
+        "toolbar_bg": "#f1f3f6",
+        "enable_publishing": false,
+        "hide_top_toolbar": false,
+        "hide_legend": false,
+        "save_image": false,
+        "studies": [
+          { "id": "MASimple@tv-basicstudies", "inputs": { "length": 50 } },
+          { "id": "MAWeighted@tv-basicstudies", "inputs": { "length": 10 } },
+          { "id": "MAWeighted@tv-basicstudies", "inputs": { "length": 30 } }
+        ]
+      });
+    });
+  });
+}
+
+/* ============================================================
+   RENDER
+   ============================================================ */
 function renderStrategyGrid(){
   const el = document.getElementById("strategyGrid");
   el.innerHTML = PRESETS_LIST.map(p => {
     const count = presets[p].length;
     const hasData = count > 0;
-    const isSelected = p === selectedPreset && viewMode === "single";
+    const isSelected = p === selectedPreset && (viewMode === "single" || viewMode === "chart");
     return `<div class="strategy-item ${hasData?'has-data':''} ${isSelected?'selected':''}" data-preset="${p.replace(/"/g,'&quot;')}">
       <span class="name">${p}</span><span class="count">${count}</span>
     </div>`;
@@ -387,7 +364,7 @@ function renderStrategyGrid(){
   el.querySelectorAll('.strategy-item').forEach(item=>{
     item.addEventListener('click', ()=>{
       selectedPreset = item.getAttribute('data-preset');
-      viewMode = "single";
+      if (viewMode === "grid") viewMode = "single";
       renderAll();
     });
   });
@@ -396,8 +373,18 @@ function renderStrategyGrid(){
 function renderRightPanel(){
   document.getElementById("btnSingle").classList.toggle("active", viewMode==="single");
   document.getElementById("btnGrid").classList.toggle("active", viewMode==="grid");
-  document.getElementById("rpPill").textContent = viewMode==="single" ? "Active Watchlist Panel" : "Master Overview Dashboard";
-  document.getElementById("rpTitle").textContent = viewMode==="single" ? `${selectedPreset} Results` : "All Scanned TV Strategies";
+  document.getElementById("btnChart").classList.toggle("active", viewMode==="chart");
+  
+  if (viewMode === "grid") {
+    document.getElementById("rpPill").textContent = "Master Overview Dashboard";
+    document.getElementById("rpTitle").textContent = "All Scanned TV Strategies";
+  } else if (viewMode === "chart") {
+    document.getElementById("rpPill").textContent = "Live Candlestick Grid";
+    document.getElementById("rpTitle").textContent = `${selectedPreset} Charts`;
+  } else {
+    document.getElementById("rpPill").textContent = "Active Watchlist Panel";
+    document.getElementById("rpTitle").textContent = `${selectedPreset} Results`;
+  }
 
   const body = document.getElementById("rpBody");
 
@@ -429,14 +416,20 @@ function renderRightPanel(){
     return;
   }
 
-  // Single list view
   const tickers = presets[selectedPreset] || [];
+  
+  if (viewMode === "chart") {
+    renderChartGrid(tickers);
+    return;
+  }
+
+  // Single list view
   let h = `<div style="display:flex; justify-content:flex-end;"><div class="captured-badge">Captured: ${tickers.length} Stocks</div></div>`;
   if(tickers.length === 0){
     h += `<div class="empty-state">
       <div class="emoji">📁</div>
       <div class="title">This Preset Container is Currently Empty</div>
-      <p>No local data found. Select your TradingView text list or CSV file in the left panel to populate this slot.</p>
+      <p>No local data found. Use your TradingView screener Chrome Extension to send scanned tickers directly into this slot.</p>
     </div>`;
   } else {
     h += `<div class="table-scroll"><table class="tv-table">
@@ -448,55 +441,18 @@ function renderRightPanel(){
 }
 
 function renderAll(){
-  renderPresetSelect();
+  presets = loadPresets(); // Refresh from local storage in case extension updated it
   renderStrategyGrid();
   renderRightPanel();
-  document.getElementById("dzTitle").textContent = `Load ${selectedPreset} Data`;
 }
 
 /* ============================================================
-   FILE HANDLING
+   EVENT LISTENERS & THEME
    ============================================================ */
-function handleFile(file){
-  if(!file) return;
-  if(!/\.(csv|txt)$/i.test(file.name)){
-    alert("Please choose a .csv or .txt file.");
-    return;
-  }
-  const reader = new FileReader();
-  reader.onload = e => {
-    const tickers = extractTickersFromText(e.target.result);
-    presets[selectedPreset] = tickers;
-    savePresets(presets);
-    viewMode = "single";
-    renderAll();
-  };
-  reader.onerror = () => alert("Couldn't read that file.");
-  reader.readAsText(file);
-}
-
-const dropzone = document.getElementById("dropzone");
-const fileInput = document.getElementById("fileInput");
-document.getElementById("btnSelectFile").addEventListener("click", (e)=>{ e.stopPropagation(); fileInput.click(); });
-dropzone.addEventListener("click", ()=> fileInput.click());
-fileInput.addEventListener("change", e => handleFile(e.target.files[0]));
-["dragenter","dragover"].forEach(evt => dropzone.addEventListener(evt, e=>{ e.preventDefault(); dropzone.classList.add("drag"); }));
-["dragleave","drop"].forEach(evt => dropzone.addEventListener(evt, e=>{ e.preventDefault(); dropzone.classList.remove("drag"); }));
-dropzone.addEventListener("drop", e=>{ const f = e.dataTransfer.files[0]; if(f) handleFile(f); });
-
-document.getElementById("presetSelect").addEventListener("change", e=>{
-  selectedPreset = e.target.value;
-  viewMode = "single";
-  renderAll();
-});
 document.getElementById("btnSingle").addEventListener("click", ()=>{ viewMode="single"; renderAll(); });
 document.getElementById("btnGrid").addEventListener("click", ()=>{ viewMode="grid"; renderAll(); });
+document.getElementById("btnChart").addEventListener("click", ()=>{ viewMode="chart"; renderAll(); });
 
-/* ============================================================
-   THEME (persisted via localStorage — works on a real deployed
-   site, unlike window.storage which only exists inside Claude's
-   own artifact preview)
-   ============================================================ */
 function updateThemeToggleUI(){
   const theme = document.documentElement.getAttribute("data-theme") || "dark";
   document.getElementById("optDark").classList.toggle("active", theme==="dark");
@@ -506,9 +462,15 @@ function setTheme(theme){
   document.documentElement.setAttribute("data-theme", theme);
   updateThemeToggleUI();
   try{ localStorage.setItem('market-monitor-theme', theme); }catch(e){}
+  if (viewMode === "chart") renderAll(); // Re-render charts with new color theme
 }
 document.getElementById("optDark").addEventListener("click", ()=>setTheme("dark"));
 document.getElementById("optLight").addEventListener("click", ()=>setTheme("light"));
+
+// Listen for storage events so if your Chrome extension updates a preset in another tab, this page auto-refreshes
+window.addEventListener('storage', (e) => {
+  if (e.key === STORAGE_KEY) renderAll();
+});
 
 (function init(){
   try{
