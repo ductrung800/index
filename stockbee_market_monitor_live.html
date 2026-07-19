@@ -145,32 +145,37 @@
   </div>
 </div>
 
-<!-- ================= SPY DANGER SIGNALS PANEL ================= -->
-<div class="panel" id="spyDangerPanel" style="margin-bottom: 16px;">
-  <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e1e0d9; padding-bottom:10px; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
-    <div style="display:flex; align-items:center; gap:8px;">
-      <span style="color:#eda100; font-weight:800; font-size:14px;">⚠</span>
-      <span class="panel-label" style="margin:0;">SPY DANGER SIGNALS (<span id="spyDangerCount">0</span>)</span>
-    </div>
-    <span id="spyDangerBadge" style="padding:3px 10px; border-radius:100px; font-size:11px; font-family:'JetBrains Mono',monospace; font-weight:700; background:rgba(27,175,122,.15); color:#1baf7a;">0 Active — Healthy</span>
-  </div>
-  <ul id="spyDangerList" style="list-style:none; display:flex; flex-direction:column; gap:8px; font-family:'JetBrains Mono',monospace; font-size:11.5px; margin:0; padding:0;">
-    <li style="color:#898781; font-style:italic;">Scanning for active signals...</li>
-  </ul>
-</div>
+<!-- ================= MARKET DANGER SIGNALS CONTAINER ================= -->
+<div style="display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap;">
 
-<!-- ================= QQQ DANGER SIGNALS PANEL ================= -->
-<div class="panel" id="qqqDangerPanel" style="margin-bottom: 16px;">
-  <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e1e0d9; padding-bottom:10px; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
-    <div style="display:flex; align-items:center; gap:8px;">
-      <span style="color:#eda100; font-weight:800; font-size:14px;">⚠</span>
-      <span class="panel-label" style="margin:0;">QQQ DANGER SIGNALS (<span id="qqqDangerCount">0</span>)</span>
+  <!-- ================= SPY DANGER SIGNALS PANEL ================= -->
+  <div class="panel" id="spyDangerPanel" style="flex: 1; min-width: 300px; margin-bottom: 16px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e1e0d9; padding-bottom:10px; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span style="color:#eda100; font-weight:800; font-size:14px;">⚠</span>
+        <span class="panel-label" style="margin:0;">SPY DANGER SIGNALS (<span id="spyDangerCount">0</span>)</span>
+      </div>
+      <span id="spyDangerBadge" style="padding:3px 10px; border-radius:100px; font-size:11px; font-family:'JetBrains Mono',monospace; font-weight:700; background:rgba(27,175,122,.15); color:#1baf7a;">0 Active — Healthy</span>
     </div>
-    <span id="qqqDangerBadge" style="padding:3px 10px; border-radius:100px; font-size:11px; font-family:'JetBrains Mono',monospace; font-weight:700; background:rgba(27,175,122,.15); color:#1baf7a;">0 Active — Healthy</span>
+    <ul id="spyDangerList" style="list-style:none; display:flex; flex-direction:column; gap:8px; font-family:'JetBrains Mono',monospace; font-size:11.5px; margin:0; padding:0;">
+      <li style="color:#898781; font-style:italic;">Scanning for active signals...</li>
+    </ul>
   </div>
-  <ul id="qqqDangerList" style="list-style:none; display:flex; flex-direction:column; gap:8px; font-family:'JetBrains Mono',monospace; font-size:11.5px; margin:0; padding:0;">
-    <li style="color:#898781; font-style:italic;">Scanning for active signals...</li>
-  </ul>
+
+  <!-- ================= QQQ DANGER SIGNALS PANEL ================= -->
+  <div class="panel" id="qqqDangerPanel" style="flex: 1; min-width: 300px; margin-bottom: 16px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e1e0d9; padding-bottom:10px; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span style="color:#eda100; font-weight:800; font-size:14px;">⚠</span>
+        <span class="panel-label" style="margin:0;">QQQ DANGER SIGNALS (<span id="qqqDangerCount">0</span>)</span>
+      </div>
+      <span id="qqqDangerBadge" style="padding:3px 10px; border-radius:100px; font-size:11px; font-family:'JetBrains Mono',monospace; font-weight:700; background:rgba(27,175,122,.15); color:#1baf7a;">0 Active — Healthy</span>
+    </div>
+    <ul id="qqqDangerList" style="list-style:none; display:flex; flex-direction:column; gap:8px; font-family:'JetBrains Mono',monospace; font-size:11.5px; margin:0; padding:0;">
+      <li style="color:#898781; font-style:italic;">Scanning for active signals...</li>
+    </ul>
+  </div>
+
 </div>
  
 <!-- Summary / commentary panel -->
