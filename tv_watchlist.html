@@ -530,33 +530,27 @@ for (let i = 0; i < data.length; i++) {
   }
 }
 
-  const cloudHighSeries = chart.addAreaSeries({
-    topColor: isDark ? 'rgba(148, 163, 184, 0.32)' : 'rgba(148, 163, 184, 0.38)',
-    bottomColor: isDark ? 'rgba(148, 163, 184, 0.32)' : 'rgba(148, 163, 184, 0.38)',
-    lineColor: isDark ? 'rgba(148, 163, 184, 0.45)' : 'rgba(100, 116, 139, 0.45)',
-    lineWidth: 1,
-    priceLineVisible: false,
-    lastValueVisible: false,
-  });
-  cloudHighSeries.setData(maHighData);
+// Layer 1: High MA Area fills down to baseline with light semi-transparent institutional gray
+const cloudHighSeries = chart.addAreaSeries({
+  topColor: isDark ? 'rgba(200, 200, 205, 0.08)' : 'rgba(160, 160, 165, 0.12)',
+  bottomColor: isDark ? 'rgba(200, 200, 205, 0.08)' : 'rgba(160, 160, 165, 0.12)',
+  lineColor: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)',
+  lineWidth: 1,
+  priceLineVisible: false,
+  lastValueVisible: false,
+});
+cloudHighSeries.setData(maHighData);
 
-  const cloudLowMaskSeries = chart.addAreaSeries({
-    topColor: chartBg,
-    bottomColor: chartBg,
-    lineColor: isDark ? 'rgba(148, 163, 184, 0.45)' : 'rgba(100, 116, 139, 0.45)',
-    lineWidth: 1,
-    priceLineVisible: false,
-    lastValueVisible: false,
-  });
-  cloudLowMaskSeries.setData(maLowData);
-
-  const ema21Series = chart.addLineSeries({
-    color: isDark ? '#64748b' : '#94a3b8',
-    lineWidth: 1,
-    priceLineVisible: false,
-    lastValueVisible: false,
-  });
-  ema21Series.setData(ema21Data);
+// Layer 2: Low MA Area paints with the container background to mask out the underside of the band
+const cloudLowMaskSeries = chart.addAreaSeries({
+  topColor: chartBg,
+  bottomColor: chartBg,
+  lineColor: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)',
+  lineWidth: 1,
+  priceLineVisible: false,
+  lastValueVisible: false,
+});
+cloudLowMaskSeries.setData(maLowData);
 
   // ==========================================
 // NEW: PLOT DONCHIAN CHANNEL BANDS
@@ -590,13 +584,36 @@ const dcBasisSeries = chart.addLineSeries({
 });
 dcBasisSeries.setData(dcBasisData);
 
-  const barSeries = chart.addBarSeries({
-    upColor: barColor,
-    downColor: barColor,
-    thinBars: false,
-    openVisible: false, 
-  });
-  barSeries.setData(data);
+// Create a fast lookup map for the 21 EMA High values by timestamp
+const maHighMap = new Map(maHighData.map(item => [item.time, item.value]));
+
+// Map structural colors dynamically onto individual historical bars
+const coloredBars = data.map(bar => {
+  const currentMAHigh = maHighMap.get(bar.time);
+  
+  // Base theme structural colors (Black for light mode, light slate for dark mode)
+  let standardColor = isDark ? "#f8fafc" : "#000000";
+  
+  // Rule: If price action closes below the 21 EMA High threshold, paint the bar magenta/purple
+  let barColor = standardColor;
+  if (currentMAHigh !== undefined && bar.close < currentMAHigh) {
+    barColor = "#e600e6"; // True high-visibility institutional magenta
+  }
+
+  return {
+    ...bar,
+    color: barColor
+  };
+});
+
+// Layer 4: Initialize the HLC Price Bars series
+const barSeries = chart.addBarSeries({
+  thinBars: false,
+  openVisible: false, // Suppresses open tick marks to force institutional HLC mode
+});
+
+// Inject the custom color-mapped bar array onto the chart canvas
+barSeries.setData(coloredBars);
 
   chart.timeScale().fitContent();
 }
