@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Liquid Leaders</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+  :root{
+    --bg:#0a0e16; --panel:#101625; --panel2:#0d1220; --line:#212a3d; --line-soft:#1a2233;
+    --text:#e7ebf3; --text-dim:#8b93a8; --text-faint:#59617a;
+    --teal:#20d9b8; --amber:#f5b942; --red:#ff5c72;
+    --navy-head:#131c33; --heat-text:#12161f; --input-bg:#0d1220;
+  }
+  html[data-theme="light"]{
+    --bg:#f4f6fa; --panel:#ffffff; --panel2:#ffffff; --line:#dde2ec; --line-soft:#e9edf4;
+    --text:#151b2c; --text-dim:#5b6478; --text-faint:#8a92a6;
+    --teal:#0b9c82; --amber:#b9781a; --red:#c93a51;
+    --navy-head:#eef1f8; --heat-text:#12161f; --input-bg:#f4f6fa;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:
+      radial-gradient(ellipse 1200px 500px at 15% -5%, rgba(32,217,184,.06), transparent 60%),
+      radial-gradient(ellipse 900px 500px at 100% 0%, rgba(255,92,114,.05), transparent 55%),
+      var(--bg);
+    color:var(--text); font-family:'Inter',sans-serif; padding:22px 26px 60px; transition:background .2s ease, color .2s ease;
+  }
+  .wrap{max-width:1760px; margin:0 auto;}
+
+  .app-tabs{display:flex; gap:4px; margin-bottom:24px; border-bottom:1px solid var(--line);}
+  .app-tabs a{padding:10px 22px; text-decoration:none; color:var(--text-dim); font-size:13px; font-weight:600; border:1px solid transparent; border-bottom:none; border-radius:8px 8px 0 0; text-transform:uppercase; letter-spacing:.05em; transition:all .15s;}
+  .app-tabs a.active{background:var(--panel); color:var(--teal); border-color:var(--line); border-bottom-color:var(--panel); margin-bottom:-1px;}
+  .app-tabs a:hover:not(.active){color:var(--text); background:rgba(255,255,255,.03);}
+
+  header.top{display:flex; justify-content:space-between; align-items:flex-end; border-bottom:2px solid var(--line); padding-bottom:14px; margin-bottom:22px; gap:16px; flex-wrap:wrap;}
+  .brand-eyebrow{font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.18em; color:var(--teal); text-transform:uppercase;}
+  h1{font-size:26px; font-weight:800; letter-spacing:-.02em; margin-top:2px;}
+  .subline{color:var(--text-dim); font-size:12.5px; margin-top:4px; font-family:'JetBrains Mono',monospace;}
+  .header-right{display:flex; align-items:center; gap:12px; flex-wrap:wrap;}
+  .theme-toggle{display:flex; align-items:center; gap:8px; background:var(--panel); border:1px solid var(--line); border-radius:100px; padding:6px 6px; cursor:pointer;}
+  .theme-toggle .opt{font-size:14px; padding:5px 11px; border-radius:100px; color:var(--text-faint); font-weight:600;}
+  .theme-toggle .opt.active{background:var(--teal); color:#04150f;}
+
+  .btn{background:var(--panel); border:1px solid var(--line); color:var(--text); font-family:'JetBrains Mono',monospace; font-size:11.5px; padding:8px 14px; border-radius:7px; cursor:pointer; font-weight:600; transition:all .15s;}
+  .btn:hover{border-color:var(--teal); color:var(--teal);}
+  .btn.primary{background:var(--teal); color:#04150f; border-color:var(--teal);}
+  .btn.primary:hover{filter:brightness(1.08); color:#04150f;}
+  .btn:disabled{opacity:.55; cursor:not-allowed;}
+
+  .data-panel{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:16px 18px; margin-bottom:20px;}
+  .data-panel-head{display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;}
+  .data-panel-head h2{font-size:13px; text-transform:uppercase; letter-spacing:.05em; font-weight:700;}
+  .data-panel-head .sub{font-size:11.5px; color:var(--text-dim); margin-top:2px; font-weight:400; text-transform:none; letter-spacing:0;}
+  .data-panel-body{margin-top:14px; display:none;}
+  .data-panel-body.open{display:block;}
+  .data-panel-actions{display:flex; gap:10px; margin-top:10px; flex-wrap:wrap; align-items:center;}
+  .status-msg{font-size:11.5px; color:var(--teal); font-family:'JetBrains Mono',monospace;}
+  .status-msg.err{color:var(--red);}
+  .dropzone{border:2px dashed var(--line); border-radius:10px; padding:20px 16px; text-align:center; cursor:pointer; transition:all .15s; background:var(--input-bg); margin-top:12px;}
+  .dropzone:hover, .dropzone.drag{border-color:var(--teal); background:rgba(32,217,184,.06);}
+  .dz-sub{font-size:10.5px; color:var(--text-faint); margin-top:4px;}
+
+  .toolbar{display:flex; gap:12px; margin-bottom:14px; flex-wrap:wrap; align-items:center;}
+  .search-input{background:var(--input-bg); border:1px solid var(--line); color:var(--text); padding:9px 12px; border-radius:7px; font-family:'JetBrains Mono',monospace; font-size:12px; min-width:220px;}
+  .search-input:focus{outline:none; border-color:var(--teal);}
+  select.sector-filter{background:var(--input-bg); border:1px solid var(--line); color:var(--text); padding:9px 10px; border-radius:7px; font-family:'Inter',sans-serif; font-size:12px; cursor:pointer;}
+  .row-count{font-size:11.5px; color:var(--text-faint); font-family:'JetBrains Mono',monospace; margin-left:auto;}
+
+  .section{margin-bottom:26px;}
+  table{width:100%; border-collapse:collapse; background:var(--panel2); border:1px solid var(--line); border-radius:10px; overflow:hidden;}
+  thead th{font-size:10px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-dim); text-align:right; padding:9px 10px; border-bottom:1px solid var(--line); font-weight:600; white-space:nowrap; background:var(--navy-head); cursor:pointer; user-select:none;}
+  thead th:hover{color:var(--teal);}
+  thead th.left, thead th:nth-child(1), thead th:nth-child(2), thead th:nth-child(3), thead th:nth-child(4){text-align:left;}
+  thead th .arrow{font-size:9px; margin-left:3px; opacity:.6;}
+  tbody td{padding:7px 10px; text-align:right; font-family:'JetBrains Mono',monospace; font-size:12px; border-bottom:1px solid var(--line-soft); color:var(--heat-text); white-space:nowrap;}
+  tbody td:nth-child(1){font-weight:700; color:var(--text); text-align:left; background:transparent !important;}
+  tbody td:nth-child(2){color:var(--text-dim); text-align:left; font-family:'Inter',sans-serif; font-size:11.5px; background:transparent !important; max-width:220px; overflow:hidden; text-overflow:ellipsis;}
+  tbody td:nth-child(3),tbody td:nth-child(4){color:var(--text-faint); text-align:left; font-family:'Inter',sans-serif; font-size:11px; background:transparent !important;}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr:hover td{filter:brightness(1.06);}
+  .chk{text-align:center !important; font-weight:800;}
+  .chk.yes{color:var(--teal);}
+
+  footer{margin-top:30px; text-align:center; color:var(--text-faint); font-size:10.5px; font-family:'JetBrains Mono',monospace;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="app-tabs">
+    <a href="index.html">Daily Market Plan</a>
+    <a href="stockbee_market_monitor_live.html">Stockbee Monitor</a>
+    <a href="liquid_leaders.html" class="active">Liquid Leaders</a>
+    <a href="tv_watchlist.html">TradingView Watchlist</a>
+  </div>
+
+  <header class="top">
+    <div>
+      <div class="brand-eyebrow">Leader Hunter · Momentum Screener</div>
+      <h1>Liquid Leaders</h1>
+      <div class="subline" id="subline">Loading…</div>
+    </div>
+    <div class="header-right">
+      <button class="btn" id="btnRefresh">↻ Refresh Live Data</button>
+      <div class="theme-toggle" id="themeToggle">
+        <span class="opt" id="optDark">Dark</span>
+        <span class="opt" id="optLight">Light</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="data-panel">
+    <div class="data-panel-head" id="dataPanelHead">
+      <div>
+        <h2>Data Source</h2>
+        <div class="sub">Pulls live from your "Leader Hunter" Google Sheet. If sharing settings block a direct fetch, upload the CSV export manually below.</div>
+      </div>
+      <button class="btn" id="toggleDataPanel">Open ▾</button>
+    </div>
+    <div class="data-panel-body" id="dataPanelBody">
+      <div class="dropzone" id="dropzone">
+        <input type="file" id="fileInput" accept=".csv,text/csv" style="display:none;">
+        <div style="font-weight:700; font-size:12px; text-transform:uppercase;">Click to choose a CSV file, or drag it in here</div>
+        <div class="dz-sub">File &gt; Download &gt; Comma-separated values (.csv) from the Leader Hunter sheet</div>
+      </div>
+      <div class="data-panel-actions">
+        <span class="status-msg" id="statusMsg"></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <input class="search-input" id="searchInput" placeholder="Search ticker or company…">
+    <select class="sector-filter" id="sectorFilter"><option value="">All Sectors</option></select>
+    <span class="row-count" id="rowCount"></span>
+  </div>
+
+  <div class="section">
+    <table id="tblLeaders"></table>
+  </div>
+
+  <footer>Data reflects your Leader Hunter sheet · For informational purposes only, not trading advice.</footer>
+</div>
+
+<script>
+/* ============================================================
+   CONFIG
+   ============================================================ */
+const SHEET_ID = "1DcWbr8T5lTIgSrpoqVteg7ar_H466KZSvZ4p_Eksa1s";
+const SHEET_GID = "592218882";
+const EXPORT_CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${SHEET_GID}`;
+const CORS_PROXIES = [
+  url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+  url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
+];
+
+/* ============================================================
+   DEFAULT / SAMPLE DATA — transcribed from the sheet as of this
+   build, so the page still shows something meaningful before the
+   first successful live fetch or CSV upload.
+   Columns: ticker, company, sector, industry, p6m, p3m, p1m, c6m, c3m, c1m, rs, ext, vol
+   ============================================================ */
+const DEFAULT_ROWS = [
+["AGL","Agilon Health Inc","Healthcare","Medical Care Facilities",531.70,458.80,114.79,1,1,0,100,4.0,"$41.1M"],
+["ACHC","Acadia Healthcare Company Inc","Healthcare","Medical Care Facilities",242.28,123.92,136.85,1,0,0,100,6.3,"$115.0M"],
+["DAVE","Dave Inc","Technology","Software - Application",237.72,164.72,142.20,0,0,1,100,7.8,"$266.3M"],
+["DK","Delek US Holdings Inc","Energy","Oil & Gas Refining & Marketing",237.07,166.45,147.50,0,0,1,100,7.5,"$77.3M"],
+["DVA","DaVita Inc","Healthcare","Medical Care Facilities",228.01,158.69,113.02,1,0,0,100,5.0,"$191.2M"],
+["PARR","Par Pacific Holdings Inc","Energy","Oil & Gas Refining & Marketing",206.92,128.93,149.36,0,0,1,100,6.9,"$68.9M"],
+["PBF","PBF Energy Inc","Energy","Oil & Gas Refining & Marketing",203.80,166.23,159.71,0,0,1,100,8.9,"$171.3M"],
+["PANW","Palo Alto Networks Inc","Technology","Software - Infrastructure",194.87,211.54,125.24,0,1,0,100,5.7,"$2.8B"],
+["MAN","ManpowerGroup","Industrials","Staffing & Employment Services",178.76,164.23,167.06,1,0,0,100,10.2,"$71.7M"],
+["RHI","Robert Half Inc","Industrials","Staffing & Employment Services",153.56,149.18,143.59,1,0,0,100,8.1,"$100.1M"],
+["NSP","Insperity Inc","Industrials","Staffing & Employment Services",109.24,157.70,145.27,0,0,0,100,6.3,"$39.4M"],
+["PRGS","Progress Software Corp","Technology","Software - Infrastructure",105.05,129.47,146.60,0,0,1,100,5.4,"$36.2M"],
+["PAY","Paymentus Holdings Inc","Technology","Software - Infrastructure",104.82,102.80,147.35,0,0,1,100,5.8,"$38.8M"],
+["GWRE","Guidewire Software Inc","Technology","Software - Application",96.51,104.91,146.09,0,0,1,100,2.6,"$296.4M"],
+["LCID","Lucid Group Inc","Consumer Cyclical","Auto Manufacturers",75.64,109.04,142.64,0,0,1,100,2.4,"$159.8M"],
+["VEEE","Twin Vee PowerCats Co","Consumer Cyclical","Recreational Vehicles",69.73,457.99,684.96,0,1,1,100,17.1,"$159.5M"],
+["FSLY","Fastly Inc","Technology","Software - Application",235.99,81.54,120.68,1,0,0,95,1.5,"$117.0M"],
+["CDNA","Caredx Inc","Healthcare","Diagnostics & Research",196.68,186.61,158.60,0,0,1,95,11.8,"$41.6M"],
+["GRPN","Groupon Inc","Communication Services","Internet Content & Information",171.47,186.15,164.67,0,0,1,95,5.5,"$46.1M"],
+["XMTR","Xometry Inc","Industrials","Industrial Distribution",162.58,197.99,107.62,0,1,0,95,2.0,"$76.5M"],
+["VRNS","Varonis Systems Inc","Technology","Software - Infrastructure",145.92,194.76,145.34,0,1,0,95,6.5,"$105.8M"],
+["BILL","BILL Holdings Inc","Technology","Software - Application",99.36,112.82,139.89,0,0,1,95,4.7,"$118.6M"],
+["CBZ","Cbiz Inc","Industrials","Specialty Business Services",91.88,138.76,148.01,0,0,1,95,5.4,"$33.4M"],
+["NTSK","Netskope Inc","Technology","Software - Infrastructure",90.66,134.82,151.84,0,0,1,95,3.4,"$100.1M"],
+["OKTA","Okta Inc","Technology","Software - Infrastructure",170.28,197.14,128.82,0,1,0,91,5.2,"$526.5M"],
+["PSNL","Personalis Inc","Healthcare","Diagnostics & Research",163.90,242.74,151.33,0,1,0,91,5.8,"$67.9M"],
+["QLYS","Qualys Inc","Technology","Software - Infrastructure",120.76,194.43,146.93,0,1,0,91,7.1,"$127.6M"],
+["RPD","Rapid7 Inc","Technology","Software - Infrastructure",97.52,209.26,192.43,0,1,0,91,7.2,"$30.9M"],
+["ALIT","Alight Inc","Technology","Software - Application",71.05,165.95,197.64,0,0,1,91,4.2,"$32.5M"],
+["FTNT","Fortinet Inc","Technology","Software - Infrastructure",214.17,195.65,111.16,0,1,0,86,3.4,"$999.5M"],
+["LQDA","Liquidia Corp","Healthcare","Drug Manufacturers - Specialty & Generic",203.10,212.27,105.89,0,1,0,86,3.3,"$184.9M"],
+["CCC","CCC Intelligent Solutions Holdings Inc","Technology","Software - Application",77.17,107.08,141.03,0,0,1,86,4.2,"$63.9M"],
+["BAND","Bandwidth Inc","Technology","Software - Infrastructure",543.19,297.60,141.30,1,1,0,81,2.4,"$105.9M"],
+["TENB","Tenable Holdings Inc","Technology","Software - Infrastructure",182.43,204.30,151.40,0,1,1,76,5.7,"$139.1M"],
+["CLRO","ClearOne Inc","Technology","Communication Equipment",106.26,224.62,215.98,0,1,1,76,2.3,"$47.3M"],
+["HNGE","Hinge Health Inc","Healthcare","Health Information Services",209.25,198.25,126.49,0,0,0,67,6.5,"$190.8M"],
+["PTRN","Pattern Group Inc","Technology","Software - Application",208.84,203.99,133.73,0,1,0,67,6.5,"$68.9M"],
+["SDOT","Sadot Group Inc","Consumer Defensive","Farm Products",37.44,82.68,273.51,0,0,1,67,1.1,"$142.8M"],
+["DDOG","Datadog Inc","Technology","Software - Application",221.10,199.39,116.86,0,1,0,62,2.1,"$1.3B"],
+["SEZL","Sezzle Inc","Financial","Credit Services",265.33,203.89,111.63,1,1,0,57,3.8,"$120.0M"],
+["ATEX","Anterix Inc","Communication Services","Telecom Services",399.01,235.56,130.29,1,0,0,52,4.1,"$55.9M"],
+["IRDM","Iridium Communications Inc","Communication Services","Telecom Services",244.40,111.84,107.81,1,0,0,43,-0.2,"$145.2M"],
+["AEHR","Aehr Test Systems","Technology","Semiconductor Equipment & Materials",278.91,89.91,71.52,1,0,0,38,-1.0,"$191.9M"],
+["CDNL","Cardinal Infrastructure Group Inc","Industrials","Engineering & Construction",265.59,136.61,90.05,1,0,0,38,0.9,"$57.7M"],
+["AMPG","Amplitech Group Inc","Technology","Communication Equipment",188.64,332.00,78.58,0,1,0,38,1.1,"$36.3M"],
+["FROG","JFrog Ltd","Technology","Software - Application",158.39,194.34,110.83,0,1,0,38,1.7,"$277.5M"],
+["BLZE","Backblaze Inc","Technology","Software - Infrastructure",281.28,320.10,162.81,1,1,0,29,2.8,"$54.2M"],
+["BB","BlackBerry Ltd","Technology","Software - Infrastructure",234.73,163.45,102.28,1,0,0,14,-0.1,"$344.7M"],
+["DELL","Dell Technologies Inc","Technology","Computer Hardware",356.84,194.06,94.66,1,0,0,10,1.0,"$3.4B"],
+["AAOI","Applied Optoelectronics Inc","Technology","Communication Equipment",260.85,62.65,59.81,1,0,0,5,-2.2,"$1.3B"],
+["ARM","Arm Holdings Plc ADR","Technology","Semiconductors",249.31,152.59,65.53,1,0,0,5,-1.4,"$2.6B"],
+["STX","Seagate Technology Holdings Plc","Technology","Computer Hardware",241.62,145.93,72.00,1,0,0,5,-1.0,"$3.7B"],
+["DOCN","DigitalOcean Holdings Inc","Technology","Software - Infrastructure",237.68,132.76,71.53,1,0,0,5,-2.2,"$425.9M"],
+["VPG","Vishay Precision Group Inc","Technology","Scientific & Technical Instruments",237.63,195.43,73.72,1,1,0,5,-1.0,"$62.3M"],
+["MRVL","Marvell Technology Inc","Technology","Semiconductors",236.44,127.62,61.29,1,0,0,5,-1.7,"$10.3B"],
+["MU","Micron Technology Inc","Technology","Semiconductors",232.59,189.32,70.08,1,0,0,5,-0.9,"$45.2B"],
+["FCEL","Fuelcell Energy Inc","Industrials","Electrical Equipment & Parts",214.12,213.87,75.85,0,1,0,5,-0.6,"$257.5M"],
+["MXL","MaxLinear Inc","Technology","Semiconductors",370.88,226.41,74.49,1,0,0,0,-1.3,"$264.0M"],
+["PENG","Penguin Solutions Inc","Technology","Information Technology Services",306.18,214.98,88.92,1,0,0,0,0.0,"$262.0M"],
+["SNDK","Sandisk Corp","Technology","Computer Hardware",299.00,148.39,59.59,1,0,0,0,-1.4,"$16.8B"],
+["ICHR","Ichor Holdings Ltd","Technology","Semiconductor Equipment & Materials",271.08,128.56,83.19,0,0,0,0,0.1,"$102.1M"],
+["SIMO","Silicon Motion Technology Corp ADR","Technology","Semiconductors",233.90,190.58,78.46,1,0,0,0,-0.8,"$227.0M"],
+["STM","ST Microelectronics","Technology","Semiconductors",228.83,139.59,77.66,1,0,0,0,-1.5,"$797.2M"],
+["AMBQ","Ambiq Micro Inc","Technology","Semiconductors",219.35,206.24,81.79,0,1,0,0,-0.5,"$51.1M"],
+["APPS","Digital Turbine Inc","Technology","Software - Application",151.64,218.90,90.16,0,1,0,0,0.0,""],
+];
+
+let ROWS = DEFAULT_ROWS.map(toRowObj);
+let sortKey = "p6m", sortDir = -1;
+let dataSourceLabel = "sample data (bundled)";
+
+function toRowObj(r){
+  return { ticker:r[0], company:r[1], sector:r[2], industry:r[3], p6m:r[4], p3m:r[5], p1m:r[6], c6m:r[7], c3m:r[8], c1m:r[9], rs:r[10], ext:r[11], vol:r[12] };
+}
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+function greenHeat(v, max=300){
+  const t = Math.max(0, Math.min(1, v/max));
+  const l = 92 - t*58;
+  return `hsl(152,55%,${l}%)`;
+}
+function extHeat(v){ // diverging: positive (extended) = red, negative (pulled back) = green
+  const maxAbs = 12;
+  const t = Math.max(-1, Math.min(1, v/maxAbs));
+  if(Math.abs(v) < 0.3) return "transparent";
+  if(t>0){ const l = 90 - t*40; return `hsl(350,68%,${l}%)`; }
+  const l = 90 - (-t)*40; return `hsl(152,55%,${l}%)`;
+}
+function volToNumber(str){
+  if(!str) return 0;
+  const m = String(str).replace('$','').match(/^([\d.]+)([BMK]?)$/i);
+  if(!m) return 0;
+  const n = parseFloat(m[1]);
+  const mult = { B:1000, M:1, K:0.001, "":0.001 }[m[2].toUpperCase()] ?? 1;
+  return n * mult; // normalized to "millions"
+}
+function volHeat(str){
+  const n = volToNumber(str); // in millions
+  const t = Math.max(0, Math.min(1, Math.log10(n+1) / Math.log10(50000)));
+  const l = 92 - t*58;
+  return n > 0 ? `hsl(152,55%,${l}%)` : "transparent";
+}
+
+/* ============================================================
+   RENDER
+   ============================================================ */
+function populateSectorFilter(){
+  const sectors = [...new Set(ROWS.map(r=>r.sector).filter(Boolean))].sort();
+  const sel = document.getElementById("sectorFilter");
+  const current = sel.value;
+  sel.innerHTML = `<option value="">All Sectors</option>` + sectors.map(s=>`<option value="${s}">${s}</option>`).join("");
+  sel.value = current;
+}
+
+function getFilteredSorted(){
+  const q = document.getElementById("searchInput").value.trim().toUpperCase();
+  const sector = document.getElementById("sectorFilter").value;
+  let rows = ROWS.filter(r=>{
+    if(sector && r.sector !== sector) return false;
+    if(q && !(r.ticker.toUpperCase().includes(q) || r.company.toUpperCase().includes(q))) return false;
+    return true;
+  });
+  rows.sort((a,b)=>{
+    const av = a[sortKey], bv = b[sortKey];
+    if(typeof av === "string") return sortDir * av.localeCompare(bv);
+    return sortDir * ((av??-Infinity) - (bv??-Infinity));
+  });
+  return rows;
+}
+
+const COLS = [
+  {key:"ticker", label:"Ticker"},
+  {key:"company", label:"Company"},
+  {key:"sector", label:"Sector"},
+  {key:"industry", label:"Industry"},
+  {key:"p6m", label:"% 6M"},
+  {key:"p3m", label:"% 3M"},
+  {key:"p1m", label:"% 1M"},
+  {key:"c6m", label:"6M"},
+  {key:"c3m", label:"3M"},
+  {key:"c1m", label:"1M"},
+  {key:"rs", label:"RS"},
+  {key:"ext", label:"EXT"},
+  {key:"vol", label:"Avg $ Vol"},
+];
+
+function renderTable(){
+  const rows = getFilteredSorted();
+  document.getElementById("rowCount").textContent = `${rows.length} of ${ROWS.length} tickers`;
+
+  let head = "<thead><tr>" + COLS.map(c=>{
+    const arrow = sortKey===c.key ? (sortDir===1?"▲":"▼") : "";
+    return `<th data-key="${c.key}">${c.label}<span class="arrow">${arrow}</span></th>`;
+  }).join("") + "</tr></thead>";
+
+  let body = "<tbody>" + rows.map(r=>`<tr>
+    <td>${r.ticker}</td>
+    <td title="${r.company}">${r.company}</td>
+    <td>${r.sector}</td>
+    <td>${r.industry}</td>
+    <td style="background:${greenHeat(r.p6m,600)}">${r.p6m.toFixed(2)}%</td>
+    <td style="background:${greenHeat(r.p3m,400)}">${r.p3m.toFixed(2)}%</td>
+    <td style="background:${greenHeat(r.p1m,300)}">${r.p1m.toFixed(2)}%</td>
+    <td class="chk ${r.c6m?'yes':''}">${r.c6m?'✓':''}</td>
+    <td class="chk ${r.c3m?'yes':''}">${r.c3m?'✓':''}</td>
+    <td class="chk ${r.c1m?'yes':''}">${r.c1m?'✓':''}</td>
+    <td style="background:${greenHeat(r.rs,100)}">${r.rs}%</td>
+    <td style="background:${extHeat(r.ext)}">${r.ext>0?'+':''}${r.ext.toFixed(1)}</td>
+    <td style="background:${volHeat(r.vol)}">${r.vol||"—"}</td>
+  </tr>`).join("") + "</tbody>";
+
+  document.getElementById("tblLeaders").innerHTML = head + body;
+
+  document.querySelectorAll("#tblLeaders thead th").forEach(th=>{
+    th.addEventListener("click", ()=>{
+      const key = th.getAttribute("data-key");
+      if(sortKey === key) sortDir *= -1; else { sortKey = key; sortDir = -1; }
+      renderTable();
+    });
+  });
+}
+
+function renderAll(){
+  populateSectorFilter();
+  renderTable();
+  document.getElementById("subline").textContent = `${ROWS.length} tickers · Source: ${dataSourceLabel}`;
+}
+
+/* ============================================================
+   CSV PARSER
+   ============================================================ */
+function parseCSVGrid(text){
+  const rows = [];
+  let row = [], field = '', inQuotes = false;
+  for(let i=0;i<text.length;i++){
+    const ch = text[i], next = text[i+1];
+    if(inQuotes){
+      if(ch === '"' && next === '"'){ field+='"'; i++; }
+      else if(ch === '"'){ inQuotes=false; }
+      else field += ch;
+    } else {
+      if(ch === '"'){ inQuotes = true; }
+      else if(ch === ','){ row.push(field); field=''; }
+      else if(ch === '\n'){ row.push(field); field=''; rows.push(row); row=[]; }
+      else if(ch === '\r'){ /* skip */ }
+      else field += ch;
+    }
+  }
+  if(field.length || row.length){ row.push(field); rows.push(row); }
+  return rows;
+}
+
+function num(v){ const n = parseFloat(String(v).replace('%','').replace(/,/g,'').trim()); return isNaN(n) ? 0 : n; }
+function bool(v){ return String(v).trim() !== "" ? 1 : 0; }
+
+function parseSheetCSV(text){
+  const grid = parseCSVGrid(text).filter(r => r.some(c=>c.trim()!==""));
+  if(grid.length < 2) throw new Error("CSV looks empty.");
+  const header = grid[0].map(h=>h.trim().toLowerCase());
+  const idx = name => header.findIndex(h=>h===name);
+  const cTicker = idx("ticker"), cCompany = idx("company"), cSector = idx("sector"), cIndustry = idx("industry");
+  const cP6 = idx("% 6m"), cP3 = idx("% 3m"), cP1 = idx("% 1m");
+  const c6 = idx("6m"), c3 = idx("3m"), c1 = idx("1m");
+  const cRS = idx("rs"), cEXT = idx("ext"), cVol = idx("avg $ vol");
+  if(cTicker === -1) throw new Error("Couldn't find a 'Ticker' column.");
+
+  return grid.slice(1)
+    .filter(r => (r[cTicker]||"").trim())
+    .map(r => ({
+      ticker: (r[cTicker]||"").trim().toUpperCase(),
+      company: (r[cCompany]||"").trim(),
+      sector: (r[cSector]||"").trim(),
+      industry: (r[cIndustry]||"").trim(),
+      p6m: num(r[cP6]), p3m: num(r[cP3]), p1m: num(r[cP1]),
+      c6m: bool(r[c6]), c3m: bool(r[c3]), c1m: bool(r[c1]),
+      rs: num(r[cRS]), ext: num(r[cEXT]), vol: (r[cVol]||"").trim(),
+    }));
+}
+
+/* ============================================================
+   LIVE FETCH (direct, then CORS-proxy fallback)
+   ============================================================ */
+const statusMsg = document.getElementById("statusMsg");
+function setStatus(msg, isErr){
+  statusMsg.textContent = msg;
+  statusMsg.className = "status-msg" + (isErr ? " err" : "");
+}
+
+async function fetchCSVText(url, label){
+  const res = await fetch(url, { cache: "no-store" });
+  if(!res.ok) throw new Error(`${label}: HTTP ${res.status}`);
+  const text = await res.text();
+  if(!text || text.trim().startsWith('<')) throw new Error(`${label}: got a webpage instead of CSV — check the sheet's sharing is "Anyone with the link can view".`);
+  return text;
+}
+
+async function refreshLiveData(){
+  const btn = document.getElementById("btnRefresh");
+  btn.textContent = "↻ Fetching…";
+  setStatus("Fetching live sheet…");
+
+  const bust = (EXPORT_CSV_URL.includes('?') ? '&' : '?') + 'cachebust=' + Date.now();
+  const freshUrl = EXPORT_CSV_URL + bust;
+
+  let text = null, lastErr = null, source = null;
+  try{ text = await fetchCSVText(freshUrl, "Direct"); source = "direct"; }
+  catch(e){ lastErr = e; console.warn("Direct fetch failed, trying proxy:", e.message); }
+
+  if(!text){
+    for(const build of CORS_PROXIES){
+      try{ text = await fetchCSVText(build(freshUrl), "Proxy"); source = "proxy"; break; }
+      catch(e){ lastErr = e; console.warn("Proxy attempt failed:", e.message); }
+    }
+  }
+
+  if(!text){
+    setStatus(`Live fetch failed: ${lastErr?.message||"unknown error"} — use the CSV upload below instead.`, true);
+    btn.textContent = "↻ Refresh Live Data";
+    return;
+  }
+
+  try{
+    ROWS = parseSheetCSV(text);
+    dataSourceLabel = `live sheet (via ${source})`;
+    renderAll();
+    setStatus(`✓ Loaded ${ROWS.length} tickers via ${source}.`);
+  }catch(e){
+    setStatus(`Fetched the sheet but couldn't parse it: ${e.message}`, true);
+  }
+  btn.textContent = "↻ Refresh Live Data";
+}
+
+/* ============================================================
+   UI WIRING
+   ============================================================ */
+document.getElementById("btnRefresh").addEventListener("click", refreshLiveData);
+document.getElementById("searchInput").addEventListener("input", renderTable);
+document.getElementById("sectorFilter").addEventListener("change", renderTable);
+
+document.getElementById("toggleDataPanel").addEventListener("click", ()=>{
+  const body = document.getElementById("dataPanelBody");
+  const btn = document.getElementById("toggleDataPanel");
+  body.classList.toggle("open");
+  btn.textContent = body.classList.contains("open") ? "Close ▴" : "Open ▾";
+});
+
+const dropzone = document.getElementById("dropzone");
+const fileInput = document.getElementById("fileInput");
+function readFile(file){
+  if(!file) return;
+  if(!/\.csv$/i.test(file.name)){ setStatus("Please choose a .csv file.", true); return; }
+  const reader = new FileReader();
+  reader.onload = e=>{
+    try{
+      ROWS = parseSheetCSV(e.target.result);
+      dataSourceLabel = `uploaded file (${file.name})`;
+      renderAll();
+      setStatus(`✓ Loaded ${ROWS.length} tickers from ${file.name}.`);
+    }catch(err){
+      setStatus(`Couldn't parse that file: ${err.message}`, true);
+    }
+  };
+  reader.onerror = ()=> setStatus("Couldn't read that file.", true);
+  reader.readAsText(file);
+}
+dropzone.addEventListener("click", ()=> fileInput.click());
+fileInput.addEventListener("change", e=> readFile(e.target.files[0]));
+["dragenter","dragover"].forEach(evt=> dropzone.addEventListener(evt, e=>{ e.preventDefault(); dropzone.classList.add("drag"); }));
+["dragleave","drop"].forEach(evt=> dropzone.addEventListener(evt, e=>{ e.preventDefault(); dropzone.classList.remove("drag"); }));
+dropzone.addEventListener("drop", e=>{ const f = e.dataTransfer.files[0]; if(f) readFile(f); });
+
+/* ---------- THEME ---------- */
+function updateThemeToggleUI(){
+  const theme = document.documentElement.getAttribute("data-theme") || "dark";
+  document.getElementById("optDark").classList.toggle("active", theme==="dark");
+  document.getElementById("optLight").classList.toggle("active", theme==="light");
+}
+function setTheme(theme){
+  document.documentElement.setAttribute("data-theme", theme);
+  updateThemeToggleUI();
+  try{ localStorage.setItem('market-monitor-theme', theme); }catch(e){}
+}
+document.getElementById("optDark").addEventListener("click", ()=>setTheme("dark"));
+document.getElementById("optLight").addEventListener("click", ()=>setTheme("light"));
+
+/* ============================================================
+   INIT
+   ============================================================ */
+(function init(){
+  try{
+    const savedTheme = localStorage.getItem('market-monitor-theme');
+    if(savedTheme) document.documentElement.setAttribute("data-theme", savedTheme);
+  }catch(e){}
+  updateThemeToggleUI();
+  renderAll();
+  refreshLiveData(); // attempt live load on open; falls back gracefully if blocked
+})();
+</script>
+</body>
+</html>
