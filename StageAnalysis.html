@@ -34,10 +34,10 @@
   }
   .wrap{max-width:1820px; margin:0 auto;}
 
-  .app-tabs{display:flex; gap:4px; margin-bottom:24px; border-bottom:1px solid var(--line); flex-wrap:wrap;}
-  .app-tabs a{padding:10px 22px; text-decoration:none; color:var(--text-dim); font-size:13px; font-weight:600; border:1px solid transparent; border-bottom:none; border-radius:8px 8px 0 0; text-transform:uppercase; letter-spacing:.05em; transition:all .15s; cursor:pointer;}
-  .app-tabs a.active{background:var(--panel); color:var(--teal); border-color:var(--line); border-bottom-color:var(--panel); margin-bottom:-1px;}
-  .app-tabs a:hover:not(.active){color:var(--text); background:rgba(255,255,255,.03);}
+  .app-tabs { display: flex; gap: 4px; margin-bottom: 24px; border-bottom: 1px solid var(--line); padding-bottom: 0; }
+  .app-tabs a { padding: 10px 22px; text-decoration: none; color: var(--text-dim); font-size: 12px; font-weight: 600; border: 1px solid transparent; border-bottom: none; border-radius: 8px 8px 0 0; text-transform: uppercase; letter-spacing: 0.02em; transition: all 0.15s;}
+  .app-tabs a.active { background: var(--panel); color: var(--teal); border-color: var(--line); border-bottom-color: var(--panel); margin-bottom: -1px; }
+  .app-tabs a:hover:not(.active) { color: var(--text); background: rgba(255,255,255,0.03); }
 
   header.top{display:flex; justify-content:space-between; align-items:flex-end; border-bottom:2px solid var(--line); padding-bottom:14px; margin-bottom:22px; gap:16px; flex-wrap:wrap;}
   .brand-eyebrow{font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.18em; color:var(--teal); text-transform:uppercase;}
