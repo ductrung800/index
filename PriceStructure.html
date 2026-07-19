@@ -64,19 +64,6 @@
   select.sector-filter{background:var(--input-bg); border:1px solid var(--line); color:var(--text); padding:9px 10px; border-radius:7px; font-family:'Inter',sans-serif; font-size:12px; cursor:pointer;}
   .row-count{font-size:11.5px; color:var(--text-faint); font-family:'JetBrains Mono',monospace; margin-left:auto;}
 
-  /* TABLE VIEW STYLES */
-  table{width:100%; border-collapse:collapse; background:var(--panel2); border:1px solid var(--line); border-radius:10px; overflow:hidden;}
-  thead th{font-size:10px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-dim); text-align:right; padding:9px 10px; border-bottom:1px solid var(--line); font-weight:600; white-space:nowrap; background:var(--navy-head); cursor:pointer; user-select:none;}
-  thead th:hover{color:var(--teal);}
-  thead th.left, thead th:nth-child(1), thead th:nth-child(2), thead th:nth-child(3), thead th:nth-child(4){text-align:left;}
-  tbody td{padding:7px 10px; text-align:right; font-family:'JetBrains Mono',monospace; font-size:12px; border-bottom:1px solid var(--line-soft); color:var(--heat-text); white-space:nowrap;}
-  tbody td:nth-child(1){font-weight:700; color:var(--text); text-align:left; background:transparent !important;}
-  tbody td:nth-child(2){color:var(--text-dim); text-align:left; font-family:'Inter',sans-serif; font-size:11.5px; background:transparent !important; max-width:220px; overflow:hidden; text-overflow:ellipsis;}
-  tbody td:nth-child(3),tbody td:nth-child(4){color:var(--text-faint); text-align:left; font-family:'Inter',sans-serif; font-size:11px; background:transparent !important;}
-  tbody tr:hover td{filter:brightness(1.06);}
-  .chk{text-align:center !important; font-weight:800;}
-  .chk.yes{color:var(--teal);}
-
   /* ================= KANBAN STRUCTURE BOARD STYLES ================= */
   .structure-summary-bar {
     display: flex; height: 28px; border-radius: 6px; overflow: hidden; margin-bottom: 20px;
@@ -142,20 +129,20 @@
 <body>
 <div class="wrap">
 
-  <!-- NAVIGATION TABS -->
-<div class="app-tabs">
-  <a href="index.html">Market Dashboard</a>
-  <a href="stockbee_market_monitor_live.html">Stockbee Monitor</a>
-  <a href="liquid_leaders.html">Liquid Leaders</a>
-  <a href="PriceStructure.html">Price Structure</a>
-  <a href="StageAnalysis.html" class="active">Stage Analysis</a>
-  <a href="tv_watchlist.html">TradingView Watchlist</a>
-</div>
+  <!-- STANDARDIZED NAVIGATION TABS -->
+  <div class="app-tabs">
+    <a href="index.html">Market Dashboard</a>
+    <a href="stockbee_market_monitor_live.html">Stockbee Monitor</a>
+    <a href="liquid_leaders.html">Liquid Leaders</a>
+    <a href="PriceStructure.html" class="active">Price Structure</a>
+    <a href="StageAnalysis.html">Stage Analysis</a>
+    <a href="tv_watchlist.html">TradingView Watchlist</a>
+  </div>
 
   <header class="top">
     <div>
       <div class="brand-eyebrow">Leader Hunter · Momentum Screener</div>
-      <h1 id="pageTitle">Liquid Leaders</h1>
+      <h1>Price Structure Board</h1>
       <div class="subline" id="subline">Loading…</div>
     </div>
     <div class="header-right">
@@ -191,20 +178,15 @@
     <span class="row-count" id="rowCount"></span>
   </div>
 
-  <!-- VIEW 1: CLASSIC TABLE VIEW -->
-  <div id="viewTableSection" class="section">
-    <table id="tblLeaders"></table>
-  </div>
-
-  <!-- VIEW 2: KANBAN PRICE STRUCTURE BOARD -->
-  <div id="viewStructureSection" class="section" style="display:none;">
+  <!-- KANBAN PRICE STRUCTURE BOARD ONLY -->
+  <div id="viewStructureSection" class="section">
     <!-- Horizontal Proportional Distribution Bar -->
     <div id="structureRibbon" class="structure-summary-bar"></div>
     <!-- 8-Column Structure Board -->
     <div id="kanbanGrid" class="kanban-grid"></div>
   </div>
 
-  <footer>Data reflects your Leader Hunter sheet · Click any ticker to open standalone institutional HLC chart.</footer>
+  <footer>Data reflects your Leader Hunter sheet · Click any card to open standalone institutional HLC chart.</footer>
 </div>
 
 <!-- ================= IN-PAGE STANDALONE CHART MODAL ================= -->
@@ -233,7 +215,6 @@ const CORS_PROXIES = [
   url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
 ];
 
-let activeTab = "leaders"; // 'leaders' | 'structure'
 let sortKey = "p6m", sortDir = -1;
 let dataSourceLabel = "sample data (bundled)";
 
@@ -302,23 +283,6 @@ function toRowObj(r){
 }
 
 /* ============================================================
-   HELPERS & COLOR MAPS
-   ============================================================ */
-function greenHeat(v, max=300){ const t = Math.max(0, Math.min(1, v/max)); return `hsl(152,55%,${92 - t*58}%)`; }
-function extHeat(v){
-  const t = Math.max(-1, Math.min(1, v/12));
-  if(Math.abs(v) < 0.3) return "transparent";
-  return t > 0 ? `hsl(350,68%,${90 - t*40}%)` : `hsl(152,55%,${90 - (-t)*40}%)`;
-}
-function volToNumber(str){
-  if(!str) return 0;
-  const m = String(str).replace('$','').match(/^([\d.]+)([BMK]?)$/i);
-  if(!m) return 0;
-  return parseFloat(m[1]) * ({ B:1000, M:1, K:0.001, "":0.001 }[m[2].toUpperCase()] ?? 1);
-}
-function volHeat(str){ const n = volToNumber(str); return n > 0 ? `hsl(152,55%,${92 - Math.max(0, Math.min(1, Math.log10(n+1)/Math.log10(50000)))*58}%)` : "transparent"; }
-
-/* ============================================================
    PRICE STRUCTURE CLASSIFICATION ENGINE
    ============================================================ */
 const STRUCTURE_BUCKETS = [
@@ -333,29 +297,14 @@ const STRUCTURE_BUCKETS = [
 ];
 
 function classifyStructure(r) {
-  if (r.ext >= 7.0) return 0;                        // Ext (7x ATR or greater)
-  if (r.ext >= 4.5 && r.c1m === 1) return 1;          // Hold (Trend inflection)
-  if (r.p1m >= 110 && r.ext >= 2.0) return 2;         // >= MA10 (Strong momentum)
-  if (r.p1m >= 80 && r.ext >= 0) return 3;            // >= MA21 (Standard trending)
-  if (r.p3m >= 100 && r.ext >= -2.0) return 4;        // >= MA50 (Healthy pullbacks)
-  if (r.p1m < 70 && r.p3m >= 100) return 5;           // < MA50 (Deeper correction)
-  if (r.p1m < 60) return 6;                           // < MA21 (Structural inflection)
-  return 7;                                           // < MA10 (Bearish loss of structure)
-}
-
-/* ============================================================
-   TAB SWITCHER
-   ============================================================ */
-function switchTab(tab) {
-  activeTab = tab;
-  document.getElementById("tabLeadersBtn").classList.toggle("active", tab === "leaders");
-  document.getElementById("tabStructureBtn").classList.toggle("active", tab === "structure");
-  
-  document.getElementById("viewTableSection").style.display = tab === "leaders" ? "block" : "none";
-  document.getElementById("viewStructureSection").style.display = tab === "structure" ? "block" : "none";
-  
-  document.getElementById("pageTitle").textContent = tab === "leaders" ? "Liquid Leaders" : "Liquid Leader Stocks By Price Structure";
-  renderAll();
+  if (r.ext >= 7.0) return 0;
+  if (r.ext >= 4.5 && r.c1m === 1) return 1;
+  if (r.p1m >= 110 && r.ext >= 2.0) return 2;
+  if (r.p1m >= 80 && r.ext >= 0) return 3;
+  if (r.p3m >= 100 && r.ext >= -2.0) return 4;
+  if (r.p1m < 70 && r.p3m >= 100) return 5;
+  if (r.p1m < 60) return 6;
+  return 7;
 }
 
 /* ============================================================
@@ -385,49 +334,10 @@ function getFilteredSorted(){
   return rows;
 }
 
-const COLS = [
-  {key:"ticker", label:"Ticker"}, {key:"company", label:"Company"}, {key:"sector", label:"Sector"}, {key:"industry", label:"Industry"},
-  {key:"p6m", label:"% 6M"}, {key:"p3m", label:"% 3M"}, {key:"p1m", label:"% 1M"}, {key:"c6m", label:"6M"}, {key:"c3m", label:"3M"}, {key:"c1m", label:"1M"},
-  {key:"rs", label:"RS"}, {key:"ext", label:"EXT"}, {key:"vol", label:"Avg $ Vol"},
-];
-
-function renderTable(rows){
-  let head = "<thead><tr>" + COLS.map(c=>{
-    const arrow = sortKey===c.key ? (sortDir===1?"▲":"▼") : "";
-    return `<th data-key="${c.key}">${c.label}<span class="arrow">${arrow}</span></th>`;
-  }).join("") + "</tr></thead>";
-
-  let body = "<tbody>" + rows.map(r=>`<tr>
-    <td onclick="openStandaloneChart('${r.ticker}')" style="cursor:pointer; color:var(--teal); text-decoration:underline; text-underline-offset:3px;">${r.ticker}</td>
-    <td title="${r.company}">${r.company}</td>
-    <td>${r.sector}</td>
-    <td>${r.industry}</td>
-    <td style="background:${greenHeat(r.p6m,600)}">${r.p6m.toFixed(2)}%</td>
-    <td style="background:${greenHeat(r.p3m,400)}">${r.p3m.toFixed(2)}%</td>
-    <td style="background:${greenHeat(r.p1m,300)}">${r.p1m.toFixed(2)}%</td>
-    <td class="chk ${r.c6m?'yes':''}">${r.c6m?'✓':''}</td>
-    <td class="chk ${r.c3m?'yes':''}">${r.c3m?'✓':''}</td>
-    <td class="chk ${r.c1m?'yes':''}">${r.c1m?'✓':''}</td>
-    <td style="background:${greenHeat(r.rs,100)}">${r.rs}%</td>
-    <td style="background:${extHeat(r.ext)}">${r.ext>0?'+':''}${r.ext.toFixed(1)}</td>
-    <td style="background:${volHeat(r.vol)}">${r.vol||"—"}</td>
-  </tr>`).join("") + "</tbody>";
-
-  document.getElementById("tblLeaders").innerHTML = head + body;
-  document.querySelectorAll("#tblLeaders thead th").forEach(th=>{
-    th.addEventListener("click", ()=>{
-      const key = th.getAttribute("data-key");
-      if(sortKey === key) sortDir *= -1; else { sortKey = key; sortDir = -1; }
-      renderAll();
-    });
-  });
-}
-
 function renderStructureBoard(rows){
   const buckets = Array.from({length: 8}, () => []);
   rows.forEach(r => { buckets[classifyStructure(r)].push(r); });
 
-  // 1. Render Top Proportional Distribution Ribbon
   const total = rows.length || 1;
   const ribbonHtml = STRUCTURE_BUCKETS.map((b, idx) => {
     const count = buckets[idx].length;
@@ -439,7 +349,6 @@ function renderStructureBoard(rows){
   }).join("");
   document.getElementById("structureRibbon").innerHTML = ribbonHtml || `<div style="padding:4px 12px; color:var(--text-dim);">No stocks matching filter</div>`;
 
-  // 2. Render 8 Kanban Columns
   const gridHtml = STRUCTURE_BUCKETS.map((b, idx) => {
     const colRows = buckets[idx];
     const cardsHtml = colRows.map(r => `
@@ -471,9 +380,7 @@ function renderAll(){
   const rows = getFilteredSorted();
   document.getElementById("rowCount").textContent = `${rows.length} of ${ROWS.length} tickers`;
   document.getElementById("subline").textContent = `${ROWS.length} tickers · Source: ${dataSourceLabel}`;
-  
-  if (activeTab === "leaders") renderTable(rows);
-  else renderStructureBoard(rows);
+  renderStructureBoard(rows);
 }
 
 /* ============================================================
