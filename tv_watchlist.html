@@ -24,7 +24,7 @@
     --heat-text:#12161f;
     --input-bg:#0d1220;
     --chart-bg:#0d1220;
-    --bar-color:#e2e8f0;
+    --bar-color:#f8fafc;
   }
   html[data-theme="light"]{
     --bg:#f4f6fa;
@@ -161,7 +161,7 @@
   .master-card .chips{ display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
   .master-card .chips span{ font-family:'JetBrains Mono',monospace; font-size:10.5px; font-weight:700; color:var(--text); }
 
-  /* ---------- CHART GRID VIEW (LIGHTWEIGHT CHARTS) ---------- */
+  /* ---------- CHART GRID VIEW (21 EMA CLOUD) ---------- */
   .charts-grid-container {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
@@ -299,7 +299,7 @@ function loadPresets(){
 let presets = loadPresets();
 let selectedPreset = PRESETS_LIST[0];
 let viewMode = "single"; 
-let activeCharts = []; // Keeps track of chart instances for cleanup/resizing
+let activeCharts = []; // Tracks chart instances and observers for clean teardown
 
 function getHotTickers(){
   const counts = {};
@@ -311,7 +311,7 @@ function getHotTickers(){
 }
 
 /* ============================================================
-   LIGHTWEIGHT CHARTS MATH ENGINE & DATA FETCHER
+   LIGHTWEIGHT CHARTS MATH ENGINE & STRICT DATA FETCHER
    ============================================================ */
 // Calculates Exponential Moving Average
 function calculateEMA(data, period, key) {
@@ -335,18 +335,24 @@ function calculateEMA(data, period, key) {
   return result;
 }
 
-// Generates realistic algorithmic OHLC bars with volume if offline or blocked by CORS
+// Generates strictly unique, ascending algorithmic OHLC bars if offline
 function generateRealisticOHLC(symbol, count = 150) {
   const data = [];
   let price = 50 + (symbol.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % 200);
-  const now = new Date();
   
-  for (let i = count; i >= 0; i--) {
-    const d = new Date();
-    d.setDate(now.getDate() - (i * 1.4)); // Account for weekends
-    if (d.getDay() === 0 || d.getDay() === 6) continue;
-    
-    const dateStr = d.toISOString().split('T')[0];
+  // 1. Generate strictly unique weekday dates backwards without float truncation bugs
+  const dates = [];
+  let d = new Date();
+  while (dates.length < count) {
+    const day = d.getDay();
+    if (day !== 0 && day !== 6) {
+      dates.unshift(d.toISOString().split('T')[0]);
+    }
+    d.setDate(d.getDate() - 1);
+  }
+
+  // 2. Build OHLC series in ascending chronological order
+  for (let i = 0; i < dates.length; i++) {
     const change = (Math.random() - 0.48) * (price * 0.035);
     const open = price;
     const close = price + change;
@@ -354,12 +360,18 @@ function generateRealisticOHLC(symbol, count = 150) {
     const low = Math.min(open, close) - (Math.random() * price * 0.015);
     price = close;
 
-    data.push({ time: dateStr, open, high, low, close });
+    data.push({
+      time: dates[i],
+      open: Number(open.toFixed(2)),
+      high: Number(high.toFixed(2)),
+      low: Number(low.toFixed(2)),
+      close: Number(close.toFixed(2))
+    });
   }
   return data;
 }
 
-// Fetches OHLC via Yahoo proxy or falls back to synthetic data
+// Fetches OHLC via Yahoo proxy and deduplicates dates cleanly
 async function fetchOHLCData(symbol) {
   const cleanSymbol = symbol.includes(":") ? symbol.split(":")[1] : symbol;
   try {
@@ -371,26 +383,28 @@ async function fetchOHLCData(symbol) {
     const timestamps = result.timestamp;
     const quote = result.indicators.quote[0];
     
-    const ohlc = [];
+    // Map deduplicates identical timestamps (e.g. today's live intraday bar vs close)
+    const uniqueBars = new Map();
     for (let i = 0; i < timestamps.length; i++) {
-      if (quote.open[i] && quote.high[i] && quote.low[i] && quote.close[i]) {
+      if (quote.open[i] != null && quote.high[i] != null && quote.low[i] != null && quote.close[i] != null) {
         const dateStr = new Date(timestamps[i] * 1000).toISOString().split('T')[0];
-        ohlc.push({
+        uniqueBars.set(dateStr, {
           time: dateStr,
-          open: quote.open[i],
-          high: quote.high[i],
-          low: quote.low[i],
-          close: quote.close[i]
+          open: Number(quote.open[i]),
+          high: Number(quote.high[i]),
+          low: Number(quote.low[i]),
+          close: Number(quote.close[i])
         });
       }
     }
+    const ohlc = Array.from(uniqueBars.values()).sort((a, b) => a.time.localeCompare(b.time));
     return ohlc.length > 50 ? ohlc : generateRealisticOHLC(cleanSymbol);
   } catch (e) {
     return generateRealisticOHLC(cleanSymbol);
   }
 }
 
-// Builds the TradersLab 21 EMA Cloud visual
+// Builds the TradersLab 21 EMA Cloud visual with HLC bars
 async function buildLightweightChartCard(symbol, idx, grid, isDark) {
   const cardId = `lw-card-${idx}`;
   const card = document.createElement("div");
@@ -423,42 +437,52 @@ async function buildLightweightChartCard(symbol, idx, grid, isDark) {
   const chartBg = isDark ? "#0d1220" : "#ffffff";
   const gridLine = isDark ? "#1a2233" : "#f1f5f9";
   const textColor = isDark ? "#8b93a8" : "#64748b";
-  const barColor = isDark ? "#e2e8f0" : "#000000";
+  const barColor = isDark ? "#f8fafc" : "#000000"; // High-contrast monochrome bars
 
   const chart = LightweightCharts.createChart(container, {
-    width: container.clientWidth,
-    height: container.clientHeight,
+    width: container.clientWidth || 360,
+    height: container.clientHeight || 320,
     layout: { background: { type: 'solid', color: chartBg }, textColor: textColor, fontFamily: 'JetBrains Mono, monospace', fontSize: 10 },
     grid: { vertLines: { color: gridLine }, horzLines: { color: gridLine } },
-    rightPriceScale: { borderVisible: false, scaleMargins: { top: 0.15, bottom: 0.08 } },
+    rightPriceScale: { borderVisible: false, scaleMargins: { top: 0.18, bottom: 0.08 } },
     timeScale: { borderVisible: false, timeVisible: false },
     crosshair: { mode: LightweightCharts.CrosshairMode.Normal }
   });
 
-  activeCharts.push({ chart, container });
+  // Attach ResizeObserver so chart canvas expands properly when card finishes layout rendering
+  const resizeObserver = new ResizeObserver(entries => {
+    for (const entry of entries) {
+      const { width, height } = entry.contentRect;
+      if (width > 0 && height > 0) {
+        chart.applyOptions({ width, height });
+      }
+    }
+  });
+  resizeObserver.observe(container);
+  activeCharts.push({ chart, container, resizeObserver });
 
   // 1. Calculate 21 EMAs
   const maHighData = calculateEMA(data, 21, 'high');
   const maLowData = calculateEMA(data, 21, 'low');
   const ema21Data = calculateEMA(data, 21, 'close');
 
-  // 2. MASKING TECHNIQUE FOR 21 EMA CLOUD:
-  // Layer 1: High MA Area fills from High line down to zero with institutional gray
+  // 2. AREA MASKING FOR 21 EMA CLOUD:
+  // Layer 1: High MA Area fills down to baseline with institutional slate
   const cloudHighSeries = chart.addAreaSeries({
-    topColor: isDark ? 'rgba(148, 163, 184, 0.28)' : 'rgba(148, 163, 184, 0.35)',
-    bottomColor: isDark ? 'rgba(148, 163, 184, 0.28)' : 'rgba(148, 163, 184, 0.35)',
-    lineColor: isDark ? 'rgba(148, 163, 184, 0.4)' : 'rgba(100, 116, 139, 0.4)',
+    topColor: isDark ? 'rgba(148, 163, 184, 0.32)' : 'rgba(148, 163, 184, 0.38)',
+    bottomColor: isDark ? 'rgba(148, 163, 184, 0.32)' : 'rgba(148, 163, 184, 0.38)',
+    lineColor: isDark ? 'rgba(148, 163, 184, 0.45)' : 'rgba(100, 116, 139, 0.45)',
     lineWidth: 1,
     priceLineVisible: false,
     lastValueVisible: false,
   });
   cloudHighSeries.setData(maHighData);
 
-  // Layer 2: Low MA Area paints with EXACT background color from Low line down to zero, masking the gray below the channel!
+  // Layer 2: Low MA Area paints with EXACT background color, cleanly masking out the gray below the channel!
   const cloudLowMaskSeries = chart.addAreaSeries({
     topColor: chartBg,
     bottomColor: chartBg,
-    lineColor: isDark ? 'rgba(148, 163, 184, 0.4)' : 'rgba(100, 116, 139, 0.4)',
+    lineColor: isDark ? 'rgba(148, 163, 184, 0.45)' : 'rgba(100, 116, 139, 0.45)',
     lineWidth: 1,
     priceLineVisible: false,
     lastValueVisible: false,
@@ -474,12 +498,12 @@ async function buildLightweightChartCard(symbol, idx, grid, isDark) {
   });
   ema21Series.setData(ema21Data);
 
-  // Layer 4: Monochrome HLC Price Bars sitting cleanly on top of the cloud
+  // Layer 4: Monochrome HLC Price Bars (openVisible: false suppresses open tick!)
   const barSeries = chart.addBarSeries({
     upColor: barColor,
     downColor: barColor,
     thinBars: false,
-    openVisible: true,
+    openVisible: false, // Converts OHLC bars into clean HLC bars
   });
   barSeries.setData(data);
 
@@ -487,8 +511,11 @@ async function buildLightweightChartCard(symbol, idx, grid, isDark) {
 }
 
 function renderChartGrid(tickers) {
-  // Destroy existing charts to prevent memory leaks
-  activeCharts.forEach(item => item.chart.remove());
+  // Teardown existing chart observers and canvases
+  activeCharts.forEach(item => {
+    if (item.resizeObserver) item.resizeObserver.disconnect();
+    item.chart.remove();
+  });
   activeCharts = [];
 
   const body = document.getElementById("rpBody");
@@ -503,7 +530,7 @@ function renderChartGrid(tickers) {
 
   const activeBatch = tickers.slice(0, 15);
   body.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-    <span style="font-size:11px; color:var(--text-faint); font-style:italic;">Showing top ${activeBatch.length} charts with 21 EMA High/Low Cloud structure</span>
+    <span style="font-size:11px; color:var(--text-faint); font-style:italic;">Showing top ${activeBatch.length} charts with monochrome HLC bars & 21 EMA Cloud</span>
     <div class="captured-badge" style="margin-bottom:0;">Captured: ${tickers.length} Stocks</div>
   </div>
   <div class="charts-grid-container" id="tvChartGrid"></div>`;
@@ -515,15 +542,6 @@ function renderChartGrid(tickers) {
     buildLightweightChartCard(symbol, idx, grid, isDark);
   });
 }
-
-// Handle window resizing
-window.addEventListener('resize', () => {
-  activeCharts.forEach(item => {
-    if (item.container && item.container.clientWidth > 0) {
-      item.chart.applyOptions({ width: item.container.clientWidth, height: item.container.clientHeight });
-    }
-  });
-});
 
 /* ============================================================
    RENDER & NAVIGATION
@@ -566,7 +584,10 @@ function renderRightPanel(){
   const body = document.getElementById("rpBody");
 
   if(viewMode === "grid"){
-    activeCharts.forEach(item => item.chart.remove());
+    activeCharts.forEach(item => {
+      if (item.resizeObserver) item.resizeObserver.disconnect();
+      item.chart.remove();
+    });
     activeCharts = [];
     const hot = getHotTickers();
     const populated = PRESETS_LIST.filter(p => presets[p].length > 0);
@@ -603,7 +624,10 @@ function renderRightPanel(){
   }
 
   // Single list view
-  activeCharts.forEach(item => item.chart.remove());
+  activeCharts.forEach(item => {
+    if (item.resizeObserver) item.resizeObserver.disconnect();
+    item.chart.remove();
+  });
   activeCharts = [];
   let h = `<div style="display:flex; justify-content:flex-end;"><div class="captured-badge">Captured: ${tickers.length} Stocks</div></div>`;
   if(tickers.length === 0){
