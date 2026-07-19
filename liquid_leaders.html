@@ -3,6 +3,40 @@
 <head>
 <meta charset="UTF-8">
 <title>Liquid Leaders</title>
+<!-- Lightweight Charts v4 Library -->
+<script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
+
+<style>
+  /* ================= IN-PAGE CHART MODAL STYLES ================= */
+  .chart-modal-backdrop {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(4px);
+    display: none; justify-content: center; align-items: center; z-index: 9999;
+    padding: 24px;
+  }
+  .chart-modal {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+    width: 100%; max-width: 1050px; height: 720px; display: flex; flex-direction: column;
+    box-shadow: 0 24px 48px rgba(0,0,0,0.5); overflow: hidden;
+  }
+  .chart-modal-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 14px 20px; border-bottom: 1px solid var(--line); background: var(--panel2);
+  }
+  .modal-title { font-size: 16px; font-weight: 800; font-family: 'JetBrains Mono', monospace; }
+  .modal-status {
+    font-size: 11px; font-family: 'JetBrains Mono', monospace; font-weight: 700;
+    padding: 4px 10px; border-radius: 4px; background: rgba(32, 217, 184, 0.1); color: var(--teal);
+    border: 1px solid rgba(32, 217, 184, 0.2);
+  }
+  .modal-close {
+    background: transparent; border: 1px solid var(--line); color: var(--text-dim);
+    font-size: 14px; font-weight: 700; width: 30px; height: 30px; border-radius: 6px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+  }
+  .modal-close:hover { border-color: var(--red); color: var(--red); background: rgba(255, 92, 114, 0.1); }
+  .chart-modal-body { flex: 1; width: 100%; position: relative; }
+</style>  
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
@@ -142,6 +176,20 @@
 
   <footer>Data reflects your Leader Hunter sheet · For informational purposes only, not trading advice.</footer>
 </div>
+
+<!-- ================= IN-PAGE CHART MODAL ================= -->
+<div id="chartModalBackdrop" class="chart-modal-backdrop" onclick="closeChartModal(event)">
+  <div class="chart-modal" onclick="event.stopPropagation()">
+    <div class="chart-modal-header">
+      <div id="modalTitle" class="modal-title">TICKER</div>
+      <div style="display: flex; gap: 12px; align-items: center;">
+        <span id="modalStatus" class="modal-status">CONNECTING...</span>
+        <button class="modal-close" onclick="closeChartModal()">✕</button>
+      </div>
+    </div>
+    <div id="modalChartContainer" class="chart-modal-body"></div>
+  </div>
+</div>  
 
 <script>
 /* ============================================================
@@ -455,71 +503,55 @@ async function refreshLiveData(){
   }
   btn.textContent = "↻ Refresh Live Data";
 }
+
 /* ============================================================
-   STANDALONE CHART POPUP ENGINE
+   IN-PAGE STANDALONE CHART MODAL ENGINE
    ============================================================ */
+let currentModalChart = null;
+let modalResizeObserver = null;
+
+function closeChartModal(e) {
+  // Close if clicking the backdrop or X button
+  if (!e || e.target.id === 'chartModalBackdrop' || !e.target) {
+    document.getElementById('chartModalBackdrop').style.display = 'none';
+    if (currentModalChart) {
+      currentModalChart.remove();
+      currentModalChart = null;
+    }
+    if (modalResizeObserver) {
+      modalResizeObserver.disconnect();
+      modalResizeObserver = null;
+    }
+  }
+}
+
+// Close modal on Escape key press
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeChartModal(); });
+
 function openStandaloneChart(ticker) {
+  const backdrop = document.getElementById('chartModalBackdrop');
+  const container = document.getElementById('modalChartContainer');
+  const titleEl = document.getElementById('modalTitle');
+  const statusEl = document.getElementById('modalStatus');
+
+  titleEl.innerHTML = `${ticker} <span style="font-size:12px; font-weight:400; color:var(--text-dim);">· Institutional Daily HLC</span>`;
+  statusEl.textContent = 'FETCHING LIVE DATA...';
+  statusEl.style.color = 'var(--amber)';
+  backdrop.style.display = 'flex';
+
+  // Clean up any existing chart instance
+  if (currentModalChart) { currentModalChart.remove(); currentModalChart = null; }
+  if (modalResizeObserver) { modalResizeObserver.disconnect(); }
+  container.innerHTML = '';
+
   const currentTheme = document.documentElement.getAttribute("data-theme") || "dark";
   const isDark = currentTheme === "dark";
-
-  const win = window.open("", `_blank_${ticker}`, "width=960,height=700,resizable=yes,scrollbars=yes");
-  if (!win) {
-    alert("Popup blocked! Please allow popups for this dashboard.");
-    return;
-  }
-
-  const htmlContent = `<!DOCTYPE html>
-<html lang="en" data-theme="${currentTheme}">
-<head>
-<meta charset="UTF-8">
-<title>${ticker} — Institutional HLC Chart</title>
-<script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"><\/script>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&display=swap');
-  :root {
-    --bg: #0a0e16; --panel: #101625; --text: #e7ebf3; --line: #212a3d; --text-dim: #8b93a8;
-  }
-  html[data-theme="light"] {
-    --bg: #f4f6fa; --panel: #ffffff; --text: #151b2c; --line: #dde2ec; --text-dim: #5b6478;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    background: var(--bg); color: var(--text); font-family: 'JetBrains Mono', monospace;
-    padding: 16px; display: flex; flex-direction: column; height: 100vh; overflow: hidden;
-  }
-  header {
-    display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px;
-    border-bottom: 1px solid var(--line); margin-bottom: 16px; flex-shrink: 0;
-  }
-  .title { font-size: 18px; font-weight: 700; letter-spacing: -0.02em; }
-  .badge {
-    background: var(--panel); border: 1px solid var(--line); padding: 4px 10px;
-    border-radius: 4px; font-size: 11px; color: var(--text-dim);
-  }
-  #chart-container { flex: 1; width: 100%; position: relative; }
-  .loading {
-    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-    font-size: 13px; color: var(--text-dim);
-  }
-</style>
-</head>
-<body>
-  <header>
-    <div class="title">${ticker} <span style="font-size:12px; font-weight:400; color:var(--text-dim);">· Daily HLC</span></div>
-    <div class="badge" id="status-badge">FETCHING LIVE DATA...</div>
-  </header>
-  <div id="chart-container"><div class="loading" id="loader">Ingesting live HLC feed for ${ticker}...</div></div>
-
-<script>
-  const ticker = "${ticker}";
-  const isDark = "${currentTheme}" === "dark";
-  const chartBg = isDark ? '#0a0e16' : '#f4f6fa';
+  const chartBg = isDark ? '#101625' : '#ffffff';
   const textColor = isDark ? '#8b93a8' : '#5b6478';
   const gridColor = isDark ? 'rgba(33, 42, 61, 0.4)' : 'rgba(221, 226, 236, 0.6)';
 
-  // Initialize Lightweight Chart
-  const container = document.getElementById('chart-container');
-  const chart = LightweightCharts.createChart(container, {
+  // Initialize Lightweight Chart inside the modal DOM
+  currentModalChart = LightweightCharts.createChart(container, {
     layout: { background: { type: 'solid', color: chartBg }, textColor: textColor, fontFamily: "'JetBrains Mono', monospace" },
     grid: { vertLines: { color: gridColor }, horzLines: { color: gridColor } },
     rightPriceScale: { borderColor: gridColor },
@@ -527,53 +559,46 @@ function openStandaloneChart(ticker) {
     crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
   });
 
-  new ResizeObserver(entries => {
-    if (entries.length === 0 || entries[0].target !== container) return;
-    const newRect = entries[0].contentRect;
-    chart.applyOptions({ width: newRect.width, height: newRect.height });
-  }).observe(container);
+  modalResizeObserver = new ResizeObserver(entries => {
+    if (entries.length === 0 || entries[0].target !== container || !currentModalChart) return;
+    currentModalChart.applyOptions({ width: container.clientWidth, height: container.clientHeight });
+  });
+  modalResizeObserver.observe(container);
 
-  // Math Engine: Exponential Moving Average
+  // EMA Math Engine
   function calculateEMA(data, period, key) {
     const k = 2 / (period + 1);
-    let ema = 0;
-    let started = false;
+    let ema = 0, started = false;
     const result = [];
     for (let i = 0; i < data.length; i++) {
       const val = data[i][key];
-      if (!started) {
-        ema = val;
-        started = true;
-      } else {
-        ema = (val - ema) * k + ema;
-      }
+      if (!started) { ema = val; started = true; } else { ema = (val - ema) * k + ema; }
       result.push({ time: data[i].time, value: ema });
     }
     return result;
   }
 
-  // Fetch Live Data (Yahoo Finance Multi-Proxy Relay)
-  async function loadData() {
-    const targetUrl = \`https://query1.finance.yahoo.com/v8/finance/chart/\${ticker}?interval=1d&range=1y\`;
+  // Fetch Data with Robust Proxy Chain
+  async function loadModalData() {
+    const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=1y`;
     const proxies = [
-      url => \`https://api.allorigins.win/raw?url=\${encodeURIComponent(url)}\`,
-      url => \`https://corsproxy.io/?url=\${encodeURIComponent(url)}\`,
+      url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
+      url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+      url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+      url => url // Direct fallback
     ];
 
     let json = null;
     for (const buildProxy of proxies) {
       try {
         const res = await fetch(buildProxy(targetUrl));
-        if (res.ok) {
-          json = await res.json();
-          break;
-        }
-      } catch (e) { console.warn("Proxy fallback triggered..."); }
+        if (res.ok) { json = await res.json(); break; }
+      } catch (e) { console.warn("Proxy attempt failed, trying next..."); }
     }
 
     if (!json || !json.chart || !json.chart.result) {
-      document.getElementById('loader').textContent = 'Failed to load market data for ' + ticker;
-      document.getElementById('status-badge').textContent = 'DATA ERROR';
+      statusEl.textContent = 'DATA ERROR';
+      statusEl.style.color = 'var(--red)';
       return;
     }
 
@@ -589,15 +614,12 @@ function openStandaloneChart(ticker) {
       }
     }
 
-    // Timestamp Deduplication & Sorting
+    // Deduplicate & Sort Timestamps Chronologically
     const uniqueMap = new Map();
     rawData.forEach(bar => uniqueMap.set(bar.time, bar));
     const cleanData = Array.from(uniqueMap.values()).sort((a, b) => a.time.localeCompare(b.time));
 
-    if (cleanData.length === 0) {
-      document.getElementById('loader').textContent = 'No historical bars found.';
-      return;
-    }
+    if (cleanData.length === 0) { statusEl.textContent = 'NO BARS FOUND'; return; }
 
     // 1. Calculate 21 EMAs
     const maHighData = calculateEMA(cleanData, 21, 'high');
@@ -605,17 +627,14 @@ function openStandaloneChart(ticker) {
     const ema21Data = calculateEMA(cleanData, 21, 'close');
 
     // 2. Calculate 100-Period Donchian Channel (Offset +2)
-    const dcLength = 100;
-    const dcOffset = 2;
+    const dcLength = 100, dcOffset = 2;
     const dcUpperData = [], dcLowerData = [], dcBasisData = [];
-
     for (let i = 0; i < cleanData.length; i++) {
       if (i >= dcLength - 1) {
         const windowBars = cleanData.slice(i - dcLength + 1, i + 1);
         const highestHigh = Math.max(...windowBars.map(b => b.high));
         const lowestLow = Math.min(...windowBars.map(b => b.low));
         const basisValue = (highestHigh + lowestLow) / 2;
-
         if (i + dcOffset < cleanData.length) {
           const targetTime = cleanData[i + dcOffset].time;
           dcUpperData.push({ time: targetTime, value: highestHigh });
@@ -627,7 +646,7 @@ function openStandaloneChart(ticker) {
 
     // 3. Render Layers in Strict Z-Index Order
     // Layer 1: EMA High Cloud
-    const cloudHighSeries = chart.addAreaSeries({
+    const cloudHighSeries = currentModalChart.addAreaSeries({
       topColor: isDark ? 'rgba(200, 200, 205, 0.08)' : 'rgba(160, 160, 165, 0.12)',
       bottomColor: isDark ? 'rgba(200, 200, 205, 0.08)' : 'rgba(160, 160, 165, 0.12)',
       lineColor: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)',
@@ -636,7 +655,7 @@ function openStandaloneChart(ticker) {
     cloudHighSeries.setData(maHighData);
 
     // Layer 2: EMA Low Cloud Mask
-    const cloudLowMaskSeries = chart.addAreaSeries({
+    const cloudLowMaskSeries = currentModalChart.addAreaSeries({
       topColor: chartBg, bottomColor: chartBg,
       lineColor: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)',
       lineWidth: 1, priceLineVisible: false, lastValueVisible: false,
@@ -644,16 +663,16 @@ function openStandaloneChart(ticker) {
     cloudLowMaskSeries.setData(maLowData);
 
     // Layer 3: EMA 21 Center Line
-    const ema21Series = chart.addLineSeries({
+    const ema21Series = currentModalChart.addLineSeries({
       color: isDark ? '#64748b' : '#94a3b8', lineWidth: 1, priceLineVisible: false, lastValueVisible: false,
     });
     ema21Series.setData(ema21Data);
 
     // Layer 4: Donchian Channels (Dashed Amber)
     const dcLineColor = isDark ? 'rgba(245, 185, 66, 0.5)' : 'rgba(185, 120, 26, 0.5)';
-    const dcUpperSeries = chart.addLineSeries({ color: dcLineColor, lineWidth: 1, lineStyle: 2, priceLineVisible: false, lastValueVisible: false });
-    const dcLowerSeries = chart.addLineSeries({ color: dcLineColor, lineWidth: 1, lineStyle: 2, priceLineVisible: false, lastValueVisible: false });
-    const dcBasisSeries = chart.addLineSeries({ color: dcLineColor, lineWidth: 1, lineStyle: 2, priceLineVisible: false, lastValueVisible: false });
+    const dcUpperSeries = currentModalChart.addLineSeries({ color: dcLineColor, lineWidth: 1, lineStyle: 2, priceLineVisible: false, lastValueVisible: false });
+    const dcLowerSeries = currentModalChart.addLineSeries({ color: dcLineColor, lineWidth: 1, lineStyle: 2, priceLineVisible: false, lastValueVisible: false });
+    const dcBasisSeries = currentModalChart.addLineSeries({ color: dcLineColor, lineWidth: 1, lineStyle: 2, priceLineVisible: false, lastValueVisible: false });
     dcUpperSeries.setData(dcUpperData);
     dcLowerSeries.setData(dcLowerData);
     dcBasisSeries.setData(dcBasisData);
@@ -667,25 +686,16 @@ function openStandaloneChart(ticker) {
       return { ...bar, color: barColor };
     });
 
-    const barSeries = chart.addBarSeries({ thinBars: false, openVisible: false });
+    const barSeries = currentModalChart.addBarSeries({ thinBars: false, openVisible: false });
     barSeries.setData(coloredBars);
 
-    document.getElementById('loader').style.display = 'none';
-    document.getElementById('status-badge').textContent = 'LIVE YAHOO DATA';
-    document.getElementById('status-badge').style.color = '#20d9b8';
-    document.getElementById('status-badge').style.borderColor = 'rgba(32,217,184,0.3)';
-    chart.timeScale().fitContent();
+    statusEl.textContent = 'LIVE YAHOO DATA';
+    statusEl.style.color = 'var(--teal)';
+    currentModalChart.timeScale().fitContent();
   }
 
-  loadData();
-<\/script>
-</body>
-</html>`;
-
-  win.document.open();
-  win.document.write(htmlContent);
-  win.document.close();
-}
+  loadModalData();
+}  
 /* ============================================================
    UI WIRING
    ============================================================ */
