@@ -221,11 +221,12 @@
 
 <script>
 /* ============================================================
-   CONFIG & STATE
+   CONFIG
    ============================================================ */
 const SHEET_ID = "1DcWbr8T5lTIgSrpoqVteg7ar_H466KZSvZ4p_Eksa1s";
-const SHEET_GID = "592218882";
-const EXPORT_CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${SHEET_GID}`;
+// Force Google to export the active default view to bypass the GID block
+const EXPORT_CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/pub?output=csv`;
+
 const CORS_PROXIES = [
   url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
   url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
