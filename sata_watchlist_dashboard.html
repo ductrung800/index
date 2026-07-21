@@ -216,6 +216,18 @@
   </div>
 </div>
 
+<!-- ================= APP TABS ================= -->
+<div class="app-tabs">
+  <a href="index.html">Market Dashboard</a>
+  <a href="stockbee_market_monitor_live.html">Stockbee Monitor</a>
+  <a href="IndustryRS.html">Industry RS</a>
+  <a href="liquid_leaders.html">Liquid Leaders</a>
+  <a href="PriceStructure.html">Price Structure</a>
+  <a href="StageAnalysis.html" class="active">Stage Analysis</a>
+  <a href="tv_watchlist.html">TradingView Watchlist</a>
+  <a href="sata_watchlist_dashboard.html">SATA Chart</a> 
+</div>
+
 <script>
 (function(){
 
@@ -564,17 +576,7 @@ function renderDetail(){
     </table>
   `;
 }
-<!-- ================= APP TABS ================= -->
-<div class="app-tabs">
-  <a href="index.html">Market Dashboard</a>
-  <a href="stockbee_market_monitor_live.html">Stockbee Monitor</a>
-  <a href="IndustryRS.html">Industry RS</a>
-  <a href="liquid_leaders.html">Liquid Leaders</a>
-  <a href="PriceStructure.html">Price Structure</a>
-  <a href="StageAnalysis.html" class="active">Stage Analysis</a>
-  <a href="tv_watchlist.html">TradingView Watchlist</a>
-  <a href="sata_watchlist_dashboard.html">SATA Chart</a> 
-</div>
+
 function updateStatus(){
   const n = state.order.length;
   setStatus(n === 0 ? "No data loaded yet" : `<b>${n}</b> ticker${n===1?'':'s'} loaded${state.spxBars ? '' : ' &middot; <span style="color:var(--red)">no SPX benchmark</span>'}`);
