@@ -162,28 +162,35 @@
   .master-card .chips span{ font-size:11px; font-weight:700; color:var(--text); }
 
   
-/* ---------- CHART GRID VIEW (21 EMA CLOUD) ---------- */
+/* ---------- EXPANDED GRID & CANVAS FIX ---------- */
   .charts-grid-container {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(440px, 1fr));
-    gap: 16px;
+    grid-template-columns: repeat(auto-fill, minmax(480px, 1fr));
+    gap: 20px;
     padding-top: 8px;
     overflow-y: auto;
-    max-height: calc(100vh - 240px);
-    padding-right: 6px;
+    max-height: calc(100vh - 220px);
     width: 100%;
+    flex: 1;
   }
+  
   .chart-card-wrapper {
     background: var(--chart-bg);
     border: 1px solid var(--line);
     border-radius: 8px;
     overflow: hidden;
-    height: 440px;
+    height: 460px;
     position: relative;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     display: flex;
     flex-direction: column;
     width: 100%;
+  }
+
+  /* Force internal canvas elements to fill wrapper width completely */
+  .chart-card-wrapper canvas {
+    width: 100% !important;
+    height: 100% !important;
   }
   .chart-header-overlay {
     position: absolute;
