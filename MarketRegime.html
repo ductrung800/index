@@ -171,15 +171,13 @@
   <!-- ================= APP TABS ================= -->
   <div class="app-tabs">
     <a href="index.html">Market Dashboard</a>
-    <a href="MarketRegime.html" class="active">Market Regime</a>
     <a href="stockbee_market_monitor_live.html">Stockbee Monitor</a>
     <a href="sata_watchlist_dashboard.html">SATA Chart</a>
-    <a href="PowerList.html">Power List</a>
     <a href="liquid_leaders.html">Liquid Leaders</a>
     <a href="group_momentum.html">Group Momentum</a>
     <a href="PriceStructure.html">Price Structure</a>
     <a href="StageAnalysis.html">Stage Analysis</a>
-   
+    <a href="MarketRegime.html" class="active">Market Regime</a>
     <a href="tv_watchlist.html">TradingView Watchlist</a>
     <a href="IndustryRS.html">Industry RS</a>
   </div>
@@ -374,11 +372,10 @@
       <div class="lw-chart-container" id="lwChartContainer"></div>
     </div>
 
-    <!-- StockCharts Static Fallback Overlay -->
+    <!-- StockCharts Reference (with referrerpolicy="no-referrer" to prevent 403 blocks) -->
     <div style="border-top: 1px solid var(--line); padding-top: 20px; text-align: center;">
       <div style="font-size:11px; color:var(--text-dim); text-transform:uppercase; letter-spacing:.05em; font-family:'JetBrains Mono',monospace; margin-bottom:12px;">Live StockCharts Reference · Nasdaq Summation Index ($NASI)</div>
-      <!-- Cache buster appended to ensure fresh load -->
-      <img src="https://c.stockcharts.com/c-sc/sc?s=%24NASI&p=D&yr=0&mn=6&dy=0&i=t1234567890c" alt="NASI StockChart" style="max-width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--line);">
+      <img src="https://c.stockcharts.com/c-sc/sc?s=%24NASI&p=D&yr=0&mn=6&dy=0" referrerpolicy="no-referrer" alt="NASI StockChart" style="max-width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--line);">
     </div>
   </div>
 
@@ -428,19 +425,24 @@ let STATE = { vix: null, vvix: null, qqq: null, spy: null, merged: [], activeCha
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 /* ============================================================
-   DATA FETCH — Sequential Staggered Delivery
+   DATA FETCH — Direct Proxy Route on Web Host
    ============================================================ */
 async function fetchYahooDaily(symbol, range = "1y") {
   const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=${range}`;
   let json = null;
 
-  try {
-    const res = await fetch(targetUrl, { cache: "no-store" });
-    if (res.ok) {
-      const j = await res.json();
-      if (j && j.chart && j.chart.result && j.chart.result[0]) json = j;
-    }
-  } catch (e) { /* fallback */ }
+  // Direct fetch only when running on local dev server to avoid browser CORS errors
+  const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+  
+  if (isLocal) {
+    try {
+      const res = await fetch(targetUrl, { cache: "no-store" });
+      if (res.ok) {
+        const j = await res.json();
+        if (j && j.chart && j.chart.result && j.chart.result[0]) json = j;
+      }
+    } catch (e) { /* fallback to proxy */ }
+  }
 
   if (!json) {
     for (const build of CORS_PROXIES) {
@@ -851,11 +853,11 @@ function renderLightweightChart() {
   });
   STATE.lwObserver.observe(container);
 
-  // Setup Secondary Left Axis for NASI 
+  // Secondary Left Axis for NASI
   chart.priceScale('left').applyOptions({
     visible: true,
     borderColor: gridLine,
-    textColor: '#eda100', // Amber NASI color
+    textColor: '#eda100',
   });
 
   const isQQQ = symbol === "QQQ";
@@ -880,18 +882,6 @@ function renderLightweightChart() {
 
   const emaSeries = chart.addLineSeries({ color: "#38bdf8", lineWidth: 2, priceLineVisible: false, lastValueVisible: true });
   emaSeries.setData(merged.map(r => ({ time: r.date, value: isQQQ ? r.qEma : r.sEma })).filter(r => r.value != null));
-
-  // NASI Overlay Series (Ready to ingest sheet data)
-  const nasiSeries = chart.addLineSeries({
-    color: '#eda100', // Amber
-    lineWidth: 2,
-    priceScaleId: 'left',
-    priceLineVisible: false,
-    lastValueVisible: true,
-  });
-
-  // UNCOMMENT the line below and map your NASI sheet data to `r.nasi` to activate the overlay line.
-  // nasiSeries.setData(merged.map(r => ({ time: r.date, value: r.nasi })).filter(r => r.value != null));
 
   chart.timeScale().fitContent();
 }
