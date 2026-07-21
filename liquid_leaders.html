@@ -234,13 +234,13 @@
    CONFIG
    ============================================================ */
 const SHEET_ID = "1DcWbr8T5lTIgSrpoqVteg7ar_H466KZSvZ4p_Eksa1s";
-const EXPORT_CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/pub?output=csv`;
-
+const SHEET_GVIZ_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
 const CORS_PROXIES = [
   url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
   url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+  url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`
 ];
-
+ 
 const DEFAULT_ROWS = [
 ["AGL","Agilon Health Inc","Healthcare","Medical Care Facilities",531.70,458.80,114.79,1,1,0,100,4.0,"$41.1M"],
 ["ACHC","Acadia Healthcare Company Inc","Healthcare","Medical Care Facilities",242.28,123.92,136.85,1,0,0,100,6.3,"$115.0M"],
@@ -490,26 +490,43 @@ async function fetchCSVText(url, label){
 
 async function refreshLiveData(){
   const btn = document.getElementById("btnRefresh");
-  btn.textContent = "↻ Fetching…";
+  if(btn) btn.textContent = "↻ Fetching…";
   setStatus("Fetching live sheet…");
 
-  const bust = (EXPORT_CSV_URL.includes('?') ? '&' : '?') + 'cachebust=' + Date.now();
-  const freshUrl = EXPORT_CSV_URL + bust;
-
   let text = null, lastErr = null, source = null;
-  try{ text = await fetchCSVText(freshUrl, "Direct"); source = "direct"; }
-  catch(e){ lastErr = e; console.warn("Direct fetch failed, trying proxy:", e.message); }
+  
+  // Try direct gviz first
+  try {
+    const res = await fetch(SHEET_GVIZ_URL, { cache: "no-store" });
+    if(res.ok) {
+      const t = await res.text();
+      if(t && !t.trim().startsWith('<') && !t.includes("ServiceLogin")) {
+        text = t;
+        source = "direct";
+      }
+    }
+  } catch(e) { lastErr = e; }
 
+  // Try proxies with gviz if direct failed
   if(!text){
     for(const build of CORS_PROXIES){
-      try{ text = await fetchCSVText(build(freshUrl), "Proxy"); source = "proxy"; break; }
-      catch(e){ lastErr = e; console.warn("Proxy attempt failed:", e.message); }
+      try{
+        const res = await fetch(build(SHEET_GVIZ_URL), { cache: "no-store" });
+        if(res.ok) {
+          const t = await res.text();
+          if(t && !t.trim().startsWith('<') && !t.includes("ServiceLogin")) {
+            text = t;
+            source = "proxy";
+            break;
+          }
+        }
+      }catch(e){ lastErr = e; }
     }
   }
 
   if(!text){
-    setStatus(`Live fetch failed: ${lastErr?.message||"unknown error"} — use the CSV upload below instead.`, true);
-    btn.textContent = "↻ Refresh Live Data";
+    setStatus(`Live fetch blocked or unauthorized — please ensure your Google Sheet is published to the web ("Anyone with the link can view"), or use the CSV upload below.`, true);
+    if(btn) btn.textContent = "↻ Refresh Live Data";
     return;
   }
 
@@ -519,9 +536,9 @@ async function refreshLiveData(){
     renderAll();
     setStatus(`✓ Loaded ${ROWS.length} tickers via ${source}.`);
   }catch(e){
-    setStatus(`Fetched the sheet but couldn't parse it: ${e.message}`, true);
+    setStatus(`Fetched sheet but failed parsing: ${e.message}`, true);
   }
-  btn.textContent = "↻ Refresh Live Data";
+  if(btn) btn.textContent = "↻ Refresh Live Data";
 }
 
 let currentModalChart = null;
