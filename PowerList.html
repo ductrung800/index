@@ -4,8 +4,9 @@
 <link rel="icon" href="data:,">
 <meta charset="UTF-8">
 <title>Power List</title>
-<!-- Lightweight Charts v4 Library -->
+<!-- Lightweight Charts v4 Library & PapaParse -->
 <script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
 <style>
   /* ================= IN-PAGE CHART MODAL STYLES ================= */
@@ -61,7 +62,7 @@
       var(--bg);
     color:var(--text); font-family:'Inter',sans-serif; padding:22px 26px 60px; transition:background .2s ease, color .2s ease;
   }
-  /*.wrap{max-width:1760px; margin:0 auto; width: 100%;}
+  .wrap{width: 100%; max-width: 100%; margin:0 auto;}
 
   /* ---------- UNIFORM APP TABS ---------- */
   .app-tabs {
@@ -154,7 +155,6 @@
   <!-- ================= APP TABS ================= -->
   <div class="app-tabs">
     <a href="index.html">Market Dashboard</a>
-    <a href="MarketRegime.html">Market Regime</a>
     <a href="stockbee_market_monitor_live.html">Stockbee Monitor</a>
     <a href="sata_watchlist_dashboard.html">SATA Chart</a>
     <a href="PowerList.html" class="active">Power List</a>
@@ -162,7 +162,7 @@
     <a href="group_momentum.html">Group Momentum</a>
     <a href="PriceStructure.html">Price Structure</a>
     <a href="StageAnalysis.html">Stage Analysis</a>
-    
+    <a href="MarketRegime.html">Market Regime</a>
     <a href="tv_watchlist.html">TradingView Watchlist</a>
     <a href="IndustryRS.html">Industry RS</a>
   </div>
@@ -230,7 +230,7 @@
     <table id="tblPower"></table>
   </div>
 
-  <footer>Data reflects your Power List sheet · Click any ticker to open standalone institutional HLC chart · For informational purposes only, not trading advice.</footer>
+  <footer>Data reflects your Power List sheet · Click any ticker to open standalone institutional HLC chart · For informational purposes only.</footer>
 </div>
 
 <!-- ================= IN-PAGE CHART MODAL ================= -->
@@ -246,7 +246,7 @@
     <div id="modalChartContainer" class="chart-modal-body"></div>
   </div>
 </div>
-<body>
+
 <script>
 /* ============================================================
    CONFIG
@@ -261,80 +261,13 @@ const CORS_PROXIES = [
   url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`
 ];
 
-// Fallback sample rows: [rsSts, ticker, name, sector, industry, ext, adr, superliquid(0/1), vol, m1,m3,m6,m12]
-const DEFAULT_ROWS = [
-[100,"ACHC","Acadia Healthcare Company Inc","Healthcare","Medical Care Facilities",7.18,5.46,0,"$115,466,351",0,0,1,1],
-[100,"BLLN","BillionToOne Inc","Healthcare","Diagnostics & Research",4.65,5.93,0,"$98,858,930",0,0,0,1],
-[100,"DINO","HF Sinclair Corp","Energy","Oil & Gas Refining & Marketing",8.87,3.40,0,"$232,442,769",0,0,0,1],
-[100,"DK","Delek US Holdings Inc","Energy","Oil & Gas Refining & Marketing",9.38,4.69,0,"$83,071,767",0,1,0,1],
-[100,"LASR","Nlight Inc","Technology","Semiconductors",0.78,9.63,0,"$97,715,946",1,0,0,0],
-[100,"MPC","Marathon Petroleum Corp","Energy","Oil & Gas Refining & Marketing",7.89,2.81,0,"$750,902,321",0,0,0,0],
-[100,"PARR","Par Pacific Holdings Inc","Energy","Oil & Gas Refining & Marketing",8.54,4.59,0,"$73,036,325",0,1,0,0],
-[100,"PBF","PBF Energy Inc","Energy","Oil & Gas Refining & Marketing",10.49,5.51,0,"$183,818,207",0,0,0,1],
-[100,"TXG","10X Genomics Inc","Healthcare","Health Information Services",7.69,6.93,0,"$161,507,261",0,0,1,1],
-[100,"XMTR","Xometry Inc","Industrials","Industrial Distribution",3.21,5.36,0,"$85,095,316",0,0,1,0],
-[95,"CHYM","Chime Financial Inc","Technology","Software - Application",3.59,6.08,0,"$128,290,964",0,0,0,1],
-[95,"LCID","Lucid Group Inc","Consumer Cyclical","Auto Manufacturers",2.35,17.74,0,"$169,282,137",0,0,0,1],
-[95,"VLO","Valero Energy Corp","Energy","Oil & Gas Refining & Marketing",6.25,3.53,1,"$1,008,073,966",0,0,0,1],
-[91,"MAN","ManpowerGroup Inc","Industrials","Staffing & Employment Services",9.09,5.99,0,"$77,083,046",0,0,0,1],
-[91,"NAVN","Navan Inc","Technology","Software - Application",3.49,6.02,0,"$149,240,691",0,1,0,0],
-[91,"SNOW","Snowflake Inc","Technology","Software - Application",3.99,5.11,1,"$1,676,396,660",0,1,0,0],
-[91,"XRAY","DENTSPLY SIRONA Inc","Healthcare","Medical Instruments & Supplies",6.16,4.54,0,"$78,194,708",0,0,0,1],
-[86,"ACIW","ACI Worldwide Inc","Technology","Software - Infrastructure",6.01,3.65,0,"$64,496,893",0,0,0,1],
-[86,"BILL","Bill Holdings Inc","Technology","Software - Application",4.03,4.48,0,"$116,162,362",0,0,0,1],
-[86,"CCC","CCC Intelligent Solutions Holdings Inc","Technology","Software - Application",4.28,5.71,0,"$63,691,229",0,0,0,1],
-[86,"DAVE","Dave Inc","Technology","Software - Application",7.15,6.58,0,"$259,649,290",0,1,0,0],
-[86,"GWRE","Guidewire Software Inc","Technology","Software - Application",1.41,5.25,0,"$272,975,736",0,0,0,1],
-[86,"HUM","Humana Inc","Healthcare","Healthcare Plans",3.88,3.87,0,"$605,490,255",0,0,1,0],
-[86,"KVYO","Klaviyo Inc","Technology","Software - Application",2.37,5.65,0,"$94,306,783",0,0,0,1],
-[86,"PYPL","PayPal Holdings Inc","Financial","Credit Services",6.85,3.18,1,"$1,104,818,445",0,0,0,1],
-[86,"RHI","Robert Half Inc","Industrials","Staffing & Employment Services",7.10,4.92,0,"$98,064,688",0,0,0,1],
-[81,"AEHR","Aehr Test Systems","Technology","Semiconductor Equipment & Materials",0.41,12.29,0,"$247,026,044",1,1,0,1],
-[81,"ATEX","Anterix Inc","Communication Services","Telecom Services",4.69,8.30,0,"$59,903,115",1,1,0,1],
-[81,"CNC","Centene Corp","Healthcare","Healthcare Plans",2.09,3.39,0,"$346,961,437",0,0,1,0],
-[81,"FIVN","Five9 Inc","Technology","Software - Infrastructure",2.06,5.54,0,"$61,227,912",0,0,0,1],
-[81,"NTSK","Netskope Inc","Technology","Software - Infrastructure",2.99,7.49,0,"$89,831,643",0,0,0,0],
-[81,"SEZL","Sezzle Inc","Financial","Credit Services",4.07,7.28,0,"$124,506,025",0,1,0,1],
-[81,"VCYT","Veracyte Inc","Healthcare","Diagnostics & Research",3.58,5.10,0,"$80,943,596",0,0,0,1],
-[76,"VRNS","Varonis Systems Inc","Technology","Software - Infrastructure",5.18,6.59,0,"$103,548,998",0,0,0,0],
-[71,"AMD","Advanced Micro Devices Inc","Technology","Semiconductors",1.18,6.06,1,"$16,307,989,605",0,0,0,0],
-[71,"BAND","Bandwidth Inc","Technology","Software - Infrastructure",1.85,8.30,0,"$104,461,100",1,1,0,1],
-[71,"NESR","National Energy Services Reunited Corp","Energy","Oil & Gas Equipment & Services",1.62,5.48,0,"$68,395,445",0,0,0,0],
-[62,"HUT","Hut 8 Corp","Financial","Capital Markets",-0.17,10.21,0,"$468,099,070",0,0,0,0],
-[62,"LITE","Lumentum Holdings Inc","Technology","Communication Equipment",-0.36,7.86,1,"$4,299,543,067",0,1,0,0],
-[62,"OSCR","Oscar Health Inc","Healthcare","Healthcare Plans",2.58,6.00,0,"$196,239,306",0,0,1,0],
-[62,"PANW","Palo Alto Networks Inc","Technology","Software - Infrastructure",3.67,5.32,1,"$2,527,497,291",0,0,0,0],
-[57,"NEO","NeoGenomics Inc","Healthcare","Diagnostics & Research",5.22,5.12,0,"$51,642,927",0,0,0,1],
-[57,"TSEM","Tower Semiconductor Ltd","Technology","Semiconductors",-0.13,7.86,0,"$482,171,740",1,0,0,0],
-[52,"FTNT","Fortinet Inc","Technology","Software - Infrastructure",2.32,4.27,0,"$956,948,154",0,0,0,1],
-[52,"ICHR","Ichor Holdings Ltd","Technology","Semiconductor Equipment & Materials",1.60,9.70,0,"$120,496,006",0,1,0,0],
-[52,"OKTA","Okta Inc","Technology","Software - Infrastructure",3.34,5.86,0,"$474,791,986",0,0,0,1],
-[52,"STX","Seagate Technology Holdings Plc","Technology","Computer Hardware",0.12,8.32,1,"$4,334,968,023",0,1,0,0],
-[52,"TER","Teradyne Inc","Technology","Semiconductor Equipment & Materials",-0.18,7.87,1,"$1,831,695,574",0,0,0,0],
-[38,"AAOI","Applied Optoelectronics Inc","Technology","Communication Equipment",-1.80,11.12,1,"$1,447,968,218",0,0,0,1],
-[38,"DDOG","Datadog Inc","Technology","Software - Application",1.43,5.36,1,"$1,184,390,551",0,0,1,0],
-[38,"HNGE","Hinge Health Inc","Healthcare","Health Information Services",4.75,4.98,0,"$184,658,430",0,0,0,1],
-[38,"MU","Micron Technology Inc","Technology","Semiconductors",0.32,7.32,1,"$51,914,813,080",0,1,0,1],
-[38,"PTRN","Pattern Group Inc","Technology","Software - Application",3.70,5.68,0,"$64,421,621",0,0,0,0],
-[38,"QLYS","Qualys Inc","Technology","Software - Infrastructure",3.44,5.79,0,"$113,639,686",0,0,0,1],
-[19,"AMBQ","Ambiq Micro Inc","Technology","Semiconductors",0.04,7.90,0,"$54,196,029",0,0,0,1],
-[19,"ASX","ASE Technology Holding Co Ltd","Technology","Semiconductors",0.66,5.36,0,"$506,290,101",0,0,0,1],
-[19,"BB","BlackBerry Ltd","Technology","Software - Infrastructure",-0.22,8.46,0,"$301,200,007",0,0,0,0],
-[19,"DELL","Dell Technologies Inc","Technology","Computer Hardware",1.13,7.44,0,"$3,257,904,073",0,0,0,0],
-[19,"MRVL","Marvell Technology Inc","Technology","Semiconductors",-1.19,7.30,1,"$10,283,233,323",0,1,0,0],
-[19,"MXL","Maxlinear Inc","Technology","Semiconductors",-0.40,12.35,0,"$317,267,849",0,0,0,0],
-[5,"PENG","Penguin Solutions Inc","Technology","Information Technology Services",-0.37,13.04,0,"$260,155,881",0,1,0,0],
-[0,"VICR","Vicor Corp","Technology","Electronic Components",-2.07,9.76,0,"$186,558,627",0,0,0,0],
-];
-
-let ROWS = DEFAULT_ROWS.map(toRowObj);
+let ROWS = [];
 let sortKey = "rsSts", sortDir = -1;
-let dataSourceLabel = "sample data (bundled)";
+let dataSourceLabel = "Initializing...";
 
-function toRowObj(r){
-  return { rsSts:r[0], ticker:r[1], company:r[2], sector:r[3], industry:r[4], ext:r[5], adr:r[6], superliquid:r[7], vol:r[8], m1:r[9], m3:r[10], m6:r[11], m12:r[12] };
-}
-
+/* ============================================================
+   FORMATTING UTILS
+   ============================================================ */
 function extHeat(v){
   const maxAbs = 12;
   const t = Math.max(-1, Math.min(1, v/maxAbs));
@@ -348,6 +281,175 @@ function rsHeat(v){
   return `hsl(152,55%,${l}%)`;
 }
 
+function formatVol(v) {
+  if(!v || v === "—" || v === "") return "—";
+  if(typeof v === 'string' && (v.includes('$') || v.includes('M') || v.includes('B'))) return v;
+  const n = num(v);
+  if(n === 0) return "—";
+  if(n >= 1e9) return "$" + (n/1e9).toFixed(2) + "B";
+  if(n >= 1e6) return "$" + (n/1e6).toFixed(2) + "M";
+  if(n >= 1e3) return "$" + (n/1e3).toFixed(0) + "K";
+  return "$" + n.toLocaleString();
+}
+
+function num(v){
+  if(v == null || v === '') return 0;
+  let s = String(v).toLowerCase().replace(/%/g,'').replace(/,/g,'').replace(/\$/g,'').trim();
+  let mult = 1;
+  if(s.endsWith('k')) { mult = 1e3; s = s.slice(0, -1); }
+  else if(s.endsWith('m')) { mult = 1e6; s = s.slice(0, -1); }
+  else if(s.endsWith('b')) { mult = 1e9; s = s.slice(0, -1); }
+  const n = parseFloat(s) * mult;
+  return isNaN(n) ? 0 : n;
+}
+
+function bool(v){
+  const s = String(v).trim().toLowerCase();
+  return (s==="yes"||s==="y"||s==="true"||s==="1"||s==="✓"||s==="v"||s==="x") ? 1 : 0;
+}
+
+/* ============================================================
+   DATA PARSING ENGINE (Replaced custom parser with PapaParse)
+   ============================================================ */
+function fuzzy(s){ return String(s||"").toLowerCase().replace(/[^a-z0-9]/g,''); }
+
+let lastMissingCols = [];
+
+function parseSheetCSV(text) {
+  // Use robust PapaParse to convert CSV text into 2D array
+  const parsed = Papa.parse(text.trim(), { skipEmptyLines: true });
+  const grid = parsed.data.filter(r => r.some(c => c && c.trim() !== ""));
+  if(grid.length < 2) throw new Error("CSV looks empty.");
+
+  // Dynamically find the actual header row (in case of blank titles at the top)
+  let headerIdx = 0;
+  for(let i=0; i < Math.min(5, grid.length); i++){
+    const rowFuzzy = grid[i].map(fuzzy);
+    if(rowFuzzy.includes("ticker") || rowFuzzy.includes("symbol") || rowFuzzy.includes("name") || rowFuzzy.includes("company")){
+      headerIdx = i;
+      break;
+    }
+  }
+
+  const rawHeader = grid[headerIdx];
+  const fuzzyHeader = rawHeader.map(fuzzy);
+
+  const fieldDefs = [
+    ["ticker",   ["ticker","symbol"]],
+    ["name",     ["name","company","companyname","stockname","description"]],
+    ["sector",   ["sector"]],
+    ["industry", ["industry","subindustry"]],
+    ["rsSts",    ["rssts","rs_sts","rsrating","rsrank","1monthrs","onemonthrs","rspercentile","1mrs","rs"]],
+    ["ext",      ["extension","ext","extfrom20","extfrom20ema","extensionfrom20"]],
+    ["adr",      ["adr%","adr","adrpct","averagedailyrange"]],
+    ["super",    ["superliquid?","superliquid","liquid"]],
+    ["vol",      ["avg$vol","avgdollarvol","dollarvol","vol","avgvol","avgvolume","volume"]],
+    ["m1",       ["1mleader","1monthleader","1moleader","1m"]],
+    ["m3",       ["3mleader","3monthleader","3moleader","3m"]],
+    ["m6",       ["6mleader","6monthleader","6moleader","6m"]],
+    ["m12",      ["12mleader","12monthleader","12moleader","12m"]],
+  ];
+
+  function findColIdx(aliases) {
+    for(const a of aliases){
+      const target = fuzzy(a);
+      const idx = fuzzyHeader.indexOf(target);
+      if(idx !== -1) return idx;
+    }
+    for(const a of aliases){
+      const target = fuzzy(a);
+      if(target.length < 3) continue; // Prevent matching short strings like 'rs' inside 'first'
+      const idx = fuzzyHeader.findIndex(h => h && h.length >= 3 && (h.includes(target) || target.includes(h)));
+      if(idx !== -1) return idx;
+    }
+    return -1;
+  }
+
+  const cols = {};
+  const missing = [];
+  fieldDefs.forEach(([key, aliases])=>{
+    const idx = findColIdx(aliases);
+    cols[key] = idx;
+    if(idx === -1) missing.push(aliases[0]);
+  });
+  lastMissingCols = missing;
+
+  if(cols.ticker === -1) throw new Error("Couldn't find a 'Ticker' column in header: " + rawHeader.join(", "));
+
+  const get = (r, key) => cols[key] === -1 ? "" : (r[cols[key]] || "");
+
+  return grid.slice(headerIdx + 1)
+    .filter(r => get(r, "ticker").trim())
+    .map(r => ({
+      ticker: get(r,"ticker").trim().toUpperCase(),
+      company: get(r,"name").trim(),
+      sector: get(r,"sector").trim(),
+      industry: get(r,"industry").trim(),
+      rsSts: num(get(r,"rsSts")),
+      ext: num(get(r,"ext")),
+      adr: num(get(r,"adr")),
+      superliquid: bool(get(r,"super")),
+      vol: get(r,"vol").trim(), 
+      m1: bool(get(r,"m1")), m3: bool(get(r,"m3")), m6: bool(get(r,"m6")), m12: bool(get(r,"m12")),
+    }));
+}
+
+const statusMsg = document.getElementById("statusMsg");
+function setStatus(msg, isErr){
+  statusMsg.textContent = msg;
+  statusMsg.className = "status-msg" + (isErr ? " err" : "");
+}
+
+async function refreshLiveData(){
+  const btn = document.getElementById("btnRefresh");
+  if(btn) btn.textContent = "↻ Fetching…";
+  setStatus("Fetching live sheet…");
+
+  let text = null, lastErr = null, source = null;
+  try {
+    const res = await fetch(SHEET_GVIZ_URL, { cache: "no-store" });
+    if(res.ok) {
+      const t = await res.text();
+      if(t && !t.trim().startsWith('<') && !t.includes("ServiceLogin")) { text = t; source = "direct"; }
+    }
+  } catch(e) { lastErr = e; }
+
+  if(!text){
+    for(const build of CORS_PROXIES){
+      try{
+        const res = await fetch(build(SHEET_GVIZ_URL), { cache: "no-store" });
+        if(res.ok) {
+          const t = await res.text();
+          if(t && !t.trim().startsWith('<') && !t.includes("ServiceLogin")) { text = t; source = "proxy"; break; }
+        }
+      }catch(e){ lastErr = e; }
+    }
+  }
+
+  if(!text){
+    setStatus(`Live fetch blocked or unauthorized — please ensure your Google Sheet is published to the web ("Anyone with the link can view"), or use the CSV upload below.`, true);
+    if(btn) btn.textContent = "↻ Refresh Live Data";
+    return;
+  }
+
+  try{
+    ROWS = parseSheetCSV(text);
+    dataSourceLabel = `live sheet (via ${source})`;
+    renderAll();
+    if(lastMissingCols.length){
+      setStatus(`✓ Loaded ${ROWS.length} tickers via ${source}, but couldn't match columns: ${lastMissingCols.join(", ")} — check header spelling.`, true);
+    } else {
+      setStatus(`✓ Loaded ${ROWS.length} tickers via ${source}.`);
+    }
+  }catch(e){
+    setStatus(`Fetched sheet but failed parsing: ${e.message}`, true);
+  }
+  if(btn) btn.textContent = "↻ Refresh Live Data";
+}
+
+/* ============================================================
+   UI RENDERING
+   ============================================================ */
 function populateSectorFilter(){
   const sectors = [...new Set(ROWS.map(r=>r.sector).filter(Boolean))].sort();
   const sel = document.getElementById("sectorFilter");
@@ -461,7 +563,7 @@ function renderTable(){
     <td style="background:${extHeat(r.ext)}">${r.ext>0?'+':''}${r.ext.toFixed(2)}</td>
     <td>${r.adr.toFixed(2)}%</td>
     <td><span class="badge-pill ${r.superliquid?'yes':'no'}">${r.superliquid?'Yes':'No'}</span></td>
-    <td>${r.vol||"—"}</td>
+    <td>${formatVol(r.vol)}</td>
     <td class="chk ${r.m1?'yes':''}">${r.m1?'✓':''}</td>
     <td class="chk ${r.m3?'yes':''}">${r.m3?'✓':''}</td>
     <td class="chk ${r.m6?'yes':''}">${r.m6?'✓':''}</td>
@@ -486,157 +588,8 @@ function renderAll(){
   document.getElementById("subline").textContent = `${ROWS.length} tickers · Source: ${dataSourceLabel}`;
 }
 
-function parseCSVGrid(text){
-  const rows = [];
-  let row = [], field = '', inQuotes = false;
-  for(let i=0;i<text.length;i++){
-    const ch = text[i], next = text[i+1];
-    if(inQuotes){
-      if(ch === '"' && next === '"'){ field+='"'; i++; }
-      else if(ch === '"'){ inQuotes=false; }
-      else field += ch;
-    } else {
-      if(ch === '"'){ inQuotes = true; }
-      else if(ch === ','){ row.push(field); field=''; }
-      else if(ch === '\n'){ row.push(field); field=''; rows.push(row); row=[]; }
-      else if(ch === '\r'){ /* skip */ }
-      else field += ch;
-    }
-  }
-  if(field.length || row.length){ row.push(field); rows.push(row); }
-  return rows;
-}
-
-function num(v){ const n = parseFloat(String(v).replace('%','').replace(/,/g,'').replace(/\$/g,'').trim()); return isNaN(n) ? 0 : n; }
-function bool(v){ const s = String(v).trim().toLowerCase(); return (s==="yes"||s==="y"||s==="true"||s==="1"||s==="✓"||s==="v"||s==="x") ? 1 : 0; }
-
-// Strip everything except letters/digits so header matching survives spacing,
-// punctuation, underscores, % signs, or case differences in the live sheet.
-function fuzzy(s){ return String(s||"").toLowerCase().replace(/[^a-z0-9]/g,''); }
-
-function findCol(fuzzyHeader, aliases){
-  for(const a of aliases){
-    const target = fuzzy(a);
-    const i = fuzzyHeader.indexOf(target);
-    if(i !== -1) return i;
-  }
-  // fallback: partial/contains match
-  for(const a of aliases){
-    const target = fuzzy(a);
-    const i = fuzzyHeader.findIndex(h => h.includes(target) || target.includes(h));
-    if(i !== -1) return i;
-  }
-  return -1;
-}
-
-let lastMissingCols = [];
-
-function parseSheetCSV(text){
-  const grid = parseCSVGrid(text).filter(r => r.some(c=>c.trim()!==""));
-  if(grid.length < 2) throw new Error("CSV looks empty.");
-  const rawHeader = grid[0];
-  const fuzzyHeader = rawHeader.map(fuzzy);
-
-  const fieldDefs = [
-    ["ticker",   ["ticker","symbol"]],
-    ["name",     ["name","company","stockname","companyname"]],
-    ["sector",   ["sector"]],
-    ["industry", ["industry"]],
-    ["rsSts",    ["rs_sts","rssts","rsscore","rspercentile","rsrank","rs%ile","1monthrs","onemonthrs","1mrs","rs"]],
-    ["ext",      ["extension","ext"]],
-    ["adr",      ["adr%","adr","adrpct"]],
-    ["super",    ["superliquid?","superliquid","liquid"]],
-    ["vol",      ["avg$vol","avgdollarvol","avgvol","avgvolume","dollarvolume","avg$volume","volume"]],
-    ["m1",       ["1mleader","1monthleader","1mo leader","1m"]],
-    ["m3",       ["3mleader","3monthleader","3m"]],
-    ["m6",       ["6mleader","6monthleader","6m"]],
-    ["m12",      ["12mleader","12monthleader","12m"]],
-  ];
-
-  const cols = {};
-  const missing = [];
-  fieldDefs.forEach(([key, aliases])=>{
-    const idx = findCol(fuzzyHeader, aliases);
-    cols[key] = idx;
-    if(idx === -1) missing.push(key);
-  });
-  lastMissingCols = missing;
-
-  if(cols.ticker === -1) throw new Error("Couldn't find a 'Ticker' column. Header row was: " + rawHeader.join(" | "));
-
-  const get = (r, key) => cols[key] === -1 ? "" : (r[cols[key]] || "");
-
-  return grid.slice(1)
-    .filter(r => get(r,"ticker").trim())
-    .map(r => ({
-      ticker: get(r,"ticker").trim().toUpperCase(),
-      company: get(r,"name").trim(),
-      sector: get(r,"sector").trim(),
-      industry: get(r,"industry").trim(),
-      rsSts: num(get(r,"rsSts")),
-      ext: num(get(r,"ext")),
-      adr: num(get(r,"adr")),
-      superliquid: bool(get(r,"super")),
-      vol: get(r,"vol").trim(),
-      m1: bool(get(r,"m1")), m3: bool(get(r,"m3")), m6: bool(get(r,"m6")), m12: bool(get(r,"m12")),
-    }));
-}
-
-const statusMsg = document.getElementById("statusMsg");
-function setStatus(msg, isErr){
-  statusMsg.textContent = msg;
-  statusMsg.className = "status-msg" + (isErr ? " err" : "");
-}
-
-async function refreshLiveData(){
-  const btn = document.getElementById("btnRefresh");
-  if(btn) btn.textContent = "↻ Fetching…";
-  setStatus("Fetching live sheet…");
-
-  let text = null, lastErr = null, source = null;
-  try {
-    const res = await fetch(SHEET_GVIZ_URL, { cache: "no-store" });
-    if(res.ok) {
-      const t = await res.text();
-      if(t && !t.trim().startsWith('<') && !t.includes("ServiceLogin")) { text = t; source = "direct"; }
-    }
-  } catch(e) { lastErr = e; }
-
-  if(!text){
-    for(const build of CORS_PROXIES){
-      try{
-        const res = await fetch(build(SHEET_GVIZ_URL), { cache: "no-store" });
-        if(res.ok) {
-          const t = await res.text();
-          if(t && !t.trim().startsWith('<') && !t.includes("ServiceLogin")) { text = t; source = "proxy"; break; }
-        }
-      }catch(e){ lastErr = e; }
-    }
-  }
-
-  if(!text){
-    setStatus(`Live fetch blocked or unauthorized — please ensure your Google Sheet is published to the web ("Anyone with the link can view"), or use the CSV upload below.`, true);
-    if(btn) btn.textContent = "↻ Refresh Live Data";
-    return;
-  }
-
-  try{
-    ROWS = parseSheetCSV(text);
-    dataSourceLabel = `live sheet (via ${source})`;
-    renderAll();
-    if(lastMissingCols.length){
-      setStatus(`✓ Loaded ${ROWS.length} tickers via ${source}, but couldn't match columns: ${lastMissingCols.join(", ")} — check header spelling in the sheet.`, true);
-    } else {
-      setStatus(`✓ Loaded ${ROWS.length} tickers via ${source}.`);
-    }
-  }catch(e){
-    setStatus(`Fetched sheet but failed parsing: ${e.message}`, true);
-  }
-  if(btn) btn.textContent = "↻ Refresh Live Data";
-}
-
 /* ============================================================
-   STANDALONE MODAL ENGINE (matches Liquid Leaders / Stage Analysis)
+   STANDALONE MODAL ENGINE
    ============================================================ */
 let currentModalChart = null, modalResizeObserver = null;
 function closeChartModal(e) {
@@ -804,6 +757,9 @@ function openStandaloneChart(ticker) {
   loadModalData();
 }
 
+/* ============================================================
+   EVENT LISTENERS & INIT
+   ============================================================ */
 document.getElementById("btnRefresh").addEventListener("click", refreshLiveData);
 document.getElementById("searchInput").addEventListener("input", renderTable);
 document.getElementById("sectorFilter").addEventListener("change", renderTable);
@@ -859,7 +815,6 @@ document.getElementById("optLight").addEventListener("click", ()=>setTheme("ligh
     if(savedTheme) document.documentElement.setAttribute("data-theme", savedTheme);
   }catch(e){}
   updateThemeToggleUI();
-  renderAll();
   refreshLiveData();
 })();
 </script>
