@@ -171,13 +171,15 @@
   <!-- ================= APP TABS ================= -->
   <div class="app-tabs">
     <a href="index.html">Market Dashboard</a>
+    <a href="MarketRegime.html" class="active">Market Regime</a>
     <a href="stockbee_market_monitor_live.html">Stockbee Monitor</a>
     <a href="sata_watchlist_dashboard.html">SATA Chart</a>
+    <a href="PowerList.html">Power List</a>
     <a href="liquid_leaders.html">Liquid Leaders</a>
     <a href="group_momentum.html">Group Momentum</a>
     <a href="PriceStructure.html">Price Structure</a>
     <a href="StageAnalysis.html">Stage Analysis</a>
-    <a href="MarketRegime.html" class="active">Market Regime</a>
+   
     <a href="tv_watchlist.html">TradingView Watchlist</a>
     <a href="IndustryRS.html">Industry RS</a>
   </div>
@@ -362,11 +364,21 @@
           <button class="chart-btn active" data-symbol="QQQ">QQQ Daily</button>
           <button class="chart-btn" data-symbol="SPY">SPY Daily</button>
         </div>
+        <span style="font-size:11px; color:var(--amber); font-family:'JetBrains Mono',monospace; margin-right:8px;">● NASI (Left Axis)</span>
         <span style="font-size:11px; color:var(--teal); font-family:'JetBrains Mono',monospace;">● Live Yahoo Feed</span>
       </div>
     </div>
-    <div class="lw-chart-wrap">
+    
+    <!-- Interactive Chart -->
+    <div class="lw-chart-wrap" style="margin-bottom: 24px;">
       <div class="lw-chart-container" id="lwChartContainer"></div>
+    </div>
+
+    <!-- StockCharts Static Fallback Overlay -->
+    <div style="border-top: 1px solid var(--line); padding-top: 20px; text-align: center;">
+      <div style="font-size:11px; color:var(--text-dim); text-transform:uppercase; letter-spacing:.05em; font-family:'JetBrains Mono',monospace; margin-bottom:12px;">Live StockCharts Reference · Nasdaq Summation Index ($NASI)</div>
+      <!-- Cache buster appended to ensure fresh load -->
+      <img src="https://c.stockcharts.com/c-sc/sc?s=%24NASI&p=D&yr=0&mn=6&dy=0&i=t1234567890c" alt="NASI StockChart" style="max-width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--line);">
     </div>
   </div>
 
@@ -839,6 +851,13 @@ function renderLightweightChart() {
   });
   STATE.lwObserver.observe(container);
 
+  // Setup Secondary Left Axis for NASI 
+  chart.priceScale('left').applyOptions({
+    visible: true,
+    borderColor: gridLine,
+    textColor: '#eda100', // Amber NASI color
+  });
+
   const isQQQ = symbol === "QQQ";
   const bars = merged.map(r => ({
     time: r.date,
@@ -862,11 +881,23 @@ function renderLightweightChart() {
   const emaSeries = chart.addLineSeries({ color: "#38bdf8", lineWidth: 2, priceLineVisible: false, lastValueVisible: true });
   emaSeries.setData(merged.map(r => ({ time: r.date, value: isQQQ ? r.qEma : r.sEma })).filter(r => r.value != null));
 
+  // NASI Overlay Series (Ready to ingest sheet data)
+  const nasiSeries = chart.addLineSeries({
+    color: '#eda100', // Amber
+    lineWidth: 2,
+    priceScaleId: 'left',
+    priceLineVisible: false,
+    lastValueVisible: true,
+  });
+
+  // UNCOMMENT the line below and map your NASI sheet data to `r.nasi` to activate the overlay line.
+  // nasiSeries.setData(merged.map(r => ({ time: r.date, value: r.nasi })).filter(r => r.value != null));
+
   chart.timeScale().fitContent();
 }
 
 /* ============================================================
-   FETCH ORCHESTRATION (SEQUENTIAL DELAYS TO PREVENT CORS/429)
+   FETCH ORCHESTRATION
    ============================================================ */
 async function refreshAll() {
   const btn = document.getElementById("btnRefresh");
