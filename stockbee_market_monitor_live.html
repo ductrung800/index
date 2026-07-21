@@ -9,13 +9,15 @@
  
 <style>
   /* NAVIGATION TABS */
-.wrap { max-width: 1780px; margin: 0 auto; width: 100%; }
+/*.wrap { max-width: 1780px; margin: 0 auto; width: 100%; }
 
+/* ---------- UNIFORM APP TABS ---------- */
   .app-tabs { 
     display: flex; 
     gap: 4px; 
-    margin-bottom: 22px; 
+    margin-bottom: 24px; 
     border-bottom: 1px solid var(--line, #e1e0d9); 
+    padding-bottom: 0; 
     flex-wrap: nowrap; 
     overflow-x: auto; 
   }
@@ -33,6 +35,17 @@
     white-space: nowrap; 
     transition: all 0.15s; 
     font-family: 'JetBrains Mono', monospace; 
+  }
+  .app-tabs a.active { 
+    background: #ffffff; 
+    color: #1baf7a; 
+    border-color: #e1e0d9; 
+    border-bottom-color: #ffffff; 
+    margin-bottom: -1px; 
+  }
+  .app-tabs a:hover:not(.active) { 
+    color: #0b0b0b; 
+    background: rgba(0,0,0,0.03); 
   }
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f8f8f6; color: #0b0b0b; padding: 22px 26px 60px; }
