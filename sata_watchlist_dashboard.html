@@ -227,9 +227,13 @@
 
 <script>
 /* ============================================================
-   1. TICKER UNIVERSE & CONFIG
+   1. LIVE GOOGLE SHEETS UNIVERSE SYNC & CONFIG
    ============================================================ */
-const RAW_UNIVERSE = [
+const SHEET_ID = "1DcWbr8T5lTIgSrpoqVteg7ar_H466KZSvZ4p_Eksa1s";
+const EXPORT_CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/pub?output=csv`;
+
+// Fallback Default Universe (65 Tickers) used if network/CORS blocks the live sheet
+const FALLBACK_UNIVERSE = [
   {ticker:"AGL", company:"Agilon Health Inc", sector:"Healthcare", industry:"Medical Care Facilities", sub:"Medical Care Facilities", exch:"NYSE"},
   {ticker:"ACHC", company:"Acadia Healthcare Co", sector:"Healthcare", industry:"Medical Care Facilities", sub:"Medical Care Facilities", exch:"NASDAQ"},
   {ticker:"DAVE", company:"Dave Inc", sector:"Technology", industry:"Software - Application", sub:"Fintech & Payments", exch:"NASDAQ"},
@@ -298,7 +302,7 @@ const RAW_UNIVERSE = [
 ];
 
 const STATE = {
-  universe: RAW_UNIVERSE,
+  universe: FALLBACK_UNIVERSE,
   data: {},
   spxBars: null,
   selected: null,
@@ -316,7 +320,74 @@ const CORS_PROXIES = [
 ];
 
 /* ============================================================
-   2. TECHNICAL MATH ENGINE
+   2. CSV PARSER & LIVE UNIVERSE FETCH
+   ============================================================ */
+function parseCSVGrid(text) {
+  const rows = [];
+  let row = [], field = '', inQuotes = false;
+  for(let i=0; i<text.length; i++) {
+    const ch = text[i], next = text[i+1];
+    if(inQuotes) {
+      if(ch === '"' && next === '"') { field += '"'; i++; }
+      else if(ch === '"') { inQuotes = false; }
+      else field += ch;
+    } else {
+      if(ch === '"') { inQuotes = true; }
+      else if(ch === ',') { row.push(field); field = ''; }
+      else if(ch === '\n') { row.push(field); field = ''; rows.push(row); row = []; }
+      else if(ch === '\r') { /* skip */ }
+      else field += ch;
+    }
+  }
+  if(field.length || row.length) { row.push(field); rows.push(row); }
+  return rows;
+}
+
+async function syncLiveTickerUniverse() {
+  const statusBox = document.getElementById("statusBox");
+  statusBox.innerHTML = `Syncing Leader Hunter Sheet…`;
+
+  for (const build of CORS_PROXIES) {
+    try {
+      const res = await fetch(build(EXPORT_CSV_URL), { cache: "no-store" });
+      if (!res.ok) continue;
+      const text = await res.text();
+      if (!text || text.trim().startsWith('<')) continue;
+      
+      const grid = parseCSVGrid(text).filter(r => r.some(c => c.trim() !== ""));
+      if (grid.length < 2) continue;
+      
+      const header = grid[0].map(h => h.trim().toLowerCase());
+      const idx = name => header.findIndex(h => h === name);
+      const cTicker = idx("ticker"), cCompany = idx("company"), cSector = idx("sector"), cIndustry = idx("industry");
+      
+      if (cTicker === -1) continue;
+
+      const liveUniverse = grid.slice(1)
+        .filter(r => (r[cTicker] || "").trim())
+        .map(r => ({
+          ticker: (r[cTicker] || "").trim().toUpperCase(),
+          company: (r[cCompany] || "").trim() || "Leader Hunter Equities",
+          sector: (r[cSector] || "").trim() || "Unassigned",
+          industry: (r[cIndustry] || "").trim() || "Unassigned",
+          sub: (r[cIndustry] || "").trim() || "Unassigned",
+          exch: "US"
+        }));
+
+      if (liveUniverse.length > 0) {
+        console.log(`✓ Synchronized ${liveUniverse.length} symbols live from Google Sheets.`);
+        return liveUniverse;
+      }
+    } catch(e) {
+      console.warn("Live sheet sync attempt failed, trying next proxy:", e);
+    }
+  }
+  console.warn("Using fallback static universe of 65 leaders.");
+  return FALLBACK_UNIVERSE;
+}
+
+/* ============================================================
+   3. TECHNICAL MATH ENGINE
    ============================================================ */
 function sma(arr, len) {
   const out = new Array(arr.length).fill(null);
@@ -444,7 +515,7 @@ function scoreColor(score) {
 }
 
 /* ============================================================
-   3. DATA INGESTION ENGINE
+   4. YAHOO INGESTION ENGINE
    ============================================================ */
 async function fetchYahooWeekly(symbol) {
   const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1wk&range=2y`;
@@ -508,7 +579,7 @@ function processTickerBars(meta, bars) {
 }
 
 /* ============================================================
-   4. RELATIVE STRENGTH (SECTOR/INDUSTRY PERCENTILES)
+   5. RELATIVE STRENGTH PERCENTILES
    ============================================================ */
 function calculateRSTiles(targetMeta) {
   const allLoaded = Object.values(STATE.data);
@@ -536,7 +607,7 @@ function calculateRSTiles(targetMeta) {
 }
 
 /* ============================================================
-   5. LIGHTWEIGHT CHARTS INTEGRATION
+   6. LIGHTWEIGHT CHARTS INTEGRATION
    ============================================================ */
 function renderLightweightChart(bars) {
   const container = document.getElementById("lwChartContainer");
@@ -583,7 +654,6 @@ function renderLightweightChart(bars) {
   currentLWObserver.observe(container);
   currentLWChart = chart;
 
-  // 30-Period MA Cloud & Centerline (Weekly Equivalent of Stage Analysis Trendline)
   const maHighData = calculateEMA(formattedBars, 30, 'high');
   const maLowData = calculateEMA(formattedBars, 30, 'low');
   const ema30Data = calculateEMA(formattedBars, 30, 'close');
@@ -608,8 +678,7 @@ function renderLightweightChart(bars) {
   });
   ema30Series.setData(ema30Data);
 
-  // 100-Period Donchian Channel (Breakout Highs & Breakdown Lows)
-  const dcLength = 52; // 52 Weeks = 1 Year Channel
+  const dcLength = 52;
   const dcUpperData = [], dcLowerData = [];
   for (let i = 0; i < formattedBars.length; i++) {
     if (i >= dcLength - 1) {
@@ -630,7 +699,6 @@ function renderLightweightChart(bars) {
   dcUpperSeries.setData(dcUpperData);
   dcLowerSeries.setData(dcLowerData);
 
-  // Dynamic Price Bar Coloring (Institutional Magenta below MA)
   const maHighMap = new Map(maHighData.map(item => [item.time, item.value]));
   const coloredBars = formattedBars.map(bar => {
     const currentMAHigh = maHighMap.get(bar.time);
@@ -646,7 +714,7 @@ function renderLightweightChart(bars) {
 }
 
 /* ============================================================
-   6. RENDERING ENGINE
+   7. RENDERING ENGINE
    ============================================================ */
 function renderWatchlist() {
   const wrap = document.getElementById("listWrap");
@@ -920,15 +988,18 @@ function renderMainDashboard() {
     </div>
   `;
 
-  // Render the Lightweight Chart immediately after injecting HTML into DOM
   requestAnimationFrame(() => renderLightweightChart(d.bars));
 }
 
 /* ============================================================
-   7. BATCH QUEUE & LAZY LOADER
+   8. BATCH QUEUE & LAZY LOADER
    ============================================================ */
 async function loadUniverseProgressively() {
   const statusBox = document.getElementById("statusBox");
+  
+  // 1. SYNC LIVE GOOGLE SHEET TICKERS FIRST
+  STATE.universe = await syncLiveTickerUniverse();
+  
   statusBox.innerHTML = `Fetching SPX benchmark…`;
   
   let spx = await fetchYahooWeekly("^GSPC");
@@ -960,7 +1031,7 @@ async function loadUniverseProgressively() {
     if(STATE.selected) renderMainDashboard();
   }
 
-  statusBox.innerHTML = `<b>Live Feed Active</b> · 40 Leaders Scored`;
+  statusBox.innerHTML = `<b>Live Feed Active</b> · ${Object.keys(STATE.data).length} Leaders Scored`;
 
   setTimeout(async () => {
     for(let i = 0; i < remaining.length; i += 5) {
@@ -979,7 +1050,7 @@ async function loadUniverseProgressively() {
 }
 
 /* ============================================================
-   8. UI WIRING & INIT
+   9. UI WIRING & INIT
    ============================================================ */
 document.getElementById("btnRefresh").addEventListener("click", () => {
   STATE.data = {};
