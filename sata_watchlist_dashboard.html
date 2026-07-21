@@ -241,7 +241,6 @@
    1. CONFIG & STATE
    ============================================================ */
 const SHEET_ID = "1DcWbr8T5lTIgSrpoqVteg7ar_H466KZSvZ4p_Eksa1s";
-/* Google Sheets Visualization Query endpoint bypasses login redirects */
 const SHEET_GVIZ_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
 const TV_STORAGE_KEY = 'tv_presets_v1';
 
@@ -259,7 +258,7 @@ const FALLBACK_UNIVERSE = [
   {ticker:"NSP", company:"Insperity Inc", sector:"Industrials", industry:"Staffing & Employment", sub:"HR & Business Services", exch:"NYSE"},
   {ticker:"PRGS", company:"Progress Software", sector:"Technology", industry:"Software - Infrastructure", sub:"Enterprise Software", exch:"NASDAQ"},
   {ticker:"PAY", company:"Paymentus Holdings", sector:"Technology", industry:"Software - Infrastructure", sub:"Fintech & Payments", exch:"NYSE"},
-  {ticker:"GWRE", company:"Guidewire Software", sector:"Technology", industry:"Software - Application", sub:"Insurance Software", exch:"NYSE"},
+  {ticker:"GWRE", company:"Guidewire Software", sector:"Technology", industry:"Software - Application", sub:"Insurance Software", exch:"NASDAQ"},
   {ticker:"LCID", company:"Lucid Group Inc", sector:"Consumer Cyclical", industry:"Auto Manufacturers", sub:"Electric Vehicles", exch:"NASDAQ"},
   {ticker:"VEEE", company:"Twin Vee PowerCats", sector:"Consumer Cyclical", industry:"Recreational Vehicles", sub:"Powerboats & Marine", exch:"NASDAQ"},
   {ticker:"FSLY", company:"Fastly Inc", sector:"Technology", industry:"Software - Application", sub:"Edge Cloud & CDN", exch:"NYSE"},
@@ -326,7 +325,6 @@ const STATE = {
 let currentLWChart = null;
 let currentLWObserver = null;
 
-/* Multi-Proxy CORS chain */
 const CORS_PROXIES = [
   url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
   url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
@@ -353,10 +351,10 @@ function getHot3PlusTickers() {
       .sort((a, b) => b[1] - a[1])
       .map(([ticker]) => ({
         ticker,
-        company: "Momentum Leader",
-        sector: "Equities",
-        industry: "Multi-Strategy Confluence",
-        sub: "3+ TV Strategies",
+        company: "Fetching Profile…",
+        sector: "Fetching Profile…",
+        industry: "Fetching Profile…",
+        sub: "Fetching Profile…",
         exch: "US"
       }));
 
@@ -430,7 +428,51 @@ async function syncLiveTickerUniverse() {
 }
 
 /* ============================================================
-   4. TECHNICAL MATH ENGINE
+   4. REAL-TIME UNAUTHENTICATED YAHOO SEARCH PROFILE ENRICHER
+   ============================================================ */
+async function enrichTickerMetadata(symbol) {
+  if (!STATE.data[symbol] || STATE.data[symbol].meta.isEnriched) return;
+
+  const targetUrl = `https://query1.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(symbol)}`;
+  
+  for (const build of CORS_PROXIES) {
+    try {
+      const res = await fetch(build(targetUrl), { cache: "no-store" });
+      if (!res.ok) continue;
+      const json = await res.json();
+      
+      const quote = json.quotes?.find(q => q.symbol === symbol) || json.quotes?.[0];
+      if (!quote) continue;
+
+      let rawExch = quote.exchDisp || quote.exchange || STATE.data[symbol].meta.exch || "US";
+      if (["NYQ", "NYSE"].includes(rawExch.toUpperCase())) rawExch = "NYSE";
+      else if (["NMS", "NASDAQ", "NASDAQGS", "NASDAQGM", "NASDAQCM"].includes(rawExch.toUpperCase())) rawExch = "NASDAQ";
+
+      const sector = quote.sectorDisp || quote.sector || "Equities";
+      const industry = quote.industryDisp || quote.industry || "General Industry";
+      const company = quote.longname || quote.shortname || STATE.data[symbol].meta.company;
+
+      STATE.data[symbol].meta = {
+        ticker: symbol,
+        company: company,
+        sector: sector,
+        industry: industry,
+        sub: industry,
+        exch: rawExch,
+        isEnriched: true
+      };
+
+      if (STATE.selected === symbol) {
+        renderMainDashboard();
+        renderWatchlist();
+      }
+      break;
+    } catch(e) {}
+  }
+}
+
+/* ============================================================
+   5. TECHNICAL MATH ENGINE
    ============================================================ */
 function sma(arr, len) {
   const out = new Array(arr.length).fill(null);
@@ -558,7 +600,7 @@ function scoreColor(score) {
 }
 
 /* ============================================================
-   5. YAHOO INGESTION ENGINE WITH PROXY FALLBACK
+   6. YAHOO INGESTION ENGINE
    ============================================================ */
 async function fetchYahooWeekly(symbol) {
   const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1wk&range=2y`;
@@ -637,7 +679,7 @@ function processTickerBars(meta, bars, chartMeta) {
 }
 
 /* ============================================================
-   6. RELATIVE STRENGTH PERCENTILES
+   7. RELATIVE STRENGTH PERCENTILES
    ============================================================ */
 function calculateRSTiles(targetMeta) {
   const allLoaded = Object.values(STATE.data);
@@ -665,7 +707,7 @@ function calculateRSTiles(targetMeta) {
 }
 
 /* ============================================================
-   7. LIGHTWEIGHT CHARTS INTEGRATION
+   8. LIGHTWEIGHT CHARTS INTEGRATION
    ============================================================ */
 function renderLightweightChart(bars) {
   const container = document.getElementById("lwChartContainer");
@@ -772,7 +814,7 @@ function renderLightweightChart(bars) {
 }
 
 /* ============================================================
-   8. RENDERING ENGINE
+   9. RENDERING ENGINE
    ============================================================ */
 function renderWatchlist() {
   const wrap = document.getElementById("listWrap");
@@ -835,6 +877,7 @@ function selectTicker(symbol) {
   STATE.selected = symbol;
   renderWatchlist();
   renderMainDashboard();
+  enrichTickerMetadata(symbol);
 }
 
 function buildMansfieldSVG(rows) {
@@ -1050,7 +1093,7 @@ function renderMainDashboard() {
 }
 
 /* ============================================================
-   9. BATCH QUEUE & LAZY LOADER
+   10. BATCH QUEUE & LAZY LOADER
    ============================================================ */
 async function loadUniverseProgressively() {
   const statusBox = document.getElementById("statusBox");
@@ -1095,7 +1138,7 @@ async function loadUniverseProgressively() {
     statusBox.innerHTML = `Scoring leaders… (<b>${Math.min(count, topBatch.length)}</b>/${topBatch.length})`;
     renderWatchlist();
     if(STATE.selected) renderMainDashboard();
-    await new Promise(r => setTimeout(r, 80)); // Prevent rate limiting
+    await new Promise(r => setTimeout(r, 80));
   }
 
   statusBox.innerHTML = `<b>${STATE.activeSource === 'hot' ? '🔥 3+ TV Hot List' : 'Leader Hunter Sheet'} Active</b> · ${Object.keys(STATE.data).length} Tickers`;
@@ -1120,7 +1163,7 @@ async function loadUniverseProgressively() {
 }
 
 /* ============================================================
-   10. UI WIRING & INIT
+   11. UI WIRING & INIT
    ============================================================ */
 document.getElementById("btnUnivSheet").addEventListener("click", (e) => {
   if (STATE.activeSource === "sheet") return;
