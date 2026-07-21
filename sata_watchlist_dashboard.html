@@ -90,7 +90,7 @@
   .px-chg { font-size: 12.5px; font-weight: 700; margin-top: 2px; }
   .px-chg.up { color: var(--teal); } .px-chg.down { color: var(--red); }
 
-  /* IMAGE 1 RECREATION: GAUGE & RS TILES */
+  /* GAUGE & RS TILES */
   .sata-grid { display: grid; grid-template-columns: 1fr 340px; gap: 20px; }
   @media(max-width: 1300px) { .sata-grid { grid-template-columns: 1fr; } }
   
@@ -161,7 +161,6 @@
 <body>
 <div class="wrap">
 
-  <!-- STANDARDIZED NAVIGATION TABS -->
   <div class="app-tabs">
     <a href="index.html">Market Dashboard</a>
     <a href="stockbee_market_monitor_live.html">Stockbee Monitor</a>
@@ -292,7 +291,7 @@ const RAW_UNIVERSE = [
 
 const STATE = {
   universe: RAW_UNIVERSE,
-  data: {},       // map: ticker -> { bars, mrs, score, comps, stage, weeklyRows, lastClose, prevClose, meta }
+  data: {},
   spxBars: null,
   selected: null,
   sortMode: "score",
@@ -349,45 +348,36 @@ function computeSATA(bars, mrs) {
 
   const comps = [];
 
-  // 1. Price vs 30w MA
   const aboveMA = maX[last] != null && price > maX[last];
   comps.push({ label: `Price > ${maLen}w MA`, pass: !!aboveMA });
 
-  // 2. MA Trend Rising (4w)
   const maRising = maX[last] != null && maX[back(4)] != null && maX[last] > maX[back(4)];
   comps.push({ label: `${maLen}w MA rising (4w)`, pass: !!maRising });
 
-  // 3. Breakout (10w High)
   let priorHigh10 = -Infinity;
   for(let i = back(10); i < last; i++) priorHigh10 = Math.max(priorHigh10, bars[i].h);
   const breakout = isFinite(priorHigh10) && price > priorHigh10;
   comps.push({ label: "Breakout (>10w high)", pass: !!breakout });
 
-  // 4. No Breakdown (10w Low)
   let priorLow10 = Infinity;
   for(let i = back(10); i < last; i++) priorLow10 = Math.min(priorLow10, bars[i].l);
   const noBreakdown = isFinite(priorLow10) ? price >= priorLow10 : true;
   comps.push({ label: "No breakdown (10w low)", pass: !!noBreakdown });
 
-  // 5. Mansfield RS Positive
   const rsPositive = mrs[last] != null && mrs[last] > 0;
   comps.push({ label: "Mansfield RS > 0 (vs SPX)", pass: !!rsPositive });
 
-  // 6. Mansfield RS Rising
   const rsRising = mrs[last] != null && mrs[back(4)] != null && mrs[last] > mrs[back(4)];
   comps.push({ label: "Mansfield RS rising (4w)", pass: !!rsRising });
 
-  // 7. Momentum (10w ROC Positive)
   const roc10 = last - 10 >= 0 ? ((price / closes[last - 10]) - 1) * 100 : 0;
   const momPositive = roc10 > 0;
   comps.push({ label: "Momentum (10w ROC) > 0", pass: !!momPositive });
 
-  // 8. Momentum Accelerating
   const roc10prev = last - 14 >= 0 ? ((closes[last - 4] / closes[last - 14]) - 1) * 100 : 0;
   const momAccel = roc10 > roc10prev;
   comps.push({ label: "Momentum accelerating", pass: !!momAccel });
 
-  // 9. Volume Accumulation
   let upVol = 0, upCnt = 0, dnVol = 0, dnCnt = 0;
   for(let i = Math.max(1, back(10)); i <= last; i++) {
     if(bars[i].c >= bars[i-1].c) { upVol += bars[i].v; upCnt++; } else { dnVol += bars[i].v; dnCnt++; }
@@ -396,14 +386,13 @@ function computeSATA(bars, mrs) {
   const volAccum = upAvg > dnAvg;
   comps.push({ label: "Volume: accumulation", pass: !!volAccum });
 
-  // 10. Overhead Resistance (<15% off 52w high)
   let high52 = -Infinity;
   for(let i = back(52); i <= last; i++) high52 = Math.max(high52, bars[i].h);
   const nearHigh = isFinite(high52) ? price >= high52 * 0.85 : false;
   comps.push({ label: "Near 52w high (<15% off)", pass: !!nearHigh });
 
-  const score = comps.reduce((s, c) => s + (c.pass ? 1 : 0), 0);
-  return { score, comps, maX, roc10 };
+  const scoreNum = comps.reduce((s, c) => s + (c.pass ? 1 : 0), 0);
+  return { score: scoreNum, comps, maX, roc10 };
 }
 
 function stageFromHistory(scores) {
@@ -456,7 +445,7 @@ async function fetchYahooWeekly(symbol) {
 
 function processTickerBars(meta, bars) {
   const mrs = computeMansfieldRS(bars, STATE.spxBars);
-  const { score, comps } = computeSATA(bars, mrs);
+  const sataResult = computeSATA(bars, mrs);
   
   const weeklyRows = [];
   const histScores = [];
@@ -481,7 +470,7 @@ function processTickerBars(meta, bars) {
   const roc26 = bars.length >= 26 ? ((lastClose / bars[bars.length - 26].c) - 1) * 100 : 0;
 
   return {
-    meta, bars, mrs, score, comps, stage,
+    meta, bars, mrs, score: sataResult, comps: sataResult.comps, stage,
     weeklyRows: weeklyRows.reverse(),
     lastClose, prevClose, roc26
   };
@@ -495,10 +484,10 @@ function calculateRSTiles(targetMeta) {
   if(allLoaded.length === 0) return { sector: { pct: 50, badge: "NEUTRAL" }, industry: { pct: 50, badge: "NEUTRAL" }, sub: { pct: 50, badge: "NEUTRAL" } };
 
   function getRank(groupKey, val) {
-    const peers = allLoaded.filter(d => d.meta[groupKey] === val).map(d => d.roc26);
+    const peers = allLoaded.filter(d => d.meta && d.meta[groupKey] === val).map(d => d.roc26);
     if(peers.length <= 1) return { pct: Math.min(99, Math.max(10, Math.round(50 + (targetMeta.roc26 || 0)))), badge: "NEUTRAL" };
     peers.sort((a,b) => a - b);
-    const myVal = STATE.data[targetMeta.ticker].roc26;
+    const myVal = STATE.data[targetMeta.ticker] ? STATE.data[targetMeta.ticker].roc26 : 0;
     let rank = 0;
     for(let i=0; i<peers.length; i++) { if(myVal >= peers[i]) rank = i + 1; }
     const pct = Math.round((rank / peers.length) * 100);
@@ -531,15 +520,15 @@ function renderWatchlist() {
     if(!STATE.query) return true;
     const q = STATE.query.toLowerCase();
     const d = STATE.data[tk];
-    return tk.toLowerCase().includes(q) || d.meta.company.toLowerCase().includes(q) || d.meta.sector.toLowerCase().includes(q);
+    return tk.toLowerCase().includes(q) || (d.meta && d.meta.company.toLowerCase().includes(q)) || (d.meta && d.meta.sector.toLowerCase().includes(q));
   });
 
   if(STATE.sortMode === "score") {
-    filtered.sort((a,b) => STATE.data[b].score.score - STATE.data[a].score.score);
+    filtered.sort((a,b) => (STATE.data[b].score?.score || 0) - (STATE.data[a].score?.score || 0));
   } else if(STATE.sortMode === "rs") {
     filtered.sort((a,b) => {
-      const ra = STATE.data[a].mrs[STATE.data[a].mrs.length-1] || -999;
-      const rb = STATE.data[b].mrs[STATE.data[b].mrs.length-1] || -999;
+      const ra = STATE.data[a].mrs ? STATE.data[a].mrs[STATE.data[a].mrs.length-1] : -999;
+      const rb = STATE.data[b].mrs ? STATE.data[b].mrs[STATE.data[b].mrs.length-1] : -999;
       return rb - ra;
     });
   } else {
@@ -555,15 +544,15 @@ function renderWatchlist() {
   filtered.forEach(tk => {
     const d = STATE.data[tk];
     const active = STATE.selected === tk ? "active" : "";
-    const s = d.score.score;
-    const rs = d.mrs[d.mrs.length-1] || 0;
+    const s = d.score ? d.score.score : 0;
+    const rs = d.mrs ? d.mrs[d.mrs.length-1] : 0;
     const rsColor = rs >= 0 ? "var(--teal)" : "var(--red)";
     const rsStr = (rs >= 0 ? "+" : "") + rs.toFixed(1);
 
     html += `<div class="row ${active}" onclick="selectTicker('${tk}')">
       <div class="meta">
         <span class="tk">${tk}</span>
-        <span class="stg">S${d.stage.stage}</span>
+        <span class="stg">S${d.stage ? d.stage.stage : 1}</span>
       </div>
       <div style="display:flex; align-items:center; gap:8px;">
         <span class="score-pill" style="background:${scoreColor(s)}22; color:${scoreColor(s)}; border: 1px solid ${scoreColor(s)}55;">${s}</span>
@@ -575,12 +564,14 @@ function renderWatchlist() {
 }
 
 function selectTicker(symbol) {
+  if (!STATE.data[symbol]) return;
   STATE.selected = symbol;
   renderWatchlist();
   renderMainDashboard();
 }
 
 function buildMansfieldSVG(rows) {
+  if(!rows || rows.length === 0) return "";
   const W = 680, H = 150, padL = 8, padR = 8, padT = 12, padB = 12;
   const vals = rows.map(r => r.mrs).filter(v => v != null && isFinite(v));
   if(vals.length < 2) return "";
@@ -592,7 +583,7 @@ function buildMansfieldSVG(rows) {
   function xAt(i) { return padL + i * stepX; }
   function yAt(v) { return padT + ((maxV - v) / range) * (H - padT - padB); }
 
-  let path = "", areaGreen = `M${xAt(0)},${zeroY} `, areaRed = `M${xAt(0)},${zeroY} `;
+  let path = "";
   rows.forEach((r, i) => {
     if(r.mrs == null || !isFinite(r.mrs)) return;
     const x = xAt(i).toFixed(1), y = yAt(r.mrs).toFixed(1);
@@ -607,6 +598,7 @@ function buildMansfieldSVG(rows) {
 }
 
 function buildScoreHistorySVG(rows) {
+  if(!rows || rows.length === 0) return "";
   const W = 680, H = 150, padL = 8, padR = 8, padT = 12, padB = 12;
   const n = rows.length;
   if(n < 2) return "";
@@ -637,13 +629,15 @@ function renderMainDashboard() {
   }
 
   const d = STATE.data[tk];
+  if (!d || !d.score || !d.comps) return;
+
   const s = d.score.score;
-  const rs = d.mrs[d.mrs.length - 1] || 0;
-  const chg = ((d.lastClose / d.prevClose) - 1) * 100;
+  const rs = d.mrs && d.mrs.length ? d.mrs[d.mrs.length - 1] : 0;
+  const chg = d.prevClose ? ((d.lastClose / d.prevClose) - 1) * 100 : 0;
   const sCol = scoreColor(s);
 
   // Calculate Delta
-  const prevWk = d.weeklyRows[1];
+  const prevWk = d.weeklyRows && d.weeklyRows[1] ? d.weeklyRows[1] : null;
   const delta = prevWk ? (s - prevWk.score) : 0;
   let deltaHtml = `<span class="delta-pill delta-flat">FLAT 0</span>`;
   if(delta > 0) deltaHtml = `<span class="delta-pill delta-up">RISING +${delta}</span>`;
@@ -671,15 +665,15 @@ function renderMainDashboard() {
   const deltaTxt = delta > 0 ? `increased +${delta}` : (delta < 0 ? `decreased ${delta}` : `remained unchanged`);
   const narrative = `${d.meta.ticker} has a Stage Analysis Technical Attributes (SATA) score of ${s} out of 10, which is in the ${rangeTxt} range and ${deltaTxt} since the prior week.`;
 
-  // Component Checklist
-  const compHtml = d.score.comps.map(c => `
+  // Safe Guarded Component Checklist
+  const compHtml = (d.comps || []).map(c => `
     <div class="comp-item">
       <span class="dot ${c.pass ? 'g' : 'r'}"></span>
       <span class="lbl">${c.label}</span>
     </div>`).join('');
 
   // Weekly History Table Rows
-  const tableRowsHtml = d.weeklyRows.slice(0, 15).map(r => {
+  const tableRowsHtml = (d.weeklyRows || []).slice(0, 15).map(r => {
     const rVal = (r.mrs >= 0 ? "+" : "") + r.mrs.toFixed(2);
     const rCol = r.mrs >= 0 ? "var(--teal)" : "var(--red)";
     const stgCol = r.stage === 2 ? "var(--teal)" : (r.stage === 1 ? "var(--blue)" : (r.stage === 3 ? "var(--amber)" : "var(--red)"));
@@ -725,13 +719,13 @@ function renderMainDashboard() {
             <span>Mansfield Relative Strength vs SPX (52-Week Range)</span>
             <span style="color:${rs >= 0 ? 'var(--teal)' : 'var(--red)'}">${rs >= 0 ? '+' : ''}${rs.toFixed(2)}</span>
           </div>
-          <div class="chart-svg-wrap">${buildMansfieldSVG(d.weeklyRows.slice().reverse())}</div>
+          <div class="chart-svg-wrap">${buildMansfieldSVG((d.weeklyRows || []).slice().reverse())}</div>
           
           <div class="chart-header" style="margin-top: 16px;">
             <span>SATA Composite Score Trajectory (Dashed line = Stage 2 Threshold)</span>
             <span style="color:${sCol}">${s} / 10</span>
           </div>
-          <div class="chart-svg-wrap">${buildScoreHistorySVG(d.weeklyRows.slice().reverse())}</div>
+          <div class="chart-svg-wrap">${buildScoreHistorySVG((d.weeklyRows || []).slice().reverse())}</div>
         </div>
       </div>
 
@@ -789,7 +783,6 @@ async function loadUniverseProgressively() {
   const statusBox = document.getElementById("statusBox");
   statusBox.innerHTML = `Fetching SPX benchmark…`;
   
-  // 1. Fetch SPX Benchmark
   let spx = await fetchYahooWeekly("^GSPC");
   if(!spx) spx = await fetchYahooWeekly("SPY");
   if(!spx) {
@@ -798,7 +791,6 @@ async function loadUniverseProgressively() {
   }
   STATE.spxBars = spx;
 
-  // 2. Load Top 40 "Hot" Tickers Instantly (Parallel Batching of 8)
   const top40 = STATE.universe.slice(0, 40);
   const remaining = STATE.universe.slice(40);
   let count = 0;
@@ -811,7 +803,7 @@ async function loadUniverseProgressively() {
       const bars = await fetchYahooWeekly(meta.ticker);
       if(bars && bars.length >= 10) {
         STATE.data[meta.ticker] = processTickerBars(meta, bars);
-        if(!STATE.selected) selectTicker(meta.ticker);
+        if(!STATE.selected) STATE.selected = meta.ticker;
       }
     }));
     count += batch.length;
@@ -822,7 +814,6 @@ async function loadUniverseProgressively() {
 
   statusBox.innerHTML = `<b>Live Feed Active</b> · 40 Leaders Scored`;
 
-  // 3. Lazy Load Remaining 25 in Background
   setTimeout(async () => {
     for(let i = 0; i < remaining.length; i += 5) {
       const batch = remaining.slice(i, i + 5);
