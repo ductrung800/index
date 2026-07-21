@@ -241,7 +241,8 @@
    1. CONFIG & STATE
    ============================================================ */
 const SHEET_ID = "1DcWbr8T5lTIgSrpoqVteg7ar_H466KZSvZ4p_Eksa1s";
-const EXPORT_CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/pub?output=csv`;
+/* Google Sheets Visualization Query endpoint bypasses login redirects */
+const SHEET_GVIZ_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
 const TV_STORAGE_KEY = 'tv_presets_v1';
 
 const FALLBACK_UNIVERSE = [
@@ -313,7 +314,7 @@ const FALLBACK_UNIVERSE = [
 ];
 
 const STATE = {
-  activeSource: "sheet", // "sheet" or "hot"
+  activeSource: "sheet",
   universe: FALLBACK_UNIVERSE,
   data: {},
   spxBars: null,
@@ -325,12 +326,11 @@ const STATE = {
 let currentLWChart = null;
 let currentLWObserver = null;
 
-/* Robust CORS routing chain to bypass Google login redirects and Yahoo blocks */
+/* Multi-Proxy CORS chain */
 const CORS_PROXIES = [
-  url => url,
+  url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
   url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-  url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
-  url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`
+  url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`
 ];
 
 /* ============================================================
@@ -362,7 +362,6 @@ function getHot3PlusTickers() {
 
     return hotList;
   } catch (e) {
-    console.warn("Couldn't parse TradingView 3+ presets:", e);
     return [];
   }
 }
@@ -399,16 +398,15 @@ async function syncLiveTickerUniverse() {
 
   for (const build of CORS_PROXIES) {
     try {
-      const res = await fetch(build(EXPORT_CSV_URL), { cache: "no-store" });
+      const res = await fetch(build(SHEET_GVIZ_URL), { cache: "no-store" });
       if (!res.ok) continue;
       const text = await res.text();
-      /* Ignore Google login redirect HTML pages */
       if (!text || text.trim().startsWith('<') || text.includes("ServiceLogin")) continue;
       
       const grid = parseCSVGrid(text).filter(r => r.some(c => c.trim() !== ""));
       if (grid.length < 2) continue;
       
-      const header = grid[0].map(h => h.trim().toLowerCase());
+      const header = grid[0].map(h => h.trim().toLowerCase().replace(/^"/, '').replace(/"$/, ''));
       const idx = name => header.findIndex(h => h === name);
       const cTicker = idx("ticker"), cCompany = idx("company"), cSector = idx("sector"), cIndustry = idx("industry");
       
@@ -417,11 +415,11 @@ async function syncLiveTickerUniverse() {
       const liveUniverse = grid.slice(1)
         .filter(r => (r[cTicker] || "").trim())
         .map(r => ({
-          ticker: (r[cTicker] || "").trim().toUpperCase(),
-          company: (r[cCompany] || "").trim() || "Leader Equities",
-          sector: (r[cSector] || "").trim() || "Equities",
-          industry: (r[cIndustry] || "").trim() || "Momentum Leaders",
-          sub: (r[cIndustry] || "").trim() || "Momentum Leaders",
+          ticker: (r[cTicker] || "").trim().toUpperCase().replace(/^"/, '').replace(/"$/, ''),
+          company: (r[cCompany] || "").trim().replace(/^"/, '').replace(/"$/, '') || "Leader Equities",
+          sector: (r[cSector] || "").trim().replace(/^"/, '').replace(/"$/, '') || "Equities",
+          industry: (r[cIndustry] || "").trim().replace(/^"/, '').replace(/"$/, '') || "Momentum Leaders",
+          sub: (r[cIndustry] || "").trim().replace(/^"/, '').replace(/"$/, '') || "Momentum Leaders",
           exch: "US"
         }));
 
@@ -432,54 +430,7 @@ async function syncLiveTickerUniverse() {
 }
 
 /* ============================================================
-   4. ZERO-CORS PROFILE ENRICHMENT (NO 404/CORS BLOCKS)
-   ============================================================ */
-async function enrichTickerMetadata(symbol) {
-  if (!STATE.data[symbol] || STATE.data[symbol].meta.isEnriched) return;
-
-  /* Use Yahoo's open /v7/quote endpoint instead of blocked /v11/quoteSummary */
-  const targetUrl = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(symbol)}`;
-  
-  for (const build of CORS_PROXIES) {
-    try {
-      const res = await fetch(build(targetUrl), { cache: "no-store" });
-      if (!res.ok) continue;
-      const json = await res.json();
-      
-      const result = json.quoteResponse?.result?.[0];
-      if (!result) continue;
-
-      let rawExch = result.fullExchangeName || result.exchange || STATE.data[symbol].meta.exch || "US";
-      if (["NYQ", "NYSE"].includes(rawExch.toUpperCase())) rawExch = "NYSE";
-      else if (["NMS", "NASDAQ", "NASDAQGS", "NASDAQGM", "NASDAQCM"].includes(rawExch.toUpperCase())) rawExch = "NASDAQ";
-
-      const sector = result.sector || STATE.data[symbol].meta.sector;
-      const industry = result.industry || STATE.data[symbol].meta.industry;
-      const company = result.longName || result.shortName || result.displayName || STATE.data[symbol].meta.company;
-
-      STATE.data[symbol].meta = {
-        ticker: symbol,
-        company: company,
-        sector: sector,
-        industry: industry,
-        sub: industry,
-        exch: rawExch,
-        isEnriched: true
-      };
-
-      if (STATE.selected === symbol) {
-        renderMainDashboard();
-        renderWatchlist();
-      }
-      break;
-    } catch(e) {
-      /* Suppress console errors if proxy drops connection */
-    }
-  }
-}
-
-/* ============================================================
-   5. TECHNICAL MATH ENGINE
+   4. TECHNICAL MATH ENGINE
    ============================================================ */
 function sma(arr, len) {
   const out = new Array(arr.length).fill(null);
@@ -607,17 +558,22 @@ function scoreColor(score) {
 }
 
 /* ============================================================
-   6. YAHOO INGESTION ENGINE
+   5. YAHOO INGESTION ENGINE WITH PROXY FALLBACK
    ============================================================ */
 async function fetchYahooWeekly(symbol) {
   const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1wk&range=2y`;
   let json = null;
+  
   for(const build of CORS_PROXIES) {
     try {
       const res = await fetch(build(targetUrl), { cache: "no-store" });
-      if(res.ok) { json = await res.json(); break; }
+      if(res.ok) { 
+        json = await res.json(); 
+        if (json && json.chart && json.chart.result && json.chart.result[0]) break;
+      }
     } catch(e) {}
   }
+  
   if(!json || !json.chart || !json.chart.result || !json.chart.result[0]) return null;
   
   const result = json.chart.result[0];
@@ -638,7 +594,6 @@ async function fetchYahooWeekly(symbol) {
 }
 
 function processTickerBars(meta, bars, chartMeta) {
-  /* Extract exact Company Name and Exchange from price chart payload */
   let rawExch = chartMeta.fullExchangeName || chartMeta.exchangeName || meta.exch || "US";
   if (["NYQ", "NYSE"].includes(rawExch.toUpperCase())) rawExch = "NYSE";
   else if (["NMS", "NASDAQ", "NASDAQGS", "NASDAQGM", "NASDAQCM"].includes(rawExch.toUpperCase())) rawExch = "NASDAQ";
@@ -682,7 +637,7 @@ function processTickerBars(meta, bars, chartMeta) {
 }
 
 /* ============================================================
-   7. RELATIVE STRENGTH PERCENTILES
+   6. RELATIVE STRENGTH PERCENTILES
    ============================================================ */
 function calculateRSTiles(targetMeta) {
   const allLoaded = Object.values(STATE.data);
@@ -710,7 +665,7 @@ function calculateRSTiles(targetMeta) {
 }
 
 /* ============================================================
-   8. LIGHTWEIGHT CHARTS INTEGRATION
+   7. LIGHTWEIGHT CHARTS INTEGRATION
    ============================================================ */
 function renderLightweightChart(bars) {
   const container = document.getElementById("lwChartContainer");
@@ -817,7 +772,7 @@ function renderLightweightChart(bars) {
 }
 
 /* ============================================================
-   9. RENDERING ENGINE
+   8. RENDERING ENGINE
    ============================================================ */
 function renderWatchlist() {
   const wrap = document.getElementById("listWrap");
@@ -880,7 +835,6 @@ function selectTicker(symbol) {
   STATE.selected = symbol;
   renderWatchlist();
   renderMainDashboard();
-  enrichTickerMetadata(symbol);
 }
 
 function buildMansfieldSVG(rows) {
@@ -1096,7 +1050,7 @@ function renderMainDashboard() {
 }
 
 /* ============================================================
-   10. BATCH QUEUE & LAZY LOADER
+   9. BATCH QUEUE & LAZY LOADER
    ============================================================ */
 async function loadUniverseProgressively() {
   const statusBox = document.getElementById("statusBox");
@@ -1128,8 +1082,8 @@ async function loadUniverseProgressively() {
 
   statusBox.innerHTML = `Scoring leaders… (<b>0</b>/${topBatch.length})`;
 
-  for(let i = 0; i < topBatch.length; i += 8) {
-    const batch = topBatch.slice(i, i + 8);
+  for(let i = 0; i < topBatch.length; i += 6) {
+    const batch = topBatch.slice(i, i + 6);
     await Promise.all(batch.map(async (meta) => {
       const res = await fetchYahooWeekly(meta.ticker);
       if(res && res.bars && res.bars.length >= 10) {
@@ -1141,6 +1095,7 @@ async function loadUniverseProgressively() {
     statusBox.innerHTML = `Scoring leaders… (<b>${Math.min(count, topBatch.length)}</b>/${topBatch.length})`;
     renderWatchlist();
     if(STATE.selected) renderMainDashboard();
+    await new Promise(r => setTimeout(r, 80)); // Prevent rate limiting
   }
 
   statusBox.innerHTML = `<b>${STATE.activeSource === 'hot' ? '🔥 3+ TV Hot List' : 'Leader Hunter Sheet'} Active</b> · ${Object.keys(STATE.data).length} Tickers`;
@@ -1157,14 +1112,15 @@ async function loadUniverseProgressively() {
         }));
         renderWatchlist();
         if(STATE.selected) renderMainDashboard();
+        await new Promise(r => setTimeout(r, 80));
       }
       statusBox.innerHTML = `<b>${STATE.activeSource === 'hot' ? '🔥 3+ TV Hot List' : 'Leader Hunter Sheet'} Active</b> · ${Object.keys(STATE.data).length} Scored`;
-    }, 1000);
+    }, 800);
   }
 }
 
 /* ============================================================
-   11. UI WIRING & INIT
+   10. UI WIRING & INIT
    ============================================================ */
 document.getElementById("btnUnivSheet").addEventListener("click", (e) => {
   if (STATE.activeSource === "sheet") return;
