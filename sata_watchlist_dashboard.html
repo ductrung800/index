@@ -64,6 +64,11 @@
   /* LEFT RAIL: WATCHLIST */
   .left-col { display: flex; flex-direction: column; gap: 12px; height: calc(100vh - 170px); min-height: 600px; }
   .left-col .card { display: flex; flex-direction: column; flex: 1; min-height: 0; padding: 14px; }
+  
+  .universe-filter-pills { display: flex; gap: 6px; margin-bottom: 10px; }
+  .universe-filter-pills button { flex: 1; background: var(--input-bg); border: 1px solid var(--line); color: var(--text-dim); font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 800; padding: 7px 4px; border-radius: 6px; cursor: pointer; transition: all .15s; text-transform: uppercase; }
+  .universe-filter-pills button.active { background: rgba(32,217,184,.15); color: var(--teal); border-color: var(--teal); }
+  
   input.search { width: 100%; background: var(--input-bg); border: 1px solid var(--line); border-radius: 7px; color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 12px; padding: 9px 12px; margin-bottom: 10px; }
   input.search:focus { outline: none; border-color: var(--teal); }
   
@@ -200,6 +205,12 @@
     <!-- LEFT COLUMN: WATCHLIST -->
     <div class="left-col">
       <div class="card">
+        <!-- UNIVERSE FILTER PILLS -->
+        <div class="universe-filter-pills">
+          <button class="active" id="btnUnivSheet">Leader Sheet</button>
+          <button id="btnUnivHot">🔥 3+ TV Strategies</button>
+        </div>
+
         <input class="search" id="searchBox" placeholder="Search ticker or company…" />
         <div class="seg">
           <button class="active" data-sort="score">Score</button>
@@ -227,12 +238,12 @@
 
 <script>
 /* ============================================================
-   1. LIVE GOOGLE SHEETS UNIVERSE SYNC & CONFIG
+   1. CONFIG & STATE
    ============================================================ */
 const SHEET_ID = "1DcWbr8T5lTIgSrpoqVteg7ar_H466KZSvZ4p_Eksa1s";
 const EXPORT_CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/pub?output=csv`;
+const TV_STORAGE_KEY = 'tv_presets_v1';
 
-// Fallback Default Universe (65 Tickers) used if network/CORS blocks the live sheet
 const FALLBACK_UNIVERSE = [
   {ticker:"AGL", company:"Agilon Health Inc", sector:"Healthcare", industry:"Medical Care Facilities", sub:"Medical Care Facilities", exch:"NYSE"},
   {ticker:"ACHC", company:"Acadia Healthcare Co", sector:"Healthcare", industry:"Medical Care Facilities", sub:"Medical Care Facilities", exch:"NASDAQ"},
@@ -302,6 +313,7 @@ const FALLBACK_UNIVERSE = [
 ];
 
 const STATE = {
+  activeSource: "sheet", // "sheet" or "hot"
   universe: FALLBACK_UNIVERSE,
   data: {},
   spxBars: null,
@@ -320,7 +332,41 @@ const CORS_PROXIES = [
 ];
 
 /* ============================================================
-   2. CSV PARSER & LIVE UNIVERSE FETCH
+   2. TRADINGVIEW LOCALSTORAGE PARSER (3+ STRATEGIES)
+   ============================================================ */
+function getHot3PlusTickers() {
+  try {
+    const raw = localStorage.getItem(TV_STORAGE_KEY);
+    if (!raw) return [];
+    const presets = JSON.parse(raw);
+    const counts = {};
+    
+    Object.values(presets).flat().forEach(t => {
+      const clean = t.includes(":") ? t.split(":")[1].trim().toUpperCase() : t.trim().toUpperCase();
+      if (clean) counts[clean] = (counts[clean] || 0) + 1;
+    });
+
+    const hotList = Object.entries(counts)
+      .filter(([, count]) => count >= 3)
+      .sort((a, b) => b[1] - a[1])
+      .map(([ticker]) => ({
+        ticker,
+        company: "TradingView High-Confluence Momentum Leader",
+        sector: "Pine Screener",
+        industry: "Multi-Strategy Confluence",
+        sub: "3+ TV Strategies",
+        exch: "US"
+      }));
+
+    return hotList;
+  } catch (e) {
+    console.warn("Couldn't parse TradingView 3+ presets:", e);
+    return [];
+  }
+}
+
+/* ============================================================
+   3. CSV PARSER & LIVE UNIVERSE FETCH
    ============================================================ */
 function parseCSVGrid(text) {
   const rows = [];
@@ -344,8 +390,10 @@ function parseCSVGrid(text) {
 }
 
 async function syncLiveTickerUniverse() {
-  const statusBox = document.getElementById("statusBox");
-  statusBox.innerHTML = `Syncing Leader Hunter Sheet…`;
+  if (STATE.activeSource === "hot") {
+    const hotList = getHot3PlusTickers();
+    if (hotList.length > 0) return hotList;
+  }
 
   for (const build of CORS_PROXIES) {
     try {
@@ -374,20 +422,14 @@ async function syncLiveTickerUniverse() {
           exch: "US"
         }));
 
-      if (liveUniverse.length > 0) {
-        console.log(`✓ Synchronized ${liveUniverse.length} symbols live from Google Sheets.`);
-        return liveUniverse;
-      }
-    } catch(e) {
-      console.warn("Live sheet sync attempt failed, trying next proxy:", e);
-    }
+      if (liveUniverse.length > 0) return liveUniverse;
+    } catch(e) {}
   }
-  console.warn("Using fallback static universe of 65 leaders.");
   return FALLBACK_UNIVERSE;
 }
 
 /* ============================================================
-   3. TECHNICAL MATH ENGINE
+   4. TECHNICAL MATH ENGINE
    ============================================================ */
 function sma(arr, len) {
   const out = new Array(arr.length).fill(null);
@@ -515,7 +557,7 @@ function scoreColor(score) {
 }
 
 /* ============================================================
-   4. YAHOO INGESTION ENGINE
+   5. YAHOO INGESTION ENGINE
    ============================================================ */
 async function fetchYahooWeekly(symbol) {
   const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1wk&range=2y`;
@@ -579,7 +621,7 @@ function processTickerBars(meta, bars) {
 }
 
 /* ============================================================
-   5. RELATIVE STRENGTH PERCENTILES
+   6. RELATIVE STRENGTH PERCENTILES
    ============================================================ */
 function calculateRSTiles(targetMeta) {
   const allLoaded = Object.values(STATE.data);
@@ -607,7 +649,7 @@ function calculateRSTiles(targetMeta) {
 }
 
 /* ============================================================
-   6. LIGHTWEIGHT CHARTS INTEGRATION
+   7. LIGHTWEIGHT CHARTS INTEGRATION
    ============================================================ */
 function renderLightweightChart(bars) {
   const container = document.getElementById("lwChartContainer");
@@ -714,7 +756,7 @@ function renderLightweightChart(bars) {
 }
 
 /* ============================================================
-   7. RENDERING ENGINE
+   8. RENDERING ENGINE
    ============================================================ */
 function renderWatchlist() {
   const wrap = document.getElementById("listWrap");
@@ -833,7 +875,7 @@ function renderMainDashboard() {
   const panel = document.getElementById("mainPanel");
   const tk = STATE.selected;
   if(!tk || !STATE.data[tk]) {
-    panel.innerHTML = `<div class="card empty-state"><div class="icon">👈</div><h3>Select a Ticker</h3><p style="font-size:12px; margin-top:4px;">Choose a stock from the Leader Hunter watchlist on the left rail to view its SATA diagnostics.</p></div>`;
+    panel.innerHTML = `<div class="card empty-state"><div class="icon">👈</div><h3>Select a Ticker</h3><p style="font-size:12px; margin-top:4px;">Choose a stock from the watchlist on the left rail to view its SATA diagnostics.</p></div>`;
     return;
   }
 
@@ -992,13 +1034,22 @@ function renderMainDashboard() {
 }
 
 /* ============================================================
-   8. BATCH QUEUE & LAZY LOADER
+   9. BATCH QUEUE & LAZY LOADER
    ============================================================ */
 async function loadUniverseProgressively() {
   const statusBox = document.getElementById("statusBox");
+  STATE.data = {};
+  STATE.selected = null;
   
-  // 1. SYNC LIVE GOOGLE SHEET TICKERS FIRST
+  // 1. SYNC ACTIVE UNIVERSE
   STATE.universe = await syncLiveTickerUniverse();
+
+  if (STATE.universe.length === 0) {
+    statusBox.innerHTML = `<b style="color:var(--amber)">No 3+ TV Tickers Found</b>`;
+    document.getElementById("listWrap").innerHTML = `<div style="padding:20px; text-align:center; color:var(--text-faint); font-size:12px;">No tickers appear in 3+ TradingView strategy lists yet.<br><br>Scan presets in your <b>TradingView Watchlist</b> tab first!</div>`;
+    renderMainDashboard();
+    return;
+  }
   
   statusBox.innerHTML = `Fetching SPX benchmark…`;
   
@@ -1010,14 +1061,14 @@ async function loadUniverseProgressively() {
   }
   STATE.spxBars = spx;
 
-  const top40 = STATE.universe.slice(0, 40);
-  const remaining = STATE.universe.slice(40);
+  const topBatch = STATE.universe.slice(0, 40);
+  const remainingBatch = STATE.universe.slice(40);
   let count = 0;
 
-  statusBox.innerHTML = `Loading top 40 leaders… (<b>0</b>/${top40.length})`;
+  statusBox.innerHTML = `Scoring leaders… (<b>0</b>/${topBatch.length})`;
 
-  for(let i = 0; i < top40.length; i += 8) {
-    const batch = top40.slice(i, i + 8);
+  for(let i = 0; i < topBatch.length; i += 8) {
+    const batch = topBatch.slice(i, i + 8);
     await Promise.all(batch.map(async (meta) => {
       const bars = await fetchYahooWeekly(meta.ticker);
       if(bars && bars.length >= 10) {
@@ -1026,35 +1077,51 @@ async function loadUniverseProgressively() {
       }
     }));
     count += batch.length;
-    statusBox.innerHTML = `Loading top 40 leaders… (<b>${Math.min(count, 40)}</b>/40)`;
+    statusBox.innerHTML = `Scoring leaders… (<b>${Math.min(count, topBatch.length)}</b>/${topBatch.length})`;
     renderWatchlist();
     if(STATE.selected) renderMainDashboard();
   }
 
-  statusBox.innerHTML = `<b>Live Feed Active</b> · ${Object.keys(STATE.data).length} Leaders Scored`;
+  statusBox.innerHTML = `<b>${STATE.activeSource === 'hot' ? '🔥 3+ TV Hot List' : 'Leader Hunter Sheet'} Active</b> · ${Object.keys(STATE.data).length} Tickers`;
 
-  setTimeout(async () => {
-    for(let i = 0; i < remaining.length; i += 5) {
-      const batch = remaining.slice(i, i + 5);
-      await Promise.all(batch.map(async (meta) => {
-        const bars = await fetchYahooWeekly(meta.ticker);
-        if(bars && bars.length >= 10) {
-          STATE.data[meta.ticker] = processTickerBars(meta, bars);
-        }
-      }));
-      renderWatchlist();
-      if(STATE.selected) renderMainDashboard();
-    }
-    statusBox.innerHTML = `<b>Universe Synchronized</b> · ${Object.keys(STATE.data).length} Tickers Active`;
-  }, 1000);
+  if (remainingBatch.length > 0) {
+    setTimeout(async () => {
+      for(let i = 0; i < remainingBatch.length; i += 5) {
+        const batch = remainingBatch.slice(i, i + 5);
+        await Promise.all(batch.map(async (meta) => {
+          const bars = await fetchYahooWeekly(meta.ticker);
+          if(bars && bars.length >= 10) {
+            STATE.data[meta.ticker] = processTickerBars(meta, bars);
+          }
+        }));
+        renderWatchlist();
+        if(STATE.selected) renderMainDashboard();
+      }
+      statusBox.innerHTML = `<b>${STATE.activeSource === 'hot' ? '🔥 3+ TV Hot List' : 'Leader Hunter Sheet'} Active</b> · ${Object.keys(STATE.data).length} Scored`;
+    }, 1000);
+  }
 }
 
 /* ============================================================
-   9. UI WIRING & INIT
+   10. UI WIRING & INIT
    ============================================================ */
+document.getElementById("btnUnivSheet").addEventListener("click", (e) => {
+  if (STATE.activeSource === "sheet") return;
+  STATE.activeSource = "sheet";
+  document.getElementById("btnUnivSheet").classList.add("active");
+  document.getElementById("btnUnivHot").classList.remove("active");
+  loadUniverseProgressively();
+});
+
+document.getElementById("btnUnivHot").addEventListener("click", (e) => {
+  if (STATE.activeSource === "hot") return;
+  STATE.activeSource = "hot";
+  document.getElementById("btnUnivHot").classList.add("active");
+  document.getElementById("btnUnivSheet").classList.remove("active");
+  loadUniverseProgressively();
+});
+
 document.getElementById("btnRefresh").addEventListener("click", () => {
-  STATE.data = {};
-  STATE.selected = null;
   loadUniverseProgressively();
 });
 
