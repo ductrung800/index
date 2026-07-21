@@ -154,6 +154,7 @@
   <!-- ================= APP TABS ================= -->
   <div class="app-tabs">
     <a href="index.html">Market Dashboard</a>
+    <a href="MarketRegime.html">Market Regime</a>
     <a href="stockbee_market_monitor_live.html">Stockbee Monitor</a>
     <a href="sata_watchlist_dashboard.html">SATA Chart</a>
     <a href="PowerList.html" class="active">Power List</a>
@@ -161,7 +162,7 @@
     <a href="group_momentum.html">Group Momentum</a>
     <a href="PriceStructure.html">Price Structure</a>
     <a href="StageAnalysis.html">Stage Analysis</a>
-    <a href="MarketRegime.html">Market Regime</a>
+    
     <a href="tv_watchlist.html">TradingView Watchlist</a>
     <a href="IndustryRS.html">Industry RS</a>
   </div>
@@ -506,44 +507,78 @@ function parseCSVGrid(text){
   return rows;
 }
 
-function num(v){ const n = parseFloat(String(v).replace('%','').replace(/,/g,'').trim()); return isNaN(n) ? 0 : n; }
-function bool(v){ const s = String(v).trim().toLowerCase(); return (s==="yes"||s==="y"||s==="true"||s==="1"||s==="✓"||s==="v") ? 1 : 0; }
+function num(v){ const n = parseFloat(String(v).replace('%','').replace(/,/g,'').replace(/\$/g,'').trim()); return isNaN(n) ? 0 : n; }
+function bool(v){ const s = String(v).trim().toLowerCase(); return (s==="yes"||s==="y"||s==="true"||s==="1"||s==="✓"||s==="v"||s==="x") ? 1 : 0; }
+
+// Strip everything except letters/digits so header matching survives spacing,
+// punctuation, underscores, % signs, or case differences in the live sheet.
+function fuzzy(s){ return String(s||"").toLowerCase().replace(/[^a-z0-9]/g,''); }
+
+function findCol(fuzzyHeader, aliases){
+  for(const a of aliases){
+    const target = fuzzy(a);
+    const i = fuzzyHeader.indexOf(target);
+    if(i !== -1) return i;
+  }
+  // fallback: partial/contains match
+  for(const a of aliases){
+    const target = fuzzy(a);
+    const i = fuzzyHeader.findIndex(h => h.includes(target) || target.includes(h));
+    if(i !== -1) return i;
+  }
+  return -1;
+}
+
+let lastMissingCols = [];
 
 function parseSheetCSV(text){
   const grid = parseCSVGrid(text).filter(r => r.some(c=>c.trim()!==""));
   if(grid.length < 2) throw new Error("CSV looks empty.");
-  const header = grid[0].map(h=>h.trim().toLowerCase());
-  const idx = name => header.findIndex(h=>h===name);
+  const rawHeader = grid[0];
+  const fuzzyHeader = rawHeader.map(fuzzy);
 
-  const cTicker = idx("ticker");
-  const cName = idx("name");
-  const cSector = idx("sector");
-  const cIndustry = idx("industry");
-  const cRsSts = idx("rs_sts") !== -1 ? idx("rs_sts") : idx("rs sts");
-  const cExt = idx("extension");
-  const cAdr = idx("adr%");
-  const cSuper = idx("superliquid?") !== -1 ? idx("superliquid?") : idx("superliquid");
-  const cVol = idx("avg $ vol");
-  const c1m = idx("1m leader");
-  const c3m = idx("3m leader");
-  const c6m = idx("6m leader");
-  const c12m = idx("12m leader");
+  const fieldDefs = [
+    ["ticker",   ["ticker","symbol"]],
+    ["name",     ["name","company","stockname","companyname"]],
+    ["sector",   ["sector"]],
+    ["industry", ["industry"]],
+    ["rsSts",    ["rs_sts","rssts","rsscore","rspercentile","rsrank","rs%ile","1monthrs","onemonthrs","1mrs","rs"]],
+    ["ext",      ["extension","ext"]],
+    ["adr",      ["adr%","adr","adrpct"]],
+    ["super",    ["superliquid?","superliquid","liquid"]],
+    ["vol",      ["avg$vol","avgdollarvol","avgvol","avgvolume","dollarvolume","avg$volume","volume"]],
+    ["m1",       ["1mleader","1monthleader","1mo leader","1m"]],
+    ["m3",       ["3mleader","3monthleader","3m"]],
+    ["m6",       ["6mleader","6monthleader","6m"]],
+    ["m12",      ["12mleader","12monthleader","12m"]],
+  ];
 
-  if(cTicker === -1) throw new Error("Couldn't find a 'Ticker' column.");
+  const cols = {};
+  const missing = [];
+  fieldDefs.forEach(([key, aliases])=>{
+    const idx = findCol(fuzzyHeader, aliases);
+    cols[key] = idx;
+    if(idx === -1) missing.push(key);
+  });
+  lastMissingCols = missing;
+
+  if(cols.ticker === -1) throw new Error("Couldn't find a 'Ticker' column. Header row was: " + rawHeader.join(" | "));
+
+  const get = (r, key) => cols[key] === -1 ? "" : (r[cols[key]] || "");
 
   return grid.slice(1)
-    .filter(r => (r[cTicker]||"").trim())
+    .filter(r => get(r,"ticker").trim())
     .map(r => ({
-      ticker: (r[cTicker]||"").trim().toUpperCase(),
-      company: (r[cName]||"").trim(),
-      sector: (r[cSector]||"").trim(),
-      industry: (r[cIndustry]||"").trim(),
-      rsSts: num(r[cRsSts]),
-      ext: num(r[cExt]),
-      adr: num(r[cAdr]),
-      superliquid: bool(r[cSuper]),
-      vol: (r[cVol]||"").trim(),
-      m1: bool(r[c1m]), m3: bool(r[c3m]), m6: bool(r[c6m]), m12: bool(r[c12m]),
+      ticker: get(r,"ticker").trim().toUpperCase(),
+      company: get(r,"name").trim(),
+      sector: get(r,"sector").trim(),
+      industry: get(r,"industry").trim(),
+      rsSts: num(get(r,"rsSts")),
+      ext: num(get(r,"ext")),
+      adr: num(get(r,"adr")),
+      superliquid: bool(get(r,"super")),
+      vol: get(r,"vol").trim(),
+      m1: bool(get(r,"m1")), m3: bool(get(r,"m3")), m6: bool(get(r,"m6")), m12: bool(get(r,"m12")),
     }));
 }
 
@@ -589,7 +624,11 @@ async function refreshLiveData(){
     ROWS = parseSheetCSV(text);
     dataSourceLabel = `live sheet (via ${source})`;
     renderAll();
-    setStatus(`✓ Loaded ${ROWS.length} tickers via ${source}.`);
+    if(lastMissingCols.length){
+      setStatus(`✓ Loaded ${ROWS.length} tickers via ${source}, but couldn't match columns: ${lastMissingCols.join(", ")} — check header spelling in the sheet.`, true);
+    } else {
+      setStatus(`✓ Loaded ${ROWS.length} tickers via ${source}.`);
+    }
   }catch(e){
     setStatus(`Fetched sheet but failed parsing: ${e.message}`, true);
   }
