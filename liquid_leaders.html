@@ -60,31 +60,30 @@
       var(--bg);
     color:var(--text); font-family:'Inter',sans-serif; padding:22px 26px 60px; transition:background .2s ease, color .2s ease;
   }
-  .wrap{max-width:1760px; margin:0 auto;}
+  .wrap{max-width:1760px; margin:0 auto; width: 100%;}
 
-<script>
-
-  
-/* ---------- UNIFORM APP TABS ---------- */
+  /* ---------- UNIFORM APP TABS ---------- */
   .app-tabs { 
     display: flex; 
     gap: 4px; 
     margin-bottom: 24px; 
     border-bottom: 1px solid #e1e0d9; 
     padding-bottom: 0; 
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    overflow-x: auto;
   }
   .app-tabs a { 
-    padding: 10px 20px; 
+    padding: 10px 18px; 
     text-decoration: none; 
     color: #898781; 
-    font-size: 12px; 
+    font-size: 11.5px; 
     font-weight: 600; 
     border: 1px solid transparent; 
     border-bottom: none; 
     border-radius: 8px 8px 0 0; 
     text-transform: uppercase; 
     letter-spacing: 0.04em; 
+    white-space: nowrap;
     transition: all 0.15s; 
     font-family: 'JetBrains Mono', monospace; 
   }
@@ -99,7 +98,6 @@
     color: var(--text, #0b0b0b); 
     background: rgba(0,0,0,0.03); 
   }
-
 
   header.top{display:flex; justify-content:space-between; align-items:flex-end; border-bottom:2px solid var(--line); padding-bottom:14px; margin-bottom:22px; gap:16px; flex-wrap:wrap;}
   .brand-eyebrow{font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.18em; color:var(--teal); text-transform:uppercase;}
@@ -155,12 +153,10 @@
 </head>
 <body>
 
-
-  
 <div class="wrap">
 
   <!-- ================= APP TABS ================= -->
-<div class="app-tabs">
+  <div class="app-tabs">
     <a href="index.html">Market Dashboard</a>
     <a href="stockbee_market_monitor_live.html">Stockbee Monitor</a>
     <a href="sata_watchlist_dashboard.html">SATA Chart</a>
@@ -170,6 +166,7 @@
     <a href="tv_watchlist.html">TradingView Watchlist</a>
     <a href="IndustryRS.html">Industry RS</a>
   </div>
+
   <header class="top">
     <div>
       <div class="brand-eyebrow">Leader Hunter · Momentum Screener</div>
@@ -231,26 +228,19 @@
     <div id="modalChartContainer" class="chart-modal-body"></div>
   </div>
 </div>  
-  
 
-
+<script>
 /* ============================================================
    CONFIG
    ============================================================ */
 const SHEET_ID = "1DcWbr8T5lTIgSrpoqVteg7ar_H466KZSvZ4p_Eksa1s";
-// Bypassing /export by requesting the canonical pub sheet layout directly
 const EXPORT_CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/pub?output=csv`;
 
 const CORS_PROXIES = [
   url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
   url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
 ];
-/* ============================================================
-   DEFAULT / SAMPLE DATA — transcribed from the sheet as of this
-   build, so the page still shows something meaningful before the
-   first successful live fetch or CSV upload.
-   Columns: ticker, company, sector, industry, p6m, p3m, p1m, c6m, c3m, c1m, rs, ext, vol
-   ============================================================ */
+
 const DEFAULT_ROWS = [
 ["AGL","Agilon Health Inc","Healthcare","Medical Care Facilities",531.70,458.80,114.79,1,1,0,100,4.0,"$41.1M"],
 ["ACHC","Acadia Healthcare Company Inc","Healthcare","Medical Care Facilities",242.28,123.92,136.85,1,0,0,100,6.3,"$115.0M"],
@@ -327,15 +317,12 @@ function toRowObj(r){
   return { ticker:r[0], company:r[1], sector:r[2], industry:r[3], p6m:r[4], p3m:r[5], p1m:r[6], c6m:r[7], c3m:r[8], c1m:r[9], rs:r[10], ext:r[11], vol:r[12] };
 }
 
-/* ============================================================
-   HELPERS
-   ============================================================ */
 function greenHeat(v, max=300){
   const t = Math.max(0, Math.min(1, v/max));
   const l = 92 - t*58;
   return `hsl(152,55%,${l}%)`;
 }
-function extHeat(v){ // diverging: positive (extended) = red, negative (pulled back) = green
+function extHeat(v){
   const maxAbs = 12;
   const t = Math.max(-1, Math.min(1, v/maxAbs));
   if(Math.abs(v) < 0.3) return "transparent";
@@ -348,18 +335,15 @@ function volToNumber(str){
   if(!m) return 0;
   const n = parseFloat(m[1]);
   const mult = { B:1000, M:1, K:0.001, "":0.001 }[m[2].toUpperCase()] ?? 1;
-  return n * mult; // normalized to "millions"
+  return n * mult;
 }
 function volHeat(str){
-  const n = volToNumber(str); // in millions
+  const n = volToNumber(str);
   const t = Math.max(0, Math.min(1, Math.log10(n+1) / Math.log10(50000)));
   const l = 92 - t*58;
   return n > 0 ? `hsl(152,55%,${l}%)` : "transparent";
 }
 
-/* ============================================================
-   RENDER
-   ============================================================ */
 function populateSectorFilter(){
   const sectors = [...new Set(ROWS.map(r=>r.sector).filter(Boolean))].sort();
   const sel = document.getElementById("sectorFilter");
@@ -442,9 +426,6 @@ function renderAll(){
   document.getElementById("subline").textContent = `${ROWS.length} tickers · Source: ${dataSourceLabel}`;
 }
 
-/* ============================================================
-   CSV PARSER
-   ============================================================ */
 function parseCSVGrid(text){
   const rows = [];
   let row = [], field = '', inQuotes = false;
@@ -493,9 +474,6 @@ function parseSheetCSV(text){
     }));
 }
 
-/* ============================================================
-   LIVE FETCH (direct, then CORS-proxy fallback)
-   ============================================================ */
 const statusMsg = document.getElementById("statusMsg");
 function setStatus(msg, isErr){
   statusMsg.textContent = msg;
@@ -546,14 +524,10 @@ async function refreshLiveData(){
   btn.textContent = "↻ Refresh Live Data";
 }
 
-/* ============================================================
-   IN-PAGE STANDALONE CHART MODAL ENGINE
-   ============================================================ */
 let currentModalChart = null;
 let modalResizeObserver = null;
 
 function closeChartModal(e) {
-  // Close if clicking the backdrop or X button
   if (!e || e.target.id === 'chartModalBackdrop' || !e.target) {
     document.getElementById('chartModalBackdrop').style.display = 'none';
     if (currentModalChart) {
@@ -567,7 +541,6 @@ function closeChartModal(e) {
   }
 }
 
-// Close modal on Escape key press
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeChartModal(); });
 
 function openStandaloneChart(ticker) {
@@ -581,7 +554,6 @@ function openStandaloneChart(ticker) {
   statusEl.style.color = 'var(--amber)';
   backdrop.style.display = 'flex';
 
-  // Clean up any existing chart instance
   if (currentModalChart) { currentModalChart.remove(); currentModalChart = null; }
   if (modalResizeObserver) { modalResizeObserver.disconnect(); }
   container.innerHTML = '';
@@ -592,7 +564,6 @@ function openStandaloneChart(ticker) {
   const textColor = isDark ? '#8b93a8' : '#5b6478';
   const gridColor = isDark ? 'rgba(33, 42, 61, 0.4)' : 'rgba(221, 226, 236, 0.6)';
 
-  // Initialize Lightweight Chart inside the modal DOM
   currentModalChart = LightweightCharts.createChart(container, {
     layout: { background: { type: 'solid', color: chartBg }, textColor: textColor, fontFamily: "'JetBrains Mono', monospace" },
     grid: { vertLines: { color: gridColor }, horzLines: { color: gridColor } },
@@ -607,7 +578,6 @@ function openStandaloneChart(ticker) {
   });
   modalResizeObserver.observe(container);
 
-  // EMA Math Engine
   function calculateEMA(data, period, key) {
     const k = 2 / (period + 1);
     let ema = 0, started = false;
@@ -620,14 +590,13 @@ function openStandaloneChart(ticker) {
     return result;
   }
 
-  // Fetch Data with Robust Proxy Chain
   async function loadModalData() {
     const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=1y`;
     const proxies = [
       url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
       url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
       url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
-      url => url // Direct fallback
+      url => url
     ];
 
     let json = null;
@@ -656,19 +625,16 @@ function openStandaloneChart(ticker) {
       }
     }
 
-    // Deduplicate & Sort Timestamps Chronologically
     const uniqueMap = new Map();
     rawData.forEach(bar => uniqueMap.set(bar.time, bar));
     const cleanData = Array.from(uniqueMap.values()).sort((a, b) => a.time.localeCompare(b.time));
 
     if (cleanData.length === 0) { statusEl.textContent = 'NO BARS FOUND'; return; }
 
-    // 1. Calculate 21 EMAs
     const maHighData = calculateEMA(cleanData, 21, 'high');
     const maLowData = calculateEMA(cleanData, 21, 'low');
     const ema21Data = calculateEMA(cleanData, 21, 'close');
 
-    // 2. Calculate 100-Period Donchian Channel (Offset +2)
     const dcLength = 100, dcOffset = 2;
     const dcUpperData = [], dcLowerData = [], dcBasisData = [];
     for (let i = 0; i < cleanData.length; i++) {
@@ -686,8 +652,6 @@ function openStandaloneChart(ticker) {
       }
     }
 
-    // 3. Render Layers in Strict Z-Index Order
-    // Layer 1: EMA High Cloud
     const cloudHighSeries = currentModalChart.addAreaSeries({
       topColor: isDark ? 'rgba(200, 200, 205, 0.08)' : 'rgba(160, 160, 165, 0.12)',
       bottomColor: isDark ? 'rgba(200, 200, 205, 0.08)' : 'rgba(160, 160, 165, 0.12)',
@@ -696,7 +660,6 @@ function openStandaloneChart(ticker) {
     });
     cloudHighSeries.setData(maHighData);
 
-    // Layer 2: EMA Low Cloud Mask
     const cloudLowMaskSeries = currentModalChart.addAreaSeries({
       topColor: chartBg, bottomColor: chartBg,
       lineColor: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)',
@@ -704,13 +667,11 @@ function openStandaloneChart(ticker) {
     });
     cloudLowMaskSeries.setData(maLowData);
 
-    // Layer 3: EMA 21 Center Line
     const ema21Series = currentModalChart.addLineSeries({
       color: isDark ? '#64748b' : '#94a3b8', lineWidth: 1, priceLineVisible: false, lastValueVisible: false,
     });
     ema21Series.setData(ema21Data);
 
-    // Layer 4: Donchian Channels (Dashed Amber)
     const dcLineColor = isDark ? 'rgba(245, 185, 66, 0.5)' : 'rgba(185, 120, 26, 0.5)';
     const dcUpperSeries = currentModalChart.addLineSeries({ color: dcLineColor, lineWidth: 1, lineStyle: 2, priceLineVisible: false, lastValueVisible: false });
     const dcLowerSeries = currentModalChart.addLineSeries({ color: dcLineColor, lineWidth: 1, lineStyle: 2, priceLineVisible: false, lastValueVisible: false });
@@ -719,7 +680,6 @@ function openStandaloneChart(ticker) {
     dcLowerSeries.setData(dcLowerData);
     dcBasisSeries.setData(dcBasisData);
 
-    // Layer 5: Dynamic Monochrome/Magenta HLC Price Bars
     const maHighMap = new Map(maHighData.map(item => [item.time, item.value]));
     const coloredBars = cleanData.map(bar => {
       const currentMAHigh = maHighMap.get(bar.time);
@@ -737,10 +697,8 @@ function openStandaloneChart(ticker) {
   }
 
   loadModalData();
-}  
-/* ============================================================
-   UI WIRING
-   ============================================================ */
+}
+
 document.getElementById("btnRefresh").addEventListener("click", refreshLiveData);
 document.getElementById("searchInput").addEventListener("input", renderTable);
 document.getElementById("sectorFilter").addEventListener("change", renderTable);
@@ -777,7 +735,6 @@ fileInput.addEventListener("change", e=> readFile(e.target.files[0]));
 ["dragleave","drop"].forEach(evt=> dropzone.addEventListener(evt, e=>{ e.preventDefault(); dropzone.classList.remove("drag"); }));
 dropzone.addEventListener("drop", e=>{ const f = e.dataTransfer.files[0]; if(f) readFile(f); });
 
-/* ---------- THEME ---------- */
 function updateThemeToggleUI(){
   const theme = document.documentElement.getAttribute("data-theme") || "dark";
   document.getElementById("optDark").classList.toggle("active", theme==="dark");
@@ -791,9 +748,6 @@ function setTheme(theme){
 document.getElementById("optDark").addEventListener("click", ()=>setTheme("dark"));
 document.getElementById("optLight").addEventListener("click", ()=>setTheme("light"));
 
-/* ============================================================
-   INIT
-   ============================================================ */
 (function init(){
   try{
     const savedTheme = localStorage.getItem('market-monitor-theme');
@@ -801,7 +755,7 @@ document.getElementById("optLight").addEventListener("click", ()=>setTheme("ligh
   }catch(e){}
   updateThemeToggleUI();
   renderAll();
-  refreshLiveData(); // attempt live load on open; falls back gracefully if blocked
+  refreshLiveData();
 })();
 </script>
 </body>
