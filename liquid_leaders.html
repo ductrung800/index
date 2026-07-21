@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<link rel="icon" href="data:,">
 <meta charset="UTF-8">
 <title>Liquid Leaders</title>
 <!-- Lightweight Charts v4 Library -->
@@ -67,7 +68,7 @@
     display: flex; 
     gap: 4px; 
     margin-bottom: 24px; 
-    border-bottom: 1px solid #e1e0d9; 
+    border-bottom: 1px solid var(--line); 
     padding-bottom: 0; 
     flex-wrap: nowrap;
     overflow-x: auto;
@@ -75,7 +76,7 @@
   .app-tabs a { 
     padding: 10px 18px; 
     text-decoration: none; 
-    color: #898781; 
+    color: var(--text-dim); 
     font-size: 11.5px; 
     font-weight: 600; 
     border: 1px solid transparent; 
@@ -88,15 +89,15 @@
     font-family: 'JetBrains Mono', monospace; 
   }
   .app-tabs a.active { 
-    background: var(--panel, #fff); 
-    color: var(--teal, #2a78d6); 
-    border-color: #e1e0d9; 
-    border-bottom-color: var(--panel, #fff); 
+    background: var(--panel); 
+    color: var(--teal); 
+    border-color: var(--line); 
+    border-bottom-color: var(--panel); 
     margin-bottom: -1px; 
   }
   .app-tabs a:hover:not(.active) { 
-    color: var(--text, #0b0b0b); 
-    background: rgba(0,0,0,0.03); 
+    color: var(--text); 
+    background: rgba(255,255,255,0.03); 
   }
 
   header.top{display:flex; justify-content:space-between; align-items:flex-end; border-bottom:2px solid var(--line); padding-bottom:14px; margin-bottom:22px; gap:16px; flex-wrap:wrap;}
@@ -126,6 +127,21 @@
   .dropzone{border:2px dashed var(--line); border-radius:10px; padding:20px 16px; text-align:center; cursor:pointer; transition:all .15s; background:var(--input-bg); margin-top:12px;}
   .dropzone:hover, .dropzone.drag{border-color:var(--teal); background:rgba(32,217,184,.06);}
   .dz-sub{font-size:10.5px; color:var(--text-faint); margin-top:4px;}
+
+  /* RANKING CHARTS SECTION */
+  .rankings-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 24px; }
+  @media(max-width: 1200px) { .rankings-grid { grid-template-columns: 1fr; } }
+  .ranking-card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; }
+  .ranking-title { font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; font-family: 'JetBrains Mono', monospace; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+  .ranking-bars { display: flex; flex-direction: column; gap: 8px; max-height: 280px; overflow-y: auto; padding-right: 4px; }
+  .ranking-bars::-webkit-scrollbar { width: 4px; }
+  .ranking-bars::-webkit-scrollbar-thumb { background: var(--line); border-radius: 4px; }
+  .rank-row { display: grid; grid-template-columns: 160px 1fr 70px; align-items: center; gap: 10px; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; cursor: pointer; padding: 4px 6px; border-radius: 4px; transition: background .12s; }
+  .rank-row:hover { background: var(--line-soft); }
+  .rank-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; color: var(--text); }
+  .rank-track { background: var(--input-bg); border-radius: 3px; height: 16px; position: relative; overflow: hidden; border: 1px solid var(--line); }
+  .rank-bar { height: 100%; border-radius: 2px; transition: width .3s ease; }
+  .rank-val { text-align: right; font-weight: 700; font-size: 11px; }
 
   .toolbar{display:flex; gap:12px; margin-bottom:14px; flex-wrap:wrap; align-items:center;}
   .search-input{background:var(--input-bg); border:1px solid var(--line); color:var(--text); padding:9px 12px; border-radius:7px; font-family:'JetBrains Mono',monospace; font-size:12px; min-width:220px;}
@@ -202,6 +218,24 @@
     </div>
   </div>
 
+  <!-- ================= SECTOR & INDUSTRY RANKING CHARTS ================= -->
+  <div class="rankings-grid">
+    <div class="ranking-card">
+      <div class="ranking-title">
+        <span>Sector Performance Ranking (% 6M)</span>
+        <span style="font-size: 11px; color: var(--text-dim); font-weight: 400;" id="sectorCount">0 sectors</span>
+      </div>
+      <div class="ranking-bars" id="sectorRankingBars"></div>
+    </div>
+    <div class="ranking-card">
+      <div class="ranking-title">
+        <span>Industry Performance Ranking (% 6M)</span>
+        <span style="font-size: 11px; color: var(--text-dim); font-weight: 400;" id="industryCount">0 industries</span>
+      </div>
+      <div class="ranking-bars" id="industryRankingBars"></div>
+    </div>
+  </div>
+
   <div class="toolbar">
     <input class="search-input" id="searchInput" placeholder="Search ticker or company…">
     <select class="sector-filter" id="sectorFilter"><option value="">All Sectors</option></select>
@@ -235,12 +269,13 @@
    ============================================================ */
 const SHEET_ID = "1DcWbr8T5lTIgSrpoqVteg7ar_H466KZSvZ4p_Eksa1s";
 const SHEET_GVIZ_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
+
 const CORS_PROXIES = [
   url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
   url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
   url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`
 ];
- 
+
 const DEFAULT_ROWS = [
 ["AGL","Agilon Health Inc","Healthcare","Medical Care Facilities",531.70,458.80,114.79,1,1,0,100,4.0,"$41.1M"],
 ["ACHC","Acadia Healthcare Company Inc","Healthcare","Medical Care Facilities",242.28,123.92,136.85,1,0,0,100,6.3,"$115.0M"],
@@ -384,6 +419,70 @@ const COLS = [
   {key:"vol", label:"Avg $ Vol"},
 ];
 
+function renderRankings() {
+  // Aggregate Sectors
+  const sectorMap = {};
+  ROWS.forEach(r => {
+    if (!r.sector) return;
+    if (!sectorMap[r.sector]) sectorMap[r.sector] = { sum: 0, count: 0 };
+    sectorMap[r.sector].sum += r.p6m;
+    sectorMap[r.sector].count += 1;
+  });
+  const sectorArr = Object.keys(sectorMap).map(sec => ({
+    name: sec,
+    avg: sectorMap[sec].sum / sectorMap[sec].count
+  })).sort((a, b) => b.avg - a.avg);
+
+  document.getElementById("sectorCount").textContent = `${sectorArr.length} sectors`;
+  const maxSecVal = Math.max(...sectorArr.map(s => Math.abs(s.avg)), 1);
+
+  document.getElementById("sectorRankingBars").innerHTML = sectorArr.map(s => {
+    const pctWidth = Math.min(100, Math.max(4, (Math.abs(s.avg) / maxSecVal) * 100));
+    const barColor = s.avg >= 0 ? "var(--teal)" : "var(--red)";
+    return `<div class="rank-row" onclick="filterBySector('${s.name}')">
+      <div class="rank-label" title="${s.name}">${s.name}</div>
+      <div class="rank-track"><div class="rank-bar" style="width: ${pctWidth}%; background: ${barColor};"></div></div>
+      <div class="rank-val" style="color: ${barColor};">${s.avg >= 0 ? '+' : ''}${s.avg.toFixed(1)}%</div>
+    </div>`;
+  }).join("");
+
+  // Aggregate Industries
+  const indMap = {};
+  ROWS.forEach(r => {
+    if (!r.industry) return;
+    if (!indMap[r.industry]) indMap[r.industry] = { sum: 0, count: 0 };
+    indMap[r.industry].sum += r.p6m;
+    indMap[r.industry].count += 1;
+  });
+  const indArr = Object.keys(indMap).map(ind => ({
+    name: ind,
+    avg: indMap[ind].sum / indMap[ind].count
+  })).sort((a, b) => b.avg - a.avg);
+
+  document.getElementById("industryCount").textContent = `${indArr.length} industries`;
+  const maxIndVal = Math.max(...indArr.map(i => Math.abs(i.avg)), 1);
+
+  document.getElementById("industryRankingBars").innerHTML = indArr.map(i => {
+    const pctWidth = Math.min(100, Math.max(4, (Math.abs(i.avg) / maxIndVal) * 100));
+    const barColor = i.avg >= 0 ? "var(--teal)" : "var(--red)";
+    return `<div class="rank-row" onclick="filterByIndustry('${i.name}')">
+      <div class="rank-label" title="${i.name}">${i.name}</div>
+      <div class="rank-track"><div class="rank-bar" style="width: ${pctWidth}%; background: ${barColor};"></div></div>
+      <div class="rank-val" style="color: ${barColor};">${i.avg >= 0 ? '+' : ''}${i.avg.toFixed(1)}%</div>
+    </div>`;
+  }).join("");
+}
+
+function filterBySector(secName) {
+  document.getElementById("sectorFilter").value = secName;
+  renderTable();
+}
+
+function filterByIndustry(indName) {
+  document.getElementById("searchInput").value = indName;
+  renderTable();
+}
+
 function renderTable(){
   const rows = getFilteredSorted();
   document.getElementById("rowCount").textContent = `${rows.length} of ${ROWS.length} tickers`;
@@ -422,6 +521,7 @@ function renderTable(){
 
 function renderAll(){
   populateSectorFilter();
+  renderRankings();
   renderTable();
   document.getElementById("subline").textContent = `${ROWS.length} tickers · Source: ${dataSourceLabel}`;
 }
@@ -480,22 +580,12 @@ function setStatus(msg, isErr){
   statusMsg.className = "status-msg" + (isErr ? " err" : "");
 }
 
-async function fetchCSVText(url, label){
-  const res = await fetch(url, { cache: "no-store" });
-  if(!res.ok) throw new Error(`${label}: HTTP ${res.status}`);
-  const text = await res.text();
-  if(!text || text.trim().startsWith('<')) throw new Error(`${label}: got a webpage instead of CSV — check the sheet's sharing is "Anyone with the link can view".`);
-  return text;
-}
-
 async function refreshLiveData(){
   const btn = document.getElementById("btnRefresh");
   if(btn) btn.textContent = "↻ Fetching…";
   setStatus("Fetching live sheet…");
 
   let text = null, lastErr = null, source = null;
-  
-  // Try direct gviz first
   try {
     const res = await fetch(SHEET_GVIZ_URL, { cache: "no-store" });
     if(res.ok) {
@@ -507,7 +597,6 @@ async function refreshLiveData(){
     }
   } catch(e) { lastErr = e; }
 
-  // Try proxies with gviz if direct failed
   if(!text){
     for(const build of CORS_PROXIES){
       try{
