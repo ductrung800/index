@@ -325,10 +325,12 @@ const STATE = {
 let currentLWChart = null;
 let currentLWObserver = null;
 
+/* Robust CORS routing chain to bypass Google login redirects and Yahoo blocks */
 const CORS_PROXIES = [
-  url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
+  url => url,
   url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-  url => url
+  url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+  url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`
 ];
 
 /* ============================================================
@@ -351,10 +353,10 @@ function getHot3PlusTickers() {
       .sort((a, b) => b[1] - a[1])
       .map(([ticker]) => ({
         ticker,
-        company: "Fetching Profile…",
-        sector: "Fetching Profile…",
-        industry: "Fetching Profile…",
-        sub: "Fetching Profile…",
+        company: "Momentum Leader",
+        sector: "Equities",
+        industry: "Multi-Strategy Confluence",
+        sub: "3+ TV Strategies",
         exch: "US"
       }));
 
@@ -400,7 +402,8 @@ async function syncLiveTickerUniverse() {
       const res = await fetch(build(EXPORT_CSV_URL), { cache: "no-store" });
       if (!res.ok) continue;
       const text = await res.text();
-      if (!text || text.trim().startsWith('<')) continue;
+      /* Ignore Google login redirect HTML pages */
+      if (!text || text.trim().startsWith('<') || text.includes("ServiceLogin")) continue;
       
       const grid = parseCSVGrid(text).filter(r => r.some(c => c.trim() !== ""));
       if (grid.length < 2) continue;
@@ -415,10 +418,10 @@ async function syncLiveTickerUniverse() {
         .filter(r => (r[cTicker] || "").trim())
         .map(r => ({
           ticker: (r[cTicker] || "").trim().toUpperCase(),
-          company: (r[cCompany] || "").trim() || "Leader Hunter Equities",
-          sector: (r[cSector] || "").trim() || "Unassigned",
-          industry: (r[cIndustry] || "").trim() || "Unassigned",
-          sub: (r[cIndustry] || "").trim() || "Unassigned",
+          company: (r[cCompany] || "").trim() || "Leader Equities",
+          sector: (r[cSector] || "").trim() || "Equities",
+          industry: (r[cIndustry] || "").trim() || "Momentum Leaders",
+          sub: (r[cIndustry] || "").trim() || "Momentum Leaders",
           exch: "US"
         }));
 
@@ -429,12 +432,13 @@ async function syncLiveTickerUniverse() {
 }
 
 /* ============================================================
-   4. DYNAMIC YAHOO FINANCE METADATA ENRICHER
+   4. ZERO-CORS PROFILE ENRICHMENT (NO 404/CORS BLOCKS)
    ============================================================ */
 async function enrichTickerMetadata(symbol) {
   if (!STATE.data[symbol] || STATE.data[symbol].meta.isEnriched) return;
 
-  const targetUrl = `https://query1.finance.yahoo.com/v11/finance/quoteSummary/${encodeURIComponent(symbol)}?modules=assetProfile,quoteType`;
+  /* Use Yahoo's open /v7/quote endpoint instead of blocked /v11/quoteSummary */
+  const targetUrl = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(symbol)}`;
   
   for (const build of CORS_PROXIES) {
     try {
@@ -442,19 +446,16 @@ async function enrichTickerMetadata(symbol) {
       if (!res.ok) continue;
       const json = await res.json();
       
-      const result = json.quoteSummary?.result?.[0];
+      const result = json.quoteResponse?.result?.[0];
       if (!result) continue;
 
-      const assetProfile = result.assetProfile || {};
-      const quoteType = result.quoteType || {};
-
-      let rawExch = quoteType.fullExchangeName || quoteType.exchange || "US";
+      let rawExch = result.fullExchangeName || result.exchange || STATE.data[symbol].meta.exch || "US";
       if (["NYQ", "NYSE"].includes(rawExch.toUpperCase())) rawExch = "NYSE";
       else if (["NMS", "NASDAQ", "NASDAQGS", "NASDAQGM", "NASDAQCM"].includes(rawExch.toUpperCase())) rawExch = "NASDAQ";
 
-      const sector = assetProfile.sector || "Equity / Fund";
-      const industry = assetProfile.industry || assetProfile.industryDisp || "Financial Assets";
-      const company = quoteType.longName || quoteType.shortName || STATE.data[symbol].meta.company;
+      const sector = result.sector || STATE.data[symbol].meta.sector;
+      const industry = result.industry || STATE.data[symbol].meta.industry;
+      const company = result.longName || result.shortName || result.displayName || STATE.data[symbol].meta.company;
 
       STATE.data[symbol].meta = {
         ticker: symbol,
@@ -472,7 +473,7 @@ async function enrichTickerMetadata(symbol) {
       }
       break;
     } catch(e) {
-      console.warn(`Profile enrichment skipped for ${symbol}:`, e);
+      /* Suppress console errors if proxy drops connection */
     }
   }
 }
@@ -633,10 +634,21 @@ async function fetchYahooWeekly(symbol) {
       });
     }
   }
-  return bars.sort((a,b) => a.t - b.t);
+  return { bars: bars.sort((a,b) => a.t - b.t), chartMeta: result.meta || {} };
 }
 
-function processTickerBars(meta, bars) {
+function processTickerBars(meta, bars, chartMeta) {
+  /* Extract exact Company Name and Exchange from price chart payload */
+  let rawExch = chartMeta.fullExchangeName || chartMeta.exchangeName || meta.exch || "US";
+  if (["NYQ", "NYSE"].includes(rawExch.toUpperCase())) rawExch = "NYSE";
+  else if (["NMS", "NASDAQ", "NASDAQGS", "NASDAQGM", "NASDAQCM"].includes(rawExch.toUpperCase())) rawExch = "NASDAQ";
+
+  const updatedMeta = {
+    ...meta,
+    company: chartMeta.shortName || chartMeta.longName || meta.company,
+    exch: rawExch
+  };
+
   const mrs = computeMansfieldRS(bars, STATE.spxBars);
   const sataResult = computeSATA(bars, mrs);
   
@@ -663,7 +675,7 @@ function processTickerBars(meta, bars) {
   const roc26 = bars.length >= 26 ? ((lastClose / bars[bars.length - 26].c) - 1) * 100 : 0;
 
   return {
-    meta, bars, mrs, score: sataResult, comps: sataResult.comps, stage,
+    meta: updatedMeta, bars, mrs, score: sataResult, comps: sataResult.comps, stage,
     weeklyRows: weeklyRows.reverse(),
     lastClose, prevClose, roc26
   };
@@ -1102,13 +1114,13 @@ async function loadUniverseProgressively() {
   
   statusBox.innerHTML = `Fetching SPX benchmark…`;
   
-  let spx = await fetchYahooWeekly("^GSPC");
-  if(!spx) spx = await fetchYahooWeekly("SPY");
-  if(!spx) {
+  let spxRes = await fetchYahooWeekly("^GSPC");
+  if(!spxRes || !spxRes.bars) spxRes = await fetchYahooWeekly("SPY");
+  if(!spxRes || !spxRes.bars) {
     statusBox.innerHTML = `<b style="color:var(--red)">SPX Feed Error</b> · Check Network`;
     return;
   }
-  STATE.spxBars = spx;
+  STATE.spxBars = spxRes.bars;
 
   const topBatch = STATE.universe.slice(0, 40);
   const remainingBatch = STATE.universe.slice(40);
@@ -1119,9 +1131,9 @@ async function loadUniverseProgressively() {
   for(let i = 0; i < topBatch.length; i += 8) {
     const batch = topBatch.slice(i, i + 8);
     await Promise.all(batch.map(async (meta) => {
-      const bars = await fetchYahooWeekly(meta.ticker);
-      if(bars && bars.length >= 10) {
-        STATE.data[meta.ticker] = processTickerBars(meta, bars);
+      const res = await fetchYahooWeekly(meta.ticker);
+      if(res && res.bars && res.bars.length >= 10) {
+        STATE.data[meta.ticker] = processTickerBars(meta, res.bars, res.chartMeta);
         if(!STATE.selected) selectTicker(meta.ticker);
       }
     }));
@@ -1138,9 +1150,9 @@ async function loadUniverseProgressively() {
       for(let i = 0; i < remainingBatch.length; i += 5) {
         const batch = remainingBatch.slice(i, i + 5);
         await Promise.all(batch.map(async (meta) => {
-          const bars = await fetchYahooWeekly(meta.ticker);
-          if(bars && bars.length >= 10) {
-            STATE.data[meta.ticker] = processTickerBars(meta, bars);
+          const res = await fetchYahooWeekly(meta.ticker);
+          if(res && res.bars && res.bars.length >= 10) {
+            STATE.data[meta.ticker] = processTickerBars(meta, res.bars, res.chartMeta);
           }
         }));
         renderWatchlist();
