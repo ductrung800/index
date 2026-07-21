@@ -155,7 +155,6 @@
   <!-- ================= APP TABS ================= -->
   <div class="app-tabs">
     <a href="index.html">Market Dashboard</a>
-    <a href="MarketRegime.html">Market Regime</a>
     <a href="stockbee_market_monitor_live.html">Stockbee Monitor</a>
     <a href="sata_watchlist_dashboard.html">SATA Chart</a>
     <a href="PowerList.html" class="active">Power List</a>
@@ -163,7 +162,7 @@
     <a href="group_momentum.html">Group Momentum</a>
     <a href="PriceStructure.html">Price Structure</a>
     <a href="StageAnalysis.html">Stage Analysis</a>
-    
+    <a href="MarketRegime.html">Market Regime</a>
     <a href="tv_watchlist.html">TradingView Watchlist</a>
     <a href="IndustryRS.html">Industry RS</a>
   </div>
@@ -255,11 +254,11 @@
 const SHEET_ID = "1RRyy9CxfV8mdIFPzjtC1WER4wXsuDZGbNoaXsGU4APQ";
 const SHEET_GID = "2698707";
 
-// Enforce single=true to lock Google Sheets export directly to GID 2698707 (Power List tab)
+// Enforce single-tab CSV endpoints to explicitly bind to GID 2698707 (Power List tab)
 const TAB_CSV_URLS = [
   `https://docs.google.com/spreadsheets/d/${SHEET_ID}/pub?output=csv&single=true&gid=${SHEET_GID}`,
-  `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${SHEET_GID}`,
-  `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&id=${SHEET_ID}&gid=${SHEET_GID}`
+  `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&id=${SHEET_ID}&gid=${SHEET_GID}`,
+  `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${SHEET_GID}`
 ];
 
 const CORS_PROXIES = [
@@ -307,21 +306,20 @@ function num(v){
   if(s.endsWith('k')) { mult = 1e3; s = s.slice(0, -1); }
   else if(s.endsWith('m')) { mult = 1e6; s = s.slice(0, -1); }
   else if(s.endsWith('b')) { mult = 1e9; s = s.slice(0, -1); }
-  const n = parseFloat(s) * mult;
-  return isNaN(n) ? 0 : n;
+  const n = parseFloat(s);
+  return isNaN(n) ? 0 : n * mult;
 }
 
 function bool(v){
+  if(v == null) return 0;
   const s = String(v).trim().toLowerCase();
   return (s==="yes"||s==="y"||s==="true"||s==="1"||s==="✓"||s==="v"||s==="x") ? 1 : 0;
 }
 
 /* ============================================================
-   DATA PARSING ENGINE
+   STRICT COLUMN-POSITION CSV PARSER
    ============================================================ */
 function fuzzy(s){ return String(s||"").toLowerCase().replace(/[^a-z0-9]/g,''); }
-
-let lastMissingCols = [];
 
 function parseSheetCSV(text) {
   const parsed = Papa.parse(text.trim(), { skipEmptyLines: true });
@@ -340,63 +338,50 @@ function parseSheetCSV(text) {
   const rawHeader = grid[headerIdx];
   const fuzzyHeader = rawHeader.map(fuzzy);
 
-  const fieldDefs = [
-    ["ticker",   ["ticker","symbol"]],
-    ["name",     ["name","company","companyname","stockname","description"]],
-    ["sector",   ["sector"]],
-    ["industry", ["industry","subindustry"]],
-    ["rsSts",    ["rssts","rs_sts","rsrank","rsrating"]], // Prioritize Col B (RS_STS) over Col A (1 Month RS)
-    ["ext",      ["extension","ext","extfrom20","extfrom20ema","extensionfrom20"]],
-    ["adr",      ["adr%","adr","adrpct","averagedailyrange"]],
-    ["super",    ["superliquid?","superliquid","liquid"]],
-    ["vol",      ["avg$vol","avgdollarvol","dollarvol","vol","avgvol","avgvolume","volume"]],
-    ["m1",       ["1mleader","1monthleader","1moleader","1m"]],
-    ["m3",       ["3mleader","3monthleader","3moleader","3m"]],
-    ["m6",       ["6mleader","6monthleader","6moleader","6m"]],
-    ["m12",      ["12mleader","12monthleader","12moleader","12m"]],
-  ];
-
-  function findColIdx(aliases) {
-    for(const a of aliases){
-      const target = fuzzy(a);
-      const idx = fuzzyHeader.indexOf(target);
-      if(idx !== -1) return idx;
+  // Precision mapper targeting exact positions from your sheet screenshot
+  function getIndex(aliasList, defaultFallbackIdx) {
+    for(const alias of aliasList){
+      const target = fuzzy(alias);
+      const foundIdx = fuzzyHeader.indexOf(target);
+      if(foundIdx !== -1) return foundIdx;
     }
-    for(const a of aliases){
-      const target = fuzzy(a);
-      if(target.length < 3) continue;
-      const idx = fuzzyHeader.findIndex(h => h && h.length >= 3 && (h.includes(target) || target.includes(h)));
-      if(idx !== -1) return idx;
-    }
-    return -1;
+    return defaultFallbackIdx;
   }
 
-  const cols = {};
-  const missing = [];
-  fieldDefs.forEach(([key, aliases])=>{
-    const idx = findColIdx(aliases);
-    cols[key] = idx;
-    if(idx === -1) missing.push(aliases[0]);
-  });
-  lastMissingCols = missing;
+  const colMap = {
+    rsSts: getIndex(["rs_sts", "rssts"], 1),        // Col B
+    ticker: getIndex(["ticker", "symbol"], 2),      // Col C
+    name: getIndex(["name", "company"], 3),         // Col D
+    sector: getIndex(["sector"], 4),               // Col E
+    industry: getIndex(["industry"], 5),           // Col F
+    ext: getIndex(["extension", "ext"], 6),        // Col G
+    adr: getIndex(["adr%", "adr"], 7),             // Col H
+    super: getIndex(["superliquid?", "superliquid"], 8), // Col I
+    vol: getIndex(["avg $ vol", "avgvol", "vol"], 9),    // Col J
+    m1: getIndex(["1m leader", "1mleader", "1m"], fuzzyHeader.length - 4),
+    m3: getIndex(["3m leader", "3mleader", "3m"], fuzzyHeader.length - 3),
+    m6: getIndex(["6m leader", "6mleader", "6m"], fuzzyHeader.length - 2),
+    m12: getIndex(["12m leader", "12mleader", "12m"], fuzzyHeader.length - 1),
+  };
 
-  if(cols.ticker === -1) throw new Error("Couldn't find 'Ticker' column in header: " + rawHeader.join(", "));
-
-  const get = (r, key) => cols[key] === -1 ? "" : (r[cols[key]] || "");
+  const getCell = (r, idx) => (idx >= 0 && idx < r.length && r[idx] != null) ? String(r[idx]).trim() : "";
 
   return grid.slice(headerIdx + 1)
-    .filter(r => get(r, "ticker") && String(get(r, "ticker")).trim())
+    .filter(r => getCell(r, colMap.ticker) !== "")
     .map(r => ({
-      ticker: String(get(r,"ticker")).trim().toUpperCase(),
-      company: String(get(r,"name")).trim(),
-      sector: String(get(r,"sector")).trim(),
-      industry: String(get(r,"industry")).trim(),
-      rsSts: num(get(r,"rsSts")),
-      ext: num(get(r,"ext")),
-      adr: num(get(r,"adr")),
-      superliquid: bool(get(r,"super")),
-      vol: String(get(r,"vol")).trim(), 
-      m1: bool(get(r,"m1")), m3: bool(get(r,"m3")), m6: bool(get(r,"m6")), m12: bool(get(r,"m12")),
+      ticker: getCell(r, colMap.ticker).toUpperCase(),
+      company: getCell(r, colMap.name),
+      sector: getCell(r, colMap.sector),
+      industry: getCell(r, colMap.industry),
+      rsSts: num(getCell(r, colMap.rsSts)),
+      ext: num(getCell(r, colMap.ext)),
+      adr: num(getCell(r, colMap.adr)),
+      superliquid: bool(getCell(r, colMap.super)),
+      vol: getCell(r, colMap.vol),
+      m1: bool(getCell(r, colMap.m1)),
+      m3: bool(getCell(r, colMap.m3)),
+      m6: bool(getCell(r, colMap.m6)),
+      m12: bool(getCell(r, colMap.m12)),
     }));
 }
 
@@ -438,13 +423,9 @@ async function refreshLiveData(){
 
   try{
     ROWS = parseSheetCSV(text);
-    dataSourceLabel = `live sheet (tab ${SHEET_GID} via ${source})`;
+    dataSourceLabel = `Power List tab (via ${source})`;
     renderAll();
-    if(lastMissingCols.length){
-      setStatus(`✓ Loaded ${ROWS.length} tickers, but couldn't match columns: ${lastMissingCols.join(", ")}.`, true);
-    } else {
-      setStatus(`✓ Loaded ${ROWS.length} tickers directly from Power List tab.`);
-    }
+    setStatus(`✓ Loaded ${ROWS.length} tickers directly from Power List tab.`);
   }catch(e){
     setStatus(`Fetched sheet but failed parsing: ${e.message}`, true);
   }
