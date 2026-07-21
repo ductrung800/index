@@ -155,6 +155,7 @@
   <!-- ================= APP TABS ================= -->
   <div class="app-tabs">
     <a href="index.html">Market Dashboard</a>
+    <a href="MarketRegime.html">Market Regime</a>
     <a href="stockbee_market_monitor_live.html">Stockbee Monitor</a>
     <a href="sata_watchlist_dashboard.html">SATA Chart</a>
     <a href="PowerList.html" class="active">Power List</a>
@@ -162,7 +163,7 @@
     <a href="group_momentum.html">Group Momentum</a>
     <a href="PriceStructure.html">Price Structure</a>
     <a href="StageAnalysis.html">Stage Analysis</a>
-    <a href="MarketRegime.html">Market Regime</a>
+    
     <a href="tv_watchlist.html">TradingView Watchlist</a>
     <a href="IndustryRS.html">Industry RS</a>
   </div>
@@ -253,9 +254,13 @@
    ============================================================ */
 const SHEET_ID = "1RRyy9CxfV8mdIFPzjtC1WER4wXsuDZGbNoaXsGU4APQ";
 const SHEET_GID = "2698707";
-const SHEET_GVIZ_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${SHEET_GID}`;
+
+// We strictly use the /export?format=csv endpoint to bypass the gviz engine bugs
+const EXPORT_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${SHEET_GID}`;
+const PUB_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/pub?output=csv&gid=${SHEET_GID}`;
 
 const CORS_PROXIES = [
+  url => url, // Try direct fetch first
   url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
   url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
   url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`
@@ -282,7 +287,7 @@ function rsHeat(v){
 }
 
 function formatVol(v) {
-  if(!v || v === "—" || v === "") return "—";
+  if(v == null || v === "—" || v === "") return "—";
   if(typeof v === 'string' && (v.includes('$') || v.includes('M') || v.includes('B'))) return v;
   const n = num(v);
   if(n === 0) return "—";
@@ -309,19 +314,17 @@ function bool(v){
 }
 
 /* ============================================================
-   DATA PARSING ENGINE (Replaced custom parser with PapaParse)
+   DATA PARSING ENGINE
    ============================================================ */
 function fuzzy(s){ return String(s||"").toLowerCase().replace(/[^a-z0-9]/g,''); }
 
 let lastMissingCols = [];
 
 function parseSheetCSV(text) {
-  // Use robust PapaParse to convert CSV text into 2D array
   const parsed = Papa.parse(text.trim(), { skipEmptyLines: true });
   const grid = parsed.data.filter(r => r.some(c => c && c.trim() !== ""));
   if(grid.length < 2) throw new Error("CSV looks empty.");
 
-  // Dynamically find the actual header row (in case of blank titles at the top)
   let headerIdx = 0;
   for(let i=0; i < Math.min(5, grid.length); i++){
     const rowFuzzy = grid[i].map(fuzzy);
@@ -358,7 +361,7 @@ function parseSheetCSV(text) {
     }
     for(const a of aliases){
       const target = fuzzy(a);
-      if(target.length < 3) continue; // Prevent matching short strings like 'rs' inside 'first'
+      if(target.length < 3) continue;
       const idx = fuzzyHeader.findIndex(h => h && h.length >= 3 && (h.includes(target) || target.includes(h)));
       if(idx !== -1) return idx;
     }
@@ -381,15 +384,15 @@ function parseSheetCSV(text) {
   return grid.slice(headerIdx + 1)
     .filter(r => get(r, "ticker").trim())
     .map(r => ({
-      ticker: get(r,"ticker").trim().toUpperCase(),
-      company: get(r,"name").trim(),
-      sector: get(r,"sector").trim(),
-      industry: get(r,"industry").trim(),
+      ticker: String(get(r,"ticker")).trim().toUpperCase(),
+      company: String(get(r,"name")).trim(),
+      sector: String(get(r,"sector")).trim(),
+      industry: String(get(r,"industry")).trim(),
       rsSts: num(get(r,"rsSts")),
       ext: num(get(r,"ext")),
       adr: num(get(r,"adr")),
       superliquid: bool(get(r,"super")),
-      vol: get(r,"vol").trim(), 
+      vol: String(get(r,"vol")).trim(), 
       m1: bool(get(r,"m1")), m3: bool(get(r,"m3")), m6: bool(get(r,"m6")), m12: bool(get(r,"m12")),
     }));
 }
@@ -405,29 +408,30 @@ async function refreshLiveData(){
   if(btn) btn.textContent = "↻ Fetching…";
   setStatus("Fetching live sheet…");
 
-  let text = null, lastErr = null, source = null;
-  try {
-    const res = await fetch(SHEET_GVIZ_URL, { cache: "no-store" });
-    if(res.ok) {
-      const t = await res.text();
-      if(t && !t.trim().startsWith('<') && !t.includes("ServiceLogin")) { text = t; source = "direct"; }
-    }
-  } catch(e) { lastErr = e; }
+  const fetchUrls = [EXPORT_URL, PUB_URL];
+  let text = null, source = null;
 
-  if(!text){
-    for(const build of CORS_PROXIES){
-      try{
-        const res = await fetch(build(SHEET_GVIZ_URL), { cache: "no-store" });
-        if(res.ok) {
+  for (const baseUrl of fetchUrls) {
+    for (let i = 0; i < CORS_PROXIES.length; i++) {
+      try {
+        const res = await fetch(CORS_PROXIES[i](baseUrl), { cache: "no-store" });
+        if (res.ok) {
           const t = await res.text();
-          if(t && !t.trim().startsWith('<') && !t.includes("ServiceLogin")) { text = t; source = "proxy"; break; }
+          if (t && !t.trim().startsWith('<') && !t.includes("ServiceLogin")) {
+            text = t;
+            source = i === 0 ? "direct" : "proxy";
+            break;
+          }
         }
-      }catch(e){ lastErr = e; }
+      } catch (e) {
+        // Continue to next proxy/URL
+      }
     }
+    if (text) break;
   }
 
   if(!text){
-    setStatus(`Live fetch blocked or unauthorized — please ensure your Google Sheet is published to the web ("Anyone with the link can view"), or use the CSV upload below.`, true);
+    setStatus(`Live fetch blocked. Ensure sheet is "Anyone with the link can view", or use CSV upload below.`, true);
     if(btn) btn.textContent = "↻ Refresh Live Data";
     return;
   }
@@ -437,7 +441,7 @@ async function refreshLiveData(){
     dataSourceLabel = `live sheet (via ${source})`;
     renderAll();
     if(lastMissingCols.length){
-      setStatus(`✓ Loaded ${ROWS.length} tickers via ${source}, but couldn't match columns: ${lastMissingCols.join(", ")} — check header spelling.`, true);
+      setStatus(`✓ Loaded ${ROWS.length} tickers, but couldn't match columns: ${lastMissingCols.join(", ")}.`, true);
     } else {
       setStatus(`✓ Loaded ${ROWS.length} tickers via ${source}.`);
     }
