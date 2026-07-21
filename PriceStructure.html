@@ -242,11 +242,12 @@
 
 const SHEET_ID = "1DcWbr8T5lTIgSrpoqVteg7ar_H466KZSvZ4p_Eksa1s";
 // Force Google to export the active default view to bypass the GID block
-const EXPORT_CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/pub?output=csv`;
+const SHEET_GVIZ_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
 
 const CORS_PROXIES = [
   url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
   url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+  url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`
 ];
 
 let sortKey = "p6m", sortDir = -1;
@@ -459,25 +460,56 @@ function parseSheetCSV(text){
 }
 
 async function refreshLiveData(){
-  const btn = document.getElementById("btnRefresh"); btn.textContent = "↻ Fetching…"; setStatus("Fetching live sheet…");
-  const freshUrl = EXPORT_CSV_URL + (EXPORT_CSV_URL.includes('?') ? '&' : '?') + 'cachebust=' + Date.now();
-  let text = null, lastErr = null, source = null;
+  const btn = document.getElementById("btnRefresh");
+  if(btn) btn.textContent = "↻ Fetching…";
+  setStatus("Fetching live sheet…");
 
-  try{ const res = await fetch(freshUrl, {cache:"no-store"}); if(res.ok){ text = await res.text(); source = "direct"; } }catch(e){ lastErr = e; }
-  if(!text || text.trim().startsWith('<')){
+  let text = null, lastErr = null, source = null;
+  
+  // Try direct gviz first
+  try {
+    const res = await fetch(SHEET_GVIZ_URL, { cache: "no-store" });
+    if(res.ok) {
+      const t = await res.text();
+      if(t && !t.trim().startsWith('<') && !t.includes("ServiceLogin")) {
+        text = t;
+        source = "direct";
+      }
+    }
+  } catch(e) { lastErr = e; }
+
+  // Try proxies with gviz if direct failed or hit login wall
+  if(!text){
     for(const build of CORS_PROXIES){
-      try{ const res = await fetch(build(freshUrl)); if(res.ok){ text = await res.text(); source = "proxy"; break; } }catch(e){ lastErr = e; }
+      try{
+        const res = await fetch(build(SHEET_GVIZ_URL), { cache: "no-store" });
+        if(res.ok) {
+          const t = await res.text();
+          if(t && !t.trim().startsWith('<') && !t.includes("ServiceLogin")) {
+            text = t;
+            source = "proxy";
+            break;
+          }
+        }
+      }catch(e){ lastErr = e; }
     }
   }
 
-  if(!text || text.trim().startsWith('<')){
-    setStatus(`Live fetch blocked by browser — please use CSV upload below.`, true);
-    btn.textContent = "↻ Refresh Live Data"; return;
+  if(!text){
+    setStatus(`Live fetch blocked or unauthorized — please ensure your Google Sheet is published to the web ("Anyone with the link can view"), or use the CSV upload below.`, true);
+    if(btn) btn.textContent = "↻ Refresh Live Data";
+    return;
   }
 
-  try{ ROWS = parseSheetCSV(text); dataSourceLabel = `live sheet (via ${source})`; renderAll(); setStatus(`✓ Loaded ${ROWS.length} tickers via ${source}.`); }
-  catch(e){ setStatus(`Parse error: ${e.message}`, true); }
-  btn.textContent = "↻ Refresh Live Data";
+  try{
+    ROWS = parseSheetCSV(text);
+    dataSourceLabel = `live sheet (via ${source})`;
+    renderAll();
+    setStatus(`✓ Loaded ${ROWS.length} tickers via ${source}.`);
+  }catch(e){
+    setStatus(`Fetched sheet but failed parsing: ${e.message}`, true);
+  }
+  if(btn) btn.textContent = "↻ Refresh Live Data";
 }
 
 /* ============================================================
