@@ -28,8 +28,10 @@
       radial-gradient(ellipse 900px 500px at 100% 0%, rgba(245,185,66,.05), transparent 55%),
       var(--bg);
     color:var(--text); font-family:'Inter',sans-serif; padding:22px 26px 60px; transition:background .2s ease, color .2s ease;
+    overflow-x: hidden;
+    width: 100%;
   }
- /* .wrap{max-width:1760px; margin:0 auto;}
+  .wrap{width:100%; max-width:100%; margin:0 auto;}
 
   /* ---------- UNIFORM APP TABS ---------- */
   .app-tabs {
@@ -111,7 +113,7 @@
   .metric-box .cap{font-size:10.5px; color:var(--text-dim); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
 
   .chart-svg-wrap{background:var(--panel2); border:1px solid var(--line); border-radius:8px; padding:10px; overflow:hidden; margin-top:4px;}
-  .chart-svg-wrap svg{width:100%; height:150px; display:block;}
+  .chart-svg-wrap svg{width:100%; height:150px; display:block; max-width:100%;}
   .chart-caption{font-size:10.5px; color:var(--text-faint); margin-top:6px; font-family:'JetBrains Mono',monospace; display:flex; justify-content:space-between; flex-wrap:wrap; gap:6px;}
 
   .streak-history{display:flex; gap:3px; margin-top:12px; overflow-x:auto; padding-bottom:4px;}
@@ -136,7 +138,7 @@
   .section-head h2{font-size:13px; letter-spacing:.05em; text-transform:uppercase; font-weight:700;}
   .section-head .note{font-size:10.5px; color:var(--text-faint); font-family:'JetBrains Mono',monospace;}
   .table-wrap{width:100%; overflow-x:auto; border:1px solid var(--line); border-radius:0 0 10px 10px; background:var(--panel2);}
-  table{width:100%; border-collapse:collapse;}
+  table{width:100%; border-collapse:collapse; min-width:900px;}
   thead th{font-size:10px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-dim); text-align:right; padding:9px 10px; border-bottom:1px solid var(--line); font-weight:600; white-space:nowrap; background:var(--navy-head);}
   thead th:first-child{text-align:left;}
   tbody td{padding:7px 10px; text-align:right; font-family:'JetBrains Mono',monospace; font-size:12px; border-bottom:1px solid var(--line-soft); color:var(--text); white-space:nowrap;}
@@ -630,7 +632,7 @@ function buildDualLineSVG(rows, key1, key2, colorKey1, colorKey2) {
   const lastY1 = rows[lastIdx][key1] != null ? yAt(rows[lastIdx][key1]).toFixed(1) : null;
   const lastY2 = rows[lastIdx][key2] != null ? yAt(rows[lastIdx][key2]).toFixed(1) : null;
 
-  return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" height="100%" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
     <path d="${p2}" fill="none" stroke="${colorKey2}" stroke-width="1.6" opacity="0.85"/>
     <path d="${p1}" fill="none" stroke="${colorKey1}" stroke-width="2"/>
     ${lastY1 ? `<circle cx="${lastX}" cy="${lastY1}" r="3.5" fill="${colorKey1}"/>` : ""}
