@@ -92,20 +92,15 @@
   }
 
   /* ================= 3-COLUMN REGIME CARDS ================= */
-.regime-grid {
-    display: grid;
-    /* minmax(0, 1fr) prevents grid items from overflowing their columns */
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 18px;
-    margin-bottom: 22px;
-    width: 100%;
+  .regime-grid{
+    display:grid; 
+    grid-template-columns:repeat(3, minmax(0, 1fr)); 
+    gap:18px; 
+    margin-bottom:22px;
+    width:100%;
   }
-@media (max-width: 1550px) {
-    .regime-grid {
-      grid-template-columns: 1fr;
-    }
-  }
-  .regime-card{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:18px 20px; display:flex; flex-direction:column; justify-content:space-between;}
+  @media(max-width:1450px){ .regime-grid{grid-template-columns:1fr;} }
+  .regime-card{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:18px 20px; display:flex; flex-direction:column; justify-content:space-between; min-width:0;}
   .regime-card-head{display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:14px; flex-wrap:wrap;}
   .regime-card-title{font-size:13.5px; font-weight:800; text-transform:uppercase; letter-spacing:.05em; font-family:'JetBrains Mono',monospace;}
   .regime-card-desc{font-size:11px; color:var(--text-faint); margin-top:3px; font-family:'Inter',sans-serif; font-weight:400;}
@@ -118,12 +113,12 @@
   .pill-flat{background:rgba(245,185,66,.15); color:var(--amber); border:1px solid rgba(245,185,66,.35);}
 
   .metric-row{display:grid; grid-template-columns:repeat(2, 1fr); gap:10px; margin-bottom:14px;}
-  .metric-box{background:var(--panel2); border:1px solid var(--line); border-radius:8px; padding:10px 12px;}
+  .metric-box{background:var(--panel2); border:1px solid var(--line); border-radius:8px; padding:10px 12px; min-width:0;}
   .metric-box .lbl{font-size:10px; color:var(--text-faint); text-transform:uppercase; letter-spacing:.06em; font-weight:600;}
   .metric-box .val{font-family:'JetBrains Mono',monospace; font-size:16px; font-weight:800; margin-top:4px;}
   .metric-box .cap{font-size:10.5px; color:var(--text-dim); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
 
-  .chart-svg-wrap{background:var(--panel2); border:1px solid var(--line); border-radius:8px; padding:10px; overflow:hidden; margin-top:4px;}
+  .chart-svg-wrap{background:var(--panel2); border:1px solid var(--line); border-radius:8px; padding:10px; overflow:hidden; margin-top:4px; width:100%;}
   .chart-svg-wrap svg{width:100%; height:150px; display:block; max-width:100%;}
   .chart-caption{font-size:10.5px; color:var(--text-faint); margin-top:6px; font-family:'JetBrains Mono',monospace; display:flex; justify-content:space-between; flex-wrap:wrap; gap:6px;}
 
@@ -176,14 +171,13 @@
   <!-- ================= APP TABS ================= -->
   <div class="app-tabs">
     <a href="index.html">Market Dashboard</a>
-    <a href="MarketRegime.html" class="active">Market Regime</a>
     <a href="stockbee_market_monitor_live.html">Stockbee Monitor</a>
     <a href="sata_watchlist_dashboard.html">SATA Chart</a>
     <a href="liquid_leaders.html">Liquid Leaders</a>
     <a href="group_momentum.html">Group Momentum</a>
     <a href="PriceStructure.html">Price Structure</a>
     <a href="StageAnalysis.html">Stage Analysis</a>
-    
+    <a href="MarketRegime.html" class="active">Market Regime</a>
     <a href="tv_watchlist.html">TradingView Watchlist</a>
     <a href="IndustryRS.html">Industry RS</a>
   </div>
@@ -411,17 +405,20 @@ const HISTORY_BARS = 120;
 
 const CORS_PROXIES = [
   url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
-  url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+  url => `https://thingproxy.freeboard.io/fetch/${url}`,
   url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
-  url => url
+  url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`
 ];
 
 let STATE = { vix: null, vvix: null, qqq: null, spy: null, merged: [], activeChartSymbol: "QQQ", lwChart: null, lwObserver: null };
 
+/* Utility delay to avoid 429 rate limits */
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
 /* ============================================================
-   DATA FETCH
+   DATA FETCH — Sequential Staggered Delivery
    ============================================================ */
-async function fetchYahooDaily(symbol, range = "2y") {
+async function fetchYahooDaily(symbol, range = "1y") {
   const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=${range}`;
   let json = null;
 
@@ -431,7 +428,7 @@ async function fetchYahooDaily(symbol, range = "2y") {
       const j = await res.json();
       if (j && j.chart && j.chart.result && j.chart.result[0]) json = j;
     }
-  } catch (e) { /* fallback to proxies */ }
+  } catch (e) { /* fallback */ }
 
   if (!json) {
     for (const build of CORS_PROXIES) {
@@ -561,7 +558,6 @@ function buildMergedSeries() {
   const qqqStreak = streaks(qqqState);
   const spyStreak = streaks(spyState);
 
-  // 3-Way Alignment Tiering: Full (3/3), Partial (2/3 + 1 Flat), Mixed (Contradiction)
   const alignedState = rows.map((r, i) => {
     const m = moodState[i], q = qqqState[i], s = spyState[i];
     if (!m || !q || !s) return null;
@@ -573,8 +569,8 @@ function buildMergedSeries() {
     if (bears === 3) return "full-bear";
     if (bulls === 2 && bears === 0) return "partial-bull";
     if (bears === 2 && bulls === 0) return "partial-bear";
-    if (bulls === 1 && bears === 0) return "partial-bull"; // Weak constructive
-    if (bears === 1 && bulls === 0) return "partial-bear"; // Weak defensive
+    if (bulls === 1 && bears === 0) return "partial-bull";
+    if (bears === 1 && bulls === 0) return "partial-bear";
     return "mixed";
   });
   
@@ -644,14 +640,13 @@ function buildDualLineSVG(rows, key1, key2, colorKey1, colorKey2) {
   const lastY1 = rows[lastIdx][key1] != null ? yAt(rows[lastIdx][key1]).toFixed(1) : null;
   const lastY2 = rows[lastIdx][key2] != null ? yAt(rows[lastIdx][key2]).toFixed(1) : null;
 
-  return `<svg viewBox="0 0 ${W} ${H}" width="100%" height="100%" preserveAspectRatio="none" style="width:100%; max-width:100%; overflow:visible;" xmlns="http://www.w3.org/2000/svg">
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" height="100%" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
     <path d="${p2}" fill="none" stroke="${colorKey2}" stroke-width="1.6" opacity="0.85"/>
     <path d="${p1}" fill="none" stroke="${colorKey1}" stroke-width="2"/>
     ${lastY1 ? `<circle cx="${lastX}" cy="${lastY1}" r="3.5" fill="${colorKey1}"/>` : ""}
     ${lastY2 ? `<circle cx="${lastX}" cy="${lastY2}" r="3" fill="${colorKey2}"/>` : ""}
   </svg>`;
-  
- 
+}
 
 function buildStreakHistoryHTML(rows, stateKey) {
   return rows.map(r => {
@@ -805,7 +800,7 @@ function renderAll() {
 }
 
 /* ============================================================
-   LIGHTWEIGHT CHART — Supports QQQ & SPY toggle
+   LIGHTWEIGHT CHART
    ============================================================ */
 function renderLightweightChart() {
   const container = document.getElementById("lwChartContainer");
@@ -871,7 +866,7 @@ function renderLightweightChart() {
 }
 
 /* ============================================================
-   FETCH & REFRESH ORCHESTRATION
+   FETCH ORCHESTRATION (SEQUENTIAL DELAYS TO PREVENT CORS/429)
    ============================================================ */
 async function refreshAll() {
   const btn = document.getElementById("btnRefresh");
@@ -881,15 +876,23 @@ async function refreshAll() {
   statusMsg.className = "status-msg";
 
   try {
-    const [vix, vvix, qqq, spy] = await Promise.all([
-      fetchYahooDaily("^VIX", "2y"),
-      fetchYahooDaily("^VVIX", "2y"),
-      fetchYahooDaily("QQQ", "2y"),
-      fetchYahooDaily("SPY", "2y")
-    ]);
+    setStatusMsg("Fetching VIX...");
+    const vix = await fetchYahooDaily("^VIX", "1y");
+    await sleep(150);
+
+    setStatusMsg("Fetching VVIX...");
+    const vvix = await fetchYahooDaily("^VVIX", "1y");
+    await sleep(150);
+
+    setStatusMsg("Fetching QQQ...");
+    const qqq = await fetchYahooDaily("QQQ", "1y");
+    await sleep(150);
+
+    setStatusMsg("Fetching SPY...");
+    const spy = await fetchYahooDaily("SPY", "1y");
 
     if (!vix || !vvix || !qqq || !spy) {
-      throw new Error("One or more data feeds (VIX / VVIX / QQQ / SPY) failed to load.");
+      throw new Error("One or more feeds (VIX / VVIX / QQQ / SPY) failed to load via CORS proxies.");
     }
 
     STATE.vix = vix; STATE.vvix = vvix; STATE.qqq = qqq; STATE.spy = spy;
@@ -900,12 +903,18 @@ async function refreshAll() {
     }
 
     renderAll();
-    statusMsg.textContent = `✓ Loaded ${STATE.merged.length} aligned trading days.`;
+    setStatusMsg(`✓ Loaded ${STATE.merged.length} aligned trading days.`);
   } catch (e) {
-    statusMsg.textContent = `Live fetch issue: ${e.message}`;
-    statusMsg.className = "status-msg err";
+    setStatusMsg(`Live fetch issue: ${e.message}`, true);
   }
   if (btn) btn.textContent = "↻ Refresh Live Data";
+}
+
+function setStatusMsg(txt, isErr = false) {
+  const el = document.getElementById("statusMsg");
+  if (!el) return;
+  el.textContent = txt;
+  el.className = "status-msg" + (isErr ? " err" : "");
 }
 
 /* ============================================================
