@@ -220,17 +220,18 @@
   </div>
 
   <!-- ================= SECTOR & INDUSTRY RANKING CHARTS ================= -->
+<!-- ================= SECTOR & INDUSTRY RANKING CHARTS ================= -->
   <div class="rankings-grid">
     <div class="ranking-card">
       <div class="ranking-title">
-        <span>Sector Performance Ranking (% 6M)</span>
+        <span>Sector Performance Ranking (% 1M)</span>
         <span style="font-size: 11px; color: var(--text-dim); font-weight: 400;" id="sectorCount">0 sectors</span>
       </div>
       <div class="ranking-bars" id="sectorRankingBars"></div>
     </div>
     <div class="ranking-card">
       <div class="ranking-title">
-        <span>Industry Performance Ranking (% 6M)</span>
+        <span>Industry Performance Ranking (% 1M)</span>
         <span style="font-size: 11px; color: var(--text-dim); font-weight: 400;" id="industryCount">0 industries</span>
       </div>
       <div class="ranking-bars" id="industryRankingBars"></div>
@@ -346,7 +347,7 @@ const DEFAULT_ROWS = [
 ];
 
 let ROWS = DEFAULT_ROWS.map(toRowObj);
-let sortKey = "p6m", sortDir = -1;
+let sortKey = "p1m", sortDir = -1;
 let dataSourceLabel = "sample data (bundled)";
 
 function toRowObj(r){
@@ -426,7 +427,7 @@ function renderRankings() {
   ROWS.forEach(r => {
     if (!r.sector) return;
     if (!sectorMap[r.sector]) sectorMap[r.sector] = { sum: 0, count: 0 };
-    sectorMap[r.sector].sum += r.p6m;
+    sectorMap[r.sector].sum += r.p1m;
     sectorMap[r.sector].count += 1;
   });
   const sectorArr = Object.keys(sectorMap).map(sec => ({
@@ -452,7 +453,7 @@ function renderRankings() {
   ROWS.forEach(r => {
     if (!r.industry) return;
     if (!indMap[r.industry]) indMap[r.industry] = { sum: 0, count: 0 };
-    indMap[r.industry].sum += r.p6m;
+    indMap[r.industry].sum += r.p1m;
     indMap[r.industry].count += 1;
   });
   const indArr = Object.keys(indMap).map(ind => ({
