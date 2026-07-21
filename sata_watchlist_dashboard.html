@@ -194,22 +194,48 @@
   <div class="modal">
     <span class="modal-close" id="closeModal">&times;</span>
     <h2>Add ticker data</h2>
-    <div class="field-row">
-      <input class="search ticker-input" id="tickerInput" placeholder="TICKER" maxlength="8" />
-      <div style="flex:1; font-size:10.5px; color:var(--text-faint); align-self:center;">Paste weekly OHLCV rows below, oldest first.</div>
+    <div class="seg" style="margin-bottom:12px;">
+      <button class="active" id="tabSingle" data-tab="single">Single ticker</button>
+      <button id="tabBulk" data-tab="bulk">Bulk (multiple tickers)</button>
     </div>
-    <textarea class="paste" id="ohlcPaste" placeholder="2024-01-05,50.20,52.10,49.80,51.30,1200000
+
+    <div id="panelSingle">
+      <div class="field-row">
+        <input class="search ticker-input" id="tickerInput" placeholder="TICKER" maxlength="8" />
+        <div style="flex:1; font-size:10.5px; color:var(--text-faint); align-self:center;">Paste weekly OHLCV rows below, oldest first.</div>
+      </div>
+      <textarea class="paste" id="ohlcPaste" placeholder="2024-01-05,50.20,52.10,49.80,51.30,1200000
 2024-01-12,51.30,53.00,50.90,52.75,1450000
 ..."></textarea>
-    <div class="paste-help">
-      One row per week: <code>date,open,high,low,close,volume</code> (comma, tab, or space separated). Need at least ~55 weeks for the Mansfield RS 52-week average to populate; fewer weeks still gives a partial score.
+      <div class="paste-help">
+        One row per week: <code>date,open,high,low,close,volume</code> (comma, tab, or space separated). Need at least ~55 weeks for the Mansfield RS 52-week average to populate; fewer weeks still gives a partial score.
+      </div>
+      <div style="display:flex; gap:8px; margin-top:6px;">
+        <label style="font-size:10.5px; color:var(--text-faint); display:flex; align-items:center; gap:6px;">
+          <input type="checkbox" id="skipSpxToggle" /> This paste is the SPX (benchmark) series
+        </label>
+      </div>
     </div>
-    <div style="display:flex; gap:8px; margin-top:6px;">
-      <label style="font-size:10.5px; color:var(--text-faint); display:flex; align-items:center; gap:6px;">
-        <input type="checkbox" id="skipSpxToggle" /> This paste is the SPX (benchmark) series
-      </label>
+
+    <div id="panelBulk" class="hidden">
+      <textarea class="paste" id="bulkPaste" style="min-height:220px;" placeholder="TICKER: RXO
+2024-01-05,50.20,52.10,49.80,51.30,1200000
+2024-01-12,51.30,53.00,50.90,52.75,1450000
+
+TICKER: RHI
+2024-01-05,60.10,61.50,59.80,61.00,900000
+2024-01-12,61.00,62.20,60.50,61.80,850000
+
+TICKER: SPX
+2024-01-05,4780.10,4820.50,4770.30,4810.20,3200000000
+..."></textarea>
+      <div class="paste-help">
+        Start each ticker's block with a line like <code>TICKER: RXO</code>, then paste its weekly rows underneath (blank lines between tickers are fine). Use <code>TICKER: SPX</code> for the S&amp;P 500 benchmark block once.
+      </div>
     </div>
+
     <div class="err-note hidden" id="pasteError"></div>
+    <div class="hidden" id="pasteSuccess" style="font-size:11px; color:var(--teal); margin-top:6px;"></div>
     <div style="display:flex; gap:8px; margin-top:12px; justify-content:flex-end;">
       <button class="btn" id="cancelAdd">Cancel</button>
       <button class="btn accent" id="saveAdd">Save &amp; compute</button>
@@ -624,9 +650,83 @@ document.getElementById("addTickerBtn").addEventListener("click", ()=>{
 document.getElementById("closeModal").addEventListener("click", ()=> modal.classList.add("hidden"));
 document.getElementById("cancelAdd").addEventListener("click", ()=> modal.classList.add("hidden"));
 
+document.getElementById("tabSingle").addEventListener("click", ()=>{
+  document.getElementById("tabSingle").classList.add("active");
+  document.getElementById("tabBulk").classList.remove("active");
+  document.getElementById("panelSingle").classList.remove("hidden");
+  document.getElementById("panelBulk").classList.add("hidden");
+});
+document.getElementById("tabBulk").addEventListener("click", ()=>{
+  document.getElementById("tabBulk").classList.add("active");
+  document.getElementById("tabSingle").classList.remove("active");
+  document.getElementById("panelBulk").classList.remove("hidden");
+  document.getElementById("panelSingle").classList.add("hidden");
+});
+
+function parseBulkPaste(text){
+  const blocks = text.split(/^TICKER:\s*/im).map(b=>b.trim()).filter(Boolean);
+  const results = [];
+  for(const block of blocks){
+    const lines = block.split("\n");
+    const ticker = lines[0].trim().toUpperCase();
+    const rest = lines.slice(1).join("\n");
+    const bars = parsePastedRows(rest);
+    results.push({ticker, bars});
+  }
+  return results;
+}
+
 document.getElementById("saveAdd").addEventListener("click", ()=>{
   const errBox = document.getElementById("pasteError");
+  const okBox = document.getElementById("pasteSuccess");
   errBox.classList.add("hidden");
+  okBox.classList.add("hidden");
+
+  const isBulkTab = document.getElementById("tabBulk").classList.contains("active");
+
+  if(isBulkTab){
+    const text = document.getElementById("bulkPaste").value;
+    const parsed = parseBulkPaste(text);
+    if(parsed.length === 0){
+      errBox.textContent = "No tickers found. Start each block with a line like \"TICKER: RXO\".";
+      errBox.classList.remove("hidden");
+      return;
+    }
+    const okList = [], failList = [];
+    let lastAdded = null;
+    parsed.forEach(({ticker, bars})=>{
+      if(!ticker){ failList.push("(missing ticker name)"); return; }
+      if(bars.length < 4){ failList.push(`${ticker} (only ${bars.length} valid rows)`); return; }
+      if(ticker === "SPX"){
+        state.spxBars = bars;
+        okList.push(`SPX (${bars.length}w, benchmark)`);
+      } else {
+        state.data[ticker] = {_rawBars: bars};
+        if(!state.order.includes(ticker)) state.order.push(ticker);
+        okList.push(`${ticker} (${bars.length}w)`);
+        lastAdded = ticker;
+      }
+    });
+    recomputeAll();
+    if(lastAdded) state.selected = lastAdded;
+    renderList();
+    renderDetail();
+    updateStatus();
+
+    if(okList.length){
+      okBox.innerHTML = `Loaded: ${okList.join(", ")}.` + (failList.length ? `<br>Skipped: ${failList.join(", ")}.` : "");
+      okBox.classList.remove("hidden");
+    }
+    if(okList.length && failList.length===0){
+      document.getElementById("bulkPaste").value = "";
+      modal.classList.add("hidden");
+    } else if(failList.length){
+      errBox.textContent = `Some blocks couldn't be parsed: ${failList.join(", ")}. Fix and try again, or remove them from the paste.`;
+      errBox.classList.remove("hidden");
+    }
+    return;
+  }
+
   const isSpx = document.getElementById("skipSpxToggle").checked;
   const tickerRaw = document.getElementById("tickerInput").value.trim().toUpperCase();
   const ticker = isSpx ? "SPX" : tickerRaw;
@@ -654,14 +754,20 @@ document.getElementById("saveAdd").addEventListener("click", ()=>{
   recomputeAll();
   if(!isSpx) state.selected = ticker;
 
-  document.getElementById("tickerInput").value = "";
   document.getElementById("ohlcPaste").value = "";
-  document.getElementById("skipSpxToggle").checked = false;
-  modal.classList.add("hidden");
 
   renderList();
   renderDetail();
   updateStatus();
+
+  if(isSpx){
+    okBox.textContent = `SPX benchmark saved (${bars.length} weeks). Now uncheck the SPX box, enter a stock ticker, and paste its data.`;
+    okBox.classList.remove("hidden");
+    document.getElementById("skipSpxToggle").checked = false;
+  } else {
+    document.getElementById("tickerInput").value = "";
+    modal.classList.add("hidden");
+  }
 });
 
 function setTheme(theme){
