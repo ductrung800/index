@@ -92,8 +92,19 @@
   }
 
   /* ================= 3-COLUMN REGIME CARDS ================= */
-  .regime-grid{display:grid; grid-template-columns:repeat(3, 1fr); gap:20px; margin-bottom:22px;}
-  @media(max-width:1300px){ .regime-grid{grid-template-columns:1fr;} }
+.regime-grid {
+    display: grid;
+    /* minmax(0, 1fr) prevents grid items from overflowing their columns */
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+    margin-bottom: 22px;
+    width: 100%;
+  }
+@media (max-width: 1550px) {
+    .regime-grid {
+      grid-template-columns: 1fr;
+    }
+  }
   .regime-card{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:18px 20px; display:flex; flex-direction:column; justify-content:space-between;}
   .regime-card-head{display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:14px; flex-wrap:wrap;}
   .regime-card-title{font-size:13.5px; font-weight:800; text-transform:uppercase; letter-spacing:.05em; font-family:'JetBrains Mono',monospace;}
@@ -633,13 +644,14 @@ function buildDualLineSVG(rows, key1, key2, colorKey1, colorKey2) {
   const lastY1 = rows[lastIdx][key1] != null ? yAt(rows[lastIdx][key1]).toFixed(1) : null;
   const lastY2 = rows[lastIdx][key2] != null ? yAt(rows[lastIdx][key2]).toFixed(1) : null;
 
-  return `<svg viewBox="0 0 ${W} ${H}" width="100%" height="100%" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" height="100%" preserveAspectRatio="none" style="width:100%; max-width:100%; overflow:visible;" xmlns="http://www.w3.org/2000/svg">
     <path d="${p2}" fill="none" stroke="${colorKey2}" stroke-width="1.6" opacity="0.85"/>
     <path d="${p1}" fill="none" stroke="${colorKey1}" stroke-width="2"/>
     ${lastY1 ? `<circle cx="${lastX}" cy="${lastY1}" r="3.5" fill="${colorKey1}"/>` : ""}
     ${lastY2 ? `<circle cx="${lastX}" cy="${lastY2}" r="3" fill="${colorKey2}"/>` : ""}
   </svg>`;
-}
+  
+ 
 
 function buildStreakHistoryHTML(rows, stateKey) {
   return rows.map(r => {
