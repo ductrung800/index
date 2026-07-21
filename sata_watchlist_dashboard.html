@@ -189,7 +189,7 @@
     <div>
       <div class="eyebrow">Oliver Kell &middot; Stan Weinstein Technical Attributes</div>
       <h1>SATA Watchlist Dashboard</h1>
-      <div class="sub">10-Band Composite Strength Gauge &middot; Mansfield RS vs SPX &middot; Real-Time Yahoo Weekly Feed</div>
+      <div class="sub">10-Band Composite Strength Gauge &middot; Mansfield RS vs SPX &middot; Real-Time TV Profile Feed</div>
     </div>
     <div class="hdr-right">
       <div class="status-badge" id="statusBox">Initializing feed…</div>
@@ -233,7 +233,7 @@
     </div>
   </div>
 
-  <footer>SATA Score is an independent 10-band technical composite (Breakouts, Price/MA, Mansfield RS, Momentum, Volume, Resistance) inspired by Stan Weinstein's Stage Analysis. Live data powered by Yahoo Finance.</footer>
+  <footer>SATA Score is an independent 10-band technical composite (Breakouts, Price/MA, Mansfield RS, Momentum, Volume, Resistance) inspired by Stan Weinstein's Stage Analysis. Live data powered by TradingView & Yahoo Finance.</footer>
 </div>
 
 <script>
@@ -428,29 +428,34 @@ async function syncLiveTickerUniverse() {
 }
 
 /* ============================================================
-   4. REAL-TIME UNAUTHENTICATED YAHOO SEARCH PROFILE ENRICHER
+   4. NATIVE TRADINGVIEW SCANNER API ENRICHER (100% TV PARITY)
    ============================================================ */
 async function enrichTickerMetadata(symbol) {
   if (!STATE.data[symbol] || STATE.data[symbol].meta.isEnriched) return;
 
-  const targetUrl = `https://query1.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(symbol)}`;
-  
+  const targetUrl = "https://scanner.tradingview.com/america/scan";
+  const payload = {
+    symbols: { tickers: [`AMERICA:${symbol}`, `NYSE:${symbol}`, `NASDAQ:${symbol}`] },
+    columns: ["name", "description", "sector", "industry", "exchange"]
+  };
+
   for (const build of CORS_PROXIES) {
     try {
-      const res = await fetch(build(targetUrl), { cache: "no-store" });
+      const res = await fetch(build(targetUrl), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
       if (!res.ok) continue;
       const json = await res.json();
       
-      const quote = json.quotes?.find(q => q.symbol === symbol) || json.quotes?.[0];
-      if (!quote) continue;
+      const row = json.data?.[0]?.d;
+      if (!row || !row[2]) continue;
 
-      let rawExch = quote.exchDisp || quote.exchange || STATE.data[symbol].meta.exch || "US";
-      if (["NYQ", "NYSE"].includes(rawExch.toUpperCase())) rawExch = "NYSE";
-      else if (["NMS", "NASDAQ", "NASDAQGS", "NASDAQGM", "NASDAQCM"].includes(rawExch.toUpperCase())) rawExch = "NASDAQ";
-
-      const sector = quote.sectorDisp || quote.sector || "Equities";
-      const industry = quote.industryDisp || quote.industry || "General Industry";
-      const company = quote.longname || quote.shortname || STATE.data[symbol].meta.company;
+      const company = row[1] || symbol;
+      const sector = row[2] || "Equities";
+      const industry = row[3] || "General";
+      const exch = row[4] || STATE.data[symbol].meta.exch || "US";
 
       STATE.data[symbol].meta = {
         ticker: symbol,
@@ -458,7 +463,7 @@ async function enrichTickerMetadata(symbol) {
         sector: sector,
         industry: industry,
         sub: industry,
-        exch: rawExch,
+        exch: exch,
         isEnriched: true
       };
 
