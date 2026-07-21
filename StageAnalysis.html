@@ -34,11 +34,40 @@
   }
   .wrap{max-width:1820px; margin:0 auto;}
 
-    /* ---------- APP TABS ---------- */
-  .app-tabs { display: flex; gap: 4px; margin-bottom: 24px; border-bottom: 1px solid #e1e0d9; padding-bottom: 0; }
-  .app-tabs a { padding: 10px 22px; text-decoration: none; color: #898781; font-size: 13px; font-weight: 600; border: 1px solid transparent; border-bottom: none; border-radius: 8px 8px 0 0; text-transform: uppercase; letter-spacing: 0.05em; transition: all 0.15s;}
-  .app-tabs a.active { background: #fff; color: #2a78d6; border-color: #e1e0d9; border-bottom-color: #fff; margin-bottom: -1px; }
-  .app-tabs a:hover:not(.active) { color: #0b0b0b; background: rgba(0,0,0,0.03); }
+/* ---------- UNIFORM APP TABS ---------- */
+  .app-tabs { 
+    display: flex; 
+    gap: 4px; 
+    margin-bottom: 24px; 
+    border-bottom: 1px solid #e1e0d9; 
+    padding-bottom: 0; 
+    flex-wrap: wrap;
+  }
+  .app-tabs a { 
+    padding: 10px 20px; 
+    text-decoration: none; 
+    color: #898781; 
+    font-size: 12px; 
+    font-weight: 600; 
+    border: 1px solid transparent; 
+    border-bottom: none; 
+    border-radius: 8px 8px 0 0; 
+    text-transform: uppercase; 
+    letter-spacing: 0.04em; 
+    transition: all 0.15s; 
+    font-family: 'JetBrains Mono', monospace; 
+  }
+  .app-tabs a.active { 
+    background: var(--panel, #fff); 
+    color: var(--teal, #2a78d6); 
+    border-color: #e1e0d9; 
+    border-bottom-color: var(--panel, #fff); 
+    margin-bottom: -1px; 
+  }
+  .app-tabs a:hover:not(.active) { 
+    color: var(--text, #0b0b0b); 
+    background: rgba(0,0,0,0.03); 
+  }
 
   header.top{display:flex; justify-content:space-between; align-items:flex-end; border-bottom:2px solid var(--line); padding-bottom:14px; margin-bottom:22px; gap:16px; flex-wrap:wrap;}
   .brand-eyebrow{font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.18em; color:var(--teal); text-transform:uppercase;}
