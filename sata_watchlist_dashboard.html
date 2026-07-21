@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <title>SATA Watchlist · Stage Analysis Dashboard</title>
 <link rel="icon" href="data:,">
+<!-- TradingView Lightweight Charts Library -->
+<script src="https://unpkg.com/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap');
   
@@ -12,12 +14,14 @@
     --text: #e7ebf3; --text-dim: #8b93a8; --text-faint: #59617a;
     --teal: #20d9b8; --amber: #f5b942; --red: #ff5c72; --blue: #38bdf8;
     --navy-head: #131c33; --input-bg: #0d1220;
+    --chart-bg: #101625;
   }
   html[data-theme="light"] {
     --bg: #f4f6fa; --panel: #ffffff; --panel2: #ffffff; --line: #dde2ec; --line-soft: #e9edf4;
     --text: #151b2c; --text-dim: #5b6478; --text-faint: #8a92a6;
     --teal: #0b9c82; --amber: #b9781a; --red: #c93a51; --blue: #0284c7;
     --navy-head: #eef1f8; --input-bg: #f4f6fa;
+    --chart-bg: #ffffff;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -141,6 +145,10 @@
   .chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 700; color: var(--text-dim); }
   .chart-svg-wrap { background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; padding: 12px; overflow: hidden; }
   .chart-svg-wrap svg { width: 100%; height: 160px; display: block; }
+
+  /* LIGHTWEIGHT CHART CONTAINER */
+  .lw-chart-wrap { background: var(--chart-bg); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; height: 320px; position: relative; margin-bottom: 16px; }
+  .lw-chart-container { width: 100%; height: 100%; }
   
   /* HISTORY TABLE */
   table.wk-table { width: 100%; border-collapse: collapse; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
@@ -298,6 +306,9 @@ const STATE = {
   query: ""
 };
 
+let currentLWChart = null;
+let currentLWObserver = null;
+
 const CORS_PROXIES = [
   url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
   url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
@@ -316,6 +327,26 @@ function sma(arr, len) {
     if(i >= len-1) out[i] = sum / len;
   }
   return out;
+}
+
+function calculateEMA(data, period, key) {
+  const result = [];
+  const k = 2 / (period + 1);
+  let ema = 0;
+  for (let i = 0; i < data.length; i++) {
+    const val = data[i][key];
+    if (i < period - 1) {
+      ema += val;
+      if (i === period - 2) ema /= (period - 1);
+    } else if (i === period - 1) {
+      ema = (ema * (period - 1) + val) / period;
+      result.push({ time: data[i].time, value: ema });
+    } else {
+      ema = val * k + ema * (1 - k);
+      result.push({ time: data[i].time, value: ema });
+    }
+  }
+  return result;
 }
 
 function computeMansfieldRS(stockBars, spxBars) {
@@ -505,7 +536,117 @@ function calculateRSTiles(targetMeta) {
 }
 
 /* ============================================================
-   5. RENDERING ENGINE
+   5. LIGHTWEIGHT CHARTS INTEGRATION
+   ============================================================ */
+function renderLightweightChart(bars) {
+  const container = document.getElementById("lwChartContainer");
+  if (!container || !bars || bars.length === 0) return;
+
+  if (currentLWChart) {
+    if (currentLWObserver) currentLWObserver.disconnect();
+    currentLWChart.remove();
+    currentLWChart = null;
+  }
+
+  const isDark = document.documentElement.getAttribute("data-theme") !== "light";
+  const chartBg = isDark ? "#101625" : "#ffffff";
+  const gridLine = isDark ? "#1a2233" : "#f1f5f9";
+  const textColor = isDark ? "#8b93a8" : "#64748b";
+
+  const formattedBars = bars.map(b => {
+    const dateStr = new Date(b.t).toISOString().split('T')[0];
+    return {
+      time: dateStr,
+      open: Number(b.o.toFixed(2)),
+      high: Number(b.h.toFixed(2)),
+      low: Number(b.l.toFixed(2)),
+      close: Number(b.c.toFixed(2))
+    };
+  }).sort((a, b) => a.time.localeCompare(b.time));
+
+  const chart = LightweightCharts.createChart(container, {
+    width: container.clientWidth || 680,
+    height: container.clientHeight || 320,
+    layout: { background: { type: 'solid', color: chartBg }, textColor: textColor, fontFamily: 'JetBrains Mono, monospace', fontSize: 11 },
+    grid: { vertLines: { color: gridLine }, horzLines: { color: gridLine } },
+    rightPriceScale: { borderVisible: false, scaleMargins: { top: 0.15, bottom: 0.1 } },
+    timeScale: { borderVisible: false, timeVisible: true },
+    crosshair: { mode: LightweightCharts.CrosshairMode.Normal }
+  });
+
+  currentLWObserver = new ResizeObserver(entries => {
+    for (const entry of entries) {
+      const { width, height } = entry.contentRect;
+      if (width > 0 && height > 0) chart.applyOptions({ width, height });
+    }
+  });
+  currentLWObserver.observe(container);
+  currentLWChart = chart;
+
+  // 30-Period MA Cloud & Centerline (Weekly Equivalent of Stage Analysis Trendline)
+  const maHighData = calculateEMA(formattedBars, 30, 'high');
+  const maLowData = calculateEMA(formattedBars, 30, 'low');
+  const ema30Data = calculateEMA(formattedBars, 30, 'close');
+
+  const cloudHighSeries = chart.addAreaSeries({
+    topColor: isDark ? 'rgba(32, 217, 184, 0.12)' : 'rgba(11, 156, 130, 0.15)',
+    bottomColor: isDark ? 'rgba(32, 217, 184, 0.02)' : 'rgba(11, 156, 130, 0.05)',
+    lineColor: isDark ? 'rgba(32, 217, 184, 0.3)' : 'rgba(11, 156, 130, 0.4)',
+    lineWidth: 1, priceLineVisible: false, lastValueVisible: false,
+  });
+  cloudHighSeries.setData(maHighData);
+
+  const cloudLowMaskSeries = chart.addAreaSeries({
+    topColor: chartBg, bottomColor: chartBg,
+    lineColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+    lineWidth: 1, priceLineVisible: false, lastValueVisible: false,
+  });
+  cloudLowMaskSeries.setData(maLowData);
+
+  const ema30Series = chart.addLineSeries({
+    color: isDark ? '#38bdf8' : '#0284c7', lineWidth: 2, priceLineVisible: false, lastValueVisible: false,
+  });
+  ema30Series.setData(ema30Data);
+
+  // 100-Period Donchian Channel (Breakout Highs & Breakdown Lows)
+  const dcLength = 52; // 52 Weeks = 1 Year Channel
+  const dcUpperData = [], dcLowerData = [];
+  for (let i = 0; i < formattedBars.length; i++) {
+    if (i >= dcLength - 1) {
+      const windowBars = formattedBars.slice(i - dcLength + 1, i + 1);
+      const highestHigh = Math.max(...windowBars.map(b => b.high));
+      const lowestLow = Math.min(...windowBars.map(b => b.low));
+      if (i + 1 < formattedBars.length) {
+        const targetTime = formattedBars[i + 1].time;
+        dcUpperData.push({ time: targetTime, value: highestHigh });
+        dcLowerData.push({ time: targetTime, value: lowestLow });
+      }
+    }
+  }
+
+  const dcLineColor = isDark ? 'rgba(245, 185, 66, 0.5)' : 'rgba(185, 120, 26, 0.5)';
+  const dcUpperSeries = chart.addLineSeries({ color: dcLineColor, lineWidth: 1, lineStyle: 2, priceLineVisible: false, lastValueVisible: false });
+  const dcLowerSeries = chart.addLineSeries({ color: dcLineColor, lineWidth: 1, lineStyle: 2, priceLineVisible: false, lastValueVisible: false });
+  dcUpperSeries.setData(dcUpperData);
+  dcLowerSeries.setData(dcLowerData);
+
+  // Dynamic Price Bar Coloring (Institutional Magenta below MA)
+  const maHighMap = new Map(maHighData.map(item => [item.time, item.value]));
+  const coloredBars = formattedBars.map(bar => {
+    const currentMAHigh = maHighMap.get(bar.time);
+    let standardColor = isDark ? "#f8fafc" : "#000000";
+    let barColor = (currentMAHigh !== undefined && bar.close < currentMAHigh) ? "#ff5c72" : standardColor;
+    return { ...bar, color: barColor };
+  });
+
+  const barSeries = chart.addBarSeries({ thinBars: false, openVisible: false });
+  barSeries.setData(coloredBars);
+
+  chart.timeScale().fitContent();
+}
+
+/* ============================================================
+   6. RENDERING ENGINE
    ============================================================ */
 function renderWatchlist() {
   const wrap = document.getElementById("listWrap");
@@ -636,14 +777,12 @@ function renderMainDashboard() {
   const chg = d.prevClose ? ((d.lastClose / d.prevClose) - 1) * 100 : 0;
   const sCol = scoreColor(s);
 
-  // Calculate Delta
   const prevWk = d.weeklyRows && d.weeklyRows[1] ? d.weeklyRows[1] : null;
   const delta = prevWk ? (s - prevWk.score) : 0;
   let deltaHtml = `<span class="delta-pill delta-flat">FLAT 0</span>`;
   if(delta > 0) deltaHtml = `<span class="delta-pill delta-up">RISING +${delta}</span>`;
   else if(delta < 0) deltaHtml = `<span class="delta-pill delta-down">FALLING ${delta}</span>`;
 
-  // Horizontal Gauge Grid (0 to 10)
   let gaugeCellsHtml = "";
   for(let i = 0; i <= 10; i++) {
     let cls = "";
@@ -657,22 +796,17 @@ function renderMainDashboard() {
     gaugeCellsHtml += `<div class="gauge-cell ${cls}">${i}</div>`;
   }
 
-  // RS Tiles
   const tiles = calculateRSTiles(d.meta);
-
-  // Narrative Sentence
   const rangeTxt = s >= 8 ? "Strong" : (s >= 6 ? "Positive" : (s >= 4 ? "Neutral" : "Weak"));
   const deltaTxt = delta > 0 ? `increased +${delta}` : (delta < 0 ? `decreased ${delta}` : `remained unchanged`);
   const narrative = `${d.meta.ticker} has a Stage Analysis Technical Attributes (SATA) score of ${s} out of 10, which is in the ${rangeTxt} range and ${deltaTxt} since the prior week.`;
 
-  // Safe Guarded Component Checklist
   const compHtml = (d.comps || []).map(c => `
     <div class="comp-item">
       <span class="dot ${c.pass ? 'g' : 'r'}"></span>
       <span class="lbl">${c.label}</span>
     </div>`).join('');
 
-  // Weekly History Table Rows
   const tableRowsHtml = (d.weeklyRows || []).slice(0, 15).map(r => {
     const rVal = (r.mrs >= 0 ? "+" : "") + r.mrs.toFixed(2);
     const rCol = r.mrs >= 0 ? "var(--teal)" : "var(--red)";
@@ -700,7 +834,7 @@ function renderMainDashboard() {
 
     <!-- MAIN GRID: GAUGE & RS TILES -->
     <div class="sata-grid">
-      <!-- LEFT: GAUGE & BREAKDOWN -->
+      <!-- LEFT: GAUGE, BREAKDOWN & CHARTS -->
       <div>
         <div class="card" style="margin-bottom: 16px;">
           <div class="sata-box-header">
@@ -713,14 +847,25 @@ function renderMainDashboard() {
           <div class="comp-grid">${compHtml}</div>
         </div>
 
-        <!-- CHARTS -->
+        <!-- CHARTS SECTION -->
         <div class="card chart-box" style="margin-bottom: 16px;">
+          <!-- 1. LIGHTWEIGHT PRICE CHART -->
+          <div class="chart-header">
+            <span>Weekly Institutional HLC Chart &middot; 30w MA Cloud &middot; 52w Donchian Channel</span>
+            <span style="color:var(--teal)">● Live Yahoo Feed</span>
+          </div>
+          <div class="lw-chart-wrap">
+            <div class="lw-chart-container" id="lwChartContainer"></div>
+          </div>
+
+          <!-- 2. MANSFIELD RS CHART -->
           <div class="chart-header">
             <span>Mansfield Relative Strength vs SPX (52-Week Range)</span>
             <span style="color:${rs >= 0 ? 'var(--teal)' : 'var(--red)'}">${rs >= 0 ? '+' : ''}${rs.toFixed(2)}</span>
           </div>
           <div class="chart-svg-wrap">${buildMansfieldSVG((d.weeklyRows || []).slice().reverse())}</div>
           
+          <!-- 3. SATA SCORE HISTORY -->
           <div class="chart-header" style="margin-top: 16px;">
             <span>SATA Composite Score Trajectory (Dashed line = Stage 2 Threshold)</span>
             <span style="color:${sCol}">${s} / 10</span>
@@ -774,10 +919,13 @@ function renderMainDashboard() {
       </div>
     </div>
   `;
+
+  // Render the Lightweight Chart immediately after injecting HTML into DOM
+  requestAnimationFrame(() => renderLightweightChart(d.bars));
 }
 
 /* ============================================================
-   6. BATCH QUEUE & LAZY LOADER
+   7. BATCH QUEUE & LAZY LOADER
    ============================================================ */
 async function loadUniverseProgressively() {
   const statusBox = document.getElementById("statusBox");
@@ -831,7 +979,7 @@ async function loadUniverseProgressively() {
 }
 
 /* ============================================================
-   7. UI WIRING & INIT
+   8. UI WIRING & INIT
    ============================================================ */
 document.getElementById("btnRefresh").addEventListener("click", () => {
   STATE.data = {};
@@ -863,6 +1011,7 @@ function setTheme(theme) {
   document.documentElement.setAttribute("data-theme", theme);
   updateThemeToggleUI();
   try { localStorage.setItem('sata-theme', theme); } catch(e) {}
+  if (STATE.selected) renderMainDashboard();
 }
 document.getElementById("optDark").addEventListener("click", () => setTheme("dark"));
 document.getElementById("optLight").addEventListener("click", () => setTheme("light"));
