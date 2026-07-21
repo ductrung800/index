@@ -351,10 +351,10 @@ function getHot3PlusTickers() {
       .sort((a, b) => b[1] - a[1])
       .map(([ticker]) => ({
         ticker,
-        company: "TradingView High-Confluence Momentum Leader",
-        sector: "Pine Screener",
-        industry: "Multi-Strategy Confluence",
-        sub: "3+ TV Strategies",
+        company: "Fetching Profile…",
+        sector: "Fetching Profile…",
+        industry: "Fetching Profile…",
+        sub: "Fetching Profile…",
         exch: "US"
       }));
 
@@ -429,7 +429,56 @@ async function syncLiveTickerUniverse() {
 }
 
 /* ============================================================
-   4. TECHNICAL MATH ENGINE
+   4. DYNAMIC YAHOO FINANCE METADATA ENRICHER
+   ============================================================ */
+async function enrichTickerMetadata(symbol) {
+  if (!STATE.data[symbol] || STATE.data[symbol].meta.isEnriched) return;
+
+  const targetUrl = `https://query1.finance.yahoo.com/v11/finance/quoteSummary/${encodeURIComponent(symbol)}?modules=assetProfile,quoteType`;
+  
+  for (const build of CORS_PROXIES) {
+    try {
+      const res = await fetch(build(targetUrl), { cache: "no-store" });
+      if (!res.ok) continue;
+      const json = await res.json();
+      
+      const result = json.quoteSummary?.result?.[0];
+      if (!result) continue;
+
+      const assetProfile = result.assetProfile || {};
+      const quoteType = result.quoteType || {};
+
+      let rawExch = quoteType.fullExchangeName || quoteType.exchange || "US";
+      if (["NYQ", "NYSE"].includes(rawExch.toUpperCase())) rawExch = "NYSE";
+      else if (["NMS", "NASDAQ", "NASDAQGS", "NASDAQGM", "NASDAQCM"].includes(rawExch.toUpperCase())) rawExch = "NASDAQ";
+
+      const sector = assetProfile.sector || "Equity / Fund";
+      const industry = assetProfile.industry || assetProfile.industryDisp || "Financial Assets";
+      const company = quoteType.longName || quoteType.shortName || STATE.data[symbol].meta.company;
+
+      STATE.data[symbol].meta = {
+        ticker: symbol,
+        company: company,
+        sector: sector,
+        industry: industry,
+        sub: industry,
+        exch: rawExch,
+        isEnriched: true
+      };
+
+      if (STATE.selected === symbol) {
+        renderMainDashboard();
+        renderWatchlist();
+      }
+      break;
+    } catch(e) {
+      console.warn(`Profile enrichment skipped for ${symbol}:`, e);
+    }
+  }
+}
+
+/* ============================================================
+   5. TECHNICAL MATH ENGINE
    ============================================================ */
 function sma(arr, len) {
   const out = new Array(arr.length).fill(null);
@@ -557,7 +606,7 @@ function scoreColor(score) {
 }
 
 /* ============================================================
-   5. YAHOO INGESTION ENGINE
+   6. YAHOO INGESTION ENGINE
    ============================================================ */
 async function fetchYahooWeekly(symbol) {
   const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1wk&range=2y`;
@@ -621,7 +670,7 @@ function processTickerBars(meta, bars) {
 }
 
 /* ============================================================
-   6. RELATIVE STRENGTH PERCENTILES
+   7. RELATIVE STRENGTH PERCENTILES
    ============================================================ */
 function calculateRSTiles(targetMeta) {
   const allLoaded = Object.values(STATE.data);
@@ -649,7 +698,7 @@ function calculateRSTiles(targetMeta) {
 }
 
 /* ============================================================
-   7. LIGHTWEIGHT CHARTS INTEGRATION
+   8. LIGHTWEIGHT CHARTS INTEGRATION
    ============================================================ */
 function renderLightweightChart(bars) {
   const container = document.getElementById("lwChartContainer");
@@ -756,7 +805,7 @@ function renderLightweightChart(bars) {
 }
 
 /* ============================================================
-   8. RENDERING ENGINE
+   9. RENDERING ENGINE
    ============================================================ */
 function renderWatchlist() {
   const wrap = document.getElementById("listWrap");
@@ -819,6 +868,7 @@ function selectTicker(symbol) {
   STATE.selected = symbol;
   renderWatchlist();
   renderMainDashboard();
+  enrichTickerMetadata(symbol);
 }
 
 function buildMansfieldSVG(rows) {
@@ -1034,14 +1084,13 @@ function renderMainDashboard() {
 }
 
 /* ============================================================
-   9. BATCH QUEUE & LAZY LOADER
+   10. BATCH QUEUE & LAZY LOADER
    ============================================================ */
 async function loadUniverseProgressively() {
   const statusBox = document.getElementById("statusBox");
   STATE.data = {};
   STATE.selected = null;
   
-  // 1. SYNC ACTIVE UNIVERSE
   STATE.universe = await syncLiveTickerUniverse();
 
   if (STATE.universe.length === 0) {
@@ -1073,7 +1122,7 @@ async function loadUniverseProgressively() {
       const bars = await fetchYahooWeekly(meta.ticker);
       if(bars && bars.length >= 10) {
         STATE.data[meta.ticker] = processTickerBars(meta, bars);
-        if(!STATE.selected) STATE.selected = meta.ticker;
+        if(!STATE.selected) selectTicker(meta.ticker);
       }
     }));
     count += batch.length;
@@ -1103,7 +1152,7 @@ async function loadUniverseProgressively() {
 }
 
 /* ============================================================
-   10. UI WIRING & INIT
+   11. UI WIRING & INIT
    ============================================================ */
 document.getElementById("btnUnivSheet").addEventListener("click", (e) => {
   if (STATE.activeSource === "sheet") return;
