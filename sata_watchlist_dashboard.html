@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>SATA-Style Scanner</title>
+<link rel="icon" href="data:,">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&display=swap');
   :root{
@@ -215,7 +216,6 @@
     </div>
   </div>
 </div>
-
 <!-- ================= APP TABS ================= -->
 <div class="app-tabs">
   <a href="index.html">Market Dashboard</a>
@@ -227,7 +227,6 @@
   <a href="tv_watchlist.html">TradingView Watchlist</a>
   <a href="sata_watchlist_dashboard.html">SATA Chart</a> 
 </div>
-
 <script>
 (function(){
 
@@ -349,6 +348,7 @@ function computeScore(bars, mrs){
 }
 
 function stageFromHistory(scores){
+  if(!scores || scores.length === 0) return {stage:1, label:"Insufficient history"};
   const last = scores[scores.length-1];
   const prev4 = scores.length>=5 ? scores[scores.length-5] : scores[0];
   if(last >= 6) return {stage:2, label:"Uptrend"};
@@ -362,7 +362,7 @@ function computeForTicker(ticker, bars){
   const {score, comps, maLen} = computeScore(bars, mrs);
   const weeklyRows = [];
   const histScores = [];
-  const startIdx = Math.max(4, bars.length-9);
+  const startIdx = Math.max(0, Math.min(bars.length-1, bars.length-9));
   for(let i=startIdx; i<bars.length; i++){
     const subBars = bars.slice(0, i+1);
     const subMrs = computeMansfieldRS(subBars, state.spxBars);
@@ -380,10 +380,23 @@ function computeForTicker(ticker, bars){
 }
 
 function recomputeAll(){
+  const stillGood = [];
   state.order.forEach(t=>{
-    const raw = state.data[t]._rawBars;
-    state.data[t] = Object.assign(computeForTicker(t, raw), {_rawBars: raw});
+    const entry = state.data[t];
+    if(!entry || !entry._rawBars){ delete state.data[t]; return; }
+    try{
+      const raw = entry._rawBars;
+      state.data[t] = Object.assign(computeForTicker(t, raw), {_rawBars: raw});
+      stillGood.push(t);
+    }catch(e){
+      console.error("Failed to compute score for", t, e);
+      delete state.data[t];
+    }
   });
+  state.order = stillGood;
+  if(state.selected && !state.data[state.selected]){
+    state.selected = state.order[0] || null;
+  }
 }
 
 function scoreColor(score){
@@ -505,6 +518,14 @@ function renderDetail(){
     return;
   }
   const d = state.data[t];
+  if(!d || !d.weeklyRows || !d.score || !d.mrs){
+    card.innerHTML = `<div class="empty">
+      <div class="em">&#9888;</div>
+      <div class="t">${t} couldn't be scored</div>
+      <p>Its pasted data may be too short or malformed. Try removing it and re-adding with more weekly rows.</p>
+    </div>`;
+    return;
+  }
   const rs = d.mrs[d.mrs.length-1];
   const chg = ((d.lastClose/d.prevClose)-1)*100;
   const scoreCol = scoreColor(d.score.score);
