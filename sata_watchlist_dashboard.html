@@ -65,8 +65,8 @@
   .left-col { display: flex; flex-direction: column; gap: 12px; height: calc(100vh - 170px); min-height: 600px; }
   .left-col .card { display: flex; flex-direction: column; flex: 1; min-height: 0; padding: 14px; }
   
-  .universe-filter-pills { display: flex; gap: 6px; margin-bottom: 10px; }
-  .universe-filter-pills button { flex: 1; background: var(--input-bg); border: 1px solid var(--line); color: var(--text-dim); font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 800; padding: 7px 4px; border-radius: 6px; cursor: pointer; transition: all .15s; text-transform: uppercase; }
+  .universe-filter-pills { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; margin-bottom: 10px; }
+  .universe-filter-pills button { background: var(--input-bg); border: 1px solid var(--line); color: var(--text-dim); font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 800; padding: 7px 4px; border-radius: 6px; cursor: pointer; transition: all .15s; text-transform: uppercase; text-align: center; }
   .universe-filter-pills button.active { background: rgba(32,217,184,.15); color: var(--teal); border-color: var(--teal); }
   
   input.search { width: 100%; background: var(--input-bg); border: 1px solid var(--line); border-radius: 7px; color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 12px; padding: 9px 12px; margin-bottom: 10px; }
@@ -177,12 +177,12 @@
   <div class="app-tabs">
     <a href="index.html">Market Dashboard</a>
     <a href="stockbee_market_monitor_live.html">Stockbee Monitor</a>
-    <a href="IndustryRS.html">Industry RS</a>
+    <a href="sata_watchlist_dashboard.html" class="active">SATA Chart</a>
     <a href="liquid_leaders.html">Liquid Leaders</a>
     <a href="PriceStructure.html">Price Structure</a>
     <a href="StageAnalysis.html">Stage Analysis</a>
     <a href="tv_watchlist.html">TradingView Watchlist</a>
-    <a href="sata_watchlist_dashboard.html" class="active">SATA Chart</a>
+    <a href="IndustryRS.html">Industry RS</a>
   </div>
 
   <header class="top">
@@ -205,10 +205,12 @@
     <!-- LEFT COLUMN: WATCHLIST -->
     <div class="left-col">
       <div class="card">
-        <!-- UNIVERSE FILTER PILLS -->
+        <!-- UNIVERSE FILTER PILLS (2x2 GRID) -->
         <div class="universe-filter-pills">
           <button class="active" id="btnUnivSheet">Leader Sheet</button>
-          <button id="btnUnivHot">🔥 3+ TV Strategies</button>
+          <button id="btnUnivHot">🔥 3+ TV</button>
+          <button id="btnUnivSector">Sector ETFs</button>
+          <button id="btnUnivEWSector">EW Sectors</button>
         </div>
 
         <input class="search" id="searchBox" placeholder="Search ticker or company…" />
@@ -243,6 +245,38 @@
 const SHEET_ID = "1DcWbr8T5lTIgSrpoqVteg7ar_H466KZSvZ4p_Eksa1s";
 const SHEET_GVIZ_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
 const TV_STORAGE_KEY = 'tv_presets_v1';
+
+/* Cap-Weighted Sector ETFs (SPDR Series) */
+const CAP_SECTOR_ETFS = [
+  {ticker:"XLC", company:"Communication Services Select Sector SPDR", sector:"Sector ETF", industry:"Communication Services", sub:"Cap-Weighted", exch:"NYSE Arca"},
+  {ticker:"XLY", company:"Consumer Discretionary Select Sector SPDR", sector:"Sector ETF", industry:"Consumer Discretionary", sub:"Cap-Weighted", exch:"NYSE Arca"},
+  {ticker:"XLF", company:"Financial Select Sector SPDR Fund", sector:"Sector ETF", industry:"Financials", sub:"Cap-Weighted", exch:"NYSE Arca"},
+  {ticker:"SPY", company:"SPDR S&P 500 ETF Trust", sector:"Benchmark Index", industry:"Large Cap Blend", sub:"Cap-Weighted", exch:"NYSE Arca"},
+  {ticker:"XLRE", company:"Real Estate Select Sector SPDR Fund", sector:"Sector ETF", industry:"Real Estate", sub:"Cap-Weighted", exch:"NYSE Arca"},
+  {ticker:"XLP", company:"Consumer Staples Select Sector SPDR Fund", sector:"Sector ETF", industry:"Consumer Staples", sub:"Cap-Weighted", exch:"NYSE Arca"},
+  {ticker:"XLV", company:"Health Care Select Sector SPDR Fund", sector:"Sector ETF", industry:"Health Care", sub:"Cap-Weighted", exch:"NYSE Arca"},
+  {ticker:"XLI", company:"Industrial Select Sector SPDR Fund", sector:"Sector ETF", industry:"Industrials", sub:"Cap-Weighted", exch:"NYSE Arca"},
+  {ticker:"XLB", company:"Materials Select Sector SPDR Fund", sector:"Sector ETF", industry:"Materials", sub:"Cap-Weighted", exch:"NYSE Arca"},
+  {ticker:"XLE", company:"Energy Select Sector SPDR Fund", sector:"Sector ETF", industry:"Energy", sub:"Cap-Weighted", exch:"NYSE Arca"},
+  {ticker:"XLU", company:"Utilities Select Sector SPDR Fund", sector:"Sector ETF", industry:"Utilities", sub:"Cap-Weighted", exch:"NYSE Arca"},
+  {ticker:"XLK", company:"Technology Select Sector SPDR Fund", sector:"Sector ETF", industry:"Technology", sub:"Cap-Weighted", exch:"NYSE Arca"}
+];
+
+/* Equal-Weight Sector ETFs (Invesco RSP Series) */
+const EW_SECTOR_ETFS = [
+  {ticker:"RSPC", company:"Invesco S&P 500 Equal Weight Comm Svcs ETF", sector:"EW Sector ETF", industry:"Communication Services", sub:"Equal-Weight", exch:"NASDAQ"},
+  {ticker:"RSPD", company:"Invesco S&P 500 Equal Weight Cons Disc ETF", sector:"EW Sector ETF", industry:"Consumer Discretionary", sub:"Equal-Weight", exch:"NYSE Arca"},
+  {ticker:"RSPF", company:"Invesco S&P 500 Equal Weight Financials ETF", sector:"EW Sector ETF", industry:"Financials", sub:"Equal-Weight", exch:"NYSE Arca"},
+  {ticker:"RSPH", company:"Invesco S&P 500 Equal Weight Health Care ETF", sector:"EW Sector ETF", industry:"Health Care", sub:"Equal-Weight", exch:"NYSE Arca"},
+  {ticker:"RSPS", company:"Invesco S&P 500 Equal Weight Cons Staples ETF", sector:"EW Sector ETF", industry:"Consumer Staples", sub:"Equal-Weight", exch:"NYSE Arca"},
+  {ticker:"RSPR", company:"Invesco S&P 500 Equal Weight Real Estate ETF", sector:"EW Sector ETF", industry:"Real Estate", sub:"Equal-Weight", exch:"NYSE Arca"},
+  {ticker:"RSPM", company:"Invesco S&P 500 Equal Weight Materials ETF", sector:"EW Sector ETF", industry:"Materials", sub:"Equal-Weight", exch:"NYSE Arca"},
+  {ticker:"RSP", company:"Invesco S&P 500 Equal Weight ETF", sector:"Benchmark EW Index", industry:"Large Cap EW Blend", sub:"Equal-Weight", exch:"NYSE Arca"},
+  {ticker:"RSPN", company:"Invesco S&P 500 Equal Weight Industrials ETF", sector:"EW Sector ETF", industry:"Industrials", sub:"Equal-Weight", exch:"NYSE Arca"},
+  {ticker:"RSPU", company:"Invesco S&P 500 Equal Weight Utilities ETF", sector:"EW Sector ETF", industry:"Utilities", sub:"Equal-Weight", exch:"NYSE Arca"},
+  {ticker:"RSPG", company:"Invesco S&P 500 Equal Weight Energy ETF", sector:"EW Sector ETF", industry:"Energy", sub:"Equal-Weight", exch:"NYSE Arca"},
+  {ticker:"RSPT", company:"Invesco S&P 500 Equal Weight Tech ETF", sector:"EW Sector ETF", industry:"Technology", sub:"Equal-Weight", exch:"NYSE Arca"}
+];
 
 const FALLBACK_UNIVERSE = [
   {ticker:"AGL", company:"Agilon Health Inc", sector:"Healthcare", industry:"Medical Care Facilities", sub:"Medical Care Facilities", exch:"NYSE"},
@@ -313,7 +347,7 @@ const FALLBACK_UNIVERSE = [
 ];
 
 const STATE = {
-  activeSource: "sheet",
+  activeSource: "sheet", // "sheet", "hot", "sector", or "ew_sector"
   universe: FALLBACK_UNIVERSE,
   data: {},
   spxBars: null,
@@ -392,6 +426,10 @@ async function syncLiveTickerUniverse() {
   if (STATE.activeSource === "hot") {
     const hotList = getHot3PlusTickers();
     if (hotList.length > 0) return hotList;
+  } else if (STATE.activeSource === "sector") {
+    return CAP_SECTOR_ETFS;
+  } else if (STATE.activeSource === "ew_sector") {
+    return EW_SECTOR_ETFS;
   }
 
   for (const build of CORS_PROXIES) {
@@ -435,7 +473,7 @@ async function enrichTickerMetadata(symbol) {
 
   const targetUrl = "https://scanner.tradingview.com/america/scan";
   const payload = {
-    symbols: { tickers: [`AMERICA:${symbol}`, `NYSE:${symbol}`, `NASDAQ:${symbol}`] },
+    symbols: { tickers: [`AMERICA:${symbol}`, `NYSE:${symbol}`, `NASDAQ:${symbol}`, `AMEX:${symbol}`] },
     columns: ["name", "description", "sector", "industry", "exchange"]
   };
 
@@ -450,11 +488,11 @@ async function enrichTickerMetadata(symbol) {
       const json = await res.json();
       
       const row = json.data?.[0]?.d;
-      if (!row || !row[2]) continue;
+      if (!row) continue;
 
       const company = row[1] || symbol;
-      const sector = row[2] || "Equities";
-      const industry = row[3] || "General";
+      const sector = row[2] || STATE.data[symbol].meta.sector;
+      const industry = row[3] || STATE.data[symbol].meta.industry;
       const exch = row[4] || STATE.data[symbol].meta.exch || "US";
 
       STATE.data[symbol].meta = {
@@ -1108,8 +1146,8 @@ async function loadUniverseProgressively() {
   STATE.universe = await syncLiveTickerUniverse();
 
   if (STATE.universe.length === 0) {
-    statusBox.innerHTML = `<b style="color:var(--amber)">No 3+ TV Tickers Found</b>`;
-    document.getElementById("listWrap").innerHTML = `<div style="padding:20px; text-align:center; color:var(--text-faint); font-size:12px;">No tickers appear in 3+ TradingView strategy lists yet.<br><br>Scan presets in your <b>TradingView Watchlist</b> tab first!</div>`;
+    statusBox.innerHTML = `<b style="color:var(--amber)">No Tickers Found</b>`;
+    document.getElementById("listWrap").innerHTML = `<div style="padding:20px; text-align:center; color:var(--text-faint); font-size:12px;">No tickers found for this universe option.</div>`;
     renderMainDashboard();
     return;
   }
@@ -1128,7 +1166,7 @@ async function loadUniverseProgressively() {
   const remainingBatch = STATE.universe.slice(40);
   let count = 0;
 
-  statusBox.innerHTML = `Scoring leaders… (<b>0</b>/${topBatch.length})`;
+  statusBox.innerHTML = `Scoring tickers… (<b>0</b>/${topBatch.length})`;
 
   for(let i = 0; i < topBatch.length; i += 6) {
     const batch = topBatch.slice(i, i + 6);
@@ -1140,13 +1178,18 @@ async function loadUniverseProgressively() {
       }
     }));
     count += batch.length;
-    statusBox.innerHTML = `Scoring leaders… (<b>${Math.min(count, topBatch.length)}</b>/${topBatch.length})`;
+    statusBox.innerHTML = `Scoring tickers… (<b>${Math.min(count, topBatch.length)}</b>/${topBatch.length})`;
     renderWatchlist();
     if(STATE.selected) renderMainDashboard();
     await new Promise(r => setTimeout(r, 80));
   }
 
-  statusBox.innerHTML = `<b>${STATE.activeSource === 'hot' ? '🔥 3+ TV Hot List' : 'Leader Hunter Sheet'} Active</b> · ${Object.keys(STATE.data).length} Tickers`;
+  let sourceName = 'Leader Sheet';
+  if(STATE.activeSource === 'hot') sourceName = '🔥 3+ TV List';
+  else if(STATE.activeSource === 'sector') sourceName = 'Cap-Weighted Sectors';
+  else if(STATE.activeSource === 'ew_sector') sourceName = 'Equal-Weight Sectors';
+
+  statusBox.innerHTML = `<b>${sourceName} Active</b> · ${Object.keys(STATE.data).length} Tickers`;
 
   if (remainingBatch.length > 0) {
     setTimeout(async () => {
@@ -1162,7 +1205,7 @@ async function loadUniverseProgressively() {
         if(STATE.selected) renderMainDashboard();
         await new Promise(r => setTimeout(r, 80));
       }
-      statusBox.innerHTML = `<b>${STATE.activeSource === 'hot' ? '🔥 3+ TV Hot List' : 'Leader Hunter Sheet'} Active</b> · ${Object.keys(STATE.data).length} Scored`;
+      statusBox.innerHTML = `<b>${sourceName} Active</b> · ${Object.keys(STATE.data).length} Scored`;
     }, 800);
   }
 }
@@ -1170,19 +1213,37 @@ async function loadUniverseProgressively() {
 /* ============================================================
    11. UI WIRING & INIT
    ============================================================ */
-document.getElementById("btnUnivSheet").addEventListener("click", (e) => {
+function setActivePill(activeBtnId) {
+  ["btnUnivSheet", "btnUnivHot", "btnUnivSector", "btnUnivEWSector"].forEach(id => {
+    document.getElementById(id).classList.toggle("active", id === activeBtnId);
+  });
+}
+
+document.getElementById("btnUnivSheet").addEventListener("click", () => {
   if (STATE.activeSource === "sheet") return;
   STATE.activeSource = "sheet";
-  document.getElementById("btnUnivSheet").classList.add("active");
-  document.getElementById("btnUnivHot").classList.remove("active");
+  setActivePill("btnUnivSheet");
   loadUniverseProgressively();
 });
 
-document.getElementById("btnUnivHot").addEventListener("click", (e) => {
+document.getElementById("btnUnivHot").addEventListener("click", () => {
   if (STATE.activeSource === "hot") return;
   STATE.activeSource = "hot";
-  document.getElementById("btnUnivHot").classList.add("active");
-  document.getElementById("btnUnivSheet").classList.remove("active");
+  setActivePill("btnUnivHot");
+  loadUniverseProgressively();
+});
+
+document.getElementById("btnUnivSector").addEventListener("click", () => {
+  if (STATE.activeSource === "sector") return;
+  STATE.activeSource = "sector";
+  setActivePill("btnUnivSector");
+  loadUniverseProgressively();
+});
+
+document.getElementById("btnUnivEWSector").addEventListener("click", () => {
+  if (STATE.activeSource === "ew_sector") return;
+  STATE.activeSource = "ew_sector";
+  setActivePill("btnUnivEWSector");
   loadUniverseProgressively();
 });
 
