@@ -255,12 +255,15 @@
 const SHEET_ID = "1RRyy9CxfV8mdIFPzjtC1WER4wXsuDZGbNoaXsGU4APQ";
 const SHEET_GID = "2698707";
 
-// We strictly use the /export?format=csv endpoint to bypass the gviz engine bugs
-const EXPORT_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${SHEET_GID}`;
-const PUB_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/pub?output=csv&gid=${SHEET_GID}`;
+// Enforce single=true to lock Google Sheets export directly to GID 2698707 (Power List tab)
+const TAB_CSV_URLS = [
+  `https://docs.google.com/spreadsheets/d/${SHEET_ID}/pub?output=csv&single=true&gid=${SHEET_GID}`,
+  `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${SHEET_GID}`,
+  `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&id=${SHEET_ID}&gid=${SHEET_GID}`
+];
 
 const CORS_PROXIES = [
-  url => url, // Try direct fetch first
+  url => url,
   url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
   url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
   url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`
@@ -322,13 +325,13 @@ let lastMissingCols = [];
 
 function parseSheetCSV(text) {
   const parsed = Papa.parse(text.trim(), { skipEmptyLines: true });
-  const grid = parsed.data.filter(r => r.some(c => c && c.trim() !== ""));
+  const grid = parsed.data.filter(r => r.some(c => c && String(c).trim() !== ""));
   if(grid.length < 2) throw new Error("CSV looks empty.");
 
   let headerIdx = 0;
   for(let i=0; i < Math.min(5, grid.length); i++){
     const rowFuzzy = grid[i].map(fuzzy);
-    if(rowFuzzy.includes("ticker") || rowFuzzy.includes("symbol") || rowFuzzy.includes("name") || rowFuzzy.includes("company")){
+    if(rowFuzzy.includes("ticker") || rowFuzzy.includes("symbol") || rowFuzzy.includes("rssts")){
       headerIdx = i;
       break;
     }
@@ -342,7 +345,7 @@ function parseSheetCSV(text) {
     ["name",     ["name","company","companyname","stockname","description"]],
     ["sector",   ["sector"]],
     ["industry", ["industry","subindustry"]],
-    ["rsSts",    ["rssts","rs_sts","rsrating","rsrank","1monthrs","onemonthrs","rspercentile","1mrs","rs"]],
+    ["rsSts",    ["rssts","rs_sts","rsrank","rsrating"]], // Prioritize Col B (RS_STS) over Col A (1 Month RS)
     ["ext",      ["extension","ext","extfrom20","extfrom20ema","extensionfrom20"]],
     ["adr",      ["adr%","adr","adrpct","averagedailyrange"]],
     ["super",    ["superliquid?","superliquid","liquid"]],
@@ -377,12 +380,12 @@ function parseSheetCSV(text) {
   });
   lastMissingCols = missing;
 
-  if(cols.ticker === -1) throw new Error("Couldn't find a 'Ticker' column in header: " + rawHeader.join(", "));
+  if(cols.ticker === -1) throw new Error("Couldn't find 'Ticker' column in header: " + rawHeader.join(", "));
 
   const get = (r, key) => cols[key] === -1 ? "" : (r[cols[key]] || "");
 
   return grid.slice(headerIdx + 1)
-    .filter(r => get(r, "ticker").trim())
+    .filter(r => get(r, "ticker") && String(get(r, "ticker")).trim())
     .map(r => ({
       ticker: String(get(r,"ticker")).trim().toUpperCase(),
       company: String(get(r,"name")).trim(),
@@ -406,12 +409,11 @@ function setStatus(msg, isErr){
 async function refreshLiveData(){
   const btn = document.getElementById("btnRefresh");
   if(btn) btn.textContent = "↻ Fetching…";
-  setStatus("Fetching live sheet…");
+  setStatus("Fetching live sheet tab 2698707…");
 
-  const fetchUrls = [EXPORT_URL, PUB_URL];
   let text = null, source = null;
 
-  for (const baseUrl of fetchUrls) {
+  for (const baseUrl of TAB_CSV_URLS) {
     for (let i = 0; i < CORS_PROXIES.length; i++) {
       try {
         const res = await fetch(CORS_PROXIES[i](baseUrl), { cache: "no-store" });
@@ -423,27 +425,25 @@ async function refreshLiveData(){
             break;
           }
         }
-      } catch (e) {
-        // Continue to next proxy/URL
-      }
+      } catch (e) {}
     }
     if (text) break;
   }
 
   if(!text){
-    setStatus(`Live fetch blocked. Ensure sheet is "Anyone with the link can view", or use CSV upload below.`, true);
+    setStatus(`Live fetch blocked. Please check sheet publication settings.`, true);
     if(btn) btn.textContent = "↻ Refresh Live Data";
     return;
   }
 
   try{
     ROWS = parseSheetCSV(text);
-    dataSourceLabel = `live sheet (via ${source})`;
+    dataSourceLabel = `live sheet (tab ${SHEET_GID} via ${source})`;
     renderAll();
     if(lastMissingCols.length){
       setStatus(`✓ Loaded ${ROWS.length} tickers, but couldn't match columns: ${lastMissingCols.join(", ")}.`, true);
     } else {
-      setStatus(`✓ Loaded ${ROWS.length} tickers via ${source}.`);
+      setStatus(`✓ Loaded ${ROWS.length} tickers directly from Power List tab.`);
     }
   }catch(e){
     setStatus(`Fetched sheet but failed parsing: ${e.message}`, true);
