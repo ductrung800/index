@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="icon" href="data:,">
+<meta charset="UTF-8">
+<title>Portfolio Management</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+  :root{
+    --bg:#0a0e16; --panel:#101625; --panel2:#0d1220; --line:#212a3d; --line-soft:#1a2233;
+    --text:#e7ebf3; --text-dim:#8b93a8; --text-faint:#59617a;
+    --teal:#20d9b8; --amber:#f5b942; --red:#ff5c72; --purple:#a855f7; --blue:#38bdf8;
+    --navy-head:#131c33; --heat-text:#12161f; --input-bg:#0d1220;
+  }
+  html[data-theme="light"]{
+    --bg:#f4f6fa; --panel:#ffffff; --panel2:#ffffff; --line:#dde2ec; --line-soft:#e9edf4;
+    --text:#151b2c; --text-dim:#5b6478; --text-faint:#8a92a6;
+    --teal:#0b9c82; --amber:#b9781a; --red:#c93a51; --purple:#8b5cf6; --blue:#0284c7;
+    --navy-head:#eef1f8; --heat-text:#12161f; --input-bg:#f4f6fa;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:
+      radial-gradient(ellipse 1200px 500px at 15% -5%, rgba(32,217,184,.06), transparent 60%),
+      radial-gradient(ellipse 900px 500px at 100% 0%, rgba(245,185,66,.05), transparent 55%),
+      var(--bg);
+    color:var(--text); font-family:'Inter',sans-serif; padding:22px 26px 60px; transition:background .2s ease, color .2s ease;
+  }
+  .wrap{max-width:1780px; margin:0 auto; width:100%;}
+
+  /* ---------- UNIFORM APP TABS ---------- */
+  .app-tabs {
+    display: flex; gap: 4px; margin-bottom: 24px; border-bottom: 1px solid var(--line);
+    padding-bottom: 0; flex-wrap: nowrap; overflow-x: auto;
+  }
+  .app-tabs a {
+    padding: 10px 18px; text-decoration: none; color: var(--text-dim); font-size: 11.5px;
+    font-weight: 600; border: 1px solid transparent; border-bottom: none; border-radius: 8px 8px 0 0;
+    text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; transition: all 0.15s;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .app-tabs a.active { background: var(--panel); color: var(--teal); border-color: var(--line); border-bottom-color: var(--panel); margin-bottom: -1px; }
+  .app-tabs a:hover:not(.active) { color: var(--text); background: rgba(255,255,255,0.03); }
+
+  header.top{display:flex; justify-content:space-between; align-items:flex-end; border-bottom:2px solid var(--line); padding-bottom:14px; margin-bottom:22px; gap:16px; flex-wrap:wrap;}
+  .brand-eyebrow{font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.18em; color:var(--teal); text-transform:uppercase;}
+  h1{font-size:26px; font-weight:800; letter-spacing:-.02em; margin-top:2px;}
+  .subline{color:var(--text-dim); font-size:12.5px; margin-top:4px; font-family:'JetBrains Mono',monospace;}
+  .header-right{display:flex; align-items:center; gap:12px; flex-wrap:wrap;}
+  .theme-toggle{display:flex; align-items:center; gap:8px; background:var(--panel); border:1px solid var(--line); border-radius:100px; padding:6px 6px; cursor:pointer;}
+  .theme-toggle .opt{font-size:14px; padding:5px 11px; border-radius:100px; color:var(--text-faint); font-weight:600;}
+  .theme-toggle .opt.active{background:var(--teal); color:#04150f;}
+
+  .btn{background:var(--panel); border:1px solid var(--line); color:var(--text); font-family:'JetBrains Mono',monospace; font-size:11.5px; padding:8px 14px; border-radius:7px; cursor:pointer; font-weight:600; transition:all .15s;}
+  .btn:hover{border-color:var(--teal); color:var(--teal);}
+  .btn.primary{background:var(--teal); color:#04150f; border-color:var(--teal);}
+
+  .data-panel{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:16px 18px; margin-bottom:20px;}
+  .data-panel-head{display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;}
+  .data-panel-head h2{font-size:13px; text-transform:uppercase; letter-spacing:.05em; font-weight:700;}
+  .data-panel-head .sub{font-size:11.5px; color:var(--text-dim); margin-top:2px; font-weight:400; text-transform:none; letter-spacing:0;}
+  .data-panel-body{margin-top:14px; display:none;}
+  .data-panel-body.open{display:block;}
+  .status-msg{font-size:11.5px; color:var(--teal); font-family:'JetBrains Mono',monospace;}
+  .status-msg.err{color:var(--red);}
+  .dropzone{border:2px dashed var(--line); border-radius:10px; padding:20px 16px; text-align:center; cursor:pointer; transition:all .15s; background:var(--input-bg); margin-top:12px;}
+  .dropzone:hover{border-color:var(--teal); background:rgba(32,217,184,.06);}
+  .dz-sub{font-size:10.5px; color:var(--text-faint); margin-top:4px;}
+
+  /* ---------- SUMMARY GAUGE STRIP ---------- */
+  .gauge-strip{display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:20px;}
+  @media(max-width:1100px){ .gauge-strip{grid-template-columns:repeat(2,1fr);} }
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:14px 16px;}
+  .card .label{font-size:10.5px; text-transform:uppercase; letter-spacing:.1em; color:var(--text-faint); font-weight:600;}
+  .card .big{font-family:'JetBrains Mono',monospace; font-weight:700; font-size:26px; margin-top:6px;}
+  .card .cap{font-size:11.5px; color:var(--text-dim); margin-top:3px;}
+
+  /* ---------- DONUT CHARTS ---------- */
+  .donut-grid{display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:24px;}
+  @media(max-width:1000px){ .donut-grid{grid-template-columns:1fr;} }
+  .donut-card{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:16px 18px;}
+  .donut-title{font-size:13px; font-weight:800; text-transform:uppercase; letter-spacing:.05em; font-family:'JetBrains Mono',monospace; margin-bottom:10px;}
+  .donut-wrap{position:relative; height:260px;}
+
+  .toolbar{display:flex; gap:12px; margin-bottom:14px; flex-wrap:wrap; align-items:center;}
+  .search-input{background:var(--input-bg); border:1px solid var(--line); color:var(--text); padding:9px 12px; border-radius:7px; font-family:'JetBrains Mono',monospace; font-size:12px; min-width:220px;}
+  .search-input:focus{outline:none; border-color:var(--teal);}
+  select.sector-filter{background:var(--input-bg); border:1px solid var(--line); color:var(--text); padding:9px 10px; border-radius:7px; font-family:'Inter',sans-serif; font-size:12px; cursor:pointer;}
+  .row-count{font-size:11.5px; color:var(--text-faint); font-family:'JetBrains Mono',monospace; margin-left:auto;}
+
+  .section{margin-bottom:26px;}
+  .section-head{background:var(--navy-head); border:1px solid var(--line); border-bottom:none; padding:9px 16px; border-radius:10px 10px 0 0; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;}
+  .section-head h2{font-size:13px; letter-spacing:.05em; text-transform:uppercase; font-weight:700;}
+  .section-head .note{font-size:10.5px; color:var(--text-faint); font-family:'JetBrains Mono',monospace;}
+
+  .table-wrap{width:100%; overflow-x:auto; border:1px solid var(--line); border-radius:0 0 10px 10px; background:var(--panel2);}
+  table{width:100%; border-collapse:collapse; min-width:1500px;}
+  thead th{font-size:9.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--text-dim); text-align:center; padding:8px 8px; border-bottom:1px solid var(--line); font-weight:600; white-space:nowrap; background:var(--navy-head); cursor:pointer; user-select:none;}
+  thead th:hover{color:var(--teal);}
+  thead th.left{text-align:left;}
+  thead th .arrow{font-size:9px; margin-left:2px; opacity:.6;}
+  tbody td{padding:6px 8px; text-align:center; font-family:'JetBrains Mono',monospace; font-size:11.5px; border-bottom:1px solid var(--line-soft); color:var(--heat-text); white-space:nowrap;}
+  tbody td.left{text-align:left; font-family:'Inter',sans-serif;}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr:hover td{filter:brightness(1.08);}
+  .tk-cell{font-weight:800; color:var(--text); background:transparent !important;}
+  .company-cell{color:var(--text-dim); font-size:11px; background:transparent !important; max-width:220px; overflow:hidden; text-overflow:ellipsis;}
+  .tag-mini{background:var(--input-bg); border:1px solid var(--line); padding:2px 7px; border-radius:4px; font-size:10.5px; color:var(--text-dim); background-color:transparent !important;}
+  .arrow-up{color:var(--teal); font-weight:800;}
+  .arrow-down{color:var(--red); font-weight:800;}
+  .badge{font-size:10px; font-weight:800; padding:2px 8px; border-radius:100px; display:inline-block;}
+  .badge.open{background:rgba(56,189,248,.15); color:var(--blue); border:1px solid rgba(56,189,248,.3);}
+  .badge.closed{background:rgba(139,147,168,.15); color:var(--text-dim); border:1px solid var(--line);}
+
+  .legend{display:flex; gap:18px; padding:12px 16px; font-size:11.5px; color:var(--text-dim); align-items:center; flex-wrap:wrap;}
+  .legend .key{display:flex; align-items:center; gap:6px;}
+  .legend .swatch{width:12px; height:12px; border-radius:3px;}
+
+  footer{margin-top:30px; text-align:center; color:var(--text-faint); font-size:10.5px; font-family:'JetBrains Mono',monospace;}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- ================= APP TABS ================= -->
+  <div class="app-tabs">
+    <a href="index.html">Market Dashboard</a>
+    <a href="stockbee_market_monitor_live.html">Stockbee Monitor</a>
+    <a href="sata_watchlist_dashboard.html">SATA Chart</a>
+    <a href="liquid_leaders.html">Liquid Leaders</a>
+    <a href="group_momentum.html">Group Momentum</a>
+    <a href="PriceStructure.html">Price Structure</a>
+    <a href="StageAnalysis.html">Stage Analysis</a>
+    <a href="MarketRegime.html">Market Regime</a>
+    <a href="PortfolioManagement.html" class="active">Portfolio Management</a>
+  </div>
+
+  <header class="top">
+    <div>
+      <div class="brand-eyebrow">Live Holdings · Sector &amp; Industry Allocation · Trade Journal</div>
+      <h1>Portfolio Management</h1>
+      <div class="subline" id="subline">Loading…</div>
+    </div>
+    <div class="header-right">
+      <button class="btn primary" id="btnRefresh">↻ Refresh Live Data</button>
+      <div class="theme-toggle" id="themeToggle">
+        <span class="opt" id="optDark">Dark</span>
+        <span class="opt" id="optLight">Light</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="data-panel">
+    <div class="data-panel-head" id="dataPanelHead">
+      <div>
+        <h2>Data Source</h2>
+        <div class="sub">Pulls live from your published Portfolio Google Sheet. If sharing settings block a direct fetch, upload the CSV export manually below.</div>
+      </div>
+      <button class="btn" id="toggleDataPanel">Open ▾</button>
+    </div>
+    <div class="data-panel-body" id="dataPanelBody">
+      <div class="dropzone" id="dropzone">
+        <input type="file" id="fileInput" accept=".csv,text/csv" style="display:none;">
+        <div style="font-weight:700; font-size:12px; text-transform:uppercase;">Click to choose a CSV file, or drag it in here</div>
+        <div class="dz-sub">Exported comma-separated values (.csv) from your Portfolio Management sheet</div>
+      </div>
+      <div style="margin-top:10px;"><span class="status-msg" id="statusMsg"></span></div>
+    </div>
+  </div>
+
+  <!-- ================= SUMMARY GAUGE STRIP ================= -->
+  <div class="gauge-strip">
+    <div class="card">
+      <div class="label">Total Assets</div>
+      <div class="big" id="totalAssetsBig" style="color:var(--teal)">—</div>
+      <div class="cap" id="totalAssetsCap">Cash + positions</div>
+    </div>
+    <div class="card">
+      <div class="label">Open Profit / Loss</div>
+      <div class="big" id="profitBig">—</div>
+      <div class="cap" id="profitCap">—</div>
+    </div>
+    <div class="card">
+      <div class="label">Cash %</div>
+      <div class="big" id="cashBig" style="color:var(--amber)">—</div>
+      <div class="cap" id="cashCap">Uninvested buying power</div>
+    </div>
+    <div class="card">
+      <div class="label">USD / AUD</div>
+      <div class="big" id="fxBig" style="color:var(--blue)">—</div>
+      <div class="cap">Reference FX rate</div>
+    </div>
+  </div>
+
+  <!-- ================= ALLOCATION DONUTS ================= -->
+  <div class="donut-grid">
+    <div class="donut-card">
+      <div class="donut-title">Allocation by Sector</div>
+      <div class="donut-wrap"><canvas id="sectorDonut"></canvas></div>
+    </div>
+    <div class="donut-card">
+      <div class="donut-title">Allocation by Industry</div>
+      <div class="donut-wrap"><canvas id="industryDonut"></canvas></div>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <input class="search-input" id="searchInput" placeholder="Search ticker or company…">
+    <select class="sector-filter" id="sectorFilter"><option value="">All Sectors</option></select>
+    <span class="row-count" id="rowCount"></span>
+  </div>
+
+  <!-- ================= HOLDINGS TABLE ================= -->
+  <div class="section">
+    <div class="section-head">
+      <h2>Holdings &amp; Trade Journal</h2>
+      <div class="note">Entry / Exit · ATR Risk · SMA Ladder · Trim Log</div>
+    </div>
+    <div class="table-wrap">
+      <table id="tblHoldings"></table>
+    </div>
+  </div>
+
+  <!-- ================= LEGEND ================= -->
+  <div class="section">
+    <div class="section-head"><h2>Legend</h2></div>
+    <div style="background:var(--panel2); border:1px solid var(--line); border-radius:0 0 10px 10px;" class="legend">
+      <div class="key"><span class="badge open">OPEN</span>Position currently held</div>
+      <div class="key"><span class="badge closed">CLOSED</span>Position exited (realized P/L booked)</div>
+      <div class="key"><span class="arrow-up">▲</span>Price above this SMA rung</div>
+      <div class="key"><span class="arrow-down">▼</span>Price below this SMA rung</div>
+      <div class="key"><span class="swatch" style="background:#ff5c72"></span>Below stop-loss / at risk</div>
+      <div class="key"><span class="swatch" style="background:#20d9b8"></span>Profitable / above entry</div>
+    </div>
+  </div>
+
+  <footer>Portfolio Management · Live from published Google Sheet · For informational purposes only, not trading advice.</footer>
+</div>
+
+<script>
+/* ============================================================
+   CONFIG
+   ============================================================ */
+const SHEET_ID = "13P9xvf1NWTzGtNO1HOAhryOwhQ087wLqo2qMqeMgf3g";
+const SHEET_GID = "2081359794";
+const SHEET_GVIZ_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${SHEET_GID}`;
+const PUBLISHED_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTvDsxwxJSatKaMzAUsdAGJT4ZhtiRQ0iHbyihBL9DOje7r4oVibcxYDOs-NYz3lBEXrevKMwq8duaH/pub?gid=2081359794&single=true&output=csv";
+
+const CORS_PROXIES = [
+  url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
+  url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+  url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`
+];
+
+let SUMMARY = { totalAssets: 0, profit: 0, profitPct: 0, cashPct: 0, cash: 0, fx: 0 };
+let ROWS = [];
+let sortKey = "weight", sortDir = -1;
+let dataSourceLabel = "sample data (bundled)";
+let sectorChart = null, industryChart = null;
+
+/* ============================================================
+   SAMPLE / SEED DATA (matches the screenshot as fallback)
+   ============================================================ */
+const DEFAULT_ROWS = [
+  { ticker:"AMKR", company:"Amkor Technology, Inc.", sector:"Technology", industry:"Semiconductor Equipment & Materials", weight:11.07, shares:20, totalCost:1480.00, purchaseDay:"2026/06/15", entryActual:74.00, priceLast:66.73, pctChg:6.67, pl:-145.40, plPct:-9.82, exitDate:"", exitPrice:null, realizedPl:null, realizedPlPct:null, dayHold:null, value:1334.60, atr:6.03, atrPct:9.04, sma50:73.78, sma50Pct:-9.56, sma10:"down", sma20:"down", sma50t:"down", sma10w:"down", sma40w:"up", stopLoss:61.72, entryLo:67.75, entryMid:73.78, holdVals:[79.81,85.84,91.87,97.90,103.93,109.96,115.99,122.02,128.05,134.08,140.11], trimPct:null, returnMax:null, reward:null },
+  { ticker:"PENG", company:"Penguin Solutions, Inc.", sector:"Technology", industry:"Information Technology Services", weight:9.72, shares:20, totalCost:1300.00, purchaseDay:"2026/06/23", entryActual:65.00, priceLast:58.10, pctChg:9.15, pl:0.00, plPct:0.00, exitDate:"2026/07/08", exitPrice:72.50, realizedPl:150.00, realizedPlPct:11.54, dayHold:15, value:1162.00, atr:8.50, atrPct:14.63, sma50:61.43, sma50Pct:-5.42, sma10:"down", sma20:"down", sma50t:"down", sma10w:"up", sma40w:"up", stopLoss:44.43, entryLo:52.93, entryMid:61.43, holdVals:[69.93,78.43,86.93,95.43,103.93,112.43,120.93,129.43,137.93,146.43,154.93], trimPct:100, returnMax:null, reward:null },
+  { ticker:"SIMO", company:"Silicon Motion Technology Corporation", sector:"Technology", industry:"Semiconductors", weight:20.87, shares:9, totalCost:2790.00, purchaseDay:"2026/06/30", entryActual:310.00, priceLast:278.17, pctChg:10.12, pl:0.00, plPct:0.00, exitDate:"2026/07/09", exitPrice:334.00, realizedPl:216.00, realizedPlPct:7.74, dayHold:9, value:2503.53, atr:26.09, atrPct:9.38, sma50:287.54, sma50Pct:-3.26, sma10:"down", sma20:"down", sma50t:"down", sma10w:"up", sma40w:"up", stopLoss:235.36, entryLo:261.45, entryMid:287.54, holdVals:[313.63,339.72,365.81,391.90,417.99,444.08,470.17,496.26,522.35,548.44,574.53], trimPct:100, returnMax:null, reward:null },
+  { ticker:"EXEL", company:"Exelixis, Inc.", sector:"Healthcare", industry:"Biotechnology", weight:8.08, shares:20, totalCost:1080.00, purchaseDay:"2026/07/01", entryActual:54.00, priceLast:56.12, pctChg:1.06, pl:0.00, plPct:0.00, exitDate:"2026/07/15", exitPrice:55.67, realizedPl:33.40, realizedPlPct:3.09, dayHold:14, value:1122.40, atr:1.50, atrPct:2.67, sma50:52.68, sma50Pct:6.53, sma10:"up", sma20:"up", sma50t:"up", sma10w:"up", sma40w:"up", stopLoss:49.68, entryLo:51.18, entryMid:52.68, holdVals:[54.18,55.68,57.18,58.68,60.18,61.68,63.18,64.68,66.18,67.68,69.18], trimPct:100, returnMax:17.0, reward:2.13 },
+  { ticker:"AMDL", company:"GraniteShares 2x Long AMD Daily ETF", sector:"General", industry:"ETF", weight:10.47, shares:20, totalCost:1400.00, purchaseDay:"2026/07/06", entryActual:70.00, priceLast:69.62, pctChg:15.86, pl:-7.60, plPct:-0.54, exitDate:"", exitPrice:null, realizedPl:null, realizedPlPct:null, dayHold:null, value:1392.40, atr:9.48, atrPct:13.62, sma50:64.22, sma50Pct:8.41, sma10:"up", sma20:"up", sma50t:"up", sma10w:"up", sma40w:"up", stopLoss:45.26, entryLo:54.74, entryMid:64.22, holdVals:[73.70,83.18,92.66,102.14,111.62,121.10,130.58,140.06,149.54,159.02,168.50], trimPct:null, returnMax:86.5, reward:2.45 },
+  { ticker:"PENG", company:"Penguin Solutions, Inc.", sector:"Technology", industry:"Information Technology Services", weight:12.90, shares:25, totalCost:1725.00, purchaseDay:"2026/07/21", entryActual:69.00, priceLast:58.10, pctChg:9.15, pl:-272.50, plPct:-15.80, exitDate:"", exitPrice:null, realizedPl:null, realizedPlPct:null, dayHold:null, value:1452.50, atr:8.50, atrPct:14.63, sma50:61.43, sma50Pct:-5.42, sma10:"down", sma20:"down", sma50t:"down", sma10w:"up", sma40w:"up", stopLoss:44.43, entryLo:52.93, entryMid:61.43, holdVals:[69.93,78.43,86.93,95.43,103.93,112.43,120.93,129.43,137.93,146.43,154.93], trimPct:null, returnMax:null, reward:null },
+  { ticker:"SOFI", company:"SoFi Technologies, Inc.", sector:"Financial Services", industry:"Credit Services", weight:7.07, shares:50, totalCost:945.00, purchaseDay:"2026/07/13", entryActual:18.90, priceLast:17.64, pctChg:3.70, pl:-63.00, plPct:-6.67, exitDate:"", exitPrice:null, realizedPl:null, realizedPlPct:null, dayHold:null, value:882.00, atr:0.91, atrPct:5.16, sma50:17.07, sma50Pct:3.34, sma10:"down", sma20:"down", sma50t:"up", sma10w:"up", sma40w:"down", stopLoss:15.25, entryLo:16.16, entryMid:17.07, holdVals:[17.98,18.89,19.80,20.71,21.62,22.53,23.44,24.35,25.26,26.17,27.08], trimPct:null, returnMax:24.0, reward:1.24 },
+  { ticker:"SNXX", company:"Tradr 2X Long Sndk Daily ETF", sector:"General", industry:"ETF", weight:12.34, shares:100, totalCost:1650.00, purchaseDay:"2026/07/14", entryActual:16.50, priceLast:17.82, pctChg:28.57, pl:132.00, plPct:8.00, exitDate:"", exitPrice:null, realizedPl:null, realizedPlPct:null, dayHold:null, value:1782.00, atr:5.77, atrPct:32.38, sma50:26.85, sma50Pct:-33.63, sma10:"down", sma20:"down", sma50t:"down", sma10w:"down", sma40w:"up", stopLoss:15.31, entryLo:21.08, entryMid:26.85, holdVals:[32.62,38.39,44.16,49.93,55.70,61.47,67.24,73.01,78.78,84.55,90.32], trimPct:null, returnMax:null, reward:null },
+  { ticker:"YPF", company:"YPF Sociedad Anónima", sector:"Energy", industry:"Oil & Gas Integrated", weight:7.48, shares:20, totalCost:1000.00, purchaseDay:"2026/07/08", entryActual:50.00, priceLast:51.33, pctChg:1.76, pl:26.60, plPct:2.66, exitDate:"", exitPrice:null, realizedPl:null, realizedPlPct:null, dayHold:null, value:1026.60, atr:1.69, atrPct:3.29, sma50:49.18, sma50Pct:4.37, sma10:"up", sma20:"up", sma50t:"up", sma10w:"up", sma40w:"up", stopLoss:45.80, entryLo:47.49, entryMid:49.18, holdVals:[50.87,52.56,54.25,55.94,57.63,59.32,61.01,62.70,64.39,66.08,67.77], trimPct:null, returnMax:22.0, reward:2.62 },
+];
+ROWS = DEFAULT_ROWS.slice();
+SUMMARY = { totalAssets:12658, profit:-330, profitPct:-2.47, cashPct:0.00, cash:0, fx:1.43 };
+
+const PALETTE = ["#20d9b8","#f5b942","#ff5c72","#38bdf8","#a855f7","#34d399","#f97316","#facc15","#3b82f6","#ec4899","#eab308","#14b8a6"];
+
+/* ============================================================
+   CSV PARSER — mirrors the multi-header layout of the sheet
+   ============================================================ */
+function parseCSVGrid(text){
+  const rows = [];
+  let row = [], field = '', inQuotes = false;
+  for(let i=0;i<text.length;i++){
+    const ch = text[i], next = text[i+1];
+    if(inQuotes){
+      if(ch === '"' && next === '"'){ field+='"'; i++; }
+      else if(ch === '"'){ inQuotes=false; }
+      else field += ch;
+    } else {
+      if(ch === '"'){ inQuotes = true; }
+      else if(ch === ','){ row.push(field); field=''; }
+      else if(ch === '\n'){ row.push(field); field=''; rows.push(row); row=[]; }
+      else if(ch === '\r'){ /* skip */ }
+      else field += ch;
+    }
+  }
+  if(field.length || row.length){ row.push(field); rows.push(row); }
+  return rows;
+}
+
+const gnorm = s => (s===undefined||s===null) ? "" : String(s).trim();
+function gnum(v){
+  if(v===undefined||v===null) return null;
+  const s = String(v).replace(/[$,%]/g,'').replace(/,/g,'').trim();
+  if(s==="" || s==="—") return null;
+  const n = parseFloat(s);
+  return isNaN(n) ? null : n;
+}
+function arrowState(v){
+  const s = gnorm(v);
+  if(s === "▲") return "up";
+  if(s === "▼") return "down";
+  return null;
+}
+
+function findRowIndex(grid, firstCellText){
+  const target = gnorm(firstCellText).toLowerCase();
+  for(let r=0;r<grid.length;r++){
+    if(gnorm(grid[r][0]).toLowerCase() === target) return r;
+  }
+  return -1;
+}
+
+function parsePortfolioCSV(text){
+  const grid = parseCSVGrid(text);
+
+  // ---- Summary box: labels sit in col 4 (Total assets/Profit/Profit %) and col 7 (Cash/Cash%/USD-AUD),
+  // with numeric values two cols after each label (col 6) or, for Cash%/USD-AUD, further right (col 18).
+  const summary = { totalAssets:0, profit:0, profitPct:0, cashPct:0, cash:0, fx:0 };
+  for(let r=0; r<Math.min(grid.length, 6); r++){
+    const row = grid[r] || [];
+    for(let c=0; c<row.length; c++){
+      const label = gnorm(row[c]).toLowerCase();
+      if(label === "total assets") summary.totalAssets = gnum(row[c+2]) ?? summary.totalAssets;
+      else if(label === "profit") summary.profit = gnum(row[c+2]) ?? summary.profit;
+      else if(label === "profit %") summary.profitPct = gnum(row[c+2]) ?? summary.profitPct;
+      else if(label.startsWith("cash") && label !== "cash"){
+        // "Cash%" / "Cash\uFF05" label — scan rightward on this row for the first % value
+        for(let cc=c+1; cc<row.length; cc++){
+          const v = gnorm(row[cc]);
+          if(v.includes('%')){ summary.cashPct = gnum(v) ?? summary.cashPct; break; }
+        }
+      }
+      else if(label.includes("usd/aud")){
+        for(let cc=c+1; cc<row.length; cc++){
+          const v = gnum(row[cc]);
+          if(v !== null){ summary.fx = v; break; }
+        }
+      }
+    }
+  }
+
+  // ---- Ticker table: find header row containing "Ticker" as first cell AND "Company" second cell
+  let headerRowIdx = -1;
+  for(let r=0;r<grid.length;r++){
+    if(gnorm(grid[r][0]).toLowerCase() === "ticker" && gnorm(grid[r][1]).toLowerCase() === "company"){
+      headerRowIdx = r; break;
+    }
+  }
+  if(headerRowIdx === -1) throw new Error("Couldn't find the Ticker/Company header row.");
+
+  // Fixed column layout verified against the published sheet's two-row header:
+  //  0 Ticker | 1 Company | 2 Sector | 3 Industry | 4 Weight | 5 Shares | 6 Total Cost
+  //  7 Purchase day | 8 8Week | 9 Entry Actual | 10 Price Last | 11 % Chg
+  //  12 P/L | 13 P/L % | 14 Exit Date | 15 Exit Price | 16 Realized P/L | 17 Realized P/L %
+  //  18 Day Hold | 19 Value | 20 ATR | 21 ATR% | 22 50MA | 23 50MA %
+  //  24-28 SMA ladder arrows (10d,20d,50d,10w,40w) | 29 spacer '%'
+  //  30 Stop Loss(-2) | 31 (-1) | 32 SMA50 anchor (0) | 33 (1) | 34 (2) | 35 (3) | 36 (4)
+  //  37-43 Hold ladder (5..11) | 44 Trim log % | 45 Return Max | 46 Reward:Risk
+  const cTicker=0, cCompany=1, cSector=2, cIndustry=3, cWeight=4, cShares=5, cTotalCost=6, cPurchaseDay=7;
+  const cActual=9, cLast=10, cPctChg=11, cPL=12, cPLPct=13, cExitDate=14, cExitPrice=15,
+        cRealizedPL=16, cRealizedPLPct=17, cDayHold=18, cValue=19, cATR=20, cATRPct=21,
+        cSMA50=22, cSMA50Pct=23, cSma10=24, cSma20=25, cSma50t=26, cSma10w=27, cSma40w=28,
+        cLadderBase=30, cTrimLog=44, cReturn=45, cReward=46;
+
+  const dataRows = [];
+  for(let r=headerRowIdx+2; r<grid.length; r++){
+    const row = grid[r];
+    const ticker = gnorm(row[cTicker]);
+    if(!ticker) continue;
+    const company = gnorm(row[cCompany]);
+    if(!company && !gnum(row[cWeight])) continue;
+
+    const holdVals = [];
+    for(let k=0;k<11;k++){
+      const v = gnum(row[cLadderBase + 7 + k]); // relative positions 5..11
+      if(v !== null) holdVals.push(v);
+    }
+
+    dataRows.push({
+      ticker: ticker.toUpperCase(),
+      company,
+      sector: gnorm(row[cSector]) || "\u2014",
+      industry: gnorm(row[cIndustry]) || "\u2014",
+      weight: gnum(row[cWeight]) ?? 0,
+      shares: gnum(row[cShares]) ?? 0,
+      totalCost: gnum(row[cTotalCost]) ?? 0,
+      purchaseDay: gnorm(row[cPurchaseDay]),
+      entryActual: gnum(row[cActual]),
+      priceLast: gnum(row[cLast]),
+      pctChg: gnum(row[cPctChg]),
+      pl: gnum(row[cPL]),
+      plPct: gnum(row[cPLPct]),
+      exitDate: gnorm(row[cExitDate]),
+      exitPrice: gnum(row[cExitPrice]),
+      realizedPl: gnum(row[cRealizedPL]),
+      realizedPlPct: gnum(row[cRealizedPLPct]),
+      dayHold: gnum(row[cDayHold]),
+      value: gnum(row[cValue]) ?? 0,
+      atr: gnum(row[cATR]),
+      atrPct: gnum(row[cATRPct]),
+      sma50: gnum(row[cSMA50]),
+      sma50Pct: gnum(row[cSMA50Pct]),
+      sma10: arrowState(row[cSma10]),
+      sma20: arrowState(row[cSma20]),
+      sma50t: arrowState(row[cSma50t]),
+      sma10w: arrowState(row[cSma10w]),
+      sma40w: arrowState(row[cSma40w]),
+      stopLoss: gnum(row[cLadderBase]),
+      entryLo: gnum(row[cLadderBase+1]),
+      entryMid: gnum(row[cLadderBase+2]),
+      holdVals,
+      trimPct: gnum(row[cTrimLog]),
+      returnMax: gnum(row[cReturn]),
+      reward: gnum(row[cReward]),
+    });
+  }
+
+  return { summary, rows: dataRows };
+}
+
+/* ============================================================
+   RENDERING
+   ============================================================ */
+function fmtMoney(v, dp=0){ return v==null ? "—" : "$" + v.toLocaleString(undefined,{minimumFractionDigits:dp, maximumFractionDigits:dp}); }
+function fmtPct(v, dp=2){ return v==null ? "—" : (v>0?"+":"") + v.toFixed(dp) + "%"; }
+function fmtNum(v, dp=2){ return v==null ? "—" : v.toFixed(dp); }
+
+function populateSectorFilter(){
+  const sectors = [...new Set(ROWS.map(r=>r.sector).filter(Boolean))].sort();
+  const sel = document.getElementById("sectorFilter");
+  const current = sel.value;
+  sel.innerHTML = `<option value="">All Sectors</option>` + sectors.map(s=>`<option value="${s}">${s}</option>`).join("");
+  sel.value = current;
+}
+
+function getFilteredSorted(){
+  const q = document.getElementById("searchInput").value.trim().toUpperCase();
+  const sector = document.getElementById("sectorFilter").value;
+  let rows = ROWS.filter(r=>{
+    if(sector && r.sector !== sector) return false;
+    if(q && !(r.ticker.toUpperCase().includes(q) || r.company.toUpperCase().includes(q))) return false;
+    return true;
+  });
+  rows.sort((a,b)=>{
+    const av = a[sortKey], bv = b[sortKey];
+    if(typeof av === "string") return sortDir * (av||"").localeCompare(bv||"");
+    return sortDir * ((av??-Infinity) - (bv??-Infinity));
+  });
+  return rows;
+}
+
+function renderSummary(){
+  document.getElementById("totalAssetsBig").textContent = fmtMoney(SUMMARY.totalAssets);
+  const profitEl = document.getElementById("profitBig");
+  profitEl.textContent = fmtMoney(SUMMARY.profit);
+  profitEl.style.color = SUMMARY.profit >= 0 ? "var(--teal)" : "var(--red)";
+  document.getElementById("profitCap").textContent = fmtPct(SUMMARY.profitPct) + " overall";
+  document.getElementById("profitCap").style.color = SUMMARY.profitPct >= 0 ? "var(--teal)" : "var(--red)";
+  document.getElementById("cashBig").textContent = fmtPct(SUMMARY.cashPct, 2);
+  document.getElementById("fxBig").textContent = SUMMARY.fx ? SUMMARY.fx.toFixed(2) : "—";
+}
+
+function aggregateBy(key){
+  const map = {};
+  ROWS.forEach(r=>{
+    const k = r[key] || "Other";
+    map[k] = (map[k] || 0) + (r.value || r.totalCost || 0);
+  });
+  return map;
+}
+
+function renderDonut(canvasId, dataMap, existingChartRef){
+  const labels = Object.keys(dataMap);
+  const values = Object.values(dataMap);
+  const colors = labels.map((_,i)=>PALETTE[i % PALETTE.length]);
+  const isDark = (document.documentElement.getAttribute("data-theme") || "dark") === "dark";
+  const textColor = isDark ? "#8b93a8" : "#5b6478";
+
+  if(existingChartRef){ existingChartRef.destroy(); }
+
+  const ctx = document.getElementById(canvasId).getContext('2d');
+  return new Chart(ctx, {
+    type: 'doughnut',
+    data: { labels, datasets: [{ data: values, backgroundColor: colors, borderColor: isDark ? '#101625' : '#ffffff', borderWidth: 2 }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      cutout: '62%',
+      plugins: {
+        legend: { position: 'bottom', labels: { color: textColor, font: { size: 11, family: "'Inter', sans-serif" }, boxWidth: 12, padding: 10 } },
+        tooltip: { callbacks: { label: (ctx)=>{
+          const total = values.reduce((a,b)=>a+b,0);
+          const pct = total ? (ctx.parsed/total*100).toFixed(1) : 0;
+          return ` ${ctx.label}: $${ctx.parsed.toLocaleString()} (${pct}%)`;
+        }}}
+      }
+    }
+  });
+}
+
+function renderDonuts(){
+  sectorChart = renderDonut("sectorDonut", aggregateBy("sector"), sectorChart);
+  industryChart = renderDonut("industryDonut", aggregateBy("industry"), industryChart);
+}
+
+function smaCellArrow(state){
+  if(state === "up") return `<span class="arrow-up">▲</span>`;
+  if(state === "down") return `<span class="arrow-down">▼</span>`;
+  return `<span style="color:var(--text-faint)">—</span>`;
+}
+
+const COLS = [
+  {key:"ticker", label:"Ticker"},
+  {key:"company", label:"Company"},
+  {key:"sector", label:"Sector"},
+  {key:"industry", label:"Industry"},
+  {key:"weight", label:"Weight"},
+  {key:"shares", label:"Shares"},
+  {key:"totalCost", label:"Cost"},
+  {key:"purchaseDay", label:"Purchased"},
+  {key:"entryActual", label:"Entry"},
+  {key:"priceLast", label:"Last"},
+  {key:"pctChg", label:"%Chg (ATR)"},
+  {key:"pl", label:"P/L"},
+  {key:"plPct", label:"P/L %"},
+  {key:"status", label:"Status"},
+  {key:"realizedPl", label:"Realized P/L"},
+  {key:"dayHold", label:"Days"},
+  {key:"value", label:"Value"},
+  {key:"atrPct", label:"ATR%"},
+  {key:"sma50Pct", label:"vs 50MA"},
+  {key:"smaLadder", label:"10d 20d 50d 10w 40w"},
+  {key:"stopLoss", label:"Stop Loss"},
+  {key:"returnMax", label:"Max Return"},
+  {key:"reward", label:"Reward:Risk"},
+];
+
+function renderTable(){
+  const rows = getFilteredSorted();
+  document.getElementById("rowCount").textContent = `${rows.length} of ${ROWS.length} positions`;
+
+  let head = "<thead><tr>" + COLS.map(c=>{
+    const arrow = sortKey===c.key ? (sortDir===1?"▲":"▼") : "";
+    const cls = (c.key==="company") ? "left" : "";
+    return `<th class="${cls}" data-key="${c.key}">${c.label}<span class="arrow">${arrow}</span></th>`;
+  }).join("") + "</tr></thead>";
+
+  let body = "<tbody>" + rows.map(r=>{
+    const isOpen = !r.exitDate;
+    const plColor = (r.pl ?? 0) >= 0 ? "var(--teal)" : "var(--red)";
+    const stopRisk = (r.priceLast != null && r.stopLoss != null && r.priceLast <= r.stopLoss);
+    return `<tr>
+      <td class="left tk-cell">${r.ticker}</td>
+      <td class="left company-cell" title="${r.company}">${r.company}</td>
+      <td class="left"><span class="tag-mini">${r.sector}</span></td>
+      <td class="left"><span class="tag-mini">${r.industry}</span></td>
+      <td>${r.weight != null ? r.weight.toFixed(2)+"%" : "—"}</td>
+      <td>${r.shares ?? "—"}</td>
+      <td>${fmtMoney(r.totalCost, 2)}</td>
+      <td>${r.purchaseDay || "—"}</td>
+      <td>${r.entryActual != null ? r.entryActual.toFixed(2) : "—"}</td>
+      <td>${r.priceLast != null ? r.priceLast.toFixed(2) : "—"}</td>
+      <td>${r.pctChg != null ? r.pctChg.toFixed(2)+"%" : "—"}</td>
+      <td style="color:${plColor}; font-weight:700;">${r.pl != null ? fmtMoney(r.pl,2) : "—"}</td>
+      <td style="color:${plColor}; font-weight:700;">${r.plPct != null ? fmtPct(r.plPct) : "—"}</td>
+      <td><span class="badge ${isOpen?'open':'closed'}">${isOpen?'OPEN':'CLOSED'}</span></td>
+      <td>${r.realizedPl != null ? fmtMoney(r.realizedPl,2) : "—"}</td>
+      <td>${r.dayHold ?? "—"}</td>
+      <td>${fmtMoney(r.value,2)}</td>
+      <td>${r.atrPct != null ? r.atrPct.toFixed(2)+"%" : "—"}</td>
+      <td style="color:${(r.sma50Pct??0)>=0?'var(--teal)':'var(--red)'}">${r.sma50Pct != null ? fmtPct(r.sma50Pct) : "—"}</td>
+      <td>${smaCellArrow(r.sma10)} ${smaCellArrow(r.sma20)} ${smaCellArrow(r.sma50t)} ${smaCellArrow(r.sma10w)} ${smaCellArrow(r.sma40w)}</td>
+      <td style="color:${stopRisk?'var(--red)':'var(--text-dim)'}; font-weight:${stopRisk?'800':'400'};">${r.stopLoss != null ? r.stopLoss.toFixed(2) : "—"}</td>
+      <td style="color:var(--teal);">${r.returnMax != null ? r.returnMax.toFixed(1)+"%" : "—"}</td>
+      <td>${r.reward != null ? r.reward.toFixed(2) : "—"}</td>
+    </tr>`;
+  }).join("") + "</tbody>";
+
+  document.getElementById("tblHoldings").innerHTML = head + body;
+
+  document.querySelectorAll("#tblHoldings thead th").forEach(th=>{
+    th.addEventListener("click", ()=>{
+      const key = th.getAttribute("data-key");
+      if(key === "smaLadder" || key === "status") return;
+      if(sortKey === key) sortDir *= -1; else { sortKey = key; sortDir = -1; }
+      renderTable();
+    });
+  });
+}
+
+function renderAll(){
+  populateSectorFilter();
+  renderSummary();
+  renderDonuts();
+  renderTable();
+  document.getElementById("subline").textContent = `${ROWS.length} positions · Source: ${dataSourceLabel}`;
+}
+
+/* ============================================================
+   DATA FETCH
+   ============================================================ */
+const statusMsg = document.getElementById("statusMsg");
+function setStatus(msg, isErr){
+  statusMsg.textContent = msg;
+  statusMsg.className = "status-msg" + (isErr ? " err" : "");
+}
+
+async function fetchCSVText(url, label){
+  const res = await fetch(url, { cache: "no-store" });
+  if(!res.ok) throw new Error(`${label}: HTTP ${res.status}`);
+  const text = await res.text();
+  if(!text || text.trim().startsWith('<') || text.includes("ServiceLogin")){
+    throw new Error(`${label}: got a webpage instead of CSV.`);
+  }
+  return text;
+}
+
+async function refreshLiveData(){
+  const btn = document.getElementById("btnRefresh");
+  if(btn) btn.textContent = "↻ Fetching…";
+  setStatus("Fetching live sheet…");
+
+  const urls = [PUBLISHED_CSV_URL, SHEET_GVIZ_URL];
+  let text = null, source = null;
+
+  for(const url of urls){
+    try{
+      text = await fetchCSVText(url + (url.includes('?')?'&':'?') + 'cachebust=' + Date.now(), "Direct");
+      source = "direct";
+      break;
+    }catch(e){ /* try proxies for this url */ }
+    for(const build of CORS_PROXIES){
+      try{
+        text = await fetchCSVText(build(url), "Proxy");
+        source = "proxy";
+        break;
+      }catch(e){}
+    }
+    if(text) break;
+  }
+
+  if(!text){
+    setStatus(`Live fetch blocked — please ensure your Google Sheet is published to the web ("Anyone with the link can view"), or upload the CSV below.`, true);
+    if(btn) btn.textContent = "↻ Refresh Live Data";
+    return;
+  }
+
+  try{
+    const { summary, rows } = parsePortfolioCSV(text);
+    if(rows.length === 0) throw new Error("Parsed 0 holdings — check the sheet layout.");
+    ROWS = rows;
+    SUMMARY = summary;
+    dataSourceLabel = `live sheet (via ${source})`;
+    renderAll();
+    setStatus(`✓ Loaded ${ROWS.length} positions via ${source}.`);
+  }catch(e){
+    setStatus(`Fetched sheet but failed parsing: ${e.message}`, true);
+  }
+  if(btn) btn.textContent = "↻ Refresh Live Data";
+}
+
+document.getElementById("btnRefresh").addEventListener("click", refreshLiveData);
+document.getElementById("searchInput").addEventListener("input", renderTable);
+document.getElementById("sectorFilter").addEventListener("change", renderTable);
+
+document.getElementById("toggleDataPanel").addEventListener("click", ()=>{
+  const body = document.getElementById("dataPanelBody");
+  const btn = document.getElementById("toggleDataPanel");
+  body.classList.toggle("open");
+  btn.textContent = body.classList.contains("open") ? "Close ▴" : "Open ▾";
+});
+
+const dropzone = document.getElementById("dropzone");
+const fileInput = document.getElementById("fileInput");
+function readFile(file){
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e=>{
+    try{
+      const { summary, rows } = parsePortfolioCSV(e.target.result);
+      if(rows.length === 0) throw new Error("Parsed 0 holdings — check the CSV layout.");
+      ROWS = rows;
+      SUMMARY = summary;
+      dataSourceLabel = `uploaded file (${file.name})`;
+      renderAll();
+      setStatus(`✓ Loaded ${ROWS.length} positions from ${file.name}.`);
+    }catch(err){ setStatus(`Parse error: ${err.message}`, true); }
+  };
+  reader.readAsText(file);
+}
+dropzone.addEventListener("click", ()=> fileInput.click());
+fileInput.addEventListener("change", e=> readFile(e.target.files[0]));
+["dragenter","dragover"].forEach(evt=> dropzone.addEventListener(evt, e=>{ e.preventDefault(); dropzone.classList.add("drag"); }));
+["dragleave","drop"].forEach(evt=> dropzone.addEventListener(evt, e=>{ e.preventDefault(); dropzone.classList.remove("drag"); }));
+dropzone.addEventListener("drop", e=>{ const f = e.dataTransfer.files[0]; if(f) readFile(f); });
+
+function updateThemeToggleUI(){
+  const theme = document.documentElement.getAttribute("data-theme") || "dark";
+  document.getElementById("optDark").classList.toggle("active", theme==="dark");
+  document.getElementById("optLight").classList.toggle("active", theme==="light");
+}
+function setTheme(theme){
+  document.documentElement.setAttribute("data-theme", theme);
+  updateThemeToggleUI();
+  try{ localStorage.setItem('market-monitor-theme', theme); }catch(e){}
+  renderDonuts();
+}
+document.getElementById("optDark").addEventListener("click", ()=>setTheme("dark"));
+document.getElementById("optLight").addEventListener("click", ()=>setTheme("light"));
+
+(function init(){
+  try{
+    const savedTheme = localStorage.getItem('market-monitor-theme');
+    if(savedTheme) document.documentElement.setAttribute("data-theme", savedTheme);
+  }catch(e){}
+  updateThemeToggleUI();
+  renderAll();
+  refreshLiveData();
+})();
+</script>
+</body>
+</html>
