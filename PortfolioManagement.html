@@ -4,7 +4,41 @@
 <link rel="icon" href="data:,">
 <meta charset="UTF-8">
 <title>Portfolio Management</title>
+<!-- Lightweight Charts v4 Library & Chart.js -->
+<script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+
+<style>
+  /* ================= IN-PAGE CHART MODAL STYLES ================= */
+  .chart-modal-backdrop {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(4px);
+    display: none; justify-content: center; align-items: center; z-index: 9999;
+    padding: 24px;
+  }
+  .chart-modal {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+    width: 100%; max-width: 1050px; height: 720px; display: flex; flex-direction: column;
+    box-shadow: 0 24px 48px rgba(0,0,0,0.5); overflow: hidden;
+  }
+  .chart-modal-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 14px 20px; border-bottom: 1px solid var(--line); background: var(--panel2);
+  }
+  .modal-title { font-size: 16px; font-weight: 800; font-family: 'JetBrains Mono', monospace; }
+  .modal-status {
+    font-size: 11px; font-family: 'JetBrains Mono', monospace; font-weight: 700;
+    padding: 4px 10px; border-radius: 4px; background: rgba(32, 217, 184, 0.1); color: var(--teal);
+    border: 1px solid rgba(32, 217, 184, 0.2);
+  }
+  .modal-close {
+    background: transparent; border: 1px solid var(--line); color: var(--text-dim);
+    font-size: 14px; font-weight: 700; width: 30px; height: 30px; border-radius: 6px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+  }
+  .modal-close:hover { border-color: var(--red); color: var(--red); background: rgba(255, 92, 114, 0.1); }
+  .chart-modal-body { flex: 1; width: 100%; position: relative; }
+</style>  
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
@@ -104,7 +138,7 @@
   tbody td.left{text-align:left; font-family:'Inter',sans-serif;}
   tbody tr:last-child td{border-bottom:none;}
   tbody tr:hover td{filter:brightness(1.08);}
-  .tk-cell{font-weight:800; color:var(--text); background:transparent !important;}
+  .tk-cell{font-weight:800; color:var(--teal); background:transparent !important; cursor:pointer; text-decoration:underline; text-underline-offset:3px;}
   .company-cell{color:var(--text-dim); font-size:11px; background:transparent !important; max-width:220px; overflow:hidden; text-overflow:ellipsis;}
   .tag-mini{background:var(--input-bg); border:1px solid var(--line); padding:2px 7px; border-radius:4px; font-size:10.5px; color:var(--text-dim); background-color:transparent !important;}
   .arrow-up{color:var(--teal); font-weight:800;}
@@ -137,7 +171,7 @@
     <a href="StageAnalysis.html">Stage Analysis</a>
     <a href="tv_watchlist.html">TradingView Watchlist</a>
     <a href="PortfolioManagement.html" class="active" >Portfolio Management</a>
- 
+    
   </div>
 
   <header class="top">
@@ -239,7 +273,21 @@
     </div>
   </div>
 
-  <footer>Portfolio Management · Live from published Google Sheet · For informational purposes only, not trading advice.</footer>
+  <footer>Portfolio Management · Live from published Google Sheet · Click ticker for HLC Chart · For informational purposes only.</footer>
+</div>
+
+<!-- ================= IN-PAGE CHART MODAL ================= -->
+<div id="chartModalBackdrop" class="chart-modal-backdrop" onclick="closeChartModal(event)">
+  <div class="chart-modal" onclick="event.stopPropagation()">
+    <div class="chart-modal-header">
+      <div id="modalTitle" class="modal-title">TICKER</div>
+      <div style="display: flex; gap: 12px; align-items: center;">
+        <span id="modalStatus" class="modal-status">CONNECTING...</span>
+        <button class="modal-close" onclick="closeChartModal()">✕</button>
+      </div>
+    </div>
+    <div id="modalChartContainer" class="chart-modal-body"></div>
+  </div>
 </div>
 
 <script>
@@ -264,7 +312,7 @@ let dataSourceLabel = "sample data (bundled)";
 let sectorChart = null, industryChart = null;
 
 /* ============================================================
-   SAMPLE / SEED DATA (matches the screenshot as fallback)
+   SAMPLE / SEED DATA
    ============================================================ */
 const DEFAULT_ROWS = [
   { ticker:"AMKR", company:"Amkor Technology, Inc.", sector:"Technology", industry:"Semiconductor Equipment & Materials", weight:11.07, shares:20, totalCost:1480.00, purchaseDay:"2026/06/15", entryActual:74.00, priceLast:66.73, pctChg:6.67, pl:-145.40, plPct:-9.82, exitDate:"", exitPrice:null, realizedPl:null, realizedPlPct:null, dayHold:null, value:1334.60, atr:6.03, atrPct:9.04, sma50:73.78, sma50Pct:-9.56, sma10:"down", sma20:"down", sma50t:"down", sma10w:"down", sma40w:"up", stopLoss:61.72, entryLo:67.75, entryMid:73.78, holdVals:[79.81,85.84,91.87,97.90,103.93,109.96,115.99,122.02,128.05,134.08,140.11], trimPct:null, returnMax:null, reward:null },
@@ -277,14 +325,13 @@ const DEFAULT_ROWS = [
   { ticker:"SNXX", company:"Tradr 2X Long Sndk Daily ETF", sector:"General", industry:"ETF", weight:12.34, shares:100, totalCost:1650.00, purchaseDay:"2026/07/14", entryActual:16.50, priceLast:17.82, pctChg:28.57, pl:132.00, plPct:8.00, exitDate:"", exitPrice:null, realizedPl:null, realizedPlPct:null, dayHold:null, value:1782.00, atr:5.77, atrPct:32.38, sma50:26.85, sma50Pct:-33.63, sma10:"down", sma20:"down", sma50t:"down", sma10w:"down", sma40w:"up", stopLoss:15.31, entryLo:21.08, entryMid:26.85, holdVals:[32.62,38.39,44.16,49.93,55.70,61.47,67.24,73.01,78.78,84.55,90.32], trimPct:null, returnMax:null, reward:null },
   { ticker:"YPF", company:"YPF Sociedad Anónima", sector:"Energy", industry:"Oil & Gas Integrated", weight:7.48, shares:20, totalCost:1000.00, purchaseDay:"2026/07/08", entryActual:50.00, priceLast:51.33, pctChg:1.76, pl:26.60, plPct:2.66, exitDate:"", exitPrice:null, realizedPl:null, realizedPlPct:null, dayHold:null, value:1026.60, atr:1.69, atrPct:3.29, sma50:49.18, sma50Pct:4.37, sma10:"up", sma20:"up", sma50t:"up", sma10w:"up", sma40w:"up", stopLoss:45.80, entryLo:47.49, entryMid:49.18, holdVals:[50.87,52.56,54.25,55.94,57.63,59.32,61.01,62.70,64.39,66.08,67.77], trimPct:null, returnMax:22.0, reward:2.62 },
 ];
-// Enforce weight zeroing for closed positions on default data too
 ROWS = DEFAULT_ROWS.map(r => ({...r, weight: r.exitDate ? 0 : r.weight}));
 SUMMARY = { totalAssets:12658, profit:-330, profitPct:-2.47, cashPct:0.00, cash:0, fx:1.43 };
 
 const PALETTE = ["#20d9b8","#f5b942","#ff5c72","#38bdf8","#a855f7","#34d399","#f97316","#facc15","#3b82f6","#ec4899","#eab308","#14b8a6"];
 
 /* ============================================================
-   CSV PARSER — mirrors the multi-header layout of the sheet
+   CSV PARSER
    ============================================================ */
 function parseCSVGrid(text){
   const rows = [];
@@ -322,18 +369,9 @@ function arrowState(v){
   return null;
 }
 
-function findRowIndex(grid, firstCellText){
-  const target = gnorm(firstCellText).toLowerCase();
-  for(let r=0;r<grid.length;r++){
-    if(gnorm(grid[r][0]).toLowerCase() === target) return r;
-  }
-  return -1;
-}
-
 function parsePortfolioCSV(text){
   const grid = parseCSVGrid(text);
 
-  // ---- Summary box: labels sit in col 4 (Total assets/Profit/Profit %) and col 7 (Cash/Cash%/USD-AUD)
   const summary = { totalAssets:0, profit:0, profitPct:0, cashPct:0, cash:0, fx:0 };
   for(let r=0; r<Math.min(grid.length, 6); r++){
     const row = grid[r] || [];
@@ -357,7 +395,6 @@ function parsePortfolioCSV(text){
     }
   }
 
-  // ---- Ticker table: find header row containing "Ticker" as first cell AND "Company" second cell
   let headerRowIdx = -1;
   for(let r=0;r<grid.length;r++){
     if(gnorm(grid[r][0]).toLowerCase() === "ticker" && gnorm(grid[r][1]).toLowerCase() === "company"){
@@ -366,7 +403,6 @@ function parsePortfolioCSV(text){
   }
   if(headerRowIdx === -1) throw new Error("Couldn't find the Ticker/Company header row.");
 
-  // Fixed column layout verified against the published sheet's two-row header
   const cTicker=0, cCompany=1, cSector=2, cIndustry=3, cWeight=4, cShares=5, cTotalCost=6, cPurchaseDay=7;
   const cActual=9, cLast=10, cPctChg=11, cPL=12, cPLPct=13, cExitDate=14, cExitPrice=15,
         cRealizedPL=16, cRealizedPLPct=17, cDayHold=18, cValue=19, cATR=20, cATRPct=21,
@@ -383,11 +419,10 @@ function parsePortfolioCSV(text){
 
     const holdVals = [];
     for(let k=0;k<11;k++){
-      const v = gnum(row[cLadderBase + 7 + k]); // relative positions 5..11
+      const v = gnum(row[cLadderBase + 7 + k]);
       if(v !== null) holdVals.push(v);
     }
     
-    // Explicitly zero-out active weight if the position has been closed
     const exitDateStr = gnorm(row[cExitDate]);
     const isClosed = !!exitDateStr;
 
@@ -438,7 +473,6 @@ function parsePortfolioCSV(text){
    ============================================================ */
 function fmtMoney(v, dp=0){ return v==null ? "—" : "$" + v.toLocaleString(undefined,{minimumFractionDigits:dp, maximumFractionDigits:dp}); }
 function fmtPct(v, dp=2){ return v==null ? "—" : (v>0?"+":"") + v.toFixed(dp) + "%"; }
-function fmtNum(v, dp=2){ return v==null ? "—" : v.toFixed(dp); }
 
 function populateSectorFilter(){
   const sectors = [...new Set(ROWS.map(r=>r.sector).filter(Boolean))].sort();
@@ -478,7 +512,7 @@ function renderSummary(){
 function aggregateBy(key){
   const map = {};
   ROWS.forEach(r=>{
-    if(r.exitDate) return; // Skip closed positions so capital isn't mapped twice
+    if(r.exitDate) return; 
     const k = r[key] || "Other";
     map[k] = (map[k] || 0) + (r.value || r.totalCost || 0);
   });
@@ -567,7 +601,7 @@ function renderTable(){
     const dispWeight = isOpen && r.weight != null && r.weight !== 0 ? r.weight.toFixed(2)+"%" : "—";
     
     return `<tr>
-      <td class="left tk-cell">${r.ticker}</td>
+      <td class="left tk-cell" onclick="openStandaloneChart('${r.ticker}')">${r.ticker}</td>
       <td class="left company-cell" title="${r.company}">${r.company}</td>
       <td class="left"><span class="tag-mini">${r.sector}</span></td>
       <td class="left"><span class="tag-mini">${r.industry}</span></td>
@@ -614,7 +648,176 @@ function renderAll(){
 }
 
 /* ============================================================
-   DATA FETCH
+   STANDALONE MODAL ENGINE
+   ============================================================ */
+let currentModalChart = null, modalResizeObserver = null;
+function closeChartModal(e) {
+  if (!e || e.target.id === 'chartModalBackdrop' || !e.target) {
+    document.getElementById('chartModalBackdrop').style.display = 'none';
+    if (currentModalChart) { currentModalChart.remove(); currentModalChart = null; }
+    if (modalResizeObserver) { modalResizeObserver.disconnect(); modalResizeObserver = null; }
+  }
+}
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeChartModal(); });
+
+function openStandaloneChart(ticker) {
+  const backdrop = document.getElementById('chartModalBackdrop');
+  const container = document.getElementById('modalChartContainer');
+  const titleEl = document.getElementById('modalTitle');
+  const statusEl = document.getElementById('modalStatus');
+
+  titleEl.innerHTML = `${ticker} <span style="font-size:12px; font-weight:400; color:var(--text-dim);">· Institutional Daily HLC</span>`;
+  statusEl.textContent = 'FETCHING LIVE DATA...';
+  statusEl.style.color = 'var(--amber)';
+  backdrop.style.display = 'flex';
+
+  if (currentModalChart) { currentModalChart.remove(); currentModalChart = null; }
+  if (modalResizeObserver) { modalResizeObserver.disconnect(); }
+  container.innerHTML = '';
+
+  const currentTheme = document.documentElement.getAttribute("data-theme") || "dark";
+  const isDark = currentTheme === "dark";
+  const chartBg = isDark ? '#101625' : '#ffffff';
+  const textColor = isDark ? '#8b93a8' : '#5b6478';
+  const gridColor = isDark ? 'rgba(33, 42, 61, 0.4)' : 'rgba(221, 226, 236, 0.6)';
+
+  currentModalChart = LightweightCharts.createChart(container, {
+    layout: { background: { type: 'solid', color: chartBg }, textColor: textColor, fontFamily: "'JetBrains Mono', monospace" },
+    grid: { vertLines: { color: gridColor }, horzLines: { color: gridColor } },
+    rightPriceScale: { borderColor: gridColor },
+    timeScale: { borderColor: gridColor, timeVisible: false },
+    crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+  });
+
+  modalResizeObserver = new ResizeObserver(entries => {
+    if (entries.length === 0 || entries[0].target !== container || !currentModalChart) return;
+    currentModalChart.applyOptions({ width: container.clientWidth, height: container.clientHeight });
+  });
+  modalResizeObserver.observe(container);
+
+  function calculateEMA(data, period, key) {
+    const k = 2 / (period + 1);
+    let ema = 0, started = false;
+    const result = [];
+    for (let i = 0; i < data.length; i++) {
+      const val = data[i][key];
+      if (!started) { ema = val; started = true; } else { ema = (val - ema) * k + ema; }
+      result.push({ time: data[i].time, value: ema });
+    }
+    return result;
+  }
+
+  async function loadModalData() {
+    const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=1y`;
+    const proxies = [
+      url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
+      url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+      url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+      url => url
+    ];
+
+    let json = null;
+    for (const buildProxy of proxies) {
+      try {
+        const res = await fetch(buildProxy(targetUrl));
+        if (res.ok) { json = await res.json(); break; }
+      } catch (e) { console.warn("Proxy attempt failed, trying next..."); }
+    }
+
+    if (!json || !json.chart || !json.chart.result) {
+      statusEl.textContent = 'DATA ERROR';
+      statusEl.style.color = 'var(--red)';
+      return;
+    }
+
+    const result = json.chart.result[0];
+    const timestamps = result.timestamp || [];
+    const quote = result.indicators.quote[0] || {};
+    const rawData = [];
+
+    for (let i = 0; i < timestamps.length; i++) {
+      if (quote.open[i] != null && quote.high[i] != null && quote.low[i] != null && quote.close[i] != null) {
+        const dateStr = new Date(timestamps[i] * 1000).toISOString().split('T')[0];
+        rawData.push({ time: dateStr, open: quote.open[i], high: quote.high[i], low: quote.low[i], close: quote.close[i] });
+      }
+    }
+
+    const uniqueMap = new Map();
+    rawData.forEach(bar => uniqueMap.set(bar.time, bar));
+    const cleanData = Array.from(uniqueMap.values()).sort((a, b) => a.time.localeCompare(b.time));
+
+    if (cleanData.length === 0) { statusEl.textContent = 'NO BARS FOUND'; return; }
+
+    const maHighData = calculateEMA(cleanData, 21, 'high');
+    const maLowData = calculateEMA(cleanData, 21, 'low');
+    const ema21Data = calculateEMA(cleanData, 21, 'close');
+
+    const dcLength = 100, dcOffset = 2;
+    const dcUpperData = [], dcLowerData = [], dcBasisData = [];
+    for (let i = 0; i < cleanData.length; i++) {
+      if (i >= dcLength - 1) {
+        const windowBars = cleanData.slice(i - dcLength + 1, i + 1);
+        const highestHigh = Math.max(...windowBars.map(b => b.high));
+        const lowestLow = Math.min(...windowBars.map(b => b.low));
+        const basisValue = (highestHigh + lowestLow) / 2;
+        if (i + dcOffset < cleanData.length) {
+          const targetTime = cleanData[i + dcOffset].time;
+          dcUpperData.push({ time: targetTime, value: highestHigh });
+          dcLowerData.push({ time: targetTime, value: lowestLow });
+          dcBasisData.push({ time: targetTime, value: basisValue });
+        }
+      }
+    }
+
+    const cloudHighSeries = currentModalChart.addAreaSeries({
+      topColor: isDark ? 'rgba(200, 200, 205, 0.08)' : 'rgba(160, 160, 165, 0.12)',
+      bottomColor: isDark ? 'rgba(200, 200, 205, 0.08)' : 'rgba(160, 160, 165, 0.12)',
+      lineColor: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)',
+      lineWidth: 1, priceLineVisible: false, lastValueVisible: false,
+    });
+    cloudHighSeries.setData(maHighData);
+
+    const cloudLowMaskSeries = currentModalChart.addAreaSeries({
+      topColor: chartBg, bottomColor: chartBg,
+      lineColor: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)',
+      lineWidth: 1, priceLineVisible: false, lastValueVisible: false,
+    });
+    cloudLowMaskSeries.setData(maLowData);
+
+    const ema21Series = currentModalChart.addLineSeries({
+      color: isDark ? '#64748b' : '#94a3b8', lineWidth: 1, priceLineVisible: false, lastValueVisible: false,
+    });
+    ema21Series.setData(ema21Data);
+
+    const dcLineColor = isDark ? 'rgba(245, 185, 66, 0.5)' : 'rgba(185, 120, 26, 0.5)';
+    const dcUpperSeries = currentModalChart.addLineSeries({ color: dcLineColor, lineWidth: 1, lineStyle: 2, priceLineVisible: false, lastValueVisible: false });
+    const dcLowerSeries = currentModalChart.addLineSeries({ color: dcLineColor, lineWidth: 1, lineStyle: 2, priceLineVisible: false, lastValueVisible: false });
+    const dcBasisSeries = currentModalChart.addLineSeries({ color: dcLineColor, lineWidth: 1, lineStyle: 2, priceLineVisible: false, lastValueVisible: false });
+    dcUpperSeries.setData(dcUpperData);
+    dcLowerSeries.setData(dcLowerData);
+    dcBasisSeries.setData(dcBasisData);
+
+    const maHighMap = new Map(maHighData.map(item => [item.time, item.value]));
+    const coloredBars = cleanData.map(bar => {
+      const currentMAHigh = maHighMap.get(bar.time);
+      let standardColor = isDark ? "#f8fafc" : "#000000";
+      let barColor = (currentMAHigh !== undefined && bar.close < currentMAHigh) ? "#e600e6" : standardColor;
+      return { ...bar, color: barColor };
+    });
+
+    const barSeries = currentModalChart.addBarSeries({ thinBars: false, openVisible: false });
+    barSeries.setData(coloredBars);
+
+    statusEl.textContent = 'LIVE YAHOO DATA';
+    statusEl.style.color = 'var(--teal)';
+    currentModalChart.timeScale().fitContent();
+  }
+
+  loadModalData();
+}
+
+/* ============================================================
+   DATA FETCH & INIT
    ============================================================ */
 const statusMsg = document.getElementById("statusMsg");
 function setStatus(msg, isErr){
@@ -645,7 +848,7 @@ async function refreshLiveData(){
       text = await fetchCSVText(url + (url.includes('?')?'&':'?') + 'cachebust=' + Date.now(), "Direct");
       source = "direct";
       break;
-    }catch(e){ /* try proxies for this url */ }
+    }catch(e){}
     for(const build of CORS_PROXIES){
       try{
         text = await fetchCSVText(build(url), "Proxy");
