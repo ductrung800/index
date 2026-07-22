@@ -93,7 +93,7 @@
   }
   .detail {
     flex: 1; min-width: 0; display: flex; flex-direction: column; 
-    overflow-y: auto; background: var(--panel);
+    overflow: hidden; background: var(--panel);
   }
 
   /* ---- Sidebar internals ---- */
@@ -171,7 +171,7 @@
   .detail-empty .small{font-size:12px; color:var(--text-faint); max-width:300px; text-align:center; line-height:1.6;}
 
   .detail-head{
-    display:flex; align-items:center; justify-content:space-between;
+    display:flex; align-items:center; justify-content:space-between; flex-shrink: 0;
     padding:18px 24px; border-bottom:1px solid var(--line); background:var(--navy-head);
   }
   .dh-left{display:flex; align-items:center; gap:12px;}
@@ -190,11 +190,41 @@
   }
   .icon-btn:hover{color:var(--red); border-color:var(--red); background:rgba(255,92,114,.1);}
 
-  .detail-body{padding:20px 24px 34px; display:flex; flex-direction:column; gap:20px;}
+  /* Redesigned Detail Body layout */
+  .detail-body {
+    padding: 24px; 
+    display: flex; 
+    flex-direction: row; 
+    gap: 24px; 
+    flex: 1; 
+    min-height: 0;
+  }
+  .chart-column {
+    flex: 1; 
+    display: flex; 
+    flex-direction: column; 
+    min-width: 0; 
+    min-height: 0;
+  }
+  #chartArea {
+    flex: 1; 
+    display: flex; 
+    flex-direction: column; 
+    min-height: 0;
+  }
+  .stats-column {
+    width: 360px; 
+    flex-shrink: 0; 
+    display: flex; 
+    flex-direction: column; 
+    gap: 16px; 
+    overflow-y: auto; 
+    padding-right: 8px;
+  }
 
   /* Image Compare Styles */
   .compare-frame{
-    position:relative; width:100%; aspect-ratio:16/7; max-height:68vh; min-height:340px;
+    position:relative; width:100%; height: 100%;
     border-radius:10px; overflow:hidden; border:1px solid var(--line); background:var(--panel2);
   }
   .compare-frame.split-mode{display:flex;}
@@ -248,20 +278,20 @@
   }
   .compare-expand-btn:hover{border-color:var(--teal); color:var(--teal);}
 
-  /* Stat Grids */
-  .panel-row{display:flex; gap:18px; align-items:flex-start;}
-  .panel-row > *{flex:1; min-width:0;}
+  /* Stat Grids - Reconfigured for Vertical Sidebar */
   .stats-panel, .metrics-panel, .notes-panel{
     border:1px solid var(--line); border-radius:10px; background:var(--panel2); padding:16px 20px;
+    flex-shrink: 0;
   }
   .panel-title{
     font-family:'JetBrains Mono', monospace; font-size:11px; font-weight:700; letter-spacing:.05em; text-transform:uppercase;
-    color:var(--text-dim); margin-bottom:14px; display:flex; align-items:center; gap:8px;
+    color:var(--text-dim); margin-bottom:16px; display:flex; align-items:center; gap:8px;
   }
   .panel-title .dot{width:7px; height:7px; border-radius:50%; background:var(--amber);}
   
-  .stats-grid{display:grid; grid-template-columns:repeat(4, 1fr); gap:16px 20px;}
-  .metrics-grid{display:grid; grid-template-columns:repeat(3, 1fr); gap:16px 20px;}
+  .stats-grid, .metrics-grid{
+    display:grid; grid-template-columns:repeat(2, 1fr); gap:14px 16px;
+  }
   
   .stat-cell label, .metric-cell label{
     display:block; font-family:'JetBrains Mono', monospace; font-size:10px; letter-spacing:.05em; color:var(--text-dim);
@@ -274,7 +304,6 @@
   .stat-cell input::placeholder, .metric-cell input::placeholder{color:var(--placeholder-color); font-weight:500;}
   .stat-cell input:focus, .metric-cell input:focus, .stat-cell select:focus{border-bottom:1.5px solid var(--teal);}
   .stat-cell.wide, .metric-cell.wide{grid-column:span 2;}
-  .metric-cell.wide{grid-column:span 3;}
   .stat-cell.neg input{color:var(--red);}
   .stat-cell.pos input{color:var(--teal);}
   .stat-cell.computed input{color:var(--blue); cursor:default; border-bottom-style:dashed;}
@@ -297,10 +326,9 @@
   /* Market Widget */
   .mkt-widget{
     display:flex; align-items:center; gap:12px; padding:12px; border-radius:10px;
-    border:1px solid var(--line); background:var(--input-bg); cursor:pointer; margin-bottom:14px;
+    border:1px solid var(--line); background:var(--input-bg); margin-bottom:14px;
     transition:.15s;
   }
-  .mkt-widget:hover{border-color:var(--teal);}
   .mkt-light{
     width:14px; height:14px; border-radius:50%; flex:0 0 14px;
     box-shadow:0 0 0 4px color-mix(in srgb, var(--lightcolor) 20%, transparent);
@@ -434,7 +462,19 @@
   <div class="playbook-app">
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-head">
-        <div id="mktWidgetWrap"></div>
+        
+        <!-- AUTO UPDATING MARKET WIDGET -->
+        <div class="mkt-widget" id="mktWidget" style="--lightcolor:var(--text-faint)">
+          <div class="mkt-light" id="mktLight"></div>
+          <div class="mkt-main" style="pointer-events: none;">
+            <div class="mkt-status" id="mktStatusText">LOADING REGIME...</div>
+            <div class="mkt-idx-row">
+              <div class="mkt-idx"><span class="mkt-idx-dot" id="qqqWidgetDot" style="background:var(--text-faint);"></span><span class="mkt-idx-label">QQQ</span></div>
+              <div class="mkt-idx"><span class="mkt-idx-dot" id="spyWidgetDot" style="background:var(--text-faint);"></span><span class="mkt-idx-label">SPY</span></div>
+            </div>
+          </div>
+        </div>
+
         <div class="search-wrap">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input type="text" id="searchInput" placeholder="Search ticker...">
@@ -621,126 +661,92 @@
     try{ await Store.set('tags-config', JSON.stringify(TAGS), false); }catch(e){ console.error(e); }
   }
 
-  const SLOPE_OPTS = [['up','Sloping up'],['flat','Flattening'],['down','Sloping down']];
-  const DEFAULT_MARKET = {
-    qqq: { sma10:'', sma20:'', slope10:'up', slope20:'up' },
-    spy: { sma10:'', sma20:'', slope10:'up', slope20:'up' },
-    updated: ''
-  };
-  let market = JSON.parse(JSON.stringify(DEFAULT_MARKET));
-
-  async function loadMarket(){
-    try{
-      const res = await Store.get('market-filter', false);
-      market = res && res.value ? JSON.parse(res.value) : JSON.parse(JSON.stringify(DEFAULT_MARKET));
-    }catch(e){ market = JSON.parse(JSON.stringify(DEFAULT_MARKET)); }
-  }
-  async function saveMarket(){
-    try{ await Store.set('market-filter', JSON.stringify(market), false); }catch(e){ console.error(e); }
-  }
-
-  function indexLight(idx){
-    if(idx.sma10==='' || idx.sma20==='' || idx.sma10===null || idx.sma20===null) return 'na';
-    const s10 = Number(idx.sma10), s20 = Number(idx.sma20);
-    if(s10 <= s20) return 'red';
-    if(idx.slope10==='down' && idx.slope20==='down') return 'red';
-    if(idx.slope10==='down' || idx.slope20==='down') return 'yellow';
-    if(idx.slope10==='up' && idx.slope20==='up') return 'green';
-    return 'yellow';
-  }
+  /* ============================================================
+     AUTO MARKET REGIME (YAHOO FINANCE FETCH)
+     ============================================================ */
   const LIGHT_RANK = { red:0, yellow:1, na:1, green:2 };
   const LIGHT_COLOR = { green:'var(--teal)', yellow:'var(--amber)', red:'var(--red)', na:'var(--text-faint)' };
-  const LIGHT_STATUS = {
-    green:{ text:'BREAKOUTS ON', sub:'10SMA > 20SMA, both trending up — risk-on' },
-    yellow:{ text:'CAUTION', sub:'Averages flattening or 10SMA near 20SMA — trade lighter' },
-    red:{ text:'BREAKOUTS OFF', sub:'10SMA below 20SMA or both sloping down — move to cash' },
-    na:{ text:'NOT SET', sub:'Enter QQQ / SPY 10 & 20 SMA to activate the filter' },
-  };
-  function overallLight(){
-    const q = indexLight(market.qqq), s = indexLight(market.spy);
-    if(q==='na' && s==='na') return 'na';
-    const worstRank = Math.min(LIGHT_RANK[q], LIGHT_RANK[s]);
-    return Object.keys(LIGHT_RANK).find(k=>LIGHT_RANK[k]===worstRank && k!=='na') || 'yellow';
+
+  async function fetchTickerData(ticker) {
+    const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=60d`;
+    const proxies = [
+      url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
+      url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+      url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+      url => url
+    ];
+
+    let json = null;
+    for (const buildProxy of proxies) {
+      try {
+        const res = await fetch(buildProxy(targetUrl));
+        if (res.ok) { json = await res.json(); break; }
+      } catch (e) {}
+    }
+    if (!json || !json.chart || !json.chart.result) return null;
+    
+    const result = json.chart.result[0];
+    const quote = result.indicators.quote[0];
+    const closes = quote.close;
+    const highs = quote.high;
+    const lows = quote.low;
+    
+    // Calculate 21 EMA
+    const k = 2 / (21 + 1);
+    let currentEma = closes.find(c => c !== null) || 0;
+    
+    for(let i=0; i<closes.length; i++) {
+      if(closes[i] !== null) {
+        currentEma = (closes[i] - currentEma) * k + currentEma;
+      }
+    }
+    
+    // Find latest valid candle
+    let lastIdx = closes.length - 1;
+    while(lastIdx >= 0 && closes[lastIdx] === null) { lastIdx--; }
+    
+    return { close: closes[lastIdx], high: highs[lastIdx], low: lows[lastIdx], ema21: currentEma };
   }
 
-  function renderMarketWidget(){
-    const overall = overallLight();
-    const status = LIGHT_STATUS[overall];
-    const ql = indexLight(market.qqq), sl = indexLight(market.spy);
-    document.getElementById('mktWidgetWrap').innerHTML = `
-      <div class="mkt-widget" id="mktWidget" style="--lightcolor:${LIGHT_COLOR[overall]}">
-        <div class="mkt-light"></div>
-        <div class="mkt-main">
-          <div class="mkt-status">${status.text}</div>
-          <div class="mkt-idx-row">
-            <div class="mkt-idx" style="--dotcolor:${LIGHT_COLOR[ql]}"><span class="mkt-idx-dot"></span><span class="mkt-idx-label">QQQ</span></div>
-            <div class="mkt-idx" style="--dotcolor:${LIGHT_COLOR[sl]}"><span class="mkt-idx-dot"></span><span class="mkt-idx-label">SPY</span></div>
-          </div>
-        </div>
-      </div>`;
-    document.getElementById('mktWidget').addEventListener('click', openMarketModal);
+  function getRegime(data) {
+    if(!data) return { cycle: 'NA', color: 'na' };
+    if (data.low > data.ema21) return { cycle: 'BULLISH CYCLE', color: 'green' };
+    if (data.high < data.ema21) return { cycle: 'BEARISH CYCLE', color: 'red' };
+    return { cycle: 'FLAT / MIXED', color: 'yellow' };
   }
 
-  function openMarketModal(){
-    const root = document.getElementById('modalRoot');
-    function block(key,label){
-      const d = market[key];
-      return `
-        <div style="border:1px solid var(--line); border-radius:8px; padding:12px; margin-bottom:12px; background:var(--panel2);">
-          <div style="font-family:'JetBrains Mono', monospace; font-weight:700; font-size:11.5px; margin-bottom:12px; color:var(--text);">${label}</div>
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-            <div class="form-field"><label>10-day SMA</label><input data-idx="${key}" data-field="sma10" type="number" step="0.01" value="${d.sma10}" placeholder="e.g. 512.30"></div>
-            <div class="form-field"><label>20-day SMA</label><input data-idx="${key}" data-field="sma20" type="number" step="0.01" value="${d.sma20}" placeholder="e.g. 505.10"></div>
-            <div class="form-field"><label>10-day slope</label>
-              <select data-idx="${key}" data-field="slope10">
-                ${SLOPE_OPTS.map(([v,l])=>`<option value="${v}" ${d.slope10===v?'selected':''}>${l}</option>`).join('')}
-              </select>
-            </div>
-            <div class="form-field"><label>20-day slope</label>
-              <select data-idx="${key}" data-field="slope20">
-                ${SLOPE_OPTS.map(([v,l])=>`<option value="${v}" ${d.slope20===v?'selected':''}>${l}</option>`).join('')}
-              </select>
-            </div>
-          </div>
-        </div>`;
+  let marketCache = { qqq: null, spy: null, loaded: false };
+        
+  async function updateMarketRegime() {
+    const qqqWrap = document.getElementById('qqqWidgetDot');
+    const spyWrap = document.getElementById('spyWidgetDot');
+    const statusText = document.getElementById('mktStatusText');
+    const mainWidget = document.getElementById('mktWidget');
+    
+    if(!marketCache.loaded) {
+      statusText.textContent = "FETCHING REGIME...";
+      const [qqqData, spyData] = await Promise.all([fetchTickerData('QQQ'), fetchTickerData('SPY')]);
+      marketCache.qqq = getRegime(qqqData);
+      marketCache.spy = getRegime(spyData);
+      marketCache.loaded = true;
     }
-    root.innerHTML = `
-      <div class="modal-backdrop" id="mktBackdrop">
-        <div class="modal" style="width:480px;">
-          <h3><span class="dot"></span>Market filter</h3>
-          <p style="font-size:12px; color:var(--text-dim); line-height:1.6; margin-bottom:18px;">
-            Enter the current 10-day and 20-day SMA values for QQQ and SPY, plus how each average is sloping. Whichever index is worse sets the overall light.
-          </p>
-          ${block('qqq','QQQ — Nasdaq 100')}
-          ${block('spy','SPY — S&amp;P 500')}
-          <div style="padding:10px 12px; border-radius:8px; background:var(--input-bg); font-family:'JetBrains Mono', monospace; font-size:11px; font-weight:700; margin-top:16px;" id="mktPreview"></div>
-          <div class="modal-actions">
-            <button class="modal-cancel" id="mktCancelBtn">Close</button>
-            <button class="btn primary" id="mktSaveBtn">Save</button>
-          </div>
-        </div>
-      </div>`;
-    function updatePreview(){
-      const q = indexLight(market.qqq), s = indexLight(market.spy);
-      const o = overallLight();
-      document.getElementById('mktPreview').style.color = LIGHT_COLOR[o];
-      document.getElementById('mktPreview').textContent = `Preview → QQQ: ${q.toUpperCase()}  ·  SPY: ${s.toUpperCase()}  ·  Overall: ${LIGHT_STATUS[o].text}`;
-    }
-    root.querySelectorAll('[data-idx]').forEach(el=>{
-      el.addEventListener('input', ()=>{
-        market[el.dataset.idx][el.dataset.field] = el.value;
-        updatePreview();
-      });
-    });
-    updatePreview();
-    document.getElementById('mktBackdrop').addEventListener('click', (e)=>{ if(e.target.id==='mktBackdrop') closeModal(); });
-    document.getElementById('mktCancelBtn').addEventListener('click', ()=>{ closeModal(); renderMarketWidget(); });
-    document.getElementById('mktSaveBtn').addEventListener('click', async ()=>{
-      market.updated = new Date().toISOString();
-      await saveMarket();
-      closeModal();
-      renderMarketWidget();
-    });
+    
+    const qReg = marketCache.qqq;
+    const sReg = marketCache.spy;
+    
+    let overallRank = Math.min(LIGHT_RANK[qReg.color], LIGHT_RANK[sReg.color]);
+    let overallColor = Object.keys(LIGHT_RANK).find(k=>LIGHT_RANK[k]===overallRank) || 'yellow';
+    if(qReg.color === 'na' || sReg.color === 'na') overallColor = 'na';
+    
+    let statusLabel = "MIXED / CAUTION";
+    if(overallColor === 'green') statusLabel = "BULLISH CYCLE";
+    if(overallColor === 'red') statusLabel = "BEARISH CYCLE";
+    if(overallColor === 'na') statusLabel = "DATA UNAVAILABLE";
+    
+    statusText.textContent = statusLabel;
+    qqqWrap.style.background = LIGHT_COLOR[qReg.color];
+    spyWrap.style.background = LIGHT_COLOR[sReg.color];
+    mainWidget.style.setProperty('--lightcolor', LIGHT_COLOR[overallColor]);
   }
 
   let trades = [];
@@ -964,6 +970,8 @@
     computeDerived(t);
     const gainNum = Number(t.gainPct);
     const gainClass = gainNum>=0 ? 'pos':'neg';
+    
+    // UPDATED VERTICAL SPLIT LAYOUT
     detailEl.innerHTML = `
       <div class="detail-head" style="--tagcolor:${tagInfo.color}">
         <div class="dh-left">
@@ -983,11 +991,11 @@
         </div>
       </div>
       <div class="detail-body">
-        <div id="chartArea"></div>
-        <input type="file" id="fileInputBefore" accept="image/*">
-        <input type="file" id="fileInputAfter" accept="image/*">
+        <div class="chart-column">
+          <div id="chartArea"></div>
+        </div>
 
-        <div class="panel-row">
+        <div class="stats-column">
           <div class="stats-panel">
             <div class="panel-title"><span class="dot"></span>Execution stats</div>
             <div class="stats-grid">
@@ -995,12 +1003,12 @@
               ${statCell('stop','Stop',t.stop)}
               ${statCell('exitPrice','Exit Price',t.exitPrice)}
               ${statCell('exitType','Exit Type',t.exitType)}
-              ${statCell('entryDate','Entry Day',t.entryDate,'','date')}
-              ${statCell('exitDate','Exit Day',t.exitDate,'','date')}
-              ${(t.entryDate && t.exitDate) ? computedCell('holdDays','Hold (days)',t.holdDays) : statCell('holdDays','Hold (days)',t.holdDays)}
+              ${statCell('entryDate','Entry Day',t.entryDate,'wide','date')}
+              ${statCell('exitDate','Exit Day',t.exitDate,'wide','date')}
+              ${(t.entryDate && t.exitDate) ? computedCell('holdDays','Hold (days)',t.holdDays,'wide') : statCell('holdDays','Hold (days)',t.holdDays,'wide')}
               ${computedCell('riskPct','Risk %',t.riskPct)}
               ${t.exitPrice ? computedCell('gainPct','Gain %',t.gainPct) : statCell('gainPct','Gain %',t.gainPct)}
-              ${computedCell('rMultiple','R Multiple',t.rMultiple)}
+              ${computedCell('rMultiple','R Multiple',t.rMultiple,'wide')}
               ${statCell('lowPrice','Low (hold)',t.lowPrice)}
               ${statCell('highPrice','High (hold)',t.highPrice)}
               ${computedCell('mae','MAE (drawdown)',t.mae,'neg')}
@@ -1019,16 +1027,19 @@
               ${metricCell('sharesFloat','Shares Float',t.sharesFloat)}
               ${metricCell('floatPct','Float %',t.floatPct)}
               ${metricCell('avgDollarVol','Avg $ Vol',t.avgDollarVol)}
-              ${metricCell('atrMultSma50','ATR% Mult. from SMA50',t.atrMultSma50)}
+              ${metricCell('atrMultSma50','ATR% Mult. from SMA50',t.atrMultSma50,'wide')}
               ${metricCell('sector','Sector / Industry',t.sector,'wide')}
             </div>
           </div>
+
+          <div class="notes-panel">
+            <div class="panel-title"><span class="dot"></span>Thesis &amp; notes</div>
+            <textarea id="notesArea" placeholder="What set this trade up? Base pattern, catalyst, market context, what you'd repeat or avoid next time...">${t.notes||''}</textarea>
+          </div>
         </div>
 
-        <div class="notes-panel">
-          <div class="panel-title"><span class="dot"></span>Thesis &amp; notes</div>
-          <textarea id="notesArea" placeholder="What set this trade up? Base pattern, catalyst, market context, what you'd repeat or avoid next time...">${t.notes||''}</textarea>
-        </div>
+        <input type="file" id="fileInputBefore" accept="image/*">
+        <input type="file" id="fileInputAfter" accept="image/*">
       </div>
     `;
 
@@ -1431,7 +1442,7 @@
         }
       }
       selectedId = null;
-      renderMarketWidget(); renderFilters(); renderList(); renderDetail();
+      renderFilters(); renderList(); renderDetail();
     });
   }
 
@@ -1445,10 +1456,9 @@
   async function init(){
     loadTheme();
     await loadTags();
-    await loadMarket();
     await loadTrades();
     await seedIfEmpty();
-    renderMarketWidget();
+    updateMarketRegime(); // Replaces manual widget
     renderFilters();
     renderList();
     renderDetail();
