@@ -28,7 +28,6 @@
       var(--bg);
     color:var(--text); font-family:'Inter',sans-serif; padding:22px 26px 60px; transition:background .2s ease, color .2s ease;
   }
-  /*.wrap{max-width:1780px; margin:0 auto; width:100%;}
 
   /* ---------- UNIFORM APP TABS ---------- */
   .app-tabs {
@@ -138,7 +137,7 @@
     <a href="StageAnalysis.html">Stage Analysis</a>
     <a href="tv_watchlist.html">TradingView Watchlist</a>
     <a href="PortfolioManagement.html" class="active" >Portfolio Management</a>
-    <a href="IndustryRS.html">Industry RS</a>
+ 
   </div>
 
   <header class="top">
@@ -278,7 +277,8 @@ const DEFAULT_ROWS = [
   { ticker:"SNXX", company:"Tradr 2X Long Sndk Daily ETF", sector:"General", industry:"ETF", weight:12.34, shares:100, totalCost:1650.00, purchaseDay:"2026/07/14", entryActual:16.50, priceLast:17.82, pctChg:28.57, pl:132.00, plPct:8.00, exitDate:"", exitPrice:null, realizedPl:null, realizedPlPct:null, dayHold:null, value:1782.00, atr:5.77, atrPct:32.38, sma50:26.85, sma50Pct:-33.63, sma10:"down", sma20:"down", sma50t:"down", sma10w:"down", sma40w:"up", stopLoss:15.31, entryLo:21.08, entryMid:26.85, holdVals:[32.62,38.39,44.16,49.93,55.70,61.47,67.24,73.01,78.78,84.55,90.32], trimPct:null, returnMax:null, reward:null },
   { ticker:"YPF", company:"YPF Sociedad Anónima", sector:"Energy", industry:"Oil & Gas Integrated", weight:7.48, shares:20, totalCost:1000.00, purchaseDay:"2026/07/08", entryActual:50.00, priceLast:51.33, pctChg:1.76, pl:26.60, plPct:2.66, exitDate:"", exitPrice:null, realizedPl:null, realizedPlPct:null, dayHold:null, value:1026.60, atr:1.69, atrPct:3.29, sma50:49.18, sma50Pct:4.37, sma10:"up", sma20:"up", sma50t:"up", sma10w:"up", sma40w:"up", stopLoss:45.80, entryLo:47.49, entryMid:49.18, holdVals:[50.87,52.56,54.25,55.94,57.63,59.32,61.01,62.70,64.39,66.08,67.77], trimPct:null, returnMax:22.0, reward:2.62 },
 ];
-ROWS = DEFAULT_ROWS.slice();
+// Enforce weight zeroing for closed positions on default data too
+ROWS = DEFAULT_ROWS.map(r => ({...r, weight: r.exitDate ? 0 : r.weight}));
 SUMMARY = { totalAssets:12658, profit:-330, profitPct:-2.47, cashPct:0.00, cash:0, fx:1.43 };
 
 const PALETTE = ["#20d9b8","#f5b942","#ff5c72","#38bdf8","#a855f7","#34d399","#f97316","#facc15","#3b82f6","#ec4899","#eab308","#14b8a6"];
@@ -333,8 +333,7 @@ function findRowIndex(grid, firstCellText){
 function parsePortfolioCSV(text){
   const grid = parseCSVGrid(text);
 
-  // ---- Summary box: labels sit in col 4 (Total assets/Profit/Profit %) and col 7 (Cash/Cash%/USD-AUD),
-  // with numeric values two cols after each label (col 6) or, for Cash%/USD-AUD, further right (col 18).
+  // ---- Summary box: labels sit in col 4 (Total assets/Profit/Profit %) and col 7 (Cash/Cash%/USD-AUD)
   const summary = { totalAssets:0, profit:0, profitPct:0, cashPct:0, cash:0, fx:0 };
   for(let r=0; r<Math.min(grid.length, 6); r++){
     const row = grid[r] || [];
@@ -344,7 +343,6 @@ function parsePortfolioCSV(text){
       else if(label === "profit") summary.profit = gnum(row[c+2]) ?? summary.profit;
       else if(label === "profit %") summary.profitPct = gnum(row[c+2]) ?? summary.profitPct;
       else if(label.startsWith("cash") && label !== "cash"){
-        // "Cash%" / "Cash\uFF05" label — scan rightward on this row for the first % value
         for(let cc=c+1; cc<row.length; cc++){
           const v = gnorm(row[cc]);
           if(v.includes('%')){ summary.cashPct = gnum(v) ?? summary.cashPct; break; }
@@ -368,14 +366,7 @@ function parsePortfolioCSV(text){
   }
   if(headerRowIdx === -1) throw new Error("Couldn't find the Ticker/Company header row.");
 
-  // Fixed column layout verified against the published sheet's two-row header:
-  //  0 Ticker | 1 Company | 2 Sector | 3 Industry | 4 Weight | 5 Shares | 6 Total Cost
-  //  7 Purchase day | 8 8Week | 9 Entry Actual | 10 Price Last | 11 % Chg
-  //  12 P/L | 13 P/L % | 14 Exit Date | 15 Exit Price | 16 Realized P/L | 17 Realized P/L %
-  //  18 Day Hold | 19 Value | 20 ATR | 21 ATR% | 22 50MA | 23 50MA %
-  //  24-28 SMA ladder arrows (10d,20d,50d,10w,40w) | 29 spacer '%'
-  //  30 Stop Loss(-2) | 31 (-1) | 32 SMA50 anchor (0) | 33 (1) | 34 (2) | 35 (3) | 36 (4)
-  //  37-43 Hold ladder (5..11) | 44 Trim log % | 45 Return Max | 46 Reward:Risk
+  // Fixed column layout verified against the published sheet's two-row header
   const cTicker=0, cCompany=1, cSector=2, cIndustry=3, cWeight=4, cShares=5, cTotalCost=6, cPurchaseDay=7;
   const cActual=9, cLast=10, cPctChg=11, cPL=12, cPLPct=13, cExitDate=14, cExitPrice=15,
         cRealizedPL=16, cRealizedPLPct=17, cDayHold=18, cValue=19, cATR=20, cATRPct=21,
@@ -395,13 +386,17 @@ function parsePortfolioCSV(text){
       const v = gnum(row[cLadderBase + 7 + k]); // relative positions 5..11
       if(v !== null) holdVals.push(v);
     }
+    
+    // Explicitly zero-out active weight if the position has been closed
+    const exitDateStr = gnorm(row[cExitDate]);
+    const isClosed = !!exitDateStr;
 
     dataRows.push({
       ticker: ticker.toUpperCase(),
       company,
       sector: gnorm(row[cSector]) || "\u2014",
       industry: gnorm(row[cIndustry]) || "\u2014",
-      weight: gnum(row[cWeight]) ?? 0,
+      weight: isClosed ? 0 : (gnum(row[cWeight]) ?? 0),
       shares: gnum(row[cShares]) ?? 0,
       totalCost: gnum(row[cTotalCost]) ?? 0,
       purchaseDay: gnorm(row[cPurchaseDay]),
@@ -410,7 +405,7 @@ function parsePortfolioCSV(text){
       pctChg: gnum(row[cPctChg]),
       pl: gnum(row[cPL]),
       plPct: gnum(row[cPLPct]),
-      exitDate: gnorm(row[cExitDate]),
+      exitDate: exitDateStr,
       exitPrice: gnum(row[cExitPrice]),
       realizedPl: gnum(row[cRealizedPL]),
       realizedPlPct: gnum(row[cRealizedPLPct]),
@@ -483,6 +478,7 @@ function renderSummary(){
 function aggregateBy(key){
   const map = {};
   ROWS.forEach(r=>{
+    if(r.exitDate) return; // Skip closed positions so capital isn't mapped twice
     const k = r[key] || "Other";
     map[k] = (map[k] || 0) + (r.value || r.totalCost || 0);
   });
@@ -568,12 +564,14 @@ function renderTable(){
     const isOpen = !r.exitDate;
     const plColor = (r.pl ?? 0) >= 0 ? "var(--teal)" : "var(--red)";
     const stopRisk = (r.priceLast != null && r.stopLoss != null && r.priceLast <= r.stopLoss);
+    const dispWeight = isOpen && r.weight != null && r.weight !== 0 ? r.weight.toFixed(2)+"%" : "—";
+    
     return `<tr>
       <td class="left tk-cell">${r.ticker}</td>
       <td class="left company-cell" title="${r.company}">${r.company}</td>
       <td class="left"><span class="tag-mini">${r.sector}</span></td>
       <td class="left"><span class="tag-mini">${r.industry}</span></td>
-      <td>${r.weight != null ? r.weight.toFixed(2)+"%" : "—"}</td>
+      <td>${dispWeight}</td>
       <td>${r.shares ?? "—"}</td>
       <td>${fmtMoney(r.totalCost, 2)}</td>
       <td>${r.purchaseDay || "—"}</td>
