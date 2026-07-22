@@ -61,7 +61,6 @@
       var(--bg);
     color:var(--text); font-family:'Inter',sans-serif; padding:22px 26px 60px; transition:background .2s ease, color .2s ease;
   }
-  /*.wrap{max-width:1760px; margin:0 auto; width: 100%;}
 
   /* ---------- UNIFORM APP TABS ---------- */
   .app-tabs { 
@@ -130,7 +129,7 @@
 
   /* RANKING CHARTS SECTION */
   .rankings-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 24px; }
-  @media(max-width: 1200px) { .rankings-grid { grid-template-columns: 1fr; } }
+  @media(max-width: 1400px) { .rankings-grid { grid-template-columns: 1fr; } }
   .ranking-card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; }
   .ranking-title { font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; font-family: 'JetBrains Mono', monospace; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
   .ranking-bars { display: flex; flex-direction: column; gap: 8px; max-height: 280px; overflow-y: auto; padding-right: 4px; }
@@ -172,7 +171,7 @@
 <div class="wrap">
 
   <!-- ================= APP TABS ================= -->
-  <div class="app-tabs">
+  <div class="app-tabs"> 
     <a href="index.html">Market Dashboard</a>
     <a href="MarketRegime.html" >Market Regime</a>
     <a href="stockbee_market_monitor_live.html">Stockbee Monitor</a>
@@ -221,8 +220,7 @@
     </div>
   </div>
 
-  <!-- ================= SECTOR & INDUSTRY RANKING CHARTS ================= -->
-<!-- ================= SECTOR & INDUSTRY RANKING CHARTS ================= -->
+  <!-- ================= SECTOR & INDUSTRY RANKING CHARTS (4 CARDS) ================= -->
   <div class="rankings-grid">
     <div class="ranking-card">
       <div class="ranking-title">
@@ -237,6 +235,20 @@
         <span style="font-size: 11px; color: var(--text-dim); font-weight: 400;" id="industryCount">0 industries</span>
       </div>
       <div class="ranking-bars" id="industryRankingBars"></div>
+    </div>
+    <div class="ranking-card">
+      <div class="ranking-title">
+        <span>Sector Ticker Count Ranking</span>
+        <span style="font-size: 11px; color: var(--text-dim); font-weight: 400;" id="sectorCountTotal">0 sectors</span>
+      </div>
+      <div class="ranking-bars" id="sectorCountBars"></div>
+    </div>
+    <div class="ranking-card">
+      <div class="ranking-title">
+        <span>Industry Ticker Count Ranking</span>
+        <span style="font-size: 11px; color: var(--text-dim); font-weight: 400;" id="industryCountTotal">0 industries</span>
+      </div>
+      <div class="ranking-bars" id="industryCountBars"></div>
     </div>
   </div>
 
@@ -266,7 +278,6 @@
     <div id="modalChartContainer" class="chart-modal-body"></div>
   </div>
 </div>  
-<body>
 <script>
 /* ============================================================
    CONFIG
@@ -424,7 +435,7 @@ const COLS = [
 ];
 
 function renderRankings() {
-  // Aggregate Sectors
+  // Aggregate Sectors (Performance & Count)
   const sectorMap = {};
   ROWS.forEach(r => {
     if (!r.sector) return;
@@ -432,6 +443,8 @@ function renderRankings() {
     sectorMap[r.sector].sum += r.p1m;
     sectorMap[r.sector].count += 1;
   });
+  
+  // 1. Sector Performance Ranking (% 1M)
   const sectorArr = Object.keys(sectorMap).map(sec => ({
     name: sec,
     avg: sectorMap[sec].sum / sectorMap[sec].count
@@ -450,7 +463,7 @@ function renderRankings() {
     </div>`;
   }).join("");
 
-  // Aggregate Industries
+  // Aggregate Industries (Performance & Count)
   const indMap = {};
   ROWS.forEach(r => {
     if (!r.industry) return;
@@ -458,6 +471,8 @@ function renderRankings() {
     indMap[r.industry].sum += r.p1m;
     indMap[r.industry].count += 1;
   });
+
+  // 2. Industry Performance Ranking (% 1M)
   const indArr = Object.keys(indMap).map(ind => ({
     name: ind,
     avg: indMap[ind].sum / indMap[ind].count
@@ -473,6 +488,38 @@ function renderRankings() {
       <div class="rank-label" title="${i.name}">${i.name}</div>
       <div class="rank-track"><div class="rank-bar" style="width: ${pctWidth}%; background: ${barColor};"></div></div>
       <div class="rank-val" style="color: ${barColor};">${i.avg >= 0 ? '+' : ''}${i.avg.toFixed(1)}%</div>
+    </div>`;
+  }).join("");
+
+  // 3. Sector Ticker Count Ranking
+  const sectorCountArr = Object.keys(sectorMap).map(sec => ({
+    name: sec, count: sectorMap[sec].count
+  })).sort((a, b) => b.count - a.count);
+
+  document.getElementById("sectorCountTotal").textContent = `${sectorCountArr.length} sectors`;
+  const maxSecCount = Math.max(...sectorCountArr.map(s => s.count), 1);
+  document.getElementById("sectorCountBars").innerHTML = sectorCountArr.map(s => {
+    const pctWidth = Math.min(100, Math.max(4, (s.count / maxSecCount) * 100));
+    return `<div class="rank-row" onclick="filterBySector('${s.name}')">
+      <div class="rank-label" title="${s.name}">${s.name}</div>
+      <div class="rank-track"><div class="rank-bar" style="width: ${pctWidth}%; background: var(--teal);"></div></div>
+      <div class="rank-val" style="color: var(--teal);">${s.count}</div>
+    </div>`;
+  }).join("");
+
+  // 4. Industry Ticker Count Ranking
+  const indCountArr = Object.keys(indMap).map(ind => ({
+    name: ind, count: indMap[ind].count
+  })).sort((a, b) => b.count - a.count);
+
+  document.getElementById("industryCountTotal").textContent = `${indCountArr.length} industries`;
+  const maxIndCount = Math.max(...indCountArr.map(i => i.count), 1);
+  document.getElementById("industryCountBars").innerHTML = indCountArr.map(i => {
+    const pctWidth = Math.min(100, Math.max(4, (i.count / maxIndCount) * 100));
+    return `<div class="rank-row" onclick="filterByIndustry('${i.name}')">
+      <div class="rank-label" title="${i.name}">${i.name}</div>
+      <div class="rank-track"><div class="rank-bar" style="width: ${pctWidth}%; background: var(--amber);"></div></div>
+      <div class="rank-val" style="color: var(--amber);">${i.count}</div>
     </div>`;
   }).join("");
 }
