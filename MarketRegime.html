@@ -1,283 +1,194 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<link rel="icon" href="data:,">
 <meta charset="UTF-8">
-<title>Daily Market Monitor</title>
+<title>Market Mood &amp; Market Cycle (QQQ + SPY)</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
   :root{
-    --bg:#0a0e16;
-    --panel:#101625;
-    --panel2:#0d1220;
-    --line:#212a3d;
-    --line-soft:#1a2233;
-    --text:#e7ebf3;
-    --text-dim:#8b93a8;
-    --text-faint:#59617a;
-    --teal:#20d9b8;
-    --amber:#f5b942;
-    --red:#ff5c72;
-    --navy-head:#131c33;
-    --heat-text:#12161f;
-    --input-bg:#0d1220;
+    --bg:#0a0e16; --panel:#101625; --panel2:#0d1220; --line:#212a3d; --line-soft:#1a2233;
+    --text:#e7ebf3; --text-dim:#8b93a8; --text-faint:#59617a;
+    --teal:#20d9b8; --amber:#f5b942; --red:#ff5c72; --blue:#38bdf8;
+    --navy-head:#131c33; --heat-text:#12161f; --input-bg:#0d1220;
   }
   html[data-theme="light"]{
-    --bg:#f4f6fa;
-    --panel:#ffffff;
-    --panel2:#ffffff;
-    --line:#dde2ec;
-    --line-soft:#e9edf4;
-    --text:#151b2c;
-    --text-dim:#5b6478;
-    --text-faint:#8a92a6;
-    --teal:#0b9c82;
-    --amber:#b9781a;
-    --red:#c93a51;
-    --navy-head:#eef1f8;
-    --heat-text:#12161f;
-    --input-bg:#f4f6fa;
+    --bg:#f4f6fa; --panel:#ffffff; --panel2:#ffffff; --line:#dde2ec; --line-soft:#e9edf4;
+    --text:#151b2c; --text-dim:#5b6478; --text-faint:#8a92a6;
+    --teal:#0b9c82; --amber:#b9781a; --red:#c93a51; --blue:#0284c7;
+    --navy-head:#eef1f8; --heat-text:#12161f; --input-bg:#f4f6fa;
   }
   *{box-sizing:border-box; margin:0; padding:0;}
   body{
     background:
       radial-gradient(ellipse 1200px 500px at 15% -5%, rgba(32,217,184,.06), transparent 60%),
-      radial-gradient(ellipse 900px 500px at 100% 0%, rgba(255,92,114,.05), transparent 55%),
+      radial-gradient(ellipse 900px 500px at 100% 0%, rgba(245,185,66,.05), transparent 55%),
       var(--bg);
-    color:var(--text);
-    font-family:'Inter',sans-serif;
-    padding:22px 26px 60px;
-    transition:background .2s ease, color .2s ease;
+    color:var(--text); font-family:'Inter',sans-serif; padding:22px 26px 60px; transition:background .2s ease, color .2s ease;
+    overflow-x: hidden;
+    width: 100%;
   }
+  .wrap{width:100%; max-width:100%; margin:0 auto;}
 
-  /* ---------- COMPACT 3-COLUMN TABLES ---------- */
-  .compact-panels table th, .compact-panels table td {
-    padding: 5px 4px;
-    font-size: 10px;
-    letter-spacing: -0.03em;
+  /* ---------- UNIFORM APP TABS ---------- */
+  .app-tabs {
+    display: flex; gap: 4px; margin-bottom: 24px; border-bottom: 1px solid var(--line);
+    padding-bottom: 0; flex-wrap: nowrap; overflow-x: auto;
   }
-  .compact-panels table th:nth-child(2),
-  .compact-panels table td:nth-child(2) {
-    display: none; 
+  .app-tabs a {
+    padding: 10px 18px; text-decoration: none; color: var(--text-dim); font-size: 11.5px;
+    font-weight: 600; border: 1px solid transparent; border-bottom: none; border-radius: 8px 8px 0 0;
+    text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; transition: all 0.15s;
+    font-family: 'JetBrains Mono', monospace;
   }
-  .compact-panels .bartrack {
-    width: 24px;
-    height: 5px;
-  }
-  .compact-panels .barcell {
-    gap: 4px;
-  }
-
-  /* NAVIGATION TABS */
-  .app-tabs { display: flex; gap: 4px; margin-bottom: 22px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
-  .app-tabs a { padding: 10px 20px; text-decoration: none; color: var(--text-dim); font-size: 12px; font-weight: 600; border: 1px solid transparent; border-bottom: none; border-radius: 8px 8px 0 0; text-transform: uppercase; letter-spacing: 0.04em; transition: all 0.15s; font-family: 'JetBrains Mono', monospace; }
   .app-tabs a.active { background: var(--panel); color: var(--teal); border-color: var(--line); border-bottom-color: var(--panel); margin-bottom: -1px; }
   .app-tabs a:hover:not(.active) { color: var(--text); background: rgba(255,255,255,0.03); }
 
-  /* ---------- HEADER ---------- */
-  header.top{
-    display:flex; justify-content:space-between; align-items:flex-end;
-    border-bottom:2px solid var(--line); padding-bottom:14px; margin-bottom:18px; gap:16px; flex-wrap:wrap;
-  }
-  .brand-eyebrow{font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.18em; color:var(--teal); text-transform:uppercase;}
+  header.top{display:flex; justify-content:space-between; align-items:flex-end; border-bottom:2px solid var(--line); padding-bottom:14px; margin-bottom:22px; gap:16px; flex-wrap:wrap;}
+  .brand-eyebrow{font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.18em; color:var(--amber); text-transform:uppercase;}
   h1{font-size:26px; font-weight:800; letter-spacing:-.02em; margin-top:2px;}
   .subline{color:var(--text-dim); font-size:12.5px; margin-top:4px; font-family:'JetBrains Mono',monospace;}
   .header-right{display:flex; align-items:center; gap:12px; flex-wrap:wrap;}
-  .signal-pill{
-    display:flex; align-items:center; gap:9px;
-    background:var(--panel); border:1px solid var(--line); border-radius:100px;
-    padding:9px 18px; font-family:'JetBrains Mono',monospace; font-size:12.5px;
-  }
-  .dot{width:9px; height:9px; border-radius:50%; background:var(--teal); box-shadow:0 0 10px var(--teal);}
-  .dot.red{background:var(--red); box-shadow:0 0 10px var(--red);}
-  .dot.amber{background:var(--amber); box-shadow:0 0 10px var(--amber);}
-
-  .theme-toggle{
-    display:flex; align-items:center; gap:8px; background:var(--panel); border:1px solid var(--line);
-    border-radius:100px; padding:6px 6px; cursor:pointer; user-select:none;
-  }
-  .theme-toggle .opt{
-    font-size:14px; padding:5px 11px; border-radius:100px; color:var(--text-faint); font-weight:600;
-  }
+  .theme-toggle{display:flex; align-items:center; gap:8px; background:var(--panel); border:1px solid var(--line); border-radius:100px; padding:6px 6px; cursor:pointer;}
+  .theme-toggle .opt{font-size:14px; padding:5px 11px; border-radius:100px; color:var(--text-faint); font-weight:600;}
   .theme-toggle .opt.active{background:var(--teal); color:#04150f;}
 
-  .btn{
-    background:var(--panel); border:1px solid var(--line); color:var(--text); font-family:'JetBrains Mono',monospace;
-    font-size:11.5px; padding:8px 14px; border-radius:7px; cursor:pointer; font-weight:600; transition:all .15s;
-  }
+  .btn{background:var(--panel); border:1px solid var(--line); color:var(--text); font-family:'JetBrains Mono',monospace; font-size:11.5px; padding:8px 14px; border-radius:7px; cursor:pointer; font-weight:600; transition:all .15s;}
   .btn:hover{border-color:var(--teal); color:var(--teal);}
   .btn.primary{background:var(--teal); color:#04150f; border-color:var(--teal);}
-  .btn.primary:hover{filter:brightness(1.08); color:#04150f;}
 
   .status-msg{font-size:11.5px; color:var(--teal); font-family:'JetBrains Mono',monospace;}
   .status-msg.err{color:var(--red);}
-  .import-report{
-    margin-top:14px; background:var(--input-bg); border:1px solid var(--line); border-radius:8px;
-    padding:12px 14px; font-size:12px; font-family:'JetBrains Mono',monospace; display:none; margin-bottom:22px;
+
+  /* ================= MASTER REGIME BANNER ================= */
+  .master-banner{
+    display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap;
+    border-radius:12px; padding:20px 24px; margin-bottom:22px; border:1px solid var(--line);
+    background:var(--panel);
   }
-  .import-report .ir-title{font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-faint); margin-bottom:8px; font-family:'Inter',sans-serif; font-weight:700;}
-  .import-report .ir-row{display:flex; justify-content:space-between; padding:3px 0; border-bottom:1px solid var(--line-soft);}
-  .import-report .ir-row:last-child{border-bottom:none;}
-  .ir-ok{color:var(--teal);} .ir-miss{color:var(--red);}
-
-  /* ---------- GAUGE STRIP ---------- */
-  .gauge-strip {
-    display: grid; 
-    grid-template-columns: repeat(6, 1fr); 
-    gap: 12px; 
-    margin-bottom: 20px;
+  .master-banner.aligned-bull{ background:linear-gradient(120deg, rgba(32,217,184,.14), var(--panel) 60%); border-color:rgba(32,217,184,.45); }
+  .master-banner.aligned-bear{ background:linear-gradient(120deg, rgba(255,92,114,.14), var(--panel) 60%); border-color:rgba(255,92,114,.45); }
+  .master-banner.partial-bull{ background:linear-gradient(120deg, rgba(32,217,184,.08), var(--panel) 60%); border-color:rgba(32,217,184,.30); }
+  .master-banner.partial-bear{ background:linear-gradient(120deg, rgba(255,92,114,.08), var(--panel) 60%); border-color:rgba(255,92,114,.30); }
+  .master-banner.mixed{ background:linear-gradient(120deg, rgba(245,185,66,.10), var(--panel) 60%); border-color:rgba(245,185,66,.35); }
+  
+  .master-left{display:flex; align-items:center; gap:16px;}
+  .master-icon{font-size:34px; line-height:1;}
+  .master-title{font-size:20px; font-weight:800; font-family:'JetBrains Mono',monospace; letter-spacing:-.01em;}
+  .master-sub{font-size:12.5px; color:var(--text-dim); margin-top:4px; max-width:680px; line-height:1.5;}
+  .master-right{display:flex; align-items:center; gap:14px; flex-wrap:wrap;}
+  .streak-chip{
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    background:var(--panel2); border:1px solid var(--line); border-radius:10px; padding:10px 18px; min-width:96px;
   }
-  .card{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:14px 16px;}
-  .card .label{font-size:10.5px; text-transform:uppercase; letter-spacing:.1em; color:var(--text-faint); font-weight:600;}
-  .card .big{font-family:'JetBrains Mono',monospace; font-weight:700; font-size:26px; margin-top:6px;}
-  .card .cap{font-size:11.5px; color:var(--text-dim); margin-top:3px;}
-
-  .vix-zone-bar{position:relative; height:8px; border-radius:5px; margin-top:12px;
-    background:linear-gradient(90deg,#3a4a6b 0%,#3a4a6b 15%, var(--teal) 15%, var(--teal) 40%, var(--amber) 40%, var(--amber) 65%, var(--red) 65%, var(--red) 100%);}
-  .vix-marker{position:absolute; top:-5px; width:2px; height:18px; background:var(--text); box-shadow:0 0 6px var(--text);}
-
-  .breadth-row{display:flex; gap:16px; margin-top:10px;}
-  .ring{position:relative; width:52px; height:52px;}
-  .ring svg{transform:rotate(-90deg);}
-  .ring-val{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700;}
-  .ring-label{font-size:9.5px; color:var(--text-faint); text-align:center; margin-top:4px; text-transform:uppercase; letter-spacing:.06em;}
-
-  .checklist{display:grid; grid-template-columns:1fr 1fr; gap:6px 14px; margin-top:8px;}
-  .chk-item{display:flex; align-items:center; gap:7px; font-size:11.5px; color:var(--text-dim);}
-  .chk-item .tick{font-size:12px; font-weight:800;}
-  .tick.yes{color:var(--teal);} .tick.no{color:var(--red);}
-
-  .nasi-flagbar{display:flex; height:7px; border-radius:4px; overflow:hidden; margin-top:10px;}
-  .nasi-flagbar div{flex:1;}
-  .nasi-status{
-    display:inline-flex; align-items:center; gap:6px; margin-top:8px; font-size:11.5px; font-weight:700;
-    padding:3px 9px; border-radius:100px;
+  .streak-num{font-family:'JetBrains Mono',monospace; font-size:22px; font-weight:800;}
+  .streak-lbl{font-size:9.5px; color:var(--text-faint); text-transform:uppercase; letter-spacing:.07em; margin-top:2px;}
+  .conviction-pill{
+    font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:800; text-transform:uppercase;
+    padding:8px 14px; border-radius:100px; letter-spacing:.03em;
   }
-  .nasi-status.warn{background:rgba(245,185,66,.15); color:var(--amber);}
-  .nasi-status.bear{background:rgba(255,92,114,.15); color:var(--red);}
-  .nasi-status.bull{background:rgba(32,217,184,.15); color:var(--teal);}
 
-  .nasi-tooltip-wrap{position:relative; cursor:help;}
-  .nasi-tooltip{
-    position:absolute; bottom:calc(100% + 10px); left:0; width:280px;
-    background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:11px 13px;
-    font-size:11px; line-height:1.55; color:var(--text-dim); font-family:'Inter',sans-serif; font-weight:400;
-    opacity:0; visibility:hidden; transform:translateY(4px); transition:opacity .15s ease, transform .15s ease;
-    z-index:30; box-shadow:0 10px 28px rgba(0,0,0,.4); pointer-events:none;
+  /* ================= 3-COLUMN REGIME CARDS ================= */
+  .regime-grid{
+    display:grid; 
+    grid-template-columns:repeat(3, minmax(0, 1fr)); 
+    gap:18px; 
+    margin-bottom:22px;
+    width:100%;
   }
-  .nasi-tooltip b{color:var(--amber);}
-  .nasi-tooltip-wrap:hover .nasi-tooltip{opacity:1; visibility:visible; transform:translateY(0);}
-
-  .vix-tooltip-wrap{position:relative; cursor:help;}
-  .vix-tooltip{
-    position:absolute; bottom:calc(100% + 10px); left:0; width:360px;
-    background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:10px 12px;
-    font-size:11px; line-height:1.5; color:var(--text-dim); font-family:'Inter',sans-serif; font-weight:400;
-    opacity:0; visibility:hidden; transform:translateY(4px); transition:opacity .15s ease, transform .15s ease;
-    z-index:30; box-shadow:0 10px 28px rgba(0,0,0,.4); pointer-events:none;
+  @media(max-width:1450px){ .regime-grid{grid-template-columns:1fr;} }
+  .regime-card{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:18px 20px; display:flex; flex-direction:column; justify-content:space-between; min-width:0;}
+  .regime-card-head{display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:14px; flex-wrap:wrap;}
+  .regime-card-title{font-size:13.5px; font-weight:800; text-transform:uppercase; letter-spacing:.05em; font-family:'JetBrains Mono',monospace;}
+  .regime-card-desc{font-size:11px; color:var(--text-faint); margin-top:3px; font-family:'Inter',sans-serif; font-weight:400;}
+  .regime-status-pill{
+    font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:800; padding:6px 12px;
+    border-radius:100px; text-transform:uppercase; white-space:nowrap;
   }
-  .vix-tooltip-wrap:hover .vix-tooltip{opacity:1; visibility:visible; transform:translateY(0);}
-  .vix-tooltip table{width:100%; border-collapse:collapse; background:transparent; border:none; border-radius:0;}
-  .vix-tooltip thead th{font-size:9px; padding:3px 6px; border-bottom:1px solid var(--line-soft); text-align:left; color:var(--text-faint);}
-  .vix-tooltip tbody td{font-family:'JetBrains Mono',monospace; font-size:10.5px; padding:4px 6px; text-align:left; border-bottom:1px solid var(--line-soft); color:var(--text-dim); white-space:normal;}
-  .vix-tooltip tbody tr:last-child td{border-bottom:none;}
-  .vix-tooltip tr.zone-current td{background:rgba(32,217,184,.12); color:var(--text) !important; font-weight:700;}
+  .pill-bull{background:rgba(32,217,184,.15); color:var(--teal); border:1px solid rgba(32,217,184,.35);}
+  .pill-bear{background:rgba(255,92,114,.15); color:var(--red); border:1px solid rgba(255,92,114,.35);}
+  .pill-flat{background:rgba(245,185,66,.15); color:var(--amber); border:1px solid rgba(245,185,66,.35);}
 
-  /* ---------- SECTION ---------- */
+  .metric-row{display:grid; grid-template-columns:repeat(2, 1fr); gap:10px; margin-bottom:14px;}
+  .metric-box{background:var(--panel2); border:1px solid var(--line); border-radius:8px; padding:10px 12px; min-width:0;}
+  .metric-box .lbl{font-size:10px; color:var(--text-faint); text-transform:uppercase; letter-spacing:.06em; font-weight:600;}
+  .metric-box .val{font-family:'JetBrains Mono',monospace; font-size:16px; font-weight:800; margin-top:4px;}
+  .metric-box .cap{font-size:10.5px; color:var(--text-dim); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+
+  .chart-svg-wrap{background:var(--panel2); border:1px solid var(--line); border-radius:8px; padding:10px; overflow:hidden; margin-top:4px; width:100%;}
+  .chart-svg-wrap svg{width:100%; height:150px; display:block; max-width:100%;}
+  .chart-caption{font-size:10.5px; color:var(--text-faint); margin-top:6px; font-family:'JetBrains Mono',monospace; display:flex; justify-content:space-between; flex-wrap:wrap; gap:6px;}
+
+  .streak-history{display:flex; gap:3px; margin-top:12px; overflow-x:auto; padding-bottom:4px;}
+  .streak-history::-webkit-scrollbar{height:4px;}
+  .streak-history::-webkit-scrollbar-thumb{background:var(--line); border-radius:4px;}
+  .streak-day{width:8px; height:20px; border-radius:2px; flex-shrink:0;}
+
+  /* ================= INSTITUTIONAL PRICE CHARTS (SPLIT) ================= */
+  .charts-grid{display:grid; grid-template-columns:repeat(2, 1fr); gap:20px; margin-bottom:22px;}
+  @media(max-width:1200px){ .charts-grid{grid-template-columns:1fr;} }
+  
+  .price-panel{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:18px 20px;}
+  .price-panel-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:10px;}
+  .price-panel-title{font-size:13.5px; font-weight:800; text-transform:uppercase; letter-spacing:.05em; font-family:'JetBrains Mono',monospace;}
+  
+  .lw-chart-wrap{background:var(--panel2); border:1px solid var(--line); border-radius:8px; overflow:hidden; position:relative;}
+
+  /* ================= REGIME HISTORY TABLE ================= */
   .section{margin-bottom:26px;}
-  .section-head{
-    background:var(--navy-head);
-    border:1px solid var(--line); border-bottom:none;
-    padding:9px 16px; border-radius:10px 10px 0 0;
-    display:flex; justify-content:space-between; align-items:center;
-  }
-  .section-head h2{font-size:13px; letter-spacing:.05em; text-transform:uppercase; font-weight:700; color:var(--text);}
+  .section-head{background:var(--navy-head); border:1px solid var(--line); border-bottom:none; padding:9px 16px; border-radius:10px 10px 0 0; display:flex; justify-content:space-between; align-items:center;}
+  .section-head h2{font-size:13px; letter-spacing:.05em; text-transform:uppercase; font-weight:700;}
   .section-head .note{font-size:10.5px; color:var(--text-faint); font-family:'JetBrains Mono',monospace;}
-
-  table{width:100%; border-collapse:collapse; background:var(--panel2); border:1px solid var(--line); border-radius:0 0 10px 10px; overflow:hidden;}
-  thead th{
-    font-size:10px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-dim);
-    text-align:right; padding:8px 10px; border-bottom:1px solid var(--line); font-weight:600; white-space:nowrap;
-  }
-  thead th:first-child, thead th:nth-child(2){text-align:left;}
-  tbody td{
-    padding:6px 10px; text-align:right; font-family:'JetBrains Mono',monospace; font-size:12px;
-    border-bottom:1px solid var(--line-soft); color:var(--heat-text); white-space:nowrap;
-  }
-  tbody td:first-child{font-weight:700; color:var(--text); text-align:left; font-family:'JetBrains Mono',monospace; background:transparent !important;}
-  tbody td:nth-child(2){color:var(--text-dim); text-align:left; font-family:'Inter',sans-serif; font-size:11.5px; background:transparent !important;}
+  .table-wrap{width:100%; overflow-x:auto; border:1px solid var(--line); border-radius:0 0 10px 10px; background:var(--panel2);}
+  table{width:100%; border-collapse:collapse; min-width:900px;}
+  thead th{font-size:10px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-dim); text-align:right; padding:9px 10px; border-bottom:1px solid var(--line); font-weight:600; white-space:nowrap; background:var(--navy-head);}
+  thead th:first-child{text-align:left;}
+  tbody td{padding:7px 10px; text-align:right; font-family:'JetBrains Mono',monospace; font-size:12px; border-bottom:1px solid var(--line-soft); color:var(--text); white-space:nowrap;}
+  tbody td:first-child{font-weight:700; text-align:left;}
   tbody tr:last-child td{border-bottom:none;}
-  tbody tr:hover td{filter:brightness(1.06);}
+  tbody tr:hover td{filter:brightness(1.08);}
+  .tag-pill{font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:800; padding:2px 8px; border-radius:4px; display:inline-block;}
 
-  .barcell{display:flex; align-items:center; gap:6px; justify-content:flex-end;}
-  .bartrack{width:56px; height:7px; border-radius:4px; background:#1b2337; overflow:hidden;}
-  .barfill{height:100%; border-radius:4px;}
-
-  /* ---------- MATRICES ---------- */
-  .three-col{display:grid; grid-template-columns: 1fr 1fr 1fr; gap:16px; align-items:start;}
-  .mini-table td, .mini-table th{font-size:11.5px;}
-  .yn-yes{color:#0d3b2e; background:#bdf0d8; font-weight:700; text-align:center;}
-  .yn-no{color:#4a0f18; background:#ffc9d1; font-weight:700; text-align:center;}
-
-  .factor-row{display:flex; justify-content:space-between; align-items:center; padding:6px 4px; border-bottom:1px solid var(--line-soft); font-size:12px;}
-  .factor-row:last-child{border-bottom:none;}
-  .sq{width:9px; height:9px; border-radius:2px; display:inline-block; margin-right:8px;}
-  .factor-val{font-family:'JetBrains Mono',monospace; font-weight:700;}
-
-  .zone-table td, .zone-table th{font-size:11px;}
-  .zone-current td{outline:2px solid var(--teal); outline-offset:-2px; background:rgba(32,217,184,.12) !important; color:var(--text) !important;}
-
-  .strategy-note{
-    margin-top:10px; padding:12px 14px; background:rgba(32,217,184,.07); border:1px solid rgba(32,217,184,.35);
-    border-radius:8px; font-size:12px; color:var(--text-dim); line-height:1.5;
-  }
-  .strategy-note b{color:var(--teal);}
-
-  .legend{display:flex; gap:18px; padding:12px 16px; font-size:11.5px; color:var(--text-dim); align-items:center; flex-wrap:wrap;}
-  .legend .key{display:flex; align-items:center; gap:6px;}
-  .legend .swatch{width:12px; height:12px; border-radius:3px;}
+  /* ================= METHODOLOGY NOTE ================= */
+  .method-note{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:16px 18px; font-size:12px; color:var(--text-dim); line-height:1.6;}
+  .method-note b{color:var(--text);}
+  .method-note a{color:var(--teal); text-decoration:none;}
+  .method-note a:hover{text-decoration:underline;}
+  .method-note ul{margin:8px 0 0 18px;}
+  .method-note li{margin-bottom:4px;}
 
   footer{margin-top:30px; text-align:center; color:var(--text-faint); font-size:10.5px; font-family:'JetBrains Mono',monospace;}
-
-  @media(max-width:1300px){
-    .gauge-strip{grid-template-columns:1fr 1fr 1fr;}
-  }
-  @media(max-width:1200px){
-    .three-col{grid-template-columns:1fr;}
-  }
-  @media(max-width:700px){
-    .gauge-strip{grid-template-columns:1fr 1fr;}
-  }
 </style>
 </head>
 <body>
+
 <div class="wrap">
 
   <!-- ================= APP TABS ================= -->
   <div class="app-tabs">
-    <a href="index.html" class="active">Market Dashboard</a>
-    <a href="MarketRegime.html">Market Regime</a> 
+    <a href="index.html">Market Dashboard</a>
+    <a href="MarketRegime.html" class="active">Market Regime</a>
     <a href="stockbee_market_monitor_live.html">Stockbee Monitor</a>
     <a href="sata_watchlist_dashboard.html">SATA Chart</a>
-    <a href="PowerList.html">Power List</a>
+    <a href="PowerList.html" >Power List</a>
     <a href="liquid_leaders.html">Liquid Leaders</a>
     <a href="group_momentum.html">Group Momentum</a>
     <a href="PriceStructure.html">Price Structure</a>
     <a href="StageAnalysis.html">Stage Analysis</a>
     <a href="tv_watchlist.html">TradingView Watchlist</a>
-    <a href="PortfolioManagement.html">Portfolio Management</a>
-    <a href="Playbook.html">Playbook</a>
+    <a href="PortfolioManagement.html" >Portfolio Management</a>
+    <a href="Playbook.html" >Playbook</a>
   </div>
 
   <header class="top">
     <div>
-      <div class="brand-eyebrow">Daily Market Plan</div>
-      <h1>Market Monitor</h1>
-      <div class="subline" id="dateLine">7/16/2026 · Benchmark: RSP</div>
+      <div class="brand-eyebrow">3-Way Regime Filter · Volatility Mood × QQQ Cycle × SPY Cycle</div>
+      <h1>Market Mood &amp; Market Cycle</h1>
+      <div class="subline" id="subline">Loading…</div>
     </div>
     <div class="header-right">
-      <button class="btn primary" id="btnAutoRefresh" style="margin-right: 8px;">↻ Refresh Live Data</button>
-      <div class="signal-pill"><span class="dot" id="masterDot"></span><span id="masterText">HOLD POSITIONS — Normal / Stable</span></div>
+      <button class="btn primary" id="btnRefresh">↻ Refresh Live Data</button>
       <div class="theme-toggle" id="themeToggle">
         <span class="opt" id="optDark">Dark</span>
         <span class="opt" id="optLight">Light</span>
@@ -285,1050 +196,751 @@
     </div>
   </header>
 
-  <!-- ================= LIVE REFRESH STATUS ================= -->
-  <div style="display:flex; justify-content:flex-end; margin-bottom:8px;">
-    <span class="status-msg" id="statusMsg"></span>
+  <div style="display:flex; justify-content:flex-end; margin-bottom:10px;">
+    <span class="status-msg" id="statusMsg">Initializing…</span>
   </div>
-  <div class="import-report" id="importReport"></div>
 
-  <!-- ================= GAUGE STRIP ================= -->
-  <div class="gauge-strip">
-
-    <div class="card vix-tooltip-wrap" id="vixCard">
-      <div class="label">VIX Level</div>
-      <div class="big" style="color:var(--teal)" id="vixBig">16.73</div>
-      <div class="cap" id="vixCap">20 SMA 17.03 </div>
- 
-      <div class="vix-zone-bar"><div class="vix-marker" id="vixMarker"></div></div>
-      <div class="cap" style="margin-top:6px; display:flex; justify-content:space-between; font-family:'JetBrains Mono',monospace; font-size:9.5px;">
-        <span>&lt;15</span><span>15–25</span><span>25–35</span><span>&gt;35</span>
-      </div>
-      <div class="vix-tooltip" id="vixTooltip"></div>
-    </div>
-
-    <div class="card">
-      <div class="label">Credit Spreads (SHY/HYG)</div>
-      <div class="big" style="color:var(--teal)" id="spreadBig">1.03</div>
-      <div class="cap" id="spreadCap">Widening (Risk-off)</div>
-      <div class="strategy-note" style="margin-top:10px; font-size:10px;">
-        <b>Rising = Risk-off.</b> Widening spreads suggest investors are fleeing high-yield debt for safety.
+  <!-- ================= MASTER REGIME BANNER ================= -->
+  <div class="master-banner" id="masterBanner">
+    <div class="master-left">
+      <div class="master-icon" id="masterIcon">⏳</div>
+      <div>
+        <div class="master-title" id="masterTitle">Loading regime state…</div>
+        <div class="master-sub" id="masterSub">Fetching VIX, VVIX, QQQ, and SPY history to compute the 3-way alignment filter.</div>
       </div>
     </div>
-
-    <!-- 10Y Yield Card -->
-    <div class="card">
-      <div class="label">10Y Treasury Yield</div>
-      <div class="big" style="color:var(--amber)" id="yieldBig">4.55%</div>
-      <div class="cap" id="yieldCap">Rising</div>
-      <div class="strategy-note" style="margin-top:10px; font-size:10px;">
-        <b>Rates & Equities:</b> Rising yields pressure growth stock valuations. A steady, moderate climb is usually tolerable, but spikes often trigger market rotation.
+    <div class="master-right">
+      <div class="streak-chip">
+        <div class="streak-num" id="alignedStreakNum">–</div>
+        <div class="streak-lbl">Aligned Days</div>
       </div>
+      <div class="conviction-pill" id="convictionPill" style="background:var(--panel2); color:var(--text-dim); border:1px solid var(--line);">—</div>
     </div>
-    
-    <!-- Put-Call Ratio Card -->
-    <div class="card">
-      <div class="label">Put/Call Ratio</div>
-      <div class="big" style="color:var(--red); font-size:20px; margin-top:10px;" id="pcBig">0.55</div>
-      <div class="cap pc-status" id="pcCap">Neutral</div>
-      <div class="strategy-note" style="margin-top:10px; font-size:10px;">
-        <b>Sentiment Gauge:</b> High ratios (fear) often signal bottoms; low ratios (complacency) often precede market pullbacks. Extremes are key.
-      </div>
-    </div>
+  </div>
 
-    <div class="card nasi-tooltip-wrap" id="nasiCard">
-      <a href="https://stockcharts.com/sc3/ui/?s=%24NASI" target="_blank" style="text-decoration:none; color:inherit; display:block;">
-        <div class="label">$NASI · Nasdaq McClellan Summation</div>
-        <div class="big" id="nasiBig" style="font-size:22px;">108.19</div>
-        <div class="cap" id="nasiCap">Prev 127.04 · 50-DMA 160.48</div>
-        <div class="nasi-flagbar">
-          <div style="background:var(--red)"></div><div style="background:var(--amber)"></div><div style="background:var(--teal)"></div>
+  <!-- ================= 3-COLUMN REGIME CARDS ================= -->
+  <div class="regime-grid">
+
+    <!-- MARKET MOOD CARD -->
+    <div class="regime-card">
+      <div>
+        <div class="regime-card-head">
+          <div>
+            <div class="regime-card-title">Market Mood</div>
+            <div class="regime-card-desc">VVIX/VIX Ratio vs 21 MA. Volatility-of-volatility underlying sentiment.</div>
+          </div>
+          <span class="regime-status-pill pill-flat" id="moodPill">—</span>
         </div>
-        <span class="nasi-status warn" id="nasiStatus">⚠ Warning — below 50-DMA</span>
-      </a>
-      <div class="nasi-tooltip" id="nasiTooltip"></div>
+
+        <div class="metric-row">
+          <div class="metric-box">
+            <div class="lbl">VVIX/VIX</div>
+            <div class="val" id="moodRatioVal">—</div>
+            <div class="cap" id="moodRatioCap">—</div>
+          </div>
+          <div class="metric-box">
+            <div class="lbl">21 MA</div>
+            <div class="val" id="moodMaVal">—</div>
+            <div class="cap" id="moodMaCap">vs. ratio</div>
+          </div>
+          <div class="metric-box">
+            <div class="lbl">Slope (5d)</div>
+            <div class="val" id="moodSlopeVal">—</div>
+            <div class="cap" id="moodSlopeCap">momentum</div>
+          </div>
+          <div class="metric-box">
+            <div class="lbl">Streak</div>
+            <div class="val" id="moodStreakVal">—</div>
+            <div class="cap" id="moodStreakCap">days</div>
+          </div>
+        </div>
+
+        <div class="chart-svg-wrap"><svg id="moodSvg" viewBox="0 0 680 150" xmlns="http://www.w3.org/2000/svg"></svg></div>
+        <div class="chart-caption">
+          <span><span style="color:var(--amber)">●</span> VVIX/VIX &nbsp; <span style="color:var(--blue)">●</span> 21 MA</span>
+          <span id="moodRangeCap">120d</span>
+        </div>
+      </div>
+      <div class="streak-history" id="moodHistory"></div>
     </div>
 
-    <!-- Additional summary card to balance 6-column grid -->
-    <div class="card">
-      <div class="label">Composite Breadth Score</div>
-      <div class="big" style="color:var(--teal)" id="compositeBreadthBig">59%</div>
-      <div class="cap" id="compositeBreadthCap">Weighted Market Health</div>
-      <div class="strategy-note" style="margin-top:10px; font-size:10px;">
-        <b>Internal Health:</b> Aggregates multi-period moving average metrics across SPX and sectors.
+    <!-- QQQ CYCLE CARD -->
+    <div class="regime-card">
+      <div>
+        <div class="regime-card-head">
+          <div>
+            <div class="regime-card-title">QQQ Cycle</div>
+            <div class="regime-card-desc">Tech/Growth momentum. Entire daily candle above/below 21 EMA required.</div>
+          </div>
+          <span class="regime-status-pill pill-flat" id="qqqCyclePill">—</span>
+        </div>
+
+        <div class="metric-row">
+          <div class="metric-box">
+            <div class="lbl">QQQ Close</div>
+            <div class="val" id="qqqPriceVal">—</div>
+            <div class="cap" id="qqqPriceCap">—</div>
+          </div>
+          <div class="metric-box">
+            <div class="lbl">21 EMA</div>
+            <div class="val" id="qqqEmaVal">—</div>
+            <div class="cap" id="qqqEmaCap">slope</div>
+          </div>
+          <div class="metric-box">
+            <div class="lbl">Candle Test</div>
+            <div class="val" id="qqqCandleVal" style="font-size:12px;">—</div>
+            <div class="cap" id="qqqCandleCap">L/H vs EMA</div>
+          </div>
+          <div class="metric-box">
+            <div class="lbl">Streak</div>
+            <div class="val" id="qqqStreakVal">—</div>
+            <div class="cap" id="qqqStreakCap">days</div>
+          </div>
+        </div>
+
+        <div class="chart-svg-wrap"><svg id="qqqCycleSvg" viewBox="0 0 680 150" xmlns="http://www.w3.org/2000/svg"></svg></div>
+        <div class="chart-caption">
+          <span><span style="color:var(--text)">●</span> QQQ &nbsp; <span style="color:var(--blue)">●</span> 21 EMA</span>
+          <span id="qqqRangeCap">120d</span>
+        </div>
+      </div>
+      <div class="streak-history" id="qqqHistory"></div>
+    </div>
+
+    <!-- SPY CYCLE CARD -->
+    <div class="regime-card">
+      <div>
+        <div class="regime-card-head">
+          <div>
+            <div class="regime-card-title">SPY Cycle</div>
+            <div class="regime-card-desc">Broad market equity health. Entire daily candle above/below 21 EMA required.</div>
+          </div>
+          <span class="regime-status-pill pill-flat" id="spyCyclePill">—</span>
+        </div>
+
+        <div class="metric-row">
+          <div class="metric-box">
+            <div class="lbl">SPY Close</div>
+            <div class="val" id="spyPriceVal">—</div>
+            <div class="cap" id="spyPriceCap">—</div>
+          </div>
+          <div class="metric-box">
+            <div class="lbl">21 EMA</div>
+            <div class="val" id="spyEmaVal">—</div>
+            <div class="cap" id="spyEmaCap">slope</div>
+          </div>
+          <div class="metric-box">
+            <div class="lbl">Candle Test</div>
+            <div class="val" id="spyCandleVal" style="font-size:12px;">—</div>
+            <div class="cap" id="spyCandleCap">L/H vs EMA</div>
+          </div>
+          <div class="metric-box">
+            <div class="lbl">Streak</div>
+            <div class="val" id="spyStreakVal">—</div>
+            <div class="cap" id="spyStreakCap">days</div>
+          </div>
+        </div>
+
+        <div class="chart-svg-wrap"><svg id="spyCycleSvg" viewBox="0 0 680 150" xmlns="http://www.w3.org/2000/svg"></svg></div>
+        <div class="chart-caption">
+          <span><span style="color:var(--text)">●</span> SPY &nbsp; <span style="color:var(--blue)">●</span> 21 EMA</span>
+          <span id="spyRangeCap">120d</span>
+        </div>
+      </div>
+      <div class="streak-history" id="spyHistory"></div>
+    </div>
+
+  </div>
+
+  <!-- ================= TRADINGVIEW WIDGETS (SPLIT) ================= -->
+  <div class="charts-grid">
+    <!-- PCQQ Panel -->
+    <div class="price-panel">
+      <div class="price-panel-head">
+        <div class="price-panel-title">TradingView: Put/Call Ratio QQQ (PCQQ)</div>
+        <div style="display:flex; align-items:center; gap:12px;">
+          <span style="font-size:11px; color:var(--teal); font-family:'JetBrains Mono',monospace;">● Live Feed</span>
+        </div>
+      </div>
+      <div class="lw-chart-wrap" style="height: 420px;">
+        <div class="tradingview-widget-container" id="qqqTvContainer" style="height:100%;width:100%"></div>
       </div>
     </div>
 
-  </div>
-
-  <!-- Breadth & Factors Row -->
-  <div class="gauge-strip" style="grid-template-columns: 1fr 1fr 1fr; margin-bottom: 26px;">
-    
-    <div class="card">
-      <div class="label">Factors vs SPY (Extremes)</div>
-      <div class="checklist" style="grid-template-columns:1fr;" id="factorsExtremesList"></div>
-    </div>
-
-    <div class="card">
-      <div class="label">Market Breadth (% above MAs)</div>
-      <div class="breadth-row" id="breadthRow"></div>
-    </div>
-
-    <div class="card">
-      <div class="label">Sector Breadth (% above MAs)</div>
-      <div class="breadth-row" id="sectorBreadthRow"></div>
-    </div>
-
-  </div>
- 
-  <!-- ================= TREND STATUS + POWER TREND + FACTORS ================= -->
-  <div class="three-col" style="margin-bottom:26px;">
-    <div class="section" style="margin-bottom:0;">
-      <div class="section-head"><h2>Trend Status</h2><div class="note">vs EMA / SMA</div></div>
-      <table class="mini-table" id="tblTrendStatus"></table>
-    </div>
-    <div class="section" style="margin-bottom:0;">
-      <div class="section-head"><h2>Power Trend</h2><div class="note">6-point check</div></div>
-      <table class="mini-table" id="tblPowerTrend"></table>
-    </div>
-    <div class="section" style="margin-bottom:0;">
-      <div class="section-head"><h2>Factors vs SPY</h2><div class="note">Full list</div></div>
-      <div style="background:var(--panel2); border:1px solid var(--line); border-radius:0 0 10px 10px; padding:6px 14px;" id="factorsList"></div>
+    <!-- PCSP Panel -->
+    <div class="price-panel">
+      <div class="price-panel-head">
+        <div class="price-panel-title">TradingView: Put/Call Ratio SPY (PCSP)</div>
+        <div style="display:flex; align-items:center; gap:12px;">
+          <span style="font-size:11px; color:var(--teal); font-family:'JetBrains Mono',monospace;">● Live Feed</span>
+        </div>
+      </div>
+      <div class="lw-chart-wrap" style="height: 420px;">
+        <div class="tradingview-widget-container" id="spyTvContainer" style="height:100%;width:100%"></div>
+      </div>
     </div>
   </div>
-  
-  <!-- ================= 3-COLUMN COMPACT PERFORMANCE TABLES ================= -->
-  <div class="three-col compact-panels" style="margin-bottom:26px;">
 
-    <!-- SUB-MARKET PERFORMANCE -->
-    <div class="section" style="margin-bottom:0;">
-      <div class="section-head"><h2>Sub-Market</h2><div class="note">Cap × Style</div></div>
-      <table id="tblSubMarket"></table>
-    </div>
-
-    <!-- SUB-SECTOR PERFORMANCE (CAP) -->
-    <div class="section" style="margin-bottom:0;">
-      <div class="section-head"><h2>Sub-Sector</h2><div class="note">Cap-Weighted</div></div>
-      <table id="tblSubSector"></table>
-    </div>
-
-    <!-- SUB-SECTOR PERFORMANCE (EW) -->
-    <div class="section" style="margin-bottom:0;">
-      <div class="section-head"><h2>EW Sub-Sector</h2><div class="note">Equal-Weight</div></div>
-      <table id="tblEwSector"></table>
-    </div>
-
-  </div>
-
-  <!-- ================= TOP THEMATIC SECTORS ================= -->
+  <!-- ================= REGIME HISTORY TABLE ================= -->
   <div class="section">
-    <div class="section-head"><h2>Top Thematic Sectors</h2><div class="note">Ranked by % Daily Change</div></div>
-    <div class="three-col compact-panels" style="background:var(--panel2); padding:14px; gap:16px; border:1px solid var(--line); border-top:none; border-radius:0 0 10px 10px;">
-      <table id="tblThematic1" style="border-radius:6px;"></table>
-      <table id="tblThematic2" style="border-radius:6px;"></table>
-      <table id="tblThematic3" style="border-radius:6px;"></table>
+    <div class="section-head"><h2>3-Way Regime History</h2><div class="note">Most recent 20 sessions</div></div>
+    <div class="table-wrap">
+      <table id="tblHistory"></table>
     </div>
   </div>
 
-  <!-- ================= LEGEND ================= -->
-  <div class="section">
-    <div class="section-head"><h2>Trading Signal Legend</h2></div>
-    <div style="background:var(--panel2); border:1px solid var(--line); border-radius:0 0 10px 10px;" class="legend">
-      <div class="key"><span class="swatch" style="background:#ff5c72"></span>Red — do not trade / high risk</div>
-      <div class="key"><span class="swatch" style="background:#f5b942"></span>Yellow — caution, wait for confirmation</div>
-      <div class="key"><span class="swatch" style="background:#20d9b8"></span>Green — conditions favorable</div>
-    </div>
+  <!-- ================= METHODOLOGY ================= -->
+  <div class="method-note">
+    <b>3-Way Alignment Methodology</b> — adapted from <a href="https://thestratlab.substack.com/p/why-market-regimes-are-a-swing-traders" target="_blank">theStrat Lab: "Why Market Regimes are a Swing Trader's secret weapon"</a>.
+    <ul>
+      <li><b>Market Mood:</b> VVIX/VIX ratio smoothed with a 21-period moving average. Bullish when the ratio is above its MA <i>and</i> the MA's slope is positive; bearish when below the MA with a negative slope.</li>
+      <li><b>QQQ &amp; SPY Cycles:</b> Price action vs 21 EMA. Bullish requires the <i>entire daily candle</i> (low included) above the EMA; bearish requires the entire candle (high included) below the EMA. Straddling candles yield a flat/neutral state.</li>
+      <li><b>3-Way Alignment:</b>
+        <br>— <b>Full Bull / Full Bear (3/3):</b> Mood, QQQ, and SPY are unanimously bullish or bearish. Maximum conviction sizing favored.
+        <br>— <b>Partial Bull / Partial Bear (2/3):</b> Two signals align directionally while one is flat/neutral (e.g. Bull Mood + Bull QQQ + Flat SPY). Moderate size permitted; trend is constructive but lacking full participation.
+        <br>— <b>Mixed / Conflicted:</b> Direct contradiction between signals (e.g. Bullish Mood vs Bearish QQQ/SPY). Reduce size significantly or sit on hands until alignment resolves.</li>
+    </ul>
   </div>
 
-  <footer>Data reflects your Daily Market Plan sheet · Quotes may be delayed up to 20 minutes · For informational purposes only, not trading advice.</footer>
-
+  <footer>Market Mood &amp; Market Cycle · VIX/VVIX/QQQ/SPY data via Yahoo Finance · PCQQ/PCSP via TradingView · For informational purposes only, not trading advice.</footer>
 </div>
- 
+
 <script>
 /* ============================================================
-   DEFAULT / SAMPLE DATA
+   CONFIG & STATE
    ============================================================ */
-const DEFAULT_DATA = {
-  date: "7/16/2026",
-  benchmark: "RSP",
-  watchlist: ["PENG","AMKR","AMDL","EXEL","YBF","DELL","CRWD","CDNS"],
-  subMarket: [
-    ["SLYV","Small Cap Value",0.61,2.73,-1.26,18.31,20.83,71.10],
-    ["SPYG","Large Cap Growth",0.51,1.74,-2.40,12.38,16.67,56.70],
-    ["SLYG","Small Cap Growth",0.48,0.75,-3.05,21.91,0.00,38.90],
-    ["SPYV","Large Cap Value",0.21,0.65,-0.80,8.30,0.00,47.80],
-    ["MDYV","Mid Cap Value",0.21,2.07,-0.84,10.43,29.17,64.40],
-    ["MDYG","Mid Cap Growth",-0.06,0.70,-3.41,15.41,20.83,32.20],
-  ],
-  subSector: [
-    ["XLC","Communication Services",1.73,3.58,-5.82,-3.01,95.83,83.30],
-    ["XLY","Consumer Discretionary",0.95,1.47,-6.41,-1.14,45.83,46.70],
-    ["XLF","Financials",0.68,2.89,-0.46,2.97,95.83,75.60],
-    ["SPY","S&P 500 ETF",0.40,1.26,-0.74,10.49,4.17,51.10],
-    ["XLRE","Real Estate",0.18,0.93,-2.39,10.35,95.83,60.00],
-    ["XLP","Consumer Staples",0.06,-1.09,-7.40,7.44,29.17,50.00],
-    ["XLV","Healthcare",0.00,-2.47,-4.42,1.79,87.50,18.90],
-    ["XLI","Industrials",-0.22,-0.20,-3.43,13.98,66.67,35.60],
-    ["XLB","Materials",-0.28,0.68,-6.72,9.50,87.50,53.30],
-    ["XLE","Energy",-0.79,1.62,-10.97,23.77,91.67,86.70],
-    ["XLU","Utilities",-1.03,-0.31,-5.40,4.72,70.83,48.90],
-    ["XLK","Technology",-1.11,0.10,-8.63,25.84,25.00,21.10],
-  ],
-  ewSector: [
-    ["RSPC","Communication Services",1.17,1.42,-11.93,-8.35,95.83,65.60],
-    ["RSPD","Consumer Discretionary",0.56,1.26,-7.89,-3.24,100.00,44.40],
-    ["RSPF","Financials",0.55,2.26,-0.36,4.92,95.83,70.00],
-    ["RSPH","Healthcare",0.30,-0.91,-3.67,5.03,95.83,25.60],
-    ["RSPS","Consumer Staples",0.17,-0.46,-9.35,3.92,87.50,57.80],
-    ["RSPR","Real Estate",0.05,0.69,-2.73,8.92,95.83,58.90],
-    ["RSPM","Materials",-0.13,1.11,-7.24,10.79,83.33,62.20],
-    ["RSP","S&P 500 ETF",-0.22,0.36,-1.57,10.43,0.00,40.00],
-    ["RSPN","Industrials",-0.45,-0.11,-2.99,9.06,70.83,36.70],
-    ["RSPU","Utilities",-1.07,-0.64,-4.60,6.65,79.17,41.10],
-    ["RSPG","Energy",-1.11,0.87,-9.89,26.42,83.33,81.10],
-    ["RSPT","Technology",-2.03,-1.25,-9.91,32.87,4.17,11.10],
-  ],
-  thematic: [
-    ["KURE","China Health",3.99,10.22,-17.99,2.99,95.83,97.80],
-    ["KWEB","China Internet",3.13,2.23,-37.74,-24.22,95.83,77.80],
-    ["IPAY","Digital Payments & Fintech",2.88,5.65,-18.21,-3.49,95.83,92.20],
-    ["SVIX","Short VIX Futures (Volatility)",2.81,5.11,-0.32,1.70,95.83,87.80],
-    ["GENZ","Global Gaming & Casinos",2.59,2.27,-0.79,-4.30,91.67,72.20],
-    ["ETHA","Ether Spot",2.40,10.76,-60.54,-38.42,95.83,98.90],
-    ["MAGS","Magnificent 7",2.34,4.91,-3.01,5.62,95.83,90.00],
-    ["SPPP","Platinum & Palladium",2.27,6.64,-43.32,-22.47,95.83,95.60],
-    ["IBUY","Global E-commerce",2.10,3.88,-8.42,-2.87,95.83,85.60],
-    ["XHE","Health Devices",1.86,0.58,-6.95,-0.62,95.83,34.40],
-    ["FXI","China Large-Cap",1.51,2.51,-18.38,-13.91,58.33,84.40],
-    ["BTF","Bitcoin Strategy",1.49,7.52,-81.73,-34.42,95.83,96.70],
-    ["WGMI","Bitcoin Miners",1.47,-3.86,-31.12,26.04,87.50,0.00],
-    ["IAI","Broker-Dealers",1.45,5.38,0.00,7.98,95.83,93.30],
-    ["IHI","Medical Devices",1.30,-2.73,-22.95,-19.44,95.83,16.70],
-    ["JETS","Airlines",1.30,-1.70,-8.03,10.46,95.83,8.90],
-    ["DBA","Agriculture",1.27,1.30,-2.98,9.47,37.50,63.30],
-    ["XPH","Pharmaceuticals (Equal)",1.19,-2.07,-3.12,23.09,83.33,13.30],
-    ["KBE","Banks",1.18,3.56,-0.49,13.76,91.67,76.70],
-    ["SOCL","Social Media",1.17,1.25,-26.70,-17.44,0.00,67.80],
-    ["ARKK","Innovation",1.10,1.15,-7.44,8.21,95.83,23.30],
-    ["KRE","Regional Banks",1.04,3.33,-1.38,16.16,87.50,73.30],
-    ["USO","Crude Oil",1.01,8.17,-21.22,76.02,91.67,100.00],
-    ["IDNA","Genomics & Immunology",0.91,-3.30,-5.29,26.32,95.83,5.60],
-    ["ARKF","ARK Fintech",0.88,3.51,-28.35,-11.94,95.83,82.20],
-    ["ITB","Homebuilders",0.83,2.12,-16.97,0.46,83.33,66.70],
-    ["XHB","Homebuilders",0.70,2.72,-11.52,4.18,70.83,68.90],
-    ["PPH","Pharmaceuticals",0.69,-2.55,-4.46,3.66,66.67,22.20],
-    ["FDN","US Internet Giants",0.67,2.34,-4.69,4.41,62.50,55.60],
-    ["IBB","Biotech Megacap",0.65,-3.28,-4.59,12.37,87.50,6.70],
-    ["DBC","Commodities",0.56,3.56,-9.44,28.58,62.50,94.40],
-    ["ESPO","E-Sports",0.55,-0.99,-25.26,-12.47,0.00,31.10],
-    ["XBI","Biotech",0.50,-4.14,-5.73,28.55,95.83,3.30],
-    ["BBH","Biotech",0.40,-2.44,-3.94,7.33,50.00,14.40],
-  ],
-  trendStatus: {
-    cols: ["SPY","RSP","QQQ","QQQE","XJO","FVTT"],
-    rows: [
-      ["9 EMA",0.64,-0.20,-0.11,-0.74,0.07,-3.24],
-      ["21 EMA High",0.70,-0.21,-0.95,-1.35,-0.02,-5.37],
-      ["21 EMA",1.11,0.34,-0.19,-0.63,0.23,-4.50],
-      ["21 EMA Low",1.71,0.70,0.74,-0.07,0.73,-3.84],
-      ["3D > 21 EMA",2.37,1.88,1.54,1.58,0.49,-4.96],
-      ["200 EMA",8.34,6.79,11.23,10.02,0.87,0.98],
-      ["52W High",-0.74,-1.57,-4.13,-3.66,-4.22,-1.92],
-    ]
-  },
-  powerTrend: {
-    cols: ["SPY","QQQ","XJO","FVTT"],
-    rows: [
-      ["3D > 20 SMA","Yes","No","Yes","No"],
-      ["3D > 50 SMA","Yes","No","Yes","No"],
-      ["3D > 200 SMA","Yes","Yes","Yes","No"],
-      ["20 SMA > 50 SMA","Yes","Yes","Yes","No"],
-      ["20 SMA > 200 SMA","Yes","Yes","Yes","Yes"],
-      ["50 SMA > 200 SMA","Yes","Yes","No","Yes"],
-    ]
-  },
-  factors: [
-    ["Growth",0.11],["Value",-0.19],["High Dividend",-0.17],["Large-Cap",0.00],
-    ["Mid-Cap",-0.36],["Small-Cap",0.14],["Momentum",-0.59],["IPOs",-1.64],
-  ],
-  vix: {level:17.16, sma20:17.29, trend:"Falling", trendLabel:"Spiking", pctile:20},
-  macro: {yield10y:4.55, yieldTrend:"Rising"},
-  breadth: {spx20:52.09, spx50:61.43, spx200:64.61, ndx20:48.84, ndx50:49.14, ndx200:50.80, sec20:72.73, sec50:45.45, sec200:81.82},
-  putcall: {value:0.55, note:"Spiking (Extreme Fear) — historically marks absolute exhaustion of sellers and major market bottoms."},
-  nasi: {current:108.19, prevClose:127.04, chg:-18.85, chgPct:-14.84, sma50:160.48, status:"Warning"},
-};
+const MA_LEN = 21;
+const EMA_LEN = 21;
+const SLOPE_LOOKBACK = 5;
+const HISTORY_BARS = 120;
 
-const vixZonesTemplate = [
-  ["> 35","Extreme Panic","BUY AGGRESSIVELY","High-Beta Tech, Small-Caps, Growth Stocks"],
-  ["25 – 35","Fear & Volatility","SCALE IN (DCA)","Quality Tech, Financials, Industrials & Cyclicals"],
-  ["15 – 25","Normal / Stable","HOLD POSITIONS","Dividend Stocks, Balanced Tech & Defensive Plays"],
-  ["< 15","High Complacency","REDUCE EXPOSURE","Utilities, Healthcare, Consumer Staples, Bonds"],
+const CORS_PROXIES = [
+  url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
+  url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+  url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`
 ];
 
-let DATA = JSON.parse(JSON.stringify(DEFAULT_DATA));
+let STATE = { 
+  vix: null, vvix: null, qqq: null, spy: null, merged: []
+};
+
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+/* ============================================================
+   DATA FETCH 
+   ============================================================ */
+async function fetchYahooDaily(symbol, range = "1y") {
+  const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=${range}`;
+  let json = null;
+
+  const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+  
+  if (isLocal) {
+    try {
+      const res = await fetch(targetUrl, { cache: "no-store" });
+      if (res.ok) {
+        const j = await res.json();
+        if (j && j.chart && j.chart.result && j.chart.result[0]) json = j;
+      }
+    } catch (e) { /* fallback */ }
+  }
+
+  if (!json) {
+    for (const build of CORS_PROXIES) {
+      try {
+        const res = await fetch(build(targetUrl), { cache: "no-store" });
+        if (res.ok) {
+          const j = await res.json();
+          if (j && j.chart && j.chart.result && j.chart.result[0]) { json = j; break; }
+        }
+      } catch (e) {}
+    }
+  }
+  if (!json) return null;
+  const result = json.chart.result[0];
+  const ts = result.timestamp || [];
+  const q = result.indicators.quote[0] || {};
+  const bars = [];
+  for (let i = 0; i < ts.length; i++) {
+    if (q.close[i] != null) {
+      bars.push({
+        t: ts[i] * 1000,
+        o: q.open[i] != null ? q.open[i] : q.close[i],
+        h: q.high[i] != null ? q.high[i] : q.close[i],
+        l: q.low[i] != null ? q.low[i] : q.close[i],
+        c: q.close[i]
+      });
+    }
+  }
+  return bars.sort((a, b) => a.t - b.t);
+}
+
+/* ============================================================
+   TECHNICAL MATH & 3-WAY ALIGNMENT
+   ============================================================ */
+function sma(arr, len) {
+  const out = new Array(arr.length).fill(null);
+  let sum = 0;
+  for (let i = 0; i < arr.length; i++) {
+    sum += arr[i];
+    if (i >= len) sum -= arr[i - len];
+    if (i >= len - 1) out[i] = sum / len;
+  }
+  return out;
+}
+function ema(arr, len) {
+  const out = new Array(arr.length).fill(null);
+  const k = 2 / (len + 1);
+  let prev = null;
+  for (let i = 0; i < arr.length; i++) {
+    if (arr[i] == null) continue;
+    if (prev == null) { prev = arr[i]; }
+    else { prev = arr[i] * k + prev * (1 - k); }
+    out[i] = prev;
+  }
+  return out;
+}
+
+function buildMergedSeries() {
+  const dateKey = ms => new Date(ms).toISOString().slice(0, 10);
+
+  const vixMap = new Map(STATE.vix.map(b => [dateKey(b.t), b]));
+  const vvixMap = new Map(STATE.vvix.map(b => [dateKey(b.t), b]));
+  const qqqMap = new Map(STATE.qqq.map(b => [dateKey(b.t), b]));
+  const spyMap = new Map(STATE.spy.map(b => [dateKey(b.t), b]));
+
+  const dates = STATE.qqq.map(b => dateKey(b.t)).filter(d => vixMap.has(d) && vvixMap.has(d) && spyMap.has(d));
+
+  const rows = dates.map(d => {
+    const vix = vixMap.get(d).c;
+    const vvix = vvixMap.get(d).c;
+    const q = qqqMap.get(d);
+    const s = spyMap.get(d);
+    return {
+      date: d, vix, vvix, ratio: vvix / vix,
+      qOpen: q.o, qHigh: q.h, qLow: q.l, qClose: q.c,
+      sOpen: s.o, sHigh: s.h, sLow: s.l, sClose: s.c
+    };
+  });
+
+  const ratios = rows.map(r => r.ratio);
+  const ratioMA = sma(ratios, MA_LEN);
+  
+  const qCloses = rows.map(r => r.qClose);
+  const qEma = ema(qCloses, EMA_LEN);
+  
+  const sCloses = rows.map(r => r.sClose);
+  const sEma = ema(sCloses, EMA_LEN);
+
+  const moodSlope = ratioMA.map((v, i) => (v == null || i < SLOPE_LOOKBACK || ratioMA[i - SLOPE_LOOKBACK] == null) ? null : v - ratioMA[i - SLOPE_LOOKBACK]);
+  const qqqSlope = qEma.map((v, i) => (v == null || i < SLOPE_LOOKBACK || qEma[i - SLOPE_LOOKBACK] == null) ? null : v - qEma[i - SLOPE_LOOKBACK]);
+  const spySlope = sEma.map((v, i) => (v == null || i < SLOPE_LOOKBACK || sEma[i - SLOPE_LOOKBACK] == null) ? null : v - sEma[i - SLOPE_LOOKBACK]);
+
+  const moodState = rows.map((r, i) => {
+    if (ratioMA[i] == null || moodSlope[i] == null) return null;
+    if (r.ratio > ratioMA[i] && moodSlope[i] > 0) return "bull";
+    if (r.ratio < ratioMA[i] && moodSlope[i] < 0) return "bear";
+    return "flat";
+  });
+
+  const qqqState = rows.map((r, i) => {
+    if (qEma[i] == null) return null;
+    if (r.qLow > qEma[i]) return "bull";
+    if (r.qHigh < qEma[i]) return "bear";
+    return "flat";
+  });
+
+  const spyState = rows.map((r, i) => {
+    if (sEma[i] == null) return null;
+    if (r.sLow > sEma[i]) return "bull";
+    if (r.sHigh < sEma[i]) return "bear";
+    return "flat";
+  });
+
+  function streaks(states) {
+    const out = new Array(states.length).fill(0);
+    let run = 0, last = null;
+    for (let i = 0; i < states.length; i++) {
+      const s = states[i];
+      if (s == null) { run = 0; last = null; out[i] = 0; continue; }
+      if (s === last) run += 1; else run = 1;
+      last = s;
+      out[i] = run;
+    }
+    return out;
+  }
+  const moodStreak = streaks(moodState);
+  const qqqStreak = streaks(qqqState);
+  const spyStreak = streaks(spyState);
+
+  const alignedState = rows.map((r, i) => {
+    const m = moodState[i], q = qqqState[i], s = spyState[i];
+    if (!m || !q || !s) return null;
+
+    const bulls = [m, q, s].filter(x => x === "bull").length;
+    const bears = [m, q, s].filter(x => x === "bear").length;
+
+    if (bulls === 3) return "full-bull";
+    if (bears === 3) return "full-bear";
+    if (bulls === 2 && bears === 0) return "partial-bull";
+    if (bears === 2 && bulls === 0) return "partial-bear";
+    if (bulls === 1 && bears === 0) return "partial-bull";
+    if (bears === 1 && bulls === 0) return "partial-bear";
+    return "mixed";
+  });
+  
+  const alignedStreak = streaks(alignedState);
+
+  return rows.map((r, i) => ({
+    ...r,
+    ratioMA: ratioMA[i], moodSlope: moodSlope[i], moodState: moodState[i], moodStreak: moodStreak[i],
+    qEma: qEma[i], qqqSlope: qqqSlope[i], qqqState: qqqState[i], qqqStreak: qqqStreak[i],
+    sEma: sEma[i], spySlope: spySlope[i], spyState: spyState[i], spyStreak: spyStreak[i],
+    alignedState: alignedState[i], alignedStreak: alignedStreak[i]
+  }));
+}
 
 /* ============================================================
    RENDER HELPERS
    ============================================================ */
-function divergeColor(v, maxAbs){
-  const t = Math.max(-1, Math.min(1, v/maxAbs));
-  if(v===0) return "#eef1f6";
-  if(t>0){ const l = 88 - t*46; return `hsl(160,50%,${l}%)`; }
-  const l = 88 - (-t)*46; return `hsl(350,68%,${l}%)`;
+function fmtNum(v, dp = 2) { return v == null || isNaN(v) ? "—" : v.toFixed(dp); }
+function fmtSigned(v, dp = 2) { return v == null || isNaN(v) ? "—" : (v > 0 ? "+" : "") + v.toFixed(dp); }
+function stateColor(s) {
+  if (s && s.includes("bull")) return "var(--teal)";
+  if (s && s.includes("bear")) return "var(--red)";
+  return "var(--amber)";
 }
-function pctStr(v, dp=2){ return (v>0?"+":"") + v.toFixed(dp) + "%"; }
-function greenHeat(v){
-  const t = Math.max(0, Math.min(1, v/100));
-  const l = 92 - t*58;
-  return `hsl(152,55%,${l}%)`;
+function statePillClass(s) {
+  if (s && s.includes("bull")) return "pill-bull";
+  if (s && s.includes("bear")) return "pill-bear";
+  return "pill-flat";
 }
-function rowHTML(r){
-  const [tic,name,d,p5,off,ytd,rs,thr] = r;
-  return `<tr>
-    <td>${tic}</td>
-    <td>${name}</td>
-    <td style="background:${divergeColor(d,3)}">${pctStr(d)}</td>
-    <td style="background:${divergeColor(p5,8)}">${pctStr(p5)}</td>
-    <td style="background:${divergeColor(off,20)}">${pctStr(off)}</td>
-    <td style="background:${divergeColor(ytd,40)}">${pctStr(ytd)}</td>
-    <td style="background:${greenHeat(rs)}">
-      <div class="barcell">${rs.toFixed(2)}%
-        <div class="bartrack"><div class="barfill" style="width:${rs}%; background:#0d8f5f;"></div></div>
-      </div>
-    </td>
-    <td style="background:${greenHeat(thr)}">
-      <div class="barcell">${thr.toFixed(2)}%
-        <div class="bartrack"><div class="barfill" style="width:${thr}%; background:#0d8f5f;"></div></div>
-      </div>
-    </td>
-  </tr>`;
+function stateLabel(s) {
+  if (s === "bull" || s === "full-bull") return "Bullish";
+  if (s === "bear" || s === "full-bear") return "Bearish";
+  if (s === "partial-bull") return "Partial Bull";
+  if (s === "partial-bear") return "Partial Bear";
+  return "Flat / Mixed";
 }
-function buildTable(elId, rows){
-  const head = `<thead><tr>
-    <th>Ticker</th><th>Name</th><th>% Daily</th><th>% P5D</th><th>% Off 52W Hi</th>
-    <th>% YTD</th><th>1-Mth RS %</th><th>RS Thrust %</th>
+
+function buildDualLineSVG(rows, key1, key2, colorKey1, colorKey2) {
+  const W = 680, H = 150, padL = 8, padR = 8, padT = 12, padB = 12;
+  const vals1 = rows.map(r => r[key1]).filter(v => v != null && isFinite(v));
+  const vals2 = rows.map(r => r[key2]).filter(v => v != null && isFinite(v));
+  const all = vals1.concat(vals2);
+  if (all.length < 2) return "";
+  let maxV = Math.max(...all), minV = Math.min(...all);
+  const pad = (maxV - minV) * 0.08 || 1;
+  maxV += pad; minV -= pad;
+  const range = (maxV - minV) || 1;
+  const n = rows.length;
+  const stepX = (W - padL - padR) / Math.max(1, n - 1);
+  function xAt(i) { return padL + i * stepX; }
+  function yAt(v) { return padT + ((maxV - v) / range) * (H - padT - padB); }
+
+  function pathFor(key) {
+    let path = "";
+    rows.forEach((r, i) => {
+      const v = r[key];
+      if (v == null || !isFinite(v)) return;
+      const x = xAt(i).toFixed(1), y = yAt(v).toFixed(1);
+      path += `${path === "" ? "M" : "L"}${x},${y} `;
+    });
+    return path.trim();
+  }
+
+  const p1 = pathFor(key1), p2 = pathFor(key2);
+  const lastIdx = n - 1;
+  const lastX = xAt(lastIdx).toFixed(1);
+  const lastY1 = rows[lastIdx][key1] != null ? yAt(rows[lastIdx][key1]).toFixed(1) : null;
+  const lastY2 = rows[lastIdx][key2] != null ? yAt(rows[lastIdx][key2]).toFixed(1) : null;
+
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" height="100%" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="${p2}" fill="none" stroke="${colorKey2}" stroke-width="1.6" opacity="0.85"/>
+    <path d="${p1}" fill="none" stroke="${colorKey1}" stroke-width="2"/>
+    ${lastY1 ? `<circle cx="${lastX}" cy="${lastY1}" r="3.5" fill="${colorKey1}"/>` : ""}
+    ${lastY2 ? `<circle cx="${lastX}" cy="${lastY2}" r="3" fill="${colorKey2}"/>` : ""}
+  </svg>`;
+}
+
+function buildStreakHistoryHTML(rows, stateKey) {
+  return rows.map(r => {
+    const s = r[stateKey];
+    const col = s == null ? "var(--line)" : stateColor(s);
+    return `<div class="streak-day" style="background:${col};" title="${r.date}: ${s ? stateLabel(s) : 'n/a'}"></div>`;
+  }).join("");
+}
+
+/* ============================================================
+   MAIN RENDER
+   ============================================================ */
+function renderAll() {
+  const merged = STATE.merged;
+  if (!merged || merged.length === 0) return;
+
+  const recent = merged.slice(-HISTORY_BARS);
+  const last = merged[merged.length - 1];
+  const prev = merged.length > 1 ? merged[merged.length - 2] : null;
+
+  document.getElementById("subline").textContent =
+    `${last.date} · ${merged.length} days aligned · VIX ${fmtNum(last.vix)} · VVIX ${fmtNum(last.vvix)} · QQQ ${fmtNum(last.qClose)} · SPY ${fmtNum(last.sClose)}`;
+
+  /* ---------- MASTER BANNER ---------- */
+  const banner = document.getElementById("masterBanner");
+  const icon = document.getElementById("masterIcon");
+  const title = document.getElementById("masterTitle");
+  const sub = document.getElementById("masterSub");
+  const alignedStreakNum = document.getElementById("alignedStreakNum");
+  const convictionPill = document.getElementById("convictionPill");
+
+  banner.className = "master-banner";
+  let convictionText = "SIT TIGHT", convictionStyle = "background:var(--panel2); color:var(--text-dim); border:1px solid var(--line);";
+
+  if (last.alignedState === "full-bull") {
+    banner.classList.add("aligned-bull");
+    icon.textContent = "🟢";
+    title.textContent = `Full Bullish Alignment (3/3) — ${last.alignedStreak} day${last.alignedStreak === 1 ? "" : "s"} confirmed`;
+    sub.textContent = "Market Mood, QQQ, and SPY are unanimously bullish. Strong institutional participation across growth and broad equities favors trading breakouts with conviction.";
+    if (last.alignedStreak >= 5) { convictionText = "MAX CONVICTION — TRADE BIG"; convictionStyle = "background:rgba(32,217,184,.18); color:var(--teal); border:1px solid rgba(32,217,184,.4);"; }
+    else { convictionText = "CONVICTION — SIZE UP"; convictionStyle = "background:rgba(32,217,184,.12); color:var(--teal); border:1px solid rgba(32,217,184,.3);"; }
+  } else if (last.alignedState === "full-bear") {
+    banner.classList.add("aligned-bear");
+    icon.textContent = "🔴";
+    title.textContent = `Full Bearish Alignment (3/3) — ${last.alignedStreak} day${last.alignedStreak === 1 ? "" : "s"} confirmed`;
+    sub.textContent = "Market Mood, QQQ, and SPY are unanimously bearish. Sellers are in control across all dimensions. Favor aggressive capital defense or short exposure.";
+    if (last.alignedStreak >= 5) { convictionText = "MAX DEFENSE / SHORT BIG"; convictionStyle = "background:rgba(255,92,114,.18); color:var(--red); border:1px solid rgba(255,92,114,.4);"; }
+    else { convictionText = "DEFENSIVE POSITIONING"; convictionStyle = "background:rgba(255,92,114,.12); color:var(--red); border:1px solid rgba(255,92,114,.3);"; }
+  } else if (last.alignedState === "partial-bull") {
+    banner.classList.add("partial-bull");
+    icon.textContent = "🟢";
+    title.textContent = `Partial Bullish Alignment (2/3) — ${last.alignedStreak} day${last.alignedStreak === 1 ? "" : "s"}`;
+    sub.textContent = "Constructive directional bias, but lacking unanimous consensus (e.g. one signal is currently flat or straddling its EMA). Take long setups with moderate risk.";
+    convictionText = "MODERATE SIZE — TREND UP"; convictionStyle = "background:rgba(32,217,184,.10); color:var(--teal); border:1px solid rgba(32,217,184,.25);";
+  } else if (last.alignedState === "partial-bear") {
+    banner.classList.add("partial-bear");
+    icon.textContent = "🔴";
+    title.textContent = `Partial Bearish Alignment (2/3) — ${last.alignedStreak} day${last.alignedStreak === 1 ? "" : "s"}`;
+    sub.textContent = "Defensive directional bias, but lacking full participation. Capital preservation recommended while avoiding aggressive long exposure.";
+    convictionText = "REDUCE SIZE — CAUTION"; convictionStyle = "background:rgba(255,92,114,.10); color:var(--red); border:1px solid rgba(255,92,114,.25);";
+  } else {
+    banner.classList.add("mixed");
+    icon.textContent = "🟡";
+    title.textContent = "Mixed / Conflicted Regime";
+    sub.textContent = "Direct directional disagreement between Market Mood, QQQ, or SPY. Whipsaw risk is elevated. Reduce position size significantly or sit on your hands.";
+    convictionText = "SIT ON HANDS / SMALL SIZE"; convictionStyle = "background:rgba(245,185,66,.14); color:var(--amber); border:1px solid rgba(245,185,66,.3);";
+  }
+  alignedStreakNum.textContent = last.alignedStreak != null ? last.alignedStreak : "–";
+  convictionPill.textContent = convictionText;
+  convictionPill.style = convictionStyle;
+
+  /* ---------- MARKET MOOD CARD ---------- */
+  document.getElementById("moodPill").className = "regime-status-pill " + statePillClass(last.moodState);
+  document.getElementById("moodPill").textContent = stateLabel(last.moodState);
+  document.getElementById("moodRatioVal").textContent = fmtNum(last.ratio, 3);
+  document.getElementById("moodRatioVal").style.color = stateColor(last.moodState);
+  document.getElementById("moodRatioCap").textContent = prev ? `${last.ratio >= prev.ratio ? "▲" : "▼"} from ${fmtNum(prev.ratio, 3)}` : "—";
+  document.getElementById("moodMaVal").textContent = fmtNum(last.ratioMA, 3);
+  document.getElementById("moodMaCap").textContent = last.ratio > last.ratioMA ? "Ratio above MA" : "Ratio below MA";
+  document.getElementById("moodSlopeVal").textContent = fmtSigned(last.moodSlope, 3);
+  document.getElementById("moodSlopeVal").style.color = last.moodSlope > 0 ? "var(--teal)" : (last.moodSlope < 0 ? "var(--red)" : "var(--text)");
+  document.getElementById("moodSlopeCap").textContent = `${SLOPE_LOOKBACK}d MA change`;
+  document.getElementById("moodStreakVal").textContent = last.moodStreak != null ? last.moodStreak : "—";
+  document.getElementById("moodStreakVal").style.color = stateColor(last.moodState);
+  document.getElementById("moodStreakCap").textContent = stateLabel(last.moodState).toLowerCase();
+  document.getElementById("moodSvg").outerHTML = buildDualLineSVG(recent, "ratio", "ratioMA", "var(--amber)", "var(--blue)").replace("<svg", '<svg id="moodSvg"');
+  document.getElementById("moodRangeCap").textContent = `${recent.length}d`;
+  document.getElementById("moodHistory").innerHTML = buildStreakHistoryHTML(recent, "moodState");
+
+  /* ---------- QQQ CYCLE CARD ---------- */
+  document.getElementById("qqqCyclePill").className = "regime-status-pill " + statePillClass(last.qqqState);
+  document.getElementById("qqqCyclePill").textContent = stateLabel(last.qqqState);
+  document.getElementById("qqqPriceVal").textContent = fmtNum(last.qClose);
+  document.getElementById("qqqPriceVal").style.color = stateColor(last.qqqState);
+  document.getElementById("qqqPriceCap").textContent = prev ? `${last.qClose >= prev.qClose ? "▲" : "▼"} ${fmtSigned(((last.qClose/prev.qClose)-1)*100,2)}%` : "—";
+  document.getElementById("qqqEmaVal").textContent = fmtNum(last.qEma);
+  document.getElementById("qqqEmaCap").textContent = fmtSigned(last.qqqSlope, 2) + ` (${SLOPE_LOOKBACK}d)`;
+  const qqqCandleTxt = last.qqqState === "bull" ? "Low > EMA ✓" : (last.qqqState === "bear" ? "High < EMA ✓" : "Candle straddles");
+  document.getElementById("qqqCandleVal").textContent = qqqCandleTxt;
+  document.getElementById("qqqCandleVal").style.color = stateColor(last.qqqState);
+  document.getElementById("qqqCandleCap").textContent = `L ${fmtNum(last.qLow)} · H ${fmtNum(last.qHigh)}`;
+  document.getElementById("qqqStreakVal").textContent = last.qqqStreak != null ? last.qqqStreak : "—";
+  document.getElementById("qqqStreakVal").style.color = stateColor(last.qqqState);
+  document.getElementById("qqqStreakCap").textContent = stateLabel(last.qqqState).toLowerCase();
+  document.getElementById("qqqCycleSvg").outerHTML = buildDualLineSVG(recent, "qClose", "qEma", "var(--text)", "var(--blue)").replace("<svg", '<svg id="qqqCycleSvg"');
+  document.getElementById("qqqRangeCap").textContent = `${recent.length}d`;
+  document.getElementById("qqqHistory").innerHTML = buildStreakHistoryHTML(recent, "qqqState");
+
+  /* ---------- SPY CYCLE CARD ---------- */
+  document.getElementById("spyCyclePill").className = "regime-status-pill " + statePillClass(last.spyState);
+  document.getElementById("spyCyclePill").textContent = stateLabel(last.spyState);
+  document.getElementById("spyPriceVal").textContent = fmtNum(last.sClose);
+  document.getElementById("spyPriceVal").style.color = stateColor(last.spyState);
+  document.getElementById("spyPriceCap").textContent = prev ? `${last.sClose >= prev.sClose ? "▲" : "▼"} ${fmtSigned(((last.sClose/prev.sClose)-1)*100,2)}%` : "—";
+  document.getElementById("spyEmaVal").textContent = fmtNum(last.sEma);
+  document.getElementById("spyEmaCap").textContent = fmtSigned(last.spySlope, 2) + ` (${SLOPE_LOOKBACK}d)`;
+  const spyCandleTxt = last.spyState === "bull" ? "Low > EMA ✓" : (last.spyState === "bear" ? "High < EMA ✓" : "Candle straddles");
+  document.getElementById("spyCandleVal").textContent = spyCandleTxt;
+  document.getElementById("spyCandleVal").style.color = stateColor(last.spyState);
+  document.getElementById("spyCandleCap").textContent = `L ${fmtNum(last.sLow)} · H ${fmtNum(last.sHigh)}`;
+  document.getElementById("spyStreakVal").textContent = last.spyStreak != null ? last.spyStreak : "—";
+  document.getElementById("spyStreakVal").style.color = stateColor(last.spyState);
+  document.getElementById("spyStreakCap").textContent = stateLabel(last.spyState).toLowerCase();
+  document.getElementById("spyCycleSvg").outerHTML = buildDualLineSVG(recent, "sClose", "sEma", "var(--text)", "var(--blue)").replace("<svg", '<svg id="spyCycleSvg"');
+  document.getElementById("spyRangeCap").textContent = `${recent.length}d`;
+  document.getElementById("spyHistory").innerHTML = buildStreakHistoryHTML(recent, "spyState");
+
+  /* ---------- HISTORY TABLE ---------- */
+  const histRows = merged.slice(-20).reverse();
+  let head = `<thead><tr>
+    <th>Date</th><th>QQQ</th><th>SPY</th><th>VVIX/VIX</th><th>Mood</th><th>Mood Strk</th><th>QQQ Cycle</th><th>QQQ Strk</th><th>SPY Cycle</th><th>SPY Strk</th><th>3-Way Alignment</th><th>Align Strk</th>
   </tr></thead>`;
-  const body = "<tbody>" + rows.map(rowHTML).join("") + "</tbody>";
-  document.getElementById(elId).innerHTML = head + body;
-}
+  let body = "<tbody>" + histRows.map(r => `<tr>
+    <td>${r.date}</td>
+    <td>${fmtNum(r.qClose)}</td>
+    <td>${fmtNum(r.sClose)}</td>
+    <td>${fmtNum(r.ratio, 3)}</td>
+    <td><span class="tag-pill" style="background:${stateColor(r.moodState)}22; color:${stateColor(r.moodState)}; border:1px solid ${stateColor(r.moodState)}55;">${stateLabel(r.moodState)}</span></td>
+    <td>${r.moodStreak != null ? r.moodStreak : "—"}</td>
+    <td><span class="tag-pill" style="background:${stateColor(r.qqqState)}22; color:${stateColor(r.qqqState)}; border:1px solid ${stateColor(r.qqqState)}55;">${stateLabel(r.qqqState)}</span></td>
+    <td>${r.qqqStreak != null ? r.qqqStreak : "—"}</td>
+    <td><span class="tag-pill" style="background:${stateColor(r.spyState)}22; color:${stateColor(r.spyState)}; border:1px solid ${stateColor(r.spyState)}55;">${stateLabel(r.spyState)}</span></td>
+    <td>${r.spyStreak != null ? r.spyStreak : "—"}</td>
+    <td><span class="tag-pill" style="background:${stateColor(r.alignedState)}22; color:${stateColor(r.alignedState)}; border:1px solid ${stateColor(r.alignedState)}55;">${stateLabel(r.alignedState)}</span></td>
+    <td>${r.alignedStreak != null ? r.alignedStreak : "—"}</td>
+  </tr>`).join("") + "</tbody>";
+  document.getElementById("tblHistory").innerHTML = head + body;
 
-function renderAll(){
-  document.getElementById("dateLine").textContent = `${DATA.date} · Benchmark: ${DATA.benchmark}`;
-
-  buildTable("tblSubMarket", DATA.subMarket);
-  buildTable("tblSubSector", DATA.subSector);
-  buildTable("tblEwSector", DATA.ewSector);
-
-  // Thematic Sectors - Split into 3 columns
-  const thematicSorted = DATA.thematic.slice().sort((a,b) => b[2] - a[2]);
-  const third = Math.ceil(thematicSorted.length / 3);
-  
-  const elThem1 = document.getElementById("tblThematic1");
-  if(elThem1) buildTable("tblThematic1", thematicSorted.slice(0, third));
-  
-  const elThem2 = document.getElementById("tblThematic2");
-  if(elThem2) buildTable("tblThematic2", thematicSorted.slice(third, third * 2));
-  
-  const elThem3 = document.getElementById("tblThematic3");
-  if(elThem3) buildTable("tblThematic3", thematicSorted.slice(third * 2));
-  
-  // Trend Status
-  (function(){
-    const cols = DATA.trendStatus.cols;
-    let h = `<thead><tr><th style="text-align:left">Metric</th>${cols.map(c=>`<th>${c}</th>`).join("")}</tr></thead><tbody>`;
-    DATA.trendStatus.rows.forEach(row=>{
-      const [label, ...vals] = row;
-      h += `<tr><td style="text-align:left; font-weight:600;">${label}</td>`;
-      vals.forEach(v=>{ h += `<td style="background:${divergeColor(v,12)}">${pctStr(v)}</td>`; });
-      h += `</tr>`;
-    });
-    h += "</tbody>";
-    document.getElementById("tblTrendStatus").innerHTML = h;
-  })();
-
-  // Power Trend
-  (function(){
-    const cols = DATA.powerTrend.cols;
-    let h = `<thead><tr><th style="text-align:left">Check</th>${cols.map(c=>`<th>${c}</th>`).join("")}</tr></thead><tbody>`;
-    DATA.powerTrend.rows.forEach(row=>{
-      const [label, ...vals] = row;
-      h += `<tr><td style="text-align:left; font-weight:600;">${label}</td>`;
-      vals.forEach(v=>{
-        const cls = v==="Yes" ? "yn-yes" : "yn-no";
-        const sym = v==="Yes" ? "✓" : "✗";
-        h += `<td class="${cls}">${sym}</td>`;
-      });
-      h += `</tr>`;
-    });
-    h += "</tbody>";
-    document.getElementById("tblPowerTrend").innerHTML = h;
-  })();
-
-  // Factors
-  (function(){
-    let h = "";
-    DATA.factors.forEach(([label,val])=>{
-      const color = val>0 ? "var(--teal)" : (val<0 ? "var(--red)" : "var(--text-faint)");
-      h += `<div class="factor-row"><span><span class="sq" style="background:${color}"></span>${label}</span><span class="factor-val" style="color:${color}">${pctStr(val)}</span></div>`;
-    });
-    document.getElementById("factorsList").innerHTML = h;
-
-    const extremesEl = document.getElementById("factorsExtremesList");
-    if(extremesEl){
-      const sorted = DATA.factors.slice().sort((a,b)=>b[1]-a[1]);
-      const leaders = sorted.slice(0,2);
-      const laggards = sorted.slice(-2).reverse();
-      let eh = "";
-      leaders.forEach(([label,val])=>{
-        eh += `<div class="chk-item"><span class="tick yes">▲</span>${label}&nbsp; ${pctStr(val)}</div>`;
-      });
-      laggards.forEach(([label,val])=>{
-        eh += `<div class="chk-item"><span class="tick no">▼</span>${label}&nbsp; ${pctStr(val)}</div>`;
-      });
-      extremesEl.innerHTML = eh;
-    }
-  })();
-
-  const macro = DATA.macro;
-  const y = macro.yield10y;
-  const trend = macro.yieldTrend; 
-
-  let yieldLabel, yieldColor;
-
-  if (y < 3.5) {
-    yieldLabel = "Risk-On / Easy Money";
-    yieldColor = "var(--teal)";
-  } else if (y < 4.25) {
-    yieldLabel = "Neutral / Wait-and-See";
-    yieldColor = "var(--text-dim)";
-  } else if (y < 5.0) {
-    yieldLabel = "Caution / Tightening";
-    yieldColor = "var(--amber)";
-  } else {
-    yieldLabel = "Risk-Off / Stress";
-    yieldColor = "var(--red)";
-  }
-  
-  if (trend === "up" && y > 4.5) {
-    yieldLabel = "Risk-Off / Yields Rising";
-  } else if (trend === "down" && y > 4.0) {
-    yieldLabel = "Caution / Yields Falling";
-  }
-
-  document.getElementById("yieldCap").textContent = yieldLabel;
-  document.getElementById("yieldCap").style.color = yieldColor;
-
-  // Put-Call Logic
-  const pcVal = DATA.putcall.value;
-  const pcBig = document.getElementById("pcBig");
-  const pcCap = document.getElementById("pcCap");
-
-  if (pcBig) pcBig.textContent = pcVal.toFixed(2);
-
-  if (pcCap) {
-    let label, color;
-    if (pcVal < 0.6) {
-      label = "Complacent / Greed";
-      color = "var(--red)";
-    } else if (pcVal > 0.95) {
-      label = "Fearful / Hedged";
-      color = "var(--teal)";
-    } else {
-      label = "Neutral";
-      color = "var(--text-dim)";
-    }
-    pcCap.textContent = label;
-    pcCap.style.color = color;
-  }
-
-  // Credit Spreads
-  const spread = DATA.creditSpreads || 1.03;
-  document.getElementById("spreadBig").textContent = spread.toFixed(2);
-  const capEl = document.getElementById("spreadCap");
-  if (spread > 1.05) {
-    capEl.textContent = "Widening (Risk-off)";
-    capEl.style.color = "var(--red)";
-  } else {
-    capEl.textContent = "Tightening (Risk-on)";
-    capEl.style.color = "var(--teal)";
-  }
-
-  // Composite Breadth Score
-  const b = DATA.breadth;
-  const compBreadth = (b.spx20 + b.spx50 + b.spx200 + b.sec20 + b.sec50 + b.sec200) / 6;
-  const compEl = document.getElementById("compositeBreadthBig");
-  if(compEl) compEl.textContent = compBreadth.toFixed(0) + "%";
-
-  // ============================================================
-  // ADVANCED MASTER BANNER LOGIC (VIX + Put/Call + $NASI Integration)
-  // ============================================================
-  (function(){
-    const v = DATA.vix;
-    document.getElementById("vixBig").textContent = v.level.toFixed(2);
-    document.getElementById("vixCap").textContent = `20 SMA ${v.sma20.toFixed(2)} · ${v.trendLabel}`;
-
-    let pct;
-    const vix = v.level;
-    if(vix < 15){ pct = (vix/15)*15; }
-    else if(vix < 25){ pct = 15 + ((vix-15)/10)*25; }
-    else if(vix < 35){ pct = 40 + ((vix-25)/10)*25; }
-    else { pct = 65 + Math.min(35, ((vix-35)/15)*35); }
-    document.getElementById("vixMarker").style.left = pct+"%";
-
-    let currentZoneIdx = vix>35?0 : vix>=25?1 : vix>=15?2 : 3;
-
-    const vixTooltipEl = document.getElementById("vixTooltip");
-    if(vixTooltipEl) {
-      let h = `<thead><tr><th>VIX</th><th>Zone</th><th>Action</th></tr></thead><tbody>`;
-      vixZonesTemplate.forEach(([lvl, zone, action], i) => {
-        const isCurrent = i === currentZoneIdx;
-        h += `<tr class="${isCurrent ? 'zone-current' : ''}">
-                <td style="font-weight:700;">${lvl}</td>
-                <td>${zone}</td>
-                <td style="font-weight:700;">${action}</td>
-              </tr>`;
-      });
-      h += "</tbody>";
-      vixTooltipEl.innerHTML = `<table>${h}</table>`;
-    }
-
-    // Comprehensive Composite Master Banner Scoring incorporating Put/Call & $NASI
-    // 1. VIX Health Score (-1 to +1)
-    let vixScore = 0;
-    if (vix < 15) vixScore = -0.5; // Complacency warning
-    else if (vix >= 15 && vix <= 25) vixScore = 1.0; // Normal/Stable bull-friendly zone
-    else if (vix > 25 && vix <= 35) vixScore = 0.2; // Elevated volatility / caution
-    else vixScore = -1.0; // Extreme panic
-
-    // 2. Put/Call Sentiment Score (-1 to +1)
-    let pcScore = 0;
-    if (pcVal < 0.6) pcScore = -0.8; // Extreme complacency / market top risk
-    else if (pcVal > 0.95) pcScore = 0.8; // Extreme fear / contrarian bottom setup
-    else pcScore = 0.3; // Neutral healthy balance
-
-    // 3. $NASI Trend Score (-1 to +1)
-    let nasiScore = 0;
-    const nasiVal = DATA.nasi.current;
-    const nasiSma = DATA.nasi.sma50;
-    if (nasiVal > nasiSma && nasiVal > 0) nasiScore = 1.0;
-    else if (nasiVal <= nasiSma && nasiVal > 0) nasiScore = -0.3;
-    else nasiScore = -1.0; // Below zero line is heavy bearish momentum
-
-    // Weighted Combined Score calculation
-    const compositeScore = (vixScore * 0.4) + (pcScore * 0.3) + (nasiScore * 0.3);
-
-    let masterTextVal = "";
-    let dotClass = "dot";
-
-    if (compositeScore >= 0.5) {
-      masterTextVal = "FULL BULLISH ALIGNMENT — Aggressive Long Exposure Favorable";
-      dotClass = "dot"; // Teal
-    } else if (compositeScore >= 0.1) {
-      masterTextVal = "HOLD POSITIONS — Normal / Stable Market Conditions";
-      dotClass = "dot"; // Teal
-    } else if (compositeScore >= -0.3) {
-      masterTextVal = "CAUTION / MIXED — Reduce Size & Wait for Confirmation";
-      dotClass = "dot amber"; // Amber
-    } else {
-      masterTextVal = "DEFENSIVE / HIGH RISK — Capital Preservation & Hedge Focus";
-      dotClass = "dot red"; // Red
-    }
-
-    document.getElementById("masterText").textContent = masterTextVal;
-    document.getElementById("masterDot").className = dotClass;
-  })();
-
-  // Breadth rings
-  (function(){
-    const rings = [["20D",b.spx20],["50D",b.spx50],["200D",b.spx200]];
-    let h = "";
-    rings.forEach(([label,val])=>{
-      const circ = 2*Math.PI*22;
-      const off = circ - (val/100)*circ;
-      h += `<div>
-        <div class="ring">
-          <svg width="52" height="52">
-            <circle cx="26" cy="26" r="22" stroke="var(--line)" stroke-width="5" fill="none"/>
-            <circle cx="26" cy="26" r="22" stroke="var(--teal)" stroke-width="5" fill="none"
-              stroke-dasharray="${circ}" stroke-dashoffset="${off}" stroke-linecap="round"/>
-          </svg>
-          <div class="ring-val">${val.toFixed(0)}%</div>
-        </div>
-        <div class="ring-label">${label}</div>
-      </div>`;
-    });
-    document.getElementById("breadthRow").innerHTML = h;
-
-    const secRings = [["20D",b.sec20],["50D",b.sec50],["200D",b.sec200]];
-    let hSec = "";
-    secRings.forEach(([label,val])=>{
-      const circ = 2*Math.PI*22;
-      const off = circ - (val/100)*circ;
-      hSec += `<div>
-        <div class="ring">
-          <svg width="52" height="52">
-            <circle cx="26" cy="26" r="22" stroke="var(--line)" stroke-width="5" fill="none"/>
-            <circle cx="26" cy="26" r="22" stroke="var(--teal)" stroke-width="5" fill="none"
-              stroke-dasharray="${circ}" stroke-dashoffset="${off}" stroke-linecap="round"/>
-          </svg>
-          <div class="ring-val">${val.toFixed(0)}%</div>
-        </div>
-        <div class="ring-label">${label}</div>
-      </div>`;
-    });
-    if(document.getElementById("sectorBreadthRow")){
-      document.getElementById("sectorBreadthRow").innerHTML = hSec;
-    }
-  })();
-
-  // $NASI card + detail panel
-  (function(){
-    const n = DATA.nasi;
-    const belowSma = n.current < n.sma50;
-    document.getElementById("nasiBig").textContent = n.current.toFixed(2);
-    document.getElementById("nasiBig").style.color = belowSma ? "var(--red)" : "var(--teal)";
-    
-    document.getElementById("nasiCap").textContent = `Prev ${n.prevClose.toFixed(2)} · 50-DMA ${n.sma50.toFixed(2)}`;
-
-    const statusEl = document.getElementById("nasiStatus");
-    if(belowSma && n.current > 0){
-      statusEl.className = "nasi-status warn";
-      statusEl.textContent = "⚠ Warning — below 50-DMA";
-    } else if(n.current < 0){
-      statusEl.className = "nasi-status bear";
-      statusEl.textContent = "🔻 Bearish — below zero line";
-    } else {
-      statusEl.className = "nasi-status bull";
-      statusEl.textContent = "✓ Constructive — above 50-DMA";
-    }
-
-    const nasiTooltipEl = document.getElementById("nasiTooltip");
-    if(nasiTooltipEl){
-      nasiTooltipEl.innerHTML = `<b>McClellan Summation ($NASI):</b><br>
-      Current: <b>${n.current.toFixed(2)}</b><br>
-      50-DMA: <b>${n.sma50.toFixed(2)}</b><br>
-      Change: <b>${n.chg > 0 ? '+' : ''}${n.chg.toFixed(2)} (${n.chgPct}%)</b><br>
-      <em>Measures cumulative breadth trend. Values above 50-DMA support healthy structural bull trends.</em>`;
-    }
-  })(); 
-
-  updateThemeToggleUI();
+  /* ---------- TRADINGVIEW WIDGETS ---------- */
+  renderTradingViewWidgets();
 }
 
 /* ============================================================
-   SMART CSV IMPORTER
+   TRADINGVIEW WIDGETS (SPLIT DUAL PANELS)
    ============================================================ */
-function parseCSVGrid(text){
-  const rows = [];
-  let row = [], field = '', inQuotes = false;
-  for(let i=0;i<text.length;i++){
-    const ch = text[i], next = text[i+1];
-    if(inQuotes){
-      if(ch === '"' && next === '"'){ field+='"'; i++; }
-      else if(ch === '"'){ inQuotes=false; }
-      else field += ch;
-    } else {
-      if(ch === '"'){ inQuotes = true; }
-      else if(ch === ','){ row.push(field); field=''; }
-      else if(ch === '\n'){ row.push(field); field=''; rows.push(row); row=[]; }
-      else if(ch === '\r'){ /* skip */ }
-      else field += ch;
-    }
-  }
-  if(field.length || row.length){ row.push(field); rows.push(row); }
-  return rows;
-}
-const gnorm = s => (s===undefined||s===null) ? "" : String(s).trim();
-const gnum = s => { const n = parseFloat(gnorm(s).replace('%','').replace(/,/g,'')); return isNaN(n) ? null : n; };
-const fuzzy = s => gnorm(s).toLowerCase().replace(/[^a-z0-9$]/g,'');
+function renderTradingViewWidgets() {
+  const qContainer = document.getElementById("qqqTvContainer");
+  const sContainer = document.getElementById("spyTvContainer");
+  if (!qContainer || !sContainer) return;
 
-function findLabel(grid, text){
-  const target = fuzzy(text);
-  for(let r=0;r<grid.length;r++){
-    for(let c=0;c<(grid[r]||[]).length;c++){
-      if(fuzzy(grid[r][c]) === target) return {r,c};
-    }
-  }
-  return null;
-}
-function findLabelContains(grid, text){
-  const target = fuzzy(text);
-  for(let r=0;r<grid.length;r++){
-    for(let c=0;c<(grid[r]||[]).length;c++){
-      if(fuzzy(grid[r][c]).includes(target)) return {r,c};
-    }
-  }
-  return null;
-}
-function scanRightValue(grid, r, cStart, howMany=1){
-  const out = [];
-  for(let cc=cStart; cc<(grid[r]||[]).length && out.length<howMany; cc++){
-    const v = gnorm(grid[r][cc]);
-    if(v) out.push(v);
-  }
-  return out;
-}
-function scanRightNumbers(grid, r, cStart, cEnd, maxCount){
-  const out = [];
-  for(let cc=cStart; cc<cEnd && out.length<maxCount; cc++){
-    const v = gnorm(grid[r] && grid[r][cc]);
-    if(v==="") continue;
-    if(gnum(v)===null) break;
-    out.push(gnum(v));
-  }
-  return out;
-}
+  const isDark = (document.documentElement.getAttribute("data-theme") || "dark") === "dark";
+  const theme = isDark ? "dark" : "light";
+  const bgColor = isDark ? "rgba(16, 22, 37, 1)" : "rgba(255, 255, 255, 1)";
+  const gridColor = isDark ? "rgba(33, 42, 61, 1)" : "rgba(221, 226, 236, 1)";
 
-const TICKER_SECTION_TITLES = {
-  subMarket: "S&P 500 Sub-Market Performance",
-  subSector: "S&P 500 Sub-Sector Performance",
-  ewSector: "S&P 500 EW Sub-Sector Performance",
-  thematic: "Top Thematic Sectors",
-};
-
-function extractTickerTables(grid){
-  const headerAnchor = findLabel(grid, "Ticker / Name");
-  if(!headerAnchor) return {};
-  const {r: hr, c} = headerAnchor;
-  const headerRow = grid[hr];
-  const colMap = {};
-  for(let cc=c; cc<Math.min(headerRow.length, c+15); cc++){
-    const h = fuzzy(headerRow[cc]);
-    if(h) colMap[h] = cc;
-  }
-  
-  const findCol = names => { 
-    for(const n of names){ 
-      const key = fuzzy(n); 
-      if(colMap[key]!==undefined) return colMap[key]; 
-    } 
-    return null; 
+  const createTvWidget = (containerId, symbol) => {
+    const container = document.getElementById(containerId);
+    container.innerHTML = '<div class="tradingview-widget-container__widget" style="height:100%;width:100%"></div>';
+    
+    const script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src = "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
+    script.async = true;
+    script.innerHTML = JSON.stringify({
+      "autosize": true,
+      "symbol": symbol,
+      "interval": "D",
+      "timezone": "Etc/UTC",
+      "theme": theme,
+      "style": "2", // Renders as a line chart (ideal for Index Ratios)
+      "locale": "en",
+      "enable_publishing": false,
+      "backgroundColor": bgColor,
+      "gridColor": gridColor,
+      "hide_top_toolbar": false, // Left enabled so you can overlay QQQ/SPY manually
+      "hide_legend": false,
+      "save_image": false,
+      "hide_volume": true,
+      "support_host": "https://www.tradingview.com"
+    });
+    container.appendChild(script);
   };
-  
-  const cDaily = findCol(["dailychange"]);
-  const cP5D = findCol(["p5dchange"]);
-  const cOff = findCol(["off52wkhigh", "off52weekhigh"]);
-  const cYtd = findCol(["gainlossytd"]);
-  const cRs = findCol(["1mthrs"]);
-  const cThrust = findCol(["rsthrust"]);
 
-  const results = {};
-  for(const [key, titleText] of Object.entries(TICKER_SECTION_TITLES)){
-    const titleAnchor = findLabelContains(grid, titleText);
-    if(!titleAnchor){ results[key] = []; continue; }
-    const rows = [];
-    let rr = titleAnchor.r + 2; 
-    while(rr < grid.length){
-      const nameCell = gnorm(grid[rr] && grid[rr][c]);
-      if(!nameCell || nameCell === "") break;
-      
-      const idx = nameCell.indexOf(":");
-      let ticker = nameCell, name = "";
-      if(idx>-1){ ticker = nameCell.slice(0,idx).trim(); name = nameCell.slice(idx+1).trim(); }
-      
-      const getNum = cc => cc===null ? null : gnum(grid[rr][cc]);
-      const d=getNum(cDaily), p5=getNum(cP5D), off=getNum(cOff), ytd=getNum(cYtd), rs=getNum(cRs), th=getNum(cThrust);
-      
-      if(d===null && p5===null && rs===null && th===null){ rr++; continue; } 
-      
-      rows.push([ticker,name, d??0, p5??0, off??0, ytd??0, rs??0, th??0]);
-      rr++;
+  createTvWidget("qqqTvContainer", "INDEX:PCQQ");
+  createTvWidget("spyTvContainer", "INDEX:PCSP");
+}
+
+/* ============================================================
+   FETCH ORCHESTRATION 
+   ============================================================ */
+async function refreshAll() {
+  const btn = document.getElementById("btnRefresh");
+  const statusMsg = document.getElementById("statusMsg");
+  if (btn) btn.textContent = "↻ Fetching…";
+  statusMsg.textContent = "Fetching VIX, VVIX, QQQ, and SPY history…";
+  statusMsg.className = "status-msg";
+
+  try {
+    setStatusMsg("Fetching VIX...");
+    const vix = await fetchYahooDaily("^VIX", "1y");
+    await sleep(100);
+
+    setStatusMsg("Fetching VVIX...");
+    const vvix = await fetchYahooDaily("^VVIX", "1y");
+    await sleep(100);
+
+    setStatusMsg("Fetching QQQ...");
+    const qqq = await fetchYahooDaily("QQQ", "1y");
+    await sleep(100);
+
+    setStatusMsg("Fetching SPY...");
+    const spy = await fetchYahooDaily("SPY", "1y");
+
+    if (!vix || !vvix || !qqq || !spy) {
+      throw new Error("One or more core feeds (VIX / VVIX / QQQ / SPY) failed to load.");
     }
-    results[key] = rows;
-  }
-  return results;
-}
 
-function extractMatrix(grid, labelText, colCount){
-  const anchor = findLabel(grid, labelText);
-  if(!anchor) return null;
-  const {r,c} = anchor;
-  const headerRow = grid[r];
-  const cols = [];
-  for(let cc=c+1; cc<headerRow.length && cols.length<colCount; cc++){
-    const v = gnorm(headerRow[cc]);
-    if(v) cols.push(v); else if(cols.length>0) break;
-  }
-  const rows = [];
-  let rr = r+1;
-  while(rr < grid.length){
-    const label = gnorm(grid[rr][c]);
-    if(!label) break;
-    const vals = [];
-    for(let cc=c+1; cc<c+1+cols.length; cc++) vals.push(gnorm(grid[rr][cc]));
-    rows.push([label, ...vals]);
-    rr++;
-  }
-  return {cols, rows};
-}
-
-function scanRightNumber(grid, r, cStart, maxScan=4){
-  for(let cc=cStart; cc<cStart+maxScan && cc<(grid[r]||[]).length; cc++){
-    const v = gnorm(grid[r][cc]);
-    if(v==="") continue;
-    const n = gnum(v);
-    if(n!==null) return n;
-  }
-  return null;
-}
-
-const FACTOR_NAMES = ["growth","value","highdividend","largecap","midcap","smallcap","momentum","ipos"];
-function extractFactors(grid){
-  const anchor = findLabel(grid, "Factors vs SPY");
-  if(!anchor) return null;
-  const {r,c} = anchor;
-  let rr = r+1;
-  const factors = [];
-  let misses = 0;
-  while(rr<grid.length && misses<2){
-    const label = gnorm(grid[rr][c]);
-    if(!label){ misses++; rr++; continue; }
-    if(!FACTOR_NAMES.includes(fuzzy(label))){ rr++; continue; }
-    const val = scanRightNumber(grid, rr, c+1, 4);
-    if(val!==null) factors.push([label.replace(/[^\w\s-]/g,'').trim(), val]);
-    rr++;
-  }
-  return factors.length ? factors : null;
-}
-
-function extractDate(grid){
-  for(let r=0;r<grid.length;r++){
-    for(let c=0;c<(grid[r]||[]).length;c++){
-      const v = gnorm(grid[r][c]);
-      if(/^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(v)) return v;
-    }
-  }
-  return null;
-}
-
-function smartImport(rawText){
-  const report = [];
-  const grid = parseCSVGrid(rawText);
-  const newData = JSON.parse(JSON.stringify(DATA));
-
-  const dateFound = extractDate(grid);
-  if(dateFound){ newData.date = dateFound; report.push(["Date", true, dateFound]); }
-  else report.push(["Date", false, "kept previous"]);
-
-  const benchAnchor = findLabel(grid, "Benchmark:");
-  if(benchAnchor){
-    const v = scanRightValue(grid, benchAnchor.r, benchAnchor.c+1, 1)[0];
-    if(v){ newData.benchmark = v; report.push(["Benchmark", true, v]); }
-  } else report.push(["Benchmark", false, "kept previous"]);
-
-  const wlAnchor = findLabel(grid, "Primary Watchlist");
-  if(wlAnchor){
-    const belowRow = grid[wlAnchor.r+1] || [];
-    const tickers = belowRow.map(gnorm).filter(v=>v && /^[A-Z.]{1,6}$/.test(v));
-    if(tickers.length){ newData.watchlist = tickers; report.push(["Watchlist", true, tickers.join(', ')]); }
-    else report.push(["Watchlist", false, "kept previous"]);
-  } else report.push(["Watchlist", false, "kept previous"]);
-
-  const tables = extractTickerTables(grid);
-  const tableKeys = ["subMarket","subSector","ewSector","thematic"];
-  const tableLabels = ["Sub-Market Performance","Sub-Sector Performance","EW Sub-Sector Performance","Top Thematic Sectors"];
-  tableKeys.forEach((key,i)=>{
-    if(tables[key] && tables[key].length){
-      newData[key] = tables[key];
-      report.push([tableLabels[i], true, `${tables[key].length} rows`]);
-    } else {
-      report.push([tableLabels[i], false, "not found — kept previous"]);
-    }
-  });
-
-  const trend = extractMatrix(grid, "Trend Status", 6);
-  if(trend && trend.rows.length){
-    newData.trendStatus = {
-      cols: trend.cols,
-      rows: trend.rows.map(row=>[row[0], ...row.slice(1).map(v=>gnum(v)??0)])
-    };
-    report.push(["Trend Status", true, `${trend.rows.length} rows`]);
-  } else report.push(["Trend Status", false, "kept previous"]);
-
-  const power = extractMatrix(grid, "Power Trend", 4);
-  if(power && power.rows.length){
-    newData.powerTrend = { cols: power.cols, rows: power.rows };
-    report.push(["Power Trend", true, `${power.rows.length} rows`]);
-  } else report.push(["Power Trend", false, "kept previous"]);
-
-  const factors = extractFactors(grid);
-  if(factors){ newData.factors = factors; report.push(["Factors vs SPY", true, `${factors.length} factors`]); }
-  else report.push(["Factors vs SPY", false, "kept previous"]);
-
-  const vixAnchor = findLabel(grid, "VIX Level");
-  const vixTrendAnchor = findLabel(grid, "VIX Trend");
-  const vixPctileAnchor = findLabel(grid, "VIX 1Y %ile");
-  if(vixAnchor){
-    const lvlVals = scanRightValue(grid, vixAnchor.r, vixAnchor.c+1, 1);
-    const level = gnum(lvlVals[0]);
-    let trend = newData.vix.trend, trendLabel = newData.vix.trendLabel, pctile = newData.vix.pctile;
-    if(vixTrendAnchor){ const tv = scanRightValue(grid, vixTrendAnchor.r, vixTrendAnchor.c+1, 2); trend = tv[0]||trend; trendLabel = tv[1]||trendLabel; }
-    if(vixPctileAnchor){ const pv = scanRightValue(grid, vixPctileAnchor.r, vixPctileAnchor.c+1, 1); pctile = gnum(pv[0]) ?? pctile; }
-    if(level!==null){
-      newData.vix = {level, sma20:newData.vix.sma20, trend, trendLabel, pctile};
-      report.push(["VIX", true, `${level}`]);
-    } else report.push(["VIX", false, "kept previous"]);
-  } else report.push(["VIX", false, "kept previous"]);
-
-  const yieldAnchor = findLabel(grid, "10Y Yield");
-  if(yieldAnchor){
-    const yv = scanRightValue(grid, yieldAnchor.r, yieldAnchor.c+1, 2);
-    const y = gnum(yv[0]);
-    if(y!==null){ newData.macro = {yield10y:y, yieldTrend:yv[1]||newData.macro.yieldTrend}; report.push(["10Y Yield", true, `${y}%`]); }
-    else report.push(["10Y Yield", false, "kept previous"]);
-  } else report.push(["10Y Yield", false, "kept previous"]);
-
-  const mbRowAnchor = findLabel(grid, "Market Breadth");
-  const secRowAnchor = findLabel(grid, "Sector Breadth");
-  
-  if(mbRowAnchor){
-    const spxVals = scanRightNumbers(grid, mbRowAnchor.r, mbRowAnchor.c + 1, mbRowAnchor.c + 4, 3);
-    let secVals = [];
-    if(secRowAnchor){
-      secVals = scanRightNumbers(grid, secRowAnchor.r, secRowAnchor.c + 1, secRowAnchor.c + 4, 3);
-    }
+    STATE.vix = vix; STATE.vvix = vvix; STATE.qqq = qqq; STATE.spy = spy; 
     
-    if(spxVals.length >= 3){
-      newData.breadth = {
-        spx20: spxVals[0], spx50: spxVals[1], spx200: spxVals[2],
-        sec20: secVals.length >= 3 ? secVals[0] : newData.breadth.sec20, 
-        sec50: secVals.length >= 3 ? secVals[1] : newData.breadth.sec50, 
-        sec200: secVals.length >= 3 ? secVals[2] : newData.breadth.sec200,
-      };
-      report.push(["Market Breadth", true, `SPX ${spxVals.join('/')}`]);
-    } else {
-      report.push(["Market Breadth", false, "Could not read numbers"]);
+    STATE.merged = buildMergedSeries();
+
+    if (STATE.merged.length < MA_LEN + SLOPE_LOOKBACK) {
+      throw new Error("Not enough overlapping history to compute the regime yet.");
     }
-  } else {
-    report.push(["Market Breadth", false, "Label not found"]);
-  }
- 
-  const feedAnchor = findLabel(grid, "Put/Call");
-  if(feedAnchor){
-    const val = gnum(grid[feedAnchor.r][feedAnchor.c + 1]); 
-    if(val !== null){ 
-      newData.putcall.value = val; 
-      report.push(["Put/Call Ratio", true, `${val}`]); 
-    } else {
-      report.push(["Put/Call Ratio", false, "Found Put/Call but value is empty"]);
-    }
-  } else {
-    report.push(["Put/Call Ratio", false, "Put/Call tag missing in sheet"]);
-  }
 
-  const nasiAnchor = findLabel(grid, "$NASI");
-  if(nasiAnchor){
-    const current = gnum(grid[nasiAnchor.r][nasiAnchor.c + 2]);
-    const sma50 = gnum(grid[nasiAnchor.r][nasiAnchor.c + 4]);
-
-    if(current !== null){
-      const prevClose = newData.nasi.prevClose;
-      newData.nasi = {
-        current,
-        prevClose,
-        chg: +(current - prevClose).toFixed(2),
-        chgPct: prevClose ? +(((current - prevClose) / prevClose) * 100).toFixed(2) : newData.nasi.chgPct,
-        sma50: sma50 ?? newData.nasi.sma50,
-        status: newData.nasi.status
-      };
-      report.push(["$NASI", true, `${current}`]);
-    } else report.push(["$NASI", false, "kept previous"]);
-  }
-
-  return { data: newData, report };
-}
-
-/* ============================================================
-   LIVE GOOGLE SHEET AUTO-LOADER
-   ============================================================ */
-const PUBLISHED_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vStHHISoCKgIkrMzx45EZPPL8kJEOucskS2mcfRJ5pdhmLIhDFxyq8czbcZ2bzEPBBDCJf21ccYJc2K/pub?gid=0&single=true&output=csv';
-
-const CORS_PROXIES = [
-  url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-  url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
-];
-
-async function fetchCSVText(url, label){
-  const res = await fetch(url, { cache: 'no-store' });
-  if (!res.ok) throw new Error(`${label}: HTTP ${res.status}`);
-  const text = await res.text();
-  if (!text || text.trim().startsWith('<')) {
-    throw new Error(`${label}: got a webpage instead of CSV.`);
-  }
-  return text;
-}
-
-async function fetchLiveMarketData() {
-  const btn = document.getElementById("btnAutoRefresh");
-  if (btn) btn.textContent = "↻ Fetching...";
-  setStatus("Fetching live data from Google Sheets...");
-
-  const bust = (PUBLISHED_CSV_URL.includes('?') ? '&' : '?') + 'cachebust=' + Date.now();
-  const freshUrl = PUBLISHED_CSV_URL + bust;
-
-  let text = null, lastErr = null, source = null;
-
-  try {
-    text = await fetchCSVText(freshUrl, "Direct");
-    source = "direct";
-  } catch (err) {
-    lastErr = err;
-  }
-
-  if (!text) {
-    for (const buildProxyUrl of CORS_PROXIES) {
-      try {
-        text = await fetchCSVText(buildProxyUrl(freshUrl), "Proxy");
-        source = "proxy";
-        break;
-      } catch (err) {
-        lastErr = err;
-      }
-    }
-  }
-
-  if (!text) {
-    setStatus(`Auto-load failed: ${lastErr ? lastErr.message : 'unknown error'}`, true);
-    if (btn) btn.textContent = "↻ Refresh Failed";
-    return;
-  }
-
-  try {
-    const { data, report } = smartImport(text);
-    DATA = data;
     renderAll();
-  
-    try { await window.storage.set('market-monitor-data', JSON.stringify(DATA)); } catch(e) {}
-
-    const okCount = report.filter(r => r[1]).length;
-    setStatus(`✓ Live sheet loaded via ${source} — ${okCount}/${report.length} sections updated.`);
-    if (btn) btn.textContent = "↻ Refresh Live Data";
-
-  } catch (err) {
-    setStatus("Fetched the sheet, but couldn't parse it.", true);
-    if (btn) btn.textContent = "↻ Refresh Failed";
+    setStatusMsg(`✓ Loaded ${STATE.merged.length} aligned trading days.`);
+  } catch (e) {
+    setStatusMsg(`Live fetch issue: ${e.message}`, true);
   }
+  if (btn) btn.textContent = "↻ Refresh Live Data";
 }
 
-document.getElementById("btnAutoRefresh")?.addEventListener("click", fetchLiveMarketData);
+function setStatusMsg(txt, isErr = false) {
+  const el = document.getElementById("statusMsg");
+  if (!el) return;
+  el.textContent = txt;
+  el.className = "status-msg" + (isErr ? " err" : "");
+}
 
 /* ============================================================
-   INIT
+   INTERACTION & THEME
    ============================================================ */
-(async function init(){
-  try{
-    const savedTheme = await window.storage.get('market-monitor-theme');
-    const finalTheme = (savedTheme && savedTheme.value) ? savedTheme.value : "light";
-    document.documentElement.setAttribute("data-theme", finalTheme);
-  }catch(e){
-    document.documentElement.setAttribute("data-theme", "light");
-  }
+function updateThemeToggleUI() {
+  const theme = document.documentElement.getAttribute("data-theme") || "dark";
+  document.getElementById("optDark").classList.toggle("active", theme === "dark");
+  document.getElementById("optLight").classList.toggle("active", theme === "light");
+}
+function setTheme(theme) {
+  document.documentElement.setAttribute("data-theme", theme);
+  updateThemeToggleUI();
+  try { localStorage.setItem("market-monitor-theme", theme); } catch (e) {}
   
-  try{
-    const savedData = await window.storage.get('market-monitor-data');
-    if(savedData && savedData.value){ DATA = JSON.parse(savedData.value); }
-  }catch(e){}
-  renderAll();
-  fetchLiveMarketData();
+  if (STATE.merged && STATE.merged.length) {
+    // Top SVGs re-render easily 
+    renderAll();
+  }
+}
+document.getElementById("optDark").addEventListener("click", () => setTheme("dark"));
+document.getElementById("optLight").addEventListener("click", () => setTheme("light"));
+document.getElementById("btnRefresh").addEventListener("click", refreshAll);
+
+(function init() {
+  try {
+    const saved = localStorage.getItem("market-monitor-theme");
+    if (saved) document.documentElement.setAttribute("data-theme", saved);
+  } catch (e) {}
+  updateThemeToggleUI();
+  refreshAll();
 })();
 </script>
 </body>
