@@ -313,6 +313,11 @@ let currentWeeklyChart = null;
 let currentDailyChart = null;
 let chartResizeObservers = [];
 
+const PROXY_PROVIDERS = [
+  url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+  url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`
+];
+
 function getHot3PlusTickers() {
   try {
     const raw = localStorage.getItem(TV_STORAGE_KEY);
@@ -339,64 +344,47 @@ function getHot3PlusTickers() {
   } catch (e) { return []; }
 }
 
-/* ============================================================
-   JSONP FETCHERS: BYPASS CORS AND PROXY REQUIREMENT
-   ============================================================ */
-
 function fetchSheetJSONP(sheetId) {
   return new Promise((resolve) => {
     const cbName = 'gviz_cb_' + Math.random().toString(36).substring(2, 10);
     const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json;responseHandler:${cbName}`;
     
     const script = document.createElement('script');
-    
-    const cleanup = () => {
-      if (script.parentNode) script.parentNode.removeChild(script);
-      delete window[cbName];
-    };
-
-    window[cbName] = function(data) {
-      cleanup();
-      resolve(data);
-    };
-
-    script.onerror = () => { cleanup(); resolve(null); };
-    script.src = url;
-    document.head.appendChild(script);
-  });
-}
-
-function fetchYahooJSONP(symbol, interval = '1wk', range = '2y') {
-  return new Promise((resolve) => {
-    const cbName = 'yahoo_cb_' + Math.random().toString(36).substring(2, 10);
-    const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=${interval}&range=${range}&corsDomain=finance.yahoo.com&callback=${cbName}`;
-    
-    const script = document.createElement('script');
-    let completed = false;
-
     const cleanup = () => {
       if (script.parentNode) script.parentNode.removeChild(script);
       delete window[cbName];
     };
 
     const timer = setTimeout(() => {
-      if (!completed) {
-        completed = true;
-        cleanup();
-        resolve(null);
-      }
-    }, 4000);
+      cleanup();
+      resolve(null);
+    }, 5000);
 
-    window[cbName] = function(json) {
-      if (completed) return;
-      completed = true;
+    window[cbName] = function(data) {
       clearTimeout(timer);
       cleanup();
+      resolve(data);
+    };
+
+    script.onerror = () => { clearTimeout(timer); cleanup(); resolve(null); };
+    script.src = url;
+    document.head.appendChild(script);
+  });
+}
+
+async function fetchYahooSeries(symbol, interval = '1wk', range = '2y') {
+  const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=${interval}&range=${range}`;
+
+  for (const proxyBuilder of PROXY_PROVIDERS) {
+    try {
+      const target = proxyBuilder(targetUrl);
+      const res = await fetch(target, { cache: "no-store", signal: AbortSignal.timeout(3500) });
+      if (!res.ok) continue;
+      const text = await res.text();
+      if (!text || text.includes("429 Too Many Requests")) continue;
       
-      if (!json || !json.chart || !json.chart.result || !json.chart.result[0]) {
-        resolve(null);
-        return;
-      }
+      const json = JSON.parse(text);
+      if (!json?.chart?.result?.[0]) continue;
 
       const result = json.chart.result[0];
       const timestamps = result.timestamp || [];
@@ -412,21 +400,10 @@ function fetchYahooJSONP(symbol, interval = '1wk', range = '2y') {
           });
         }
       }
-      resolve({ bars: bars.sort((a,b) => a.t - b.t), chartMeta: result.meta || {} });
-    };
-
-    script.onerror = () => {
-      if (!completed) {
-        completed = true;
-        clearTimeout(timer);
-        cleanup();
-        resolve(null);
-      }
-    };
-
-    script.src = targetUrl;
-    document.head.appendChild(script);
-  });
+      return { bars: bars.sort((a,b) => a.t - b.t), chartMeta: result.meta || {} };
+    } catch(e) {}
+  }
+  return null;
 }
 
 async function syncLiveTickerUniverse() {
@@ -439,32 +416,34 @@ async function syncLiveTickerUniverse() {
     return EW_SECTOR_ETFS;
   }
 
-  // Attempt to load sheet via JSONP directly (No CORS needed)
   const gvizData = await fetchSheetJSONP(SHEET_ID);
   
   if (gvizData && gvizData.table && gvizData.table.rows) {
     const cols = gvizData.table.cols.map(c => (c.label || "").toLowerCase().trim());
-    const iTick = cols.indexOf("ticker");
-    const iComp = cols.indexOf("company");
-    const iSec = cols.indexOf("sector");
-    const iInd = cols.indexOf("industry");
+    let iTick = cols.indexOf("ticker");
+    let iComp = cols.indexOf("company");
+    let iSec = cols.indexOf("sector");
+    let iInd = cols.indexOf("industry");
+
+    if (iTick === -1) iTick = 0;
+    if (iComp === -1) iComp = 1;
+    if (iSec === -1) iSec = 2;
+    if (iInd === -1) iInd = 3;
     
-    if (iTick !== -1) {
-      const liveUniverse = gvizData.table.rows.map(r => {
-        const getVal = (idx) => (idx !== -1 && r.c[idx]) ? (r.c[idx].v || "") : "";
-        const tickerStr = getVal(iTick).toString().trim().toUpperCase();
-        return {
-          ticker: tickerStr,
-          company: getVal(iComp).toString().trim() || "Leader Equities",
-          sector: getVal(iSec).toString().trim() || "Equities",
-          industry: getVal(iInd).toString().trim() || "Momentum Leaders",
-          sub: getVal(iInd).toString().trim() || "Momentum Leaders",
-          exch: "US"
-        };
-      }).filter(item => item.ticker !== "");
-      
-      if (liveUniverse.length > 0) return liveUniverse;
-    }
+    const liveUniverse = gvizData.table.rows.map(r => {
+      const getVal = (idx) => (idx !== -1 && r.c && r.c[idx]) ? (r.c[idx].v || "") : "";
+      const tickerStr = getVal(iTick).toString().trim().toUpperCase();
+      return {
+        ticker: tickerStr,
+        company: getVal(iComp).toString().trim() || "Leader Equities",
+        sector: getVal(iSec).toString().trim() || "Equities",
+        industry: getVal(iInd).toString().trim() || "Momentum Leaders",
+        sub: getVal(iInd).toString().trim() || "Momentum Leaders",
+        exch: "US"
+      };
+    }).filter(item => item.ticker !== "" && item.ticker.length <= 6 && !item.ticker.includes(" "));
+    
+    if (liveUniverse.length > 0) return liveUniverse;
   }
 
   return FALLBACK_UNIVERSE;
@@ -1129,23 +1108,25 @@ async function loadUniverseProgressively() {
   statusBox.innerHTML = `Fetching SPX benchmark…`;
   
   const [spxWk, spxD] = await Promise.all([
-    fetchYahooJSONP("^GSPC", "1wk", "2y"),
-    fetchYahooJSONP("^GSPC", "1d", "1y")
+    fetchYahooSeries("^GSPC", "1wk", "2y"),
+    fetchYahooSeries("^GSPC", "1d", "1y")
   ]);
   
   STATE.spxWeeklyBars = spxWk?.bars || [];
   STATE.spxDailyBars = spxD?.bars || [];
 
-  const topBatch = STATE.universe.slice(0, 30);
-  const remainingBatch = STATE.universe.slice(30);
-  let count = 0;
+  let sourceName = 'Leader Sheet';
+  if(STATE.activeSource === 'hot') sourceName = '🔥 3+ TV List';
+  else if(STATE.activeSource === 'sector') sourceName = 'Cap-Weighted Sectors';
+  else if(STATE.activeSource === 'ew_sector') sourceName = 'Equal-Weight Sectors';
 
-  for(let i = 0; i < topBatch.length; i += 3) {
-    const batch = topBatch.slice(i, i + 3);
+  let count = 0;
+  for(let i = 0; i < STATE.universe.length; i += 2) {
+    const batch = STATE.universe.slice(i, i + 2);
     await Promise.all(batch.map(async (meta) => {
       const [wkRes, dRes] = await Promise.all([
-        fetchYahooJSONP(meta.ticker, "1wk", "2y"),
-        fetchYahooJSONP(meta.ticker, "1d", "1y")
+        fetchYahooSeries(meta.ticker, "1wk", "2y"),
+        fetchYahooSeries(meta.ticker, "1d", "1y")
       ]);
       if(wkRes && wkRes.bars && wkRes.bars.length >= 10) {
         STATE.data[meta.ticker] = processTickerBars(meta, wkRes.bars, wkRes.chartMeta, dRes?.bars || []);
@@ -1153,39 +1134,13 @@ async function loadUniverseProgressively() {
       }
     }));
     count += batch.length;
-    statusBox.innerHTML = `Scoring tickers… (<b>${Math.min(count, topBatch.length)}</b>/${topBatch.length})`;
+    statusBox.innerHTML = `Scoring ${sourceName}… (<b>${Math.min(count, STATE.universe.length)}</b>/${STATE.universe.length})`;
     renderWatchlist();
     if(STATE.selected) renderMainDashboard();
-    await new Promise(r => setTimeout(r, 80));
+    await new Promise(r => setTimeout(r, 180));
   }
 
-  let sourceName = 'Leader Sheet';
-  if(STATE.activeSource === 'hot') sourceName = '🔥 3+ TV List';
-  else if(STATE.activeSource === 'sector') sourceName = 'Cap-Weighted Sectors';
-  else if(STATE.activeSource === 'ew_sector') sourceName = 'Equal-Weight Sectors';
-
-  statusBox.innerHTML = `<b>${sourceName} Active</b> · ${Object.keys(STATE.data).length} Tickers`;
-
-  if (remainingBatch.length > 0) {
-    setTimeout(async () => {
-      for(let i = 0; i < remainingBatch.length; i += 3) {
-        const batch = remainingBatch.slice(i, i + 3);
-        await Promise.all(batch.map(async (meta) => {
-          const [wkRes, dRes] = await Promise.all([
-            fetchYahooJSONP(meta.ticker, "1wk", "2y"),
-            fetchYahooJSONP(meta.ticker, "1d", "1y")
-          ]);
-          if(wkRes && wkRes.bars && wkRes.bars.length >= 10) {
-            STATE.data[meta.ticker] = processTickerBars(meta, wkRes.bars, wkRes.chartMeta, dRes?.bars || []);
-          }
-        }));
-        renderWatchlist();
-        if(STATE.selected) renderMainDashboard();
-        await new Promise(r => setTimeout(r, 80));
-      }
-      statusBox.innerHTML = `<b>${sourceName} Active</b> · ${Object.keys(STATE.data).length} Scored`;
-    }, 300);
-  }
+  statusBox.innerHTML = `<b>${sourceName} Active</b> · ${Object.keys(STATE.data).length} Scored`;
 }
 
 function setActivePill(activeBtnId) {
