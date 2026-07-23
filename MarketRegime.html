@@ -28,9 +28,9 @@
     color:var(--text); font-family:'Inter',sans-serif; padding:22px 26px 60px; transition:background .2s ease, color .2s ease;
     overflow-x: hidden; width: 100%;
   }
- /* .wrap{width:100%; max-width:1450px; margin:0 auto;}
+   /* .wrap{max-width:1480px; margin:0 auto;}
 
-/* ---------- UNIFORM APP TABS ---------- */
+  /* ---------- UNIFORM APP TABS ---------- */
   .app-tabs {
     display: flex; gap: 4px; margin-bottom: 24px; border-bottom: 1px solid var(--line);
     padding-bottom: 0; flex-wrap: nowrap; overflow-x: auto;
@@ -188,8 +188,8 @@
 
   <!-- ================= APP TABS ================= -->
   <div class="app-tabs">
-    <a href="index.html" >Market Dashboard</a>
-    <a href="MarketCommandCenter.html" >Market Command Center</a>
+    <a href="index.html">Market Dashboard</a>
+    <a href="MarketCommandCenter.html">Market Command Center</a>
     <a href="MarketRegime.html" class="active">Market Regime</a> 
     <a href="stockbee_market_monitor_live.html">Stockbee Monitor</a>
     <a href="sata_watchlist_dashboard.html">SATA Chart</a>
@@ -731,21 +731,7 @@ function buildStreakHistoryHTML(rows, stateKey) {
     return `<div class="streak-day" style="background:${col};" title="${r.date}: ${s ? stateLabel(s) : 'n/a'}"></div>`;
   }).join("");
 }
-// Sync shared data from index.html / Google Sheet localStorage ecosystem
-try {
-  const sharedDataRaw = localStorage.getItem('market-monitor-data');
-  if (sharedDataRaw) {
-    const parsed = JSON.parse(sharedDataRaw);
-    if (parsed.nasi) {
-      DATA.nasi = parsed.nasi; // Overrides with live sheet $NASI value (-11.99)
-    }
-    if (parsed.putcall) {
-      DATA.putcall = parsed.putcall; // Overrides with live Put/Call ratio
-    }
-  }
-} catch (e) {
-  console.warn("Could not load shared local storage data", e);
-}
+
 /* ============================================================
    MAIN RENDER & INSTITUTIONAL BRIEFING ENGINE
    ============================================================ */
@@ -760,53 +746,44 @@ function renderAll() {
   document.getElementById("subline").textContent =
     `${last.date} · ${merged.length} days aligned · VIX ${fmtNum(last.vix)} · VVIX ${fmtNum(last.vvix)} · QQQ ${fmtNum(last.qClose)} · SPY ${fmtNum(last.sClose)}`;
 
-  /* ---------- RETRIEVE DATA FROM LOCAL STORAGE ECOSYSTEM ---------- */
-  let localData = {};
+  /* ---------- RETRIEVE DATA & LIVE SYNC FROM LOCAL STORAGE ECOSYSTEM ---------- */
+  let localData = {
+    nasi: { current: -11.99, sma50: 143.98 },
+    putcall: { value: 0.93 },
+    vix: { level: last.vix }
+  };
   try {
     const raw = localStorage.getItem('market-monitor-data');
-    if (raw) localData = JSON.parse(raw);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed.nasi) localData.nasi = parsed.nasi;
+      if (parsed.putcall) localData.putcall = parsed.putcall;
+      if (parsed.vix) localData.vix = parsed.vix;
+    }
   } catch(e) {}
 
   const vixVal = last.vix;
-  const pcVal = localData.putcall?.value ?? 0.74;
-  const nasiVal = localData.nasi?.current ?? 108.19;
-  const nasiSma = localData.nasi?.sma50 ?? 160.48;
+  const pcVal = localData.putcall?.value ?? 0.93;
+  const nasiVal = localData.nasi?.current ?? -11.99;
+  const nasiSma = localData.nasi?.sma50 ?? 143.98;
 
   /* ============================================================
      WEIGHTED SCORING MODEL (25% / 25% / 25% / 10% / 15%)
      ============================================================ */
-  // 1. Volatility Mood (Weight: 25%)
-  let moodScoreNorm = 50;
-  if (last.moodState === "bull") moodScoreNorm = 100;
-  else if (last.moodState === "bear") moodScoreNorm = 0;
-  else moodScoreNorm = 50;
+  let moodScoreNorm = (last.moodState === "bull") ? 100 : (last.moodState === "bear" ? 0 : 50);
+  let qqqScoreNorm = (last.qqqState === "bull") ? 100 : (last.qqqState === "bear" ? 0 : 40);
+  let spyScoreNorm = (last.spyState === "bull") ? 100 : (last.spyState === "bear" ? 0 : 40);
 
-  // 2. QQQ Trend (Weight: 25%)
-  let qqqScoreNorm = 50;
-  if (last.qqqState === "bull") qqqScoreNorm = 100;
-  else if (last.qqqState === "bear") qqqScoreNorm = 0;
-  else qqqScoreNorm = 40;
-
-  // 3. SPY Trend (Weight: 25%)
-  let spyScoreNorm = 50;
-  if (last.spyState === "bull") spyScoreNorm = 100;
-  else if (last.spyState === "bear") spyScoreNorm = 0;
-  else spyScoreNorm = 40;
-
-  // 4. Put/Call Ratio (Weight: 10%)
   let pcScoreNorm = 50;
-  if (pcVal >= 0.65 && pcVal <= 0.85) pcScoreNorm = 100; // Neutral / healthy
-  else if (pcVal > 0.95) pcScoreNorm = 75; // Contrarian fear bottom
-  else if (pcVal < 0.60) pcScoreNorm = 25; // Complacent / top risk
-  else pcScoreNorm = 50;
+  if (pcVal >= 0.65 && pcVal <= 0.85) pcScoreNorm = 100;
+  else if (pcVal > 0.95) pcScoreNorm = 75;
+  else if (pcVal < 0.60) pcScoreNorm = 25;
 
-  // 5. NASI Breadth (Weight: 15%)
   let nasiScoreNorm = 50;
   if (nasiVal > nasiSma) nasiScoreNorm = 100;
   else if (nasiVal < 0) nasiScoreNorm = 0;
   else nasiScoreNorm = 30;
 
-  // Calculate Final Composite Score (0 - 100)
   const compositeScore = Math.round(
     (moodScoreNorm * 0.25) +
     (qqqScoreNorm * 0.25) +
@@ -815,15 +792,11 @@ function renderAll() {
     (nasiScoreNorm * 0.15)
   );
 
-  /* ============================================================
-     DETERMINE REGIME STATE (BULLISH vs TRANSITIONAL vs BEARISH)
-     ============================================================ */
   let regimeType = "bullish";
   if (compositeScore >= 70) regimeType = "bullish";
   else if (compositeScore >= 45) regimeType = "transitional";
   else regimeType = "bearish";
 
-  // Override / fine-tune based on exact states
   if (last.alignedState === "full-bear" || (nasiVal < 0 && last.qqqState === "bear")) {
     regimeType = "bearish";
   } else if (last.alignedState === "full-bull" && compositeScore >= 75) {
@@ -842,7 +815,6 @@ function renderAll() {
   const finalConcList = document.getElementById("briefingFinalConclusionList");
   const postureList = document.getElementById("briefingPostureList");
 
-  // Summary Bar Elements
   const rmVol = document.getElementById("rmVolatility");
   const rmTrend = document.getElementById("rmTrend");
   const rmBreadth = document.getElementById("rmBreadth");
@@ -868,7 +840,7 @@ function renderAll() {
 
   let qqqBadge = "🟢", qqqStatus = "Strong Bull Cycle", qqqColor = "var(--teal)";
   if (last.qqqState === "bear") { qqqBadge = "🔴"; qqqStatus = "Bear Cycle Broken"; qqqColor = "var(--red)"; }
-  else if (last.qqqState === "flat") { qqqBadge = "🟡"; moodStatus = "QQQ Neutral / EMA Test"; qqqColor = "var(--amber)"; }
+  else if (last.qqqState === "flat") { qqqBadge = "🟡"; qqqStatus = "QQQ Neutral / EMA Test"; qqqColor = "var(--amber)"; }
 
   let spyBadge = "🟢", spyStatus = "Broad Market Bullish", spyColor = "var(--teal)";
   if (last.spyState === "bear") { spyBadge = "🔴"; spyStatus = "Broad Market Trend Down"; spyColor = "var(--red)"; }
@@ -878,9 +850,9 @@ function renderAll() {
   if (pcVal < 0.60) { pcBadge = "🟡"; pcStatus = "Complacent / Greed"; pcColor = "var(--amber)"; }
   else if (pcVal > 0.95) { pcBadge = "🟢"; pcStatus = "High Fear (Contrarian)"; pcColor = "var(--teal)"; }
 
-  let nasiBadge = "🟢", nasiStatus = "Breadth Expanding", nasiColor = "var(--teal)";
-  if (nasiVal < nasiSma && nasiVal > 0) { nasiBadge = "🟡"; nasiStatus = "Breadth Contracting"; nasiColor = "var(--amber)"; }
-  else if (nasiVal <= 0) { nasiBadge = "🔴"; nasiStatus = "Breadth Collapsing"; nasiColor = "var(--red)"; }
+  let nasiBadge = nasiVal > nasiSma ? "🟢" : "🔴";
+  let nasiStatus = nasiVal > nasiSma ? "Breadth Expanding" : "Breadth Contracting";
+  let nasiColor = nasiVal > nasiSma ? "var(--teal)" : "var(--red)";
 
   if (regimeType === "bullish") {
     iconEl.textContent = "🟢";
@@ -956,7 +928,7 @@ function renderAll() {
       <li>Wait for breadth and trend confirmation before re-deploying.</li>`;
   }
 
-  // Render 5 Engine Boxes
+  // Render 5 Engine Boxes with synced NASI and Put/Call values
   enginesGrid.innerHTML = `
     <div class="engine-box">
       <div>
@@ -1020,7 +992,7 @@ function renderAll() {
           <li>Participation: <b>${nasiVal > nasiSma ? 'Broad' : 'Narrow'}</b></li>
         </ul>
       </div>
-      <div class="engine-conclusion">Healthy participation supporting advance.</div>
+      <div class="engine-conclusion">${nasiVal > nasiSma ? 'Healthy participation supporting advance.' : 'Breadth contracting below 50-DMA.'}</div>
     </div>
   `;
 
@@ -1101,7 +1073,6 @@ function renderAll() {
   </tr>`).join("") + "</tbody>";
   document.getElementById("tblHistory").innerHTML = head + body;
 
-  /* ---------- TRADINGVIEW WIDGETS WITH CANDLE OVERLAY ---------- */
   renderTradingViewWidgets();
 }
 
@@ -1189,7 +1160,6 @@ async function refreshAll() {
     }
 
     STATE.vix = vix; STATE.vvix = vvix; STATE.qqq = qqq; STATE.spy = spy; 
-    
     STATE.merged = buildMergedSeries();
 
     if (STATE.merged.length < MA_LEN + SLOPE_LOOKBACK) {
