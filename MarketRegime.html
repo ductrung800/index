@@ -200,7 +200,7 @@
     <span class="status-msg" id="statusMsg">Initializing…</span>
   </div>
 
-  <!-- ================= MASTER REGIME BANNER (UPGRADED WITH PUT/CALL & $NASI) ================= -->
+  <!-- ================= MASTER REGIME BANNER ================= -->
   <div class="master-banner" id="masterBanner">
     <div class="master-left">
       <div class="master-icon" id="masterIcon">⏳</div>
@@ -352,12 +352,12 @@
 
   </div>
 
-  <!-- ================= TRADINGVIEW WIDGETS (SPLIT) ================= -->
+  <!-- ================= TRADINGVIEW WIDGETS WITH CANDLE OVERLAYS ================= -->
   <div class="charts-grid">
     <!-- PCQQ Panel -->
     <div class="price-panel">
       <div class="price-panel-head">
-        <div class="price-panel-title">TradingView: Put/Call Ratio QQQ (PCQQ)</div>
+        <div class="price-panel-title">TradingView: Put/Call Ratio QQQ (PCQQ) + QQQ Candles</div>
         <div style="display:flex; align-items:center; gap:12px;">
           <span style="font-size:11px; color:var(--teal); font-family:'JetBrains Mono',monospace;">● Live Feed</span>
         </div>
@@ -370,7 +370,7 @@
     <!-- PCSP Panel -->
     <div class="price-panel">
       <div class="price-panel-head">
-        <div class="price-panel-title">TradingView: Put/Call Ratio SPY (PCSP)</div>
+        <div class="price-panel-title">TradingView: Put/Call Ratio SPY (PCSP) + SPY Candles</div>
         <div style="display:flex; align-items:center; gap:12px;">
           <span style="font-size:11px; color:var(--teal); font-family:'JetBrains Mono',monospace;">● Live Feed</span>
         </div>
@@ -399,7 +399,7 @@
     </ul>
   </div>
 
-  <footer>Market Mood &amp; Market Cycle · VIX/VVIX/QQQ/SPY data via Yahoo Finance · PCQQ/PCSP via TradingView · For informational purposes only, not trading advice.</footer>
+  <footer>Market Mood &amp; Market Cycle · VIX/VVIX/QQQ/SPY data via Yahoo Finance · PCQQ/PCSP &amp; Candles via TradingView · For informational purposes only, not trading advice.</footer>
 </div>
 
 <script>
@@ -582,7 +582,7 @@ function buildMergedSeries() {
     if (bulls === 2 && bears === 0) return "partial-bull";
     if (bears === 2 && bulls === 0) return "partial-bear";
     if (bulls === 1 && bears === 0) return "partial-bull";
-    if (bears === 1 && bears === 0) return "partial-bear";
+    if (bears === 1 && bulls === 0) return "partial-bear";
     return "mixed";
   });
   
@@ -692,7 +692,6 @@ function renderAll() {
 
   banner.className = "master-banner";
 
-  // Pull local storage data from market monitor if available to integrate Put/Call & $NASI cleanly
   let localData = {};
   try {
     const raw = localStorage.getItem('market-monitor-data');
@@ -700,11 +699,10 @@ function renderAll() {
   } catch(e) {}
 
   const vixVal = last.vix;
-  const pcVal = localData.putcall?.value ?? 0.70; // fallback default
+  const pcVal = localData.putcall?.value ?? 0.70;
   const nasiVal = localData.nasi?.current ?? 100;
   const nasiSma = localData.nasi?.sma50 ?? 120;
 
-  // Composite Scoring Formula incorporating VIX, Put/Call, and $NASI breadth
   let vixScore = (vixVal >= 15 && vixVal <= 25) ? 1.0 : (vixVal < 15 ? -0.4 : -0.8);
   let pcScore = (pcVal > 0.95) ? 0.8 : (pcVal < 0.6 ? -0.8 : 0.2);
   let nasiScore = (nasiVal > nasiSma && nasiVal > 0) ? 1.0 : -0.8;
@@ -817,12 +815,12 @@ function renderAll() {
   </tr>`).join("") + "</tbody>";
   document.getElementById("tblHistory").innerHTML = head + body;
 
-  /* ---------- TRADINGVIEW WIDGETS ---------- */
+  /* ---------- TRADINGVIEW WIDGETS WITH CANDLE OVERLAY ---------- */
   renderTradingViewWidgets();
 }
 
 /* ============================================================
-   TRADINGVIEW WIDGETS (SPLIT DUAL PANELS)
+   TRADINGVIEW WIDGETS WITH CANDLE OVERLAYS
    ============================================================ */
 function renderTradingViewWidgets() {
   const qContainer = document.getElementById("qqqTvContainer");
@@ -834,7 +832,7 @@ function renderTradingViewWidgets() {
   const bgColor = isDark ? "rgba(16, 22, 37, 1)" : "rgba(255, 255, 255, 1)";
   const gridColor = isDark ? "rgba(33, 42, 61, 1)" : "rgba(221, 226, 236, 1)";
 
-  const createTvWidget = (containerId, symbol) => {
+  const createTvWidget = (containerId, mainSymbol, overlaySymbol) => {
     const container = document.getElementById(containerId);
     container.innerHTML = '<div class="tradingview-widget-container__widget" style="height:100%;width:100%"></div>';
     
@@ -844,11 +842,11 @@ function renderTradingViewWidgets() {
     script.async = true;
     script.innerHTML = JSON.stringify({
       "autosize": true,
-      "symbol": symbol,
+      "symbol": mainSymbol,
       "interval": "D",
       "timezone": "Etc/UTC",
       "theme": theme,
-      "style": "2",
+      "style": "2", // Renders Primary Symbol (Put/Call Ratio) as a Line on the Right Axis
       "locale": "en",
       "enable_publishing": false,
       "backgroundColor": bgColor,
@@ -857,13 +855,21 @@ function renderTradingViewWidgets() {
       "hide_legend": false,
       "save_image": false,
       "hide_volume": true,
+      "studies": [
+        {
+          "id": "Overlay@tv-basicstudies",
+          "inputs": {
+            "symbol": overlaySymbol // Automatically overlays QQQ / SPY price candles on the Left Axis
+          }
+        }
+      ],
       "support_host": "https://www.tradingview.com"
     });
     container.appendChild(script);
   };
 
-  createTvWidget("qqqTvContainer", "INDEX:PCQQ");
-  createTvWidget("spyTvContainer", "INDEX:PCSP");
+  createTvWidget("qqqTvContainer", "INDEX:PCQQ", "QQQ");
+  createTvWidget("spyTvContainer", "INDEX:PCSP", "SPY");
 }
 
 /* ============================================================
