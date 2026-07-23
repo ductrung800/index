@@ -339,14 +339,28 @@
 </div>
 
 <script>
-let DATA = {
-  date: "7/16/2026",
-  benchmark: "RSP",
-  vix: {level: 17.16},
-  putcall: {value: 0.55},
-  nasi: {current: 108.19, sma50: 160.48}
-};
+function loadSharedSheetData() {
+  try {
+    const raw = localStorage.getItem('market-monitor-data');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      
+      // Update local DATA structure with live sheet variables
+      if (parsed.nasi) DATA.nasi = parsed.nasi;
+      if (parsed.putcall) DATA.putcall = parsed.putcall;
+      if (parsed.vix) DATA.vix = parsed.vix;
+      if (parsed.breadth) DATA.breadth = parsed.breadth;
+      if (parsed.date) DATA.date = parsed.date;
+      
+      console.log("Successfully synced shared sheet data into Command Center:", parsed.nasi);
+    }
+  } catch (e) {
+    console.warn("Error reading shared storage data:", e);
+  }
+}
 
+
+  
 function renderUnifiedDashboard() {
   // Pull synchronized data from localStorage if populated by Market Regime page or sheet loader
   try {
