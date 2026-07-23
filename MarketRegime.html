@@ -4,8 +4,6 @@
 <link rel="icon" href="data:,">
 <meta charset="UTF-8">
 <title>Market Mood &amp; Market Cycle (QQQ + SPY)</title>
-<!-- Lightweight Charts v4 Library -->
-<script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
@@ -135,8 +133,7 @@
   .price-panel-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:10px;}
   .price-panel-title{font-size:13.5px; font-weight:800; text-transform:uppercase; letter-spacing:.05em; font-family:'JetBrains Mono',monospace;}
   
-  .lw-chart-wrap{background:var(--panel2); border:1px solid var(--line); border-radius:8px; overflow:hidden; height:380px; position:relative;}
-  .lw-chart-container{width:100%; height:100%;}
+  .lw-chart-wrap{background:var(--panel2); border:1px solid var(--line); border-radius:8px; overflow:hidden; position:relative;}
 
   /* ================= REGIME HISTORY TABLE ================= */
   .section{margin-bottom:26px;}
@@ -355,31 +352,31 @@
 
   </div>
 
-  <!-- ================= INSTITUTIONAL PRICE CHARTS (SPLIT) ================= -->
+  <!-- ================= TRADINGVIEW WIDGETS (SPLIT) ================= -->
   <div class="charts-grid">
-    <!-- QQQ & PCQQ Panel -->
+    <!-- PCQQ Panel -->
     <div class="price-panel">
       <div class="price-panel-head">
-        <div class="price-panel-title">QQQ Daily &amp; Put/Call Ratio (PCQQ)</div>
+        <div class="price-panel-title">TradingView: Put/Call Ratio QQQ (PCQQ)</div>
         <div style="display:flex; align-items:center; gap:12px;">
-          <span style="font-size:11px; color:var(--amber); font-family:'JetBrains Mono',monospace;">● PCQQ (Left Axis)</span>
+          <span style="font-size:11px; color:var(--teal); font-family:'JetBrains Mono',monospace;">● Live Feed</span>
         </div>
       </div>
-      <div class="lw-chart-wrap">
-        <div class="lw-chart-container" id="qqqChartContainer"></div>
+      <div class="lw-chart-wrap" style="height: 420px;">
+        <div class="tradingview-widget-container" id="qqqTvContainer" style="height:100%;width:100%"></div>
       </div>
     </div>
 
-    <!-- SPY & PCSP Panel -->
+    <!-- PCSP Panel -->
     <div class="price-panel">
       <div class="price-panel-head">
-        <div class="price-panel-title">SPY Daily &amp; Put/Call Ratio (PCSP)</div>
+        <div class="price-panel-title">TradingView: Put/Call Ratio SPY (PCSP)</div>
         <div style="display:flex; align-items:center; gap:12px;">
-          <span style="font-size:11px; color:var(--amber); font-family:'JetBrains Mono',monospace;">● PCSP (Left Axis)</span>
+          <span style="font-size:11px; color:var(--teal); font-family:'JetBrains Mono',monospace;">● Live Feed</span>
         </div>
       </div>
-      <div class="lw-chart-wrap">
-        <div class="lw-chart-container" id="spyChartContainer"></div>
+      <div class="lw-chart-wrap" style="height: 420px;">
+        <div class="tradingview-widget-container" id="spyTvContainer" style="height:100%;width:100%"></div>
       </div>
     </div>
   </div>
@@ -405,7 +402,7 @@
     </ul>
   </div>
 
-  <footer>Market Mood &amp; Market Cycle · VIX/VVIX/QQQ/SPY/PCQQ/PCSP data via Yahoo Finance · For informational purposes only, not trading advice.</footer>
+  <footer>Market Mood &amp; Market Cycle · VIX/VVIX/QQQ/SPY data via Yahoo Finance · PCQQ/PCSP via TradingView · For informational purposes only, not trading advice.</footer>
 </div>
 
 <script>
@@ -417,7 +414,6 @@ const EMA_LEN = 21;
 const SLOPE_LOOKBACK = 5;
 const HISTORY_BARS = 120;
 
-/* Cleaned CORS Proxies - removed dead freeboard proxy */
 const CORS_PROXIES = [
   url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
   url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
@@ -425,15 +421,13 @@ const CORS_PROXIES = [
 ];
 
 let STATE = { 
-  vix: null, vvix: null, qqq: null, spy: null, pcqq: null, pcsp: null, merged: [], 
-  chartQQQ: null, chartSPY: null, obsQQQ: null, obsSPY: null 
+  vix: null, vvix: null, qqq: null, spy: null, merged: []
 };
 
-/* Utility delay to avoid 429 rate limits */
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 /* ============================================================
-   DATA FETCH — Direct Proxy Route on Web Host
+   DATA FETCH 
    ============================================================ */
 async function fetchYahooDaily(symbol, range = "1y") {
   const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=${range}`;
@@ -448,7 +442,7 @@ async function fetchYahooDaily(symbol, range = "1y") {
         const j = await res.json();
         if (j && j.chart && j.chart.result && j.chart.result[0]) json = j;
       }
-    } catch (e) { /* fallback to proxy */ }
+    } catch (e) { /* fallback */ }
   }
 
   if (!json) {
@@ -514,9 +508,6 @@ function buildMergedSeries() {
   const vvixMap = new Map(STATE.vvix.map(b => [dateKey(b.t), b]));
   const qqqMap = new Map(STATE.qqq.map(b => [dateKey(b.t), b]));
   const spyMap = new Map(STATE.spy.map(b => [dateKey(b.t), b]));
-  
-  const pcqqMap = STATE.pcqq ? new Map(STATE.pcqq.map(b => [dateKey(b.t), b])) : new Map();
-  const pcspMap = STATE.pcsp ? new Map(STATE.pcsp.map(b => [dateKey(b.t), b])) : new Map();
 
   const dates = STATE.qqq.map(b => dateKey(b.t)).filter(d => vixMap.has(d) && vvixMap.has(d) && spyMap.has(d));
 
@@ -528,9 +519,7 @@ function buildMergedSeries() {
     return {
       date: d, vix, vvix, ratio: vvix / vix,
       qOpen: q.o, qHigh: q.h, qLow: q.l, qClose: q.c,
-      sOpen: s.o, sHigh: s.h, sLow: s.l, sClose: s.c,
-      pcqq: pcqqMap.has(d) ? pcqqMap.get(d).c : null,
-      pcsp: pcspMap.has(d) ? pcspMap.get(d).c : null
+      sOpen: s.o, sHigh: s.h, sLow: s.l, sClose: s.c
     };
   });
 
@@ -821,92 +810,57 @@ function renderAll() {
   </tr>`).join("") + "</tbody>";
   document.getElementById("tblHistory").innerHTML = head + body;
 
-  /* ---------- LIGHTWEIGHT CHARTS ---------- */
-  renderSplitCharts();
+  /* ---------- TRADINGVIEW WIDGETS ---------- */
+  renderTradingViewWidgets();
 }
 
 /* ============================================================
-   LIGHTWEIGHT CHARTS (SPLIT DUAL PANELS)
+   TRADINGVIEW WIDGETS (SPLIT DUAL PANELS)
    ============================================================ */
-function renderSplitCharts() {
-  const qContainer = document.getElementById("qqqChartContainer");
-  const sContainer = document.getElementById("spyChartContainer");
+function renderTradingViewWidgets() {
+  const qContainer = document.getElementById("qqqTvContainer");
+  const sContainer = document.getElementById("spyTvContainer");
   if (!qContainer || !sContainer) return;
-  const merged = STATE.merged;
-  if (!merged || merged.length === 0) return;
-
-  if (STATE.chartQQQ) { STATE.chartQQQ.remove(); STATE.chartQQQ = null; }
-  if (STATE.chartSPY) { STATE.chartSPY.remove(); STATE.chartSPY = null; }
-  if (STATE.obsQQQ) { STATE.obsQQQ.disconnect(); STATE.obsQQQ = null; }
-  if (STATE.obsSPY) { STATE.obsSPY.disconnect(); STATE.obsSPY = null; }
 
   const isDark = (document.documentElement.getAttribute("data-theme") || "dark") === "dark";
-  const chartBg = isDark ? "#101625" : "#ffffff";
-  const gridLine = isDark ? "#1a2233" : "#f1f5f9";
-  const textColor = isDark ? "#8b93a8" : "#64748b";
+  const theme = isDark ? "dark" : "light";
+  const bgColor = isDark ? "rgba(16, 22, 37, 1)" : "rgba(255, 255, 255, 1)";
+  const gridColor = isDark ? "rgba(33, 42, 61, 1)" : "rgba(221, 226, 236, 1)";
 
-  function createChartInstance(container) {
-    const chart = LightweightCharts.createChart(container, {
-      layout: { background: { type: "solid", color: chartBg }, textColor, fontFamily: "'JetBrains Mono', monospace", fontSize: 11 },
-      grid: { vertLines: { color: gridLine }, horzLines: { color: gridLine } },
-      rightPriceScale: { borderVisible: false },
-      leftPriceScale: { visible: true, borderColor: gridLine, textColor: '#f5b942' },
-      timeScale: { borderVisible: false, timeVisible: false },
-      crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+  const createTvWidget = (containerId, symbol) => {
+    const container = document.getElementById(containerId);
+    container.innerHTML = '<div class="tradingview-widget-container__widget" style="height:100%;width:100%"></div>';
+    
+    const script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src = "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
+    script.async = true;
+    script.innerHTML = JSON.stringify({
+      "autosize": true,
+      "symbol": symbol,
+      "interval": "D",
+      "timezone": "Etc/UTC",
+      "theme": theme,
+      "style": "2", // Renders as a line chart (ideal for Index Ratios)
+      "locale": "en",
+      "enable_publishing": false,
+      "backgroundColor": bgColor,
+      "gridColor": gridColor,
+      "hide_top_toolbar": false, // Left enabled so you can overlay QQQ/SPY manually
+      "hide_legend": false,
+      "save_image": false,
+      "hide_volume": true,
+      "support_host": "https://www.tradingview.com"
     });
-    const obs = new ResizeObserver(entries => {
-      for (const entry of entries) {
-        const { width, height } = entry.contentRect;
-        if (width > 0 && height > 0) chart.applyOptions({ width, height });
-      }
-    });
-    obs.observe(container);
-    return { chart, obs };
-  }
+    container.appendChild(script);
+  };
 
-  // QQQ Chart
-  const qqqInstance = createChartInstance(qContainer);
-  STATE.chartQQQ = qqqInstance.chart;
-  STATE.obsQQQ = qqqInstance.obs;
-
-  const qqqBars = merged.map(r => ({ time: r.date, open: r.qOpen, high: r.qHigh, low: r.qLow, close: r.qClose }));
-  const qqqColors = merged.map(r => r.qqqState === "bull" ? "#20d9b8" : (r.qqqState === "bear" ? "#ff5c72" : (isDark ? "#8b93a8" : "#64748b")));
-  const qqqBarSeries = STATE.chartQQQ.addBarSeries({ thinBars: false, openVisible: false, priceScaleId: 'right' });
-  qqqBarSeries.setData(qqqBars.map((b, i) => ({ ...b, color: qqqColors[i] })));
-
-  const qqqEmaSeries = STATE.chartQQQ.addLineSeries({ color: "#38bdf8", lineWidth: 2, priceScaleId: 'right', priceLineVisible: false, lastValueVisible: true });
-  qqqEmaSeries.setData(merged.map(r => ({ time: r.date, value: r.qEma })).filter(r => r.value != null));
-
-  if (STATE.pcqq) {
-    const pcqqSeries = STATE.chartQQQ.addLineSeries({ color: "#f5b942", lineWidth: 2, priceScaleId: 'left', priceLineVisible: false, lastValueVisible: true });
-    pcqqSeries.setData(merged.map(r => ({ time: r.date, value: r.pcqq })).filter(r => r.value != null));
-  }
-
-  STATE.chartQQQ.timeScale().fitContent();
-
-  // SPY Chart
-  const spyInstance = createChartInstance(sContainer);
-  STATE.chartSPY = spyInstance.chart;
-  STATE.obsSPY = spyInstance.obs;
-
-  const spyBars = merged.map(r => ({ time: r.date, open: r.sOpen, high: r.sHigh, low: r.sLow, close: r.sClose }));
-  const spyColors = merged.map(r => r.spyState === "bull" ? "#20d9b8" : (r.spyState === "bear" ? "#ff5c72" : (isDark ? "#8b93a8" : "#64748b")));
-  const spyBarSeries = STATE.chartSPY.addBarSeries({ thinBars: false, openVisible: false, priceScaleId: 'right' });
-  spyBarSeries.setData(spyBars.map((b, i) => ({ ...b, color: spyColors[i] })));
-
-  const spyEmaSeries = STATE.chartSPY.addLineSeries({ color: "#38bdf8", lineWidth: 2, priceScaleId: 'right', priceLineVisible: false, lastValueVisible: true });
-  spyEmaSeries.setData(merged.map(r => ({ time: r.date, value: r.sEma })).filter(r => r.value != null));
-
-  if (STATE.pcsp) {
-    const pcspSeries = STATE.chartSPY.addLineSeries({ color: "#f5b942", lineWidth: 2, priceScaleId: 'left', priceLineVisible: false, lastValueVisible: true });
-    pcspSeries.setData(merged.map(r => ({ time: r.date, value: r.pcsp })).filter(r => r.value != null));
-  }
-
-  STATE.chartSPY.timeScale().fitContent();
+  createTvWidget("qqqTvContainer", "INDEX:PCQQ");
+  createTvWidget("spyTvContainer", "INDEX:PCSP");
 }
 
 /* ============================================================
-   FETCH ORCHESTRATION WITH ISOLATED TRY/CATCH
+   FETCH ORCHESTRATION 
    ============================================================ */
 async function refreshAll() {
   const btn = document.getElementById("btnRefresh");
@@ -930,19 +884,12 @@ async function refreshAll() {
 
     setStatusMsg("Fetching SPY...");
     const spy = await fetchYahooDaily("SPY", "1y");
-    await sleep(100);
-
-    // Optional Put-Call fetch wrapper (non-blocking if symbol returns 404)
-    let pcqq = null, pcsp = null;
-    try { pcqq = await fetchYahooDaily("^PCQQ", "1y"); } catch(e) {}
-    try { pcsp = await fetchYahooDaily("^PCSP", "1y"); } catch(e) {}
 
     if (!vix || !vvix || !qqq || !spy) {
       throw new Error("One or more core feeds (VIX / VVIX / QQQ / SPY) failed to load.");
     }
 
     STATE.vix = vix; STATE.vvix = vvix; STATE.qqq = qqq; STATE.spy = spy; 
-    STATE.pcqq = pcqq; STATE.pcsp = pcsp;
     
     STATE.merged = buildMergedSeries();
 
@@ -977,7 +924,11 @@ function setTheme(theme) {
   document.documentElement.setAttribute("data-theme", theme);
   updateThemeToggleUI();
   try { localStorage.setItem("market-monitor-theme", theme); } catch (e) {}
-  if (STATE.merged && STATE.merged.length) renderSplitCharts();
+  
+  if (STATE.merged && STATE.merged.length) {
+    // Top SVGs re-render easily 
+    renderAll();
+  }
 }
 document.getElementById("optDark").addEventListener("click", () => setTheme("dark"));
 document.getElementById("optLight").addEventListener("click", () => setTheme("light"));
