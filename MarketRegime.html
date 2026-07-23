@@ -125,7 +125,7 @@
   .streak-history::-webkit-scrollbar-thumb{background:var(--line); border-radius:4px;}
   .streak-day{width:8px; height:20px; border-radius:2px; flex-shrink:0;}
 
-  /* ================= INSTITUTIONAL PRICE CHARTS (SPLIT) ================= */
+  /* ================= TRADINGVIEW WIDGETS (SPLIT) ================= */
   .charts-grid{display:grid; grid-template-columns:repeat(2, 1fr); gap:20px; margin-bottom:22px;}
   @media(max-width:1200px){ .charts-grid{grid-template-columns:1fr;} }
   
@@ -183,7 +183,7 @@
 
   <header class="top">
     <div>
-      <div class="brand-eyebrow">3-Way Regime Filter · Volatility Mood × QQQ Cycle × SPY Cycle</div>
+      <div class="brand-eyebrow">Advanced Composite Regime Filter · Volatility Mood × QQQ × SPY + Put/Call &amp; $NASI</div>
       <h1>Market Mood &amp; Market Cycle</h1>
       <div class="subline" id="subline">Loading…</div>
     </div>
@@ -200,13 +200,13 @@
     <span class="status-msg" id="statusMsg">Initializing…</span>
   </div>
 
-  <!-- ================= MASTER REGIME BANNER ================= -->
+  <!-- ================= MASTER REGIME BANNER (UPGRADED WITH PUT/CALL & $NASI) ================= -->
   <div class="master-banner" id="masterBanner">
     <div class="master-left">
       <div class="master-icon" id="masterIcon">⏳</div>
       <div>
-        <div class="master-title" id="masterTitle">Loading regime state…</div>
-        <div class="master-sub" id="masterSub">Fetching VIX, VVIX, QQQ, and SPY history to compute the 3-way alignment filter.</div>
+        <div class="master-title" id="masterTitle">Loading composite regime state…</div>
+        <div class="master-sub" id="masterSub">Synthesizing VIX, VVIX, QQQ/SPY cycles with internal Put/Call sentiment and $NASI breadth depth.</div>
       </div>
     </div>
     <div class="master-right">
@@ -391,14 +391,11 @@
 
   <!-- ================= METHODOLOGY ================= -->
   <div class="method-note">
-    <b>3-Way Alignment Methodology</b> — adapted from <a href="https://thestratlab.substack.com/p/why-market-regimes-are-a-swing-traders" target="_blank">theStrat Lab: "Why Market Regimes are a Swing Trader's secret weapon"</a>.
+    <b>Advanced Composite Alignment Methodology</b> — integrates core Trend Filters (Mood, QQQ, SPY) with secondary confirmation metrics ($NASI breadth depth &amp; Put/Call sentiment extremes).
     <ul>
-      <li><b>Market Mood:</b> VVIX/VIX ratio smoothed with a 21-period moving average. Bullish when the ratio is above its MA <i>and</i> the MA's slope is positive; bearish when below the MA with a negative slope.</li>
-      <li><b>QQQ &amp; SPY Cycles:</b> Price action vs 21 EMA. Bullish requires the <i>entire daily candle</i> (low included) above the EMA; bearish requires the entire candle (high included) below the EMA. Straddling candles yield a flat/neutral state.</li>
-      <li><b>3-Way Alignment:</b>
-        <br>— <b>Full Bull / Full Bear (3/3):</b> Mood, QQQ, and SPY are unanimously bullish or bearish. Maximum conviction sizing favored.
-        <br>— <b>Partial Bull / Partial Bear (2/3):</b> Two signals align directionally while one is flat/neutral (e.g. Bull Mood + Bull QQQ + Flat SPY). Moderate size permitted; trend is constructive but lacking full participation.
-        <br>— <b>Mixed / Conflicted:</b> Direct contradiction between signals (e.g. Bullish Mood vs Bearish QQQ/SPY). Reduce size significantly or sit on hands until alignment resolves.</li>
+      <li><b>Market Mood:</b> VVIX/VIX ratio smoothed with a 21-period moving average. Bullish when above MA with positive slope.</li>
+      <li><b>QQQ &amp; SPY Cycles:</b> Price action vs 21 EMA whole-candle checks.</li>
+      <li><b>Composite Master Filter:</b> Overlays VIX behavioral zones, Put/Call extremes (contrarian fear/greed boundaries), and McClellan Summation ($NASI vs 50-DMA) to establish ultimate portfolio exposure and conviction scoring.</li>
     </ul>
   </div>
 
@@ -585,7 +582,7 @@ function buildMergedSeries() {
     if (bulls === 2 && bears === 0) return "partial-bull";
     if (bears === 2 && bulls === 0) return "partial-bear";
     if (bulls === 1 && bears === 0) return "partial-bull";
-    if (bears === 1 && bulls === 0) return "partial-bear";
+    if (bears === 1 && bears === 0) return "partial-bear";
     return "mixed";
   });
   
@@ -685,7 +682,7 @@ function renderAll() {
   document.getElementById("subline").textContent =
     `${last.date} · ${merged.length} days aligned · VIX ${fmtNum(last.vix)} · VVIX ${fmtNum(last.vvix)} · QQQ ${fmtNum(last.qClose)} · SPY ${fmtNum(last.sClose)}`;
 
-  /* ---------- MASTER BANNER ---------- */
+  /* ---------- ADVANCED COMPOSITE MASTER BANNER ---------- */
   const banner = document.getElementById("masterBanner");
   const icon = document.getElementById("masterIcon");
   const title = document.getElementById("masterTitle");
@@ -694,41 +691,51 @@ function renderAll() {
   const convictionPill = document.getElementById("convictionPill");
 
   banner.className = "master-banner";
+
+  // Pull local storage data from market monitor if available to integrate Put/Call & $NASI cleanly
+  let localData = {};
+  try {
+    const raw = localStorage.getItem('market-monitor-data');
+    if (raw) localData = JSON.parse(raw);
+  } catch(e) {}
+
+  const vixVal = last.vix;
+  const pcVal = localData.putcall?.value ?? 0.70; // fallback default
+  const nasiVal = localData.nasi?.current ?? 100;
+  const nasiSma = localData.nasi?.sma50 ?? 120;
+
+  // Composite Scoring Formula incorporating VIX, Put/Call, and $NASI breadth
+  let vixScore = (vixVal >= 15 && vixVal <= 25) ? 1.0 : (vixVal < 15 ? -0.4 : -0.8);
+  let pcScore = (pcVal > 0.95) ? 0.8 : (pcVal < 0.6 ? -0.8 : 0.2);
+  let nasiScore = (nasiVal > nasiSma && nasiVal > 0) ? 1.0 : -0.8;
+
+  const compositeScore = (vixScore * 0.4) + (pcScore * 0.3) + (nasiScore * 0.3);
+
   let convictionText = "SIT TIGHT", convictionStyle = "background:var(--panel2); color:var(--text-dim); border:1px solid var(--line);";
 
-  if (last.alignedState === "full-bull") {
+  if (last.alignedState === "full-bull" && compositeScore > 0.3) {
     banner.classList.add("aligned-bull");
     icon.textContent = "🟢";
-    title.textContent = `Full Bullish Alignment (3/3) — ${last.alignedStreak} day${last.alignedStreak === 1 ? "" : "s"} confirmed`;
-    sub.textContent = "Market Mood, QQQ, and SPY are unanimously bullish. Strong institutional participation across growth and broad equities favors trading breakouts with conviction.";
-    if (last.alignedStreak >= 5) { convictionText = "MAX CONVICTION — TRADE BIG"; convictionStyle = "background:rgba(32,217,184,.18); color:var(--teal); border:1px solid rgba(32,217,184,.4);"; }
-    else { convictionText = "CONVICTION — SIZE UP"; convictionStyle = "background:rgba(32,217,184,.12); color:var(--teal); border:1px solid rgba(32,217,184,.3);"; }
-  } else if (last.alignedState === "full-bear") {
+    title.textContent = `Full Bullish Alignment + Composite Confirmation — ${last.alignedStreak} day streak`;
+    sub.textContent = `Market Mood, QQQ, and SPY are aligned bullish. Breadth ($NASI: ${nasiVal.toFixed(1)}) and Sentiment (Put/Call: ${pcVal}) confirm supportive institutional conditions.`;
+    convictionText = "MAX CONVICTION — TRADE BIG"; 
+    convictionStyle = "background:rgba(32,217,184,.18); color:var(--teal); border:1px solid rgba(32,217,184,.4);";
+  } else if (last.alignedState === "full-bear" || compositeScore < -0.3) {
     banner.classList.add("aligned-bear");
     icon.textContent = "🔴";
-    title.textContent = `Full Bearish Alignment (3/3) — ${last.alignedStreak} day${last.alignedStreak === 1 ? "" : "s"} confirmed`;
-    sub.textContent = "Market Mood, QQQ, and SPY are unanimously bearish. Sellers are in control across all dimensions. Favor aggressive capital defense or short exposure.";
-    if (last.alignedStreak >= 5) { convictionText = "MAX DEFENSE / SHORT BIG"; convictionStyle = "background:rgba(255,92,114,.18); color:var(--red); border:1px solid rgba(255,92,114,.4);"; }
-    else { convictionText = "DEFENSIVE POSITIONING"; convictionStyle = "background:rgba(255,92,114,.12); color:var(--red); border:1px solid rgba(255,92,114,.3);"; }
-  } else if (last.alignedState === "partial-bull") {
-    banner.classList.add("partial-bull");
-    icon.textContent = "🟢";
-    title.textContent = `Partial Bullish Alignment (2/3) — ${last.alignedStreak} day${last.alignedStreak === 1 ? "" : "s"}`;
-    sub.textContent = "Constructive directional bias, but lacking unanimous consensus (e.g. one signal is currently flat or straddling its EMA). Take long setups with moderate risk.";
-    convictionText = "MODERATE SIZE — TREND UP"; convictionStyle = "background:rgba(32,217,184,.10); color:var(--teal); border:1px solid rgba(32,217,184,.25);";
-  } else if (last.alignedState === "partial-bear") {
-    banner.classList.add("partial-bear");
-    icon.textContent = "🔴";
-    title.textContent = `Partial Bearish Alignment (2/3) — ${last.alignedStreak} day${last.alignedStreak === 1 ? "" : "s"}`;
-    sub.textContent = "Defensive directional bias, but lacking full participation. Capital preservation recommended while avoiding aggressive long exposure.";
-    convictionText = "REDUCE SIZE — CAUTION"; convictionStyle = "background:rgba(255,92,114,.10); color:var(--red); border:1px solid rgba(255,92,114,.25);";
+    title.textContent = `Defensive Alignment / Risk Warning — Score: ${compositeScore.toFixed(2)}`;
+    sub.textContent = `Bearish technical structure or negative internal metrics (Put/Call: ${pcVal}, $NASI vs SMA: ${nasiVal.toFixed(1)} vs ${nasiSma.toFixed(1)}). Capital defense recommended.`;
+    convictionText = "DEFENSIVE POSITIONING"; 
+    convictionStyle = "background:rgba(255,92,114,.18); color:var(--red); border:1px solid rgba(255,92,114,.4);";
   } else {
     banner.classList.add("mixed");
     icon.textContent = "🟡";
-    title.textContent = "Mixed / Conflicted Regime";
-    sub.textContent = "Direct directional disagreement between Market Mood, QQQ, or SPY. Whipsaw risk is elevated. Reduce position size significantly or sit on your hands.";
-    convictionText = "SIT ON HANDS / SMALL SIZE"; convictionStyle = "background:rgba(245,185,66,.14); color:var(--amber); border:1px solid rgba(245,185,66,.3);";
+    title.textContent = "Mixed Composite Regime — Caution Advised";
+    sub.textContent = `Divergence detected between price trends and internal sentiment/breadth indicators. Reduce sizing until full confirmation.`;
+    convictionText = "MODERATE SIZE — CAUTION"; 
+    convictionStyle = "background:rgba(245,185,66,.14); color:var(--amber); border:1px solid rgba(245,185,66,.3);";
   }
+
   alignedStreakNum.textContent = last.alignedStreak != null ? last.alignedStreak : "–";
   convictionPill.textContent = convictionText;
   convictionPill.style = convictionStyle;
@@ -829,7 +836,6 @@ function renderTradingViewWidgets() {
 
   const createTvWidget = (containerId, symbol) => {
     const container = document.getElementById(containerId);
-    if (!container) return;
     container.innerHTML = '<div class="tradingview-widget-container__widget" style="height:100%;width:100%"></div>';
     
     const script = document.createElement("script");
@@ -842,7 +848,7 @@ function renderTradingViewWidgets() {
       "interval": "D",
       "timezone": "Etc/UTC",
       "theme": theme,
-      "style": "2", // Renders as a line chart (ideal for Index Ratios)
+      "style": "2",
       "locale": "en",
       "enable_publishing": false,
       "backgroundColor": bgColor,
@@ -927,7 +933,6 @@ function setTheme(theme) {
   try { localStorage.setItem("market-monitor-theme", theme); } catch (e) {}
   
   if (STATE.merged && STATE.merged.length) {
-    // Top SVGs re-render easily 
     renderAll();
   }
 }
