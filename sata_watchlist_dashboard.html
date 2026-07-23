@@ -32,7 +32,6 @@
     color: var(--text); font-family: 'Inter', sans-serif; padding: 20px 24px 60px;
     min-height: 100vh; transition: background .2s ease, color .2s ease;
   }
-  /*.wrap { max-width: 1780px; margin: 0 auto; }
 
   /* NAVIGATION TABS */
   .app-tabs { display: flex; gap: 4px; margin-bottom: 22px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
@@ -99,8 +98,8 @@
   .px-chg { font-size: 12.5px; font-weight: 700; margin-top: 2px; }
   .px-chg.up { color: var(--teal); } .px-chg.down { color: var(--red); }
 
-  /* GAUGE & RS TILES */
-  .sata-grid { display: grid; grid-template-columns: 1fr 340px; gap: 20px; }
+  /* GAUGE & RS TILES LAYOUT */
+  .sata-grid { display: grid; grid-template-columns: 1fr 360px; gap: 20px; }
   @media(max-width: 1300px) { .sata-grid { grid-template-columns: 1fr; } }
   
   .sata-box-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
@@ -137,13 +136,13 @@
   .meta-table td:first-child { color: var(--text-dim); font-weight: 600; width: 120px; background: var(--input-bg); }
   .meta-table td:last-child { color: var(--text); font-weight: 700; text-align: right; }
 
-  /* COMPONENT CHECKLIST GRID */
-  .comp-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
-  .comp-item { display: flex; align-items: center; justify-content: space-between; gap: 8px; background: var(--input-bg); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; font-size: 11px; }
+  /* COMPONENT CHECKLIST LIST (SINGLE COLUMN RIGHT RAIL) */
+  .comp-list { display: flex; flex-direction: column; gap: 6px; }
+  .comp-item { display: flex; align-items: center; justify-content: space-between; gap: 8px; background: var(--input-bg); border: 1px solid var(--line); border-radius: 6px; padding: 8px 12px; font-size: 11px; }
   .comp-item .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
   .comp-item .dot.g { background: var(--teal); box-shadow: 0 0 6px var(--teal); }
   .comp-item .dot.r { background: var(--red); opacity: .6; }
-  .comp-item .lbl { color: var(--text-dim); flex: 1; font-weight: 500; }
+  .comp-item .lbl { color: var(--text-dim); flex: 1; font-weight: 500; font-family: 'JetBrains Mono', monospace; }
 
   /* CHARTS SECTION */
   .chart-box { margin-top: 6px; }
@@ -151,8 +150,8 @@
   .chart-svg-wrap { background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; padding: 12px; overflow: hidden; }
   .chart-svg-wrap svg { width: 100%; height: 160px; display: block; }
 
-  /* LIGHTWEIGHT CHART CONTAINER */
-  .lw-chart-wrap { background: var(--chart-bg); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; height: 320px; position: relative; margin-bottom: 16px; }
+  /* EXPANDED LIGHTWEIGHT CHART CONTAINER */
+  .lw-chart-wrap { background: var(--chart-bg); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; height: 480px; position: relative; margin-bottom: 16px; }
   .lw-chart-container { width: 100%; height: 100%; }
   
   /* HISTORY TABLE */
@@ -176,14 +175,14 @@
 
   <!-- ================= APP TABS ================= -->
   <div class="app-tabs">
-    <a href="index.html" >Market Dashboard</a>
-    <a href="MarketCommandCenter.html" >Market Command Center</a>
+    <a href="index.html">Market Dashboard</a>
+    <a href="MarketCommandCenter.html">Market Command Center</a>
     <a href="MarketRegime.html">Market Regime</a> 
     <a href="stockbee_market_monitor_live.html">Stockbee Monitor</a>
     <a href="sata_watchlist_dashboard.html" class="active">SATA Chart</a>
-    <a href="PowerList.html" >Power List</a>
+    <a href="PowerList.html">Power List</a>
     <a href="liquid_leaders.html">Liquid Leaders</a>
-    <a href="group_momentum.html" >Group Momentum</a>
+    <a href="group_momentum.html">Group Momentum</a>
     <a href="PriceStructure.html">Price Structure</a>
     <a href="StageAnalysis.html">Stage Analysis</a>
     <a href="tv_watchlist.html">TradingView Watchlist</a>
@@ -211,7 +210,6 @@
     <!-- LEFT COLUMN: WATCHLIST -->
     <div class="left-col">
       <div class="card">
-        <!-- UNIVERSE FILTER PILLS (2x2 GRID) -->
         <div class="universe-filter-pills">
           <button class="active" id="btnUnivSheet">Leader Sheet</button>
           <button id="btnUnivHot">🔥 3+ TV</button>
@@ -241,10 +239,9 @@
     </div>
   </div>
 
-  <footer>SATA Score is an independent 10-band technical composite (Breakouts, Price/MA, Mansfield RS, Momentum, Volume, Resistance) inspired by Stan Weinstein's Stage Analysis. Live data powered by TradingView & Yahoo Finance.</footer>
+  <footer>SATA Score is an independent 10-band technical composite inspired by Stan Weinstein's Stage Analysis. Live data powered by TradingView & Yahoo Finance.</footer>
 </div>
-<body>
-  
+
 <script>
 /* ============================================================
    1. CONFIG & STATE
@@ -253,7 +250,6 @@ const SHEET_ID = "1DcWbr8T5lTIgSrpoqVteg7ar_H466KZSvZ4p_Eksa1s";
 const SHEET_GVIZ_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
 const TV_STORAGE_KEY = 'tv_presets_v1';
 
-/* Cap-Weighted Sector ETFs (SPDR Series) */
 const CAP_SECTOR_ETFS = [
   {ticker:"XLC", company:"Communication Services Select Sector SPDR", sector:"Sector ETF", industry:"Communication Services", sub:"Cap-Weighted", exch:"NYSE Arca"},
   {ticker:"XLY", company:"Consumer Discretionary Select Sector SPDR", sector:"Sector ETF", industry:"Consumer Discretionary", sub:"Cap-Weighted", exch:"NYSE Arca"},
@@ -269,7 +265,6 @@ const CAP_SECTOR_ETFS = [
   {ticker:"XLK", company:"Technology Select Sector SPDR Fund", sector:"Sector ETF", industry:"Technology", sub:"Cap-Weighted", exch:"NYSE Arca"}
 ];
 
-/* Equal-Weight Sector ETFs (Invesco RSP Series) */
 const EW_SECTOR_ETFS = [
   {ticker:"RSPC", company:"Invesco S&P 500 Equal Weight Comm Svcs ETF", sector:"EW Sector ETF", industry:"Communication Services", sub:"Equal-Weight", exch:"NASDAQ"},
   {ticker:"RSPD", company:"Invesco S&P 500 Equal Weight Cons Disc ETF", sector:"EW Sector ETF", industry:"Consumer Discretionary", sub:"Equal-Weight", exch:"NYSE Arca"},
@@ -295,66 +290,11 @@ const FALLBACK_UNIVERSE = [
   {ticker:"PBF", company:"PBF Energy Inc", sector:"Energy", industry:"Oil & Gas Refining", sub:"Refining & Marketing", exch:"NYSE"},
   {ticker:"PANW", company:"Palo Alto Networks", sector:"Technology", industry:"Software - Infrastructure", sub:"Cybersecurity", exch:"NASDAQ"},
   {ticker:"MAN", company:"ManpowerGroup Inc", sector:"Industrials", industry:"Staffing & Employment", sub:"Workforce Solutions", exch:"NYSE"},
-  {ticker:"RHI", company:"Robert Half Inc", sector:"Industrials", industry:"Staffing & Employment", sub:"Professional Staffing", exch:"NYSE"},
-  {ticker:"NSP", company:"Insperity Inc", sector:"Industrials", industry:"Staffing & Employment", sub:"HR & Business Services", exch:"NYSE"},
-  {ticker:"PRGS", company:"Progress Software", sector:"Technology", industry:"Software - Infrastructure", sub:"Enterprise Software", exch:"NASDAQ"},
-  {ticker:"PAY", company:"Paymentus Holdings", sector:"Technology", industry:"Software - Infrastructure", sub:"Fintech & Payments", exch:"NYSE"},
-  {ticker:"GWRE", company:"Guidewire Software", sector:"Technology", industry:"Software - Application", sub:"Insurance Software", exch:"NASDAQ"},
-  {ticker:"LCID", company:"Lucid Group Inc", sector:"Consumer Cyclical", industry:"Auto Manufacturers", sub:"Electric Vehicles", exch:"NASDAQ"},
-  {ticker:"VEEE", company:"Twin Vee PowerCats", sector:"Consumer Cyclical", industry:"Recreational Vehicles", sub:"Powerboats & Marine", exch:"NASDAQ"},
-  {ticker:"FSLY", company:"Fastly Inc", sector:"Technology", industry:"Software - Application", sub:"Edge Cloud & CDN", exch:"NYSE"},
-  {ticker:"CDNA", company:"CareDx Inc", sector:"Healthcare", industry:"Diagnostics & Research", sub:"Transplant Diagnostics", exch:"NASDAQ"},
-  {ticker:"GRPN", company:"Groupon Inc", sector:"Communication", industry:"Internet Content", sub:"E-Commerce Marketplace", exch:"NASDAQ"},
-  {ticker:"XMTR", company:"Xometry Inc", sector:"Industrials", industry:"Industrial Distribution", sub:"AI Manufacturing Marketplace", exch:"NASDAQ"},
-  {ticker:"VRNS", company:"Varonis Systems", sector:"Technology", industry:"Software - Infrastructure", sub:"Data Security & SaaS", exch:"NASDAQ"},
-  {ticker:"BILL", company:"BILL Holdings Inc", sector:"Technology", industry:"Software - Application", sub:"Financial Automation", exch:"NYSE"},
-  {ticker:"CBZ", company:"CBIZ Inc", sector:"Industrials", industry:"Specialty Business Services", sub:"Accounting & Advisory", exch:"NYSE"},
-  {ticker:"NTSK", company:"Netskope Inc", sector:"Technology", industry:"Software - Infrastructure", sub:"Cloud Security", exch:"NASDAQ"},
-  {ticker:"OKTA", company:"Okta Inc", sector:"Technology", industry:"Software - Infrastructure", sub:"Identity & Access Management", exch:"NASDAQ"},
-  {ticker:"PSNL", company:"Personalis Inc", sector:"Healthcare", industry:"Diagnostics & Research", sub:"Cancer Genomics", exch:"NASDAQ"},
-  {ticker:"QLYS", company:"Qualys Inc", sector:"Technology", industry:"Software - Infrastructure", sub:"Cloud Compliance & Security", exch:"NASDAQ"},
-  {ticker:"RPD", company:"Rapid7 Inc", sector:"Technology", industry:"Software - Infrastructure", sub:"Security Analytics", exch:"NASDAQ"},
-  {ticker:"ALIT", company:"Alight Inc", sector:"Technology", industry:"Software - Application", sub:"Cloud Benefits Administration", exch:"NYSE"},
-  {ticker:"FTNT", company:"Fortinet Inc", sector:"Technology", industry:"Software - Infrastructure", sub:"Network Security", exch:"NASDAQ"},
-  {ticker:"LQDA", company:"Liquidia Corp", sector:"Healthcare", industry:"Drug Manufacturers", sub:"Biopharmaceuticals", exch:"NASDAQ"},
-  {ticker:"CCC", company:"CCC Intelligent Solutions", sector:"Technology", industry:"Software - Application", sub:"Automotive AI & SaaS", exch:"NASDAQ"},
-  {ticker:"BAND", company:"Bandwidth Inc", sector:"Technology", industry:"Software - Infrastructure", sub:"CPaaS & Enterprise Telecom", exch:"NASDAQ"},
-  {ticker:"TENB", company:"Tenable Holdings", sector:"Technology", industry:"Software - Infrastructure", sub:"Cybersecurity Exposure", exch:"NASDAQ"},
-  {ticker:"CLRO", company:"ClearOne Inc", sector:"Technology", industry:"Communication Equipment", sub:"Conferencing Systems", exch:"NASDAQ"},
-  {ticker:"HNGE", company:"Hinge Health Inc", sector:"Healthcare", industry:"Health Information", sub:"Digital Musculoskeletal Care", exch:"NYSE"},
-  {ticker:"PTRN", company:"Pattern Group Inc", sector:"Technology", industry:"Software - Application", sub:"E-Commerce Acceleration", exch:"NASDAQ"},
-  {ticker:"SDOT", company:"Sadot Group Inc", sector:"Consumer Defensive", industry:"Farm Products", sub:"Agri-Food Supply Chain", exch:"NASDAQ"},
-  {ticker:"DDOG", company:"Datadog Inc", sector:"Technology", industry:"Software - Application", sub:"Cloud Observability & AI", exch:"NASDAQ"},
-  {ticker:"SEZL", company:"Sezzle Inc", sector:"Financial", industry:"Credit Services", sub:"Buy Now Pay Later Fintech", exch:"NASDAQ"},
-  {ticker:"ATEX", company:"Anterix Inc", sector:"Communication", industry:"Telecom Services", sub:"Wireless Communications", exch:"NASDAQ"},
-  {ticker:"IRDM", company:"Iridium Communications", sector:"Communication", industry:"Telecom Services", sub:"Satellite Communications", exch:"NASDAQ"},
-  {ticker:"AEHR", company:"Aehr Test Systems", sector:"Technology", industry:"Semiconductor Equipment", sub:"Wafer Level Test & Burn-in", exch:"NASDAQ"},
-  {ticker:"CDNL", company:"Cardinal Infrastructure", sector:"Industrials", industry:"Engineering & Construction", sub:"Infrastructure Consulting", exch:"NYSE"},
-  {ticker:"AMPG", company:"Amplitech Group", sector:"Technology", industry:"Communication Equipment", sub:"RF & Microwave Components", exch:"NASDAQ"},
-  {ticker:"FROG", company:"JFrog Ltd", sector:"Technology", industry:"Software - Application", sub:"DevOps & Software Supply", exch:"NASDAQ"},
-  {ticker:"BLZE", company:"Backblaze Inc", sector:"Technology", industry:"Software - Infrastructure", sub:"Cloud Storage & Backup", exch:"NASDAQ"},
-  {ticker:"BB", company:"BlackBerry Ltd", sector:"Technology", industry:"Software - Infrastructure", sub:"IoT & Cybersecurity", exch:"NYSE"},
-  {ticker:"DELL", company:"Dell Technologies", sector:"Technology", industry:"Computer Hardware", sub:"AI Servers & Infrastructure", exch:"NYSE"},
-  {ticker:"AAOI", company:"Applied Optoelectronics", sector:"Technology", industry:"Communication Equipment", sub:"Fiber Optic Networking", exch:"NASDAQ"},
-  {ticker:"ARM", company:"Arm Holdings Plc", sector:"Technology", industry:"Semiconductors", sub:"CPU Architecture & IP", exch:"NASDAQ"},
-  {ticker:"STX", company:"Seagate Technology", sector:"Technology", industry:"Computer Hardware", sub:"Mass Data Storage Solutions", exch:"NASDAQ"},
-  {ticker:"DOCN", company:"DigitalOcean Holdings", sector:"Technology", industry:"Software - Infrastructure", sub:"Cloud Computing Platform", exch:"NYSE"},
-  {ticker:"VPG", company:"Vishay Precision Group", sector:"Technology", industry:"Scientific Instruments", sub:"Precision Sensors & Systems", exch:"NYSE"},
-  {ticker:"MRVL", company:"Marvell Technology", sector:"Technology", industry:"Semiconductors", sub:"Data Center & AI Chips", exch:"NASDAQ"},
-  {ticker:"MU", company:"Micron Technology", sector:"Technology", industry:"Semiconductors", sub:"Memory & Storage (DRAM/NAND)", exch:"NASDAQ"},
-  {ticker:"FCEL", company:"Fuelcell Energy", sector:"Industrials", industry:"Electrical Equipment", sub:"Clean Energy Fuel Cells", exch:"NASDAQ"},
-  {ticker:"MXL", company:"MaxLinear Inc", sector:"Technology", industry:"Semiconductors", sub:"Broadband & RF Systems", exch:"NASDAQ"},
-  {ticker:"PENG", company:"Penguin Solutions", sector:"Technology", industry:"IT Services", sub:"AI High-Performance Compute", exch:"NASDAQ"},
-  {ticker:"SNDK", company:"Sandisk Corp", sector:"Technology", industry:"Computer Hardware", sub:"Flash Memory Storage", exch:"NASDAQ"},
-  {ticker:"ICHR", company:"Ichor Holdings Ltd", sector:"Technology", industry:"Semiconductor Equipment", sub:"Fluid Delivery Subsystems", exch:"NASDAQ"},
-  {ticker:"SIMO", company:"Silicon Motion Tech", sector:"Technology", industry:"Semiconductors", sub:"NAND Flash Controllers", exch:"NASDAQ"},
-  {ticker:"STM", company:"ST Microelectronics", sector:"Technology", industry:"Semiconductors", sub:"Automotive & Industrial Chips", exch:"NYSE"},
-  {ticker:"AMBQ", company:"Ambiq Micro Inc", sector:"Technology", industry:"Semiconductors", sub:"Ultra-Low Power IoT Chips", exch:"NYSE"},
-  {ticker:"APPS", company:"Digital Turbine Inc", sector:"Technology", industry:"Software - Application", sub:"Mobile App Discovery", exch:"NASDAQ"}
+  {ticker:"RHI", company:"Robert Half Inc", sector:"Industrials", industry:"Staffing & Employment", sub:"Professional Staffing", exch:"NYSE"}
 ];
 
 const STATE = {
-  activeSource: "sheet", // "sheet", "hot", "sector", or "ew_sector"
+  activeSource: "sheet",
   universe: FALLBACK_UNIVERSE,
   data: {},
   spxBars: null,
@@ -372,9 +312,6 @@ const CORS_PROXIES = [
   url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`
 ];
 
-/* ============================================================
-   2. TRADINGVIEW LOCALSTORAGE PARSER (3+ STRATEGIES)
-   ============================================================ */
 function getHot3PlusTickers() {
   try {
     const raw = localStorage.getItem(TV_STORAGE_KEY);
@@ -387,7 +324,7 @@ function getHot3PlusTickers() {
       if (clean) counts[clean] = (counts[clean] || 0) + 1;
     });
 
-    const hotList = Object.entries(counts)
+    return Object.entries(counts)
       .filter(([, count]) => count >= 3)
       .sort((a, b) => b[1] - a[1])
       .map(([ticker]) => ({
@@ -398,16 +335,9 @@ function getHot3PlusTickers() {
         sub: "Fetching Profile…",
         exch: "US"
       }));
-
-    return hotList;
-  } catch (e) {
-    return [];
-  }
+  } catch (e) { return []; }
 }
 
-/* ============================================================
-   3. CSV PARSER & LIVE UNIVERSE FETCH
-   ============================================================ */
 function parseCSVGrid(text) {
   const rows = [];
   let row = [], field = '', inQuotes = false;
@@ -472,12 +402,8 @@ async function syncLiveTickerUniverse() {
   return FALLBACK_UNIVERSE;
 }
 
-/* ============================================================
-   4. NATIVE TRADINGVIEW SCANNER API ENRICHER (100% TV PARITY)
-   ============================================================ */
 async function enrichTickerMetadata(symbol) {
   if (!STATE.data[symbol] || STATE.data[symbol].meta.isEnriched) return;
-
   const targetUrl = "https://scanner.tradingview.com/america/scan";
   const payload = {
     symbols: { tickers: [`AMERICA:${symbol}`, `NYSE:${symbol}`, `NASDAQ:${symbol}`, `AMEX:${symbol}`] },
@@ -493,22 +419,16 @@ async function enrichTickerMetadata(symbol) {
       });
       if (!res.ok) continue;
       const json = await res.json();
-      
       const row = json.data?.[0]?.d;
       if (!row) continue;
 
-      const company = row[1] || symbol;
-      const sector = row[2] || STATE.data[symbol].meta.sector;
-      const industry = row[3] || STATE.data[symbol].meta.industry;
-      const exch = row[4] || STATE.data[symbol].meta.exch || "US";
-
       STATE.data[symbol].meta = {
         ticker: symbol,
-        company: company,
-        sector: sector,
-        industry: industry,
-        sub: industry,
-        exch: exch,
+        company: row[1] || symbol,
+        sector: row[2] || STATE.data[symbol].meta.sector,
+        industry: row[3] || STATE.data[symbol].meta.industry,
+        sub: row[3] || STATE.data[symbol].meta.sub,
+        exch: row[4] || STATE.data[symbol].meta.exch || "US",
         isEnriched: true
       };
 
@@ -521,9 +441,6 @@ async function enrichTickerMetadata(symbol) {
   }
 }
 
-/* ============================================================
-   5. TECHNICAL MATH ENGINE
-   ============================================================ */
 function sma(arr, len) {
   const out = new Array(arr.length).fill(null);
   let sum = 0;
@@ -557,7 +474,6 @@ function calculateEMA(data, period, key) {
 
 function computeMansfieldRS(stockBars, spxBars) {
   if(!spxBars || spxBars.length < 2) return stockBars.map(() => 0);
-  
   const spxSorted = spxBars.slice().sort((a,b) => a.t - b.t);
   function spxCloseAt(t) {
     let lo = 0, hi = spxSorted.length - 1, ans = spxSorted[0].c;
@@ -584,7 +500,6 @@ function computeSATA(bars, mrs) {
   const back = (k) => Math.max(0, last - k);
 
   const comps = [];
-
   const aboveMA = maX[last] != null && price > maX[last];
   comps.push({ label: `Price > ${maLen}w MA`, pass: !!aboveMA });
 
@@ -608,25 +523,20 @@ function computeSATA(bars, mrs) {
   comps.push({ label: "Mansfield RS rising (4w)", pass: !!rsRising });
 
   const roc10 = last - 10 >= 0 ? ((price / closes[last - 10]) - 1) * 100 : 0;
-  const momPositive = roc10 > 0;
-  comps.push({ label: "Momentum (10w ROC) > 0", pass: !!momPositive });
+  comps.push({ label: "Momentum (10w ROC) > 0", pass: roc10 > 0 });
 
   const roc10prev = last - 14 >= 0 ? ((closes[last - 4] / closes[last - 14]) - 1) * 100 : 0;
-  const momAccel = roc10 > roc10prev;
-  comps.push({ label: "Momentum accelerating", pass: !!momAccel });
+  comps.push({ label: "Momentum accelerating", pass: roc10 > roc10prev });
 
   let upVol = 0, upCnt = 0, dnVol = 0, dnCnt = 0;
   for(let i = Math.max(1, back(10)); i <= last; i++) {
     if(bars[i].c >= bars[i-1].c) { upVol += bars[i].v; upCnt++; } else { dnVol += bars[i].v; dnCnt++; }
   }
-  const upAvg = upCnt ? upVol / upCnt : 0, dnAvg = dnCnt ? dnVol / dnCnt : 0;
-  const volAccum = upAvg > dnAvg;
-  comps.push({ label: "Volume: accumulation", pass: !!volAccum });
+  comps.push({ label: "Volume: accumulation", pass: (upCnt ? upVol / upCnt : 0) > (dnCnt ? dnVol / dnCnt : 0) });
 
   let high52 = -Infinity;
   for(let i = back(52); i <= last; i++) high52 = Math.max(high52, bars[i].h);
-  const nearHigh = isFinite(high52) ? price >= high52 * 0.85 : false;
-  comps.push({ label: "Near 52w high (<15% off)", pass: !!nearHigh });
+  comps.push({ label: "Near 52w high (<15% off)", pass: isFinite(high52) ? price >= high52 * 0.85 : false });
 
   const scoreNum = comps.reduce((s, c) => s + (c.pass ? 1 : 0), 0);
   return { score: scoreNum, comps, maX, roc10 };
@@ -649,13 +559,9 @@ function scoreColor(score) {
   return "var(--red)";
 }
 
-/* ============================================================
-   6. YAHOO INGESTION ENGINE
-   ============================================================ */
 async function fetchYahooWeekly(symbol) {
   const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1wk&range=2y`;
   let json = null;
-  
   for(const build of CORS_PROXIES) {
     try {
       const res = await fetch(build(targetUrl), { cache: "no-store" });
@@ -665,7 +571,6 @@ async function fetchYahooWeekly(symbol) {
       }
     } catch(e) {}
   }
-  
   if(!json || !json.chart || !json.chart.result || !json.chart.result[0]) return null;
   
   const result = json.chart.result[0];
@@ -690,12 +595,7 @@ function processTickerBars(meta, bars, chartMeta) {
   if (["NYQ", "NYSE"].includes(rawExch.toUpperCase())) rawExch = "NYSE";
   else if (["NMS", "NASDAQ", "NASDAQGS", "NASDAQGM", "NASDAQCM"].includes(rawExch.toUpperCase())) rawExch = "NASDAQ";
 
-  const updatedMeta = {
-    ...meta,
-    company: chartMeta.shortName || chartMeta.longName || meta.company,
-    exch: rawExch
-  };
-
+  const updatedMeta = { ...meta, company: chartMeta.shortName || chartMeta.longName || meta.company, exch: rawExch };
   const mrs = computeMansfieldRS(bars, STATE.spxBars);
   const sataResult = computeSATA(bars, mrs);
   
@@ -728,9 +628,6 @@ function processTickerBars(meta, bars, chartMeta) {
   };
 }
 
-/* ============================================================
-   7. RELATIVE STRENGTH PERCENTILES
-   ============================================================ */
 function calculateRSTiles(targetMeta) {
   const allLoaded = Object.values(STATE.data);
   if(allLoaded.length === 0) return { sector: { pct: 50, badge: "NEUTRAL" }, industry: { pct: 50, badge: "NEUTRAL" }, sub: { pct: 50, badge: "NEUTRAL" } };
@@ -756,9 +653,6 @@ function calculateRSTiles(targetMeta) {
   };
 }
 
-/* ============================================================
-   8. LIGHTWEIGHT CHARTS INTEGRATION
-   ============================================================ */
 function renderLightweightChart(bars) {
   const container = document.getElementById("lwChartContainer");
   if (!container || !bars || bars.length === 0) return;
@@ -774,20 +668,17 @@ function renderLightweightChart(bars) {
   const gridLine = isDark ? "#1a2233" : "#f1f5f9";
   const textColor = isDark ? "#8b93a8" : "#64748b";
 
-  const formattedBars = bars.map(b => {
-    const dateStr = new Date(b.t).toISOString().split('T')[0];
-    return {
-      time: dateStr,
-      open: Number(b.o.toFixed(2)),
-      high: Number(b.h.toFixed(2)),
-      low: Number(b.l.toFixed(2)),
-      close: Number(b.c.toFixed(2))
-    };
-  }).sort((a, b) => a.time.localeCompare(b.time));
+  const formattedBars = bars.map(b => ({
+    time: new Date(b.t).toISOString().split('T')[0],
+    open: Number(b.o.toFixed(2)),
+    high: Number(b.h.toFixed(2)),
+    low: Number(b.l.toFixed(2)),
+    close: Number(b.c.toFixed(2))
+  })).sort((a, b) => a.time.localeCompare(b.time));
 
   const chart = LightweightCharts.createChart(container, {
     width: container.clientWidth || 680,
-    height: container.clientHeight || 320,
+    height: container.clientHeight || 480,
     layout: { background: { type: 'solid', color: chartBg }, textColor: textColor, fontFamily: 'JetBrains Mono, monospace', fontSize: 11 },
     grid: { vertLines: { color: gridLine }, horzLines: { color: gridLine } },
     rightPriceScale: { borderVisible: false, scaleMargins: { top: 0.15, bottom: 0.1 } },
@@ -828,32 +719,10 @@ function renderLightweightChart(bars) {
   });
   ema30Series.setData(ema30Data);
 
-  const dcLength = 52;
-  const dcUpperData = [], dcLowerData = [];
-  for (let i = 0; i < formattedBars.length; i++) {
-    if (i >= dcLength - 1) {
-      const windowBars = formattedBars.slice(i - dcLength + 1, i + 1);
-      const highestHigh = Math.max(...windowBars.map(b => b.high));
-      const lowestLow = Math.min(...windowBars.map(b => b.low));
-      if (i + 1 < formattedBars.length) {
-        const targetTime = formattedBars[i + 1].time;
-        dcUpperData.push({ time: targetTime, value: highestHigh });
-        dcLowerData.push({ time: targetTime, value: lowestLow });
-      }
-    }
-  }
-
-  const dcLineColor = isDark ? 'rgba(245, 185, 66, 0.5)' : 'rgba(185, 120, 26, 0.5)';
-  const dcUpperSeries = chart.addLineSeries({ color: dcLineColor, lineWidth: 1, lineStyle: 2, priceLineVisible: false, lastValueVisible: false });
-  const dcLowerSeries = chart.addLineSeries({ color: dcLineColor, lineWidth: 1, lineStyle: 2, priceLineVisible: false, lastValueVisible: false });
-  dcUpperSeries.setData(dcUpperData);
-  dcLowerSeries.setData(dcLowerData);
-
   const maHighMap = new Map(maHighData.map(item => [item.time, item.value]));
   const coloredBars = formattedBars.map(bar => {
     const currentMAHigh = maHighMap.get(bar.time);
-    let standardColor = isDark ? "#f8fafc" : "#000000";
-    let barColor = (currentMAHigh !== undefined && bar.close < currentMAHigh) ? "#ff5c72" : standardColor;
+    let barColor = (currentMAHigh !== undefined && bar.close < currentMAHigh) ? "#ff5c72" : (isDark ? "#f8fafc" : "#000000");
     return { ...bar, color: barColor };
   });
 
@@ -863,13 +732,9 @@ function renderLightweightChart(bars) {
   chart.timeScale().fitContent();
 }
 
-/* ============================================================
-   9. RENDERING ENGINE
-   ============================================================ */
 function renderWatchlist() {
   const wrap = document.getElementById("listWrap");
   const loadedKeys = Object.keys(STATE.data);
-  
   if(loadedKeys.length === 0) {
     wrap.innerHTML = `<div style="padding:20px; text-align:center; color:var(--text-faint); font-size:12px;">Ingesting weekly feeds…</div>`;
     return;
@@ -882,22 +747,9 @@ function renderWatchlist() {
     return tk.toLowerCase().includes(q) || (d.meta && d.meta.company.toLowerCase().includes(q)) || (d.meta && d.meta.sector.toLowerCase().includes(q));
   });
 
-  if(STATE.sortMode === "score") {
-    filtered.sort((a,b) => (STATE.data[b].score?.score || 0) - (STATE.data[a].score?.score || 0));
-  } else if(STATE.sortMode === "rs") {
-    filtered.sort((a,b) => {
-      const ra = STATE.data[a].mrs ? STATE.data[a].mrs[STATE.data[a].mrs.length-1] : -999;
-      const rb = STATE.data[b].mrs ? STATE.data[b].mrs[STATE.data[b].mrs.length-1] : -999;
-      return rb - ra;
-    });
-  } else {
-    filtered.sort();
-  }
-
-  if(filtered.length === 0) {
-    wrap.innerHTML = `<div style="padding:20px; text-align:center; color:var(--text-faint); font-size:12px;">No matching tickers found.</div>`;
-    return;
-  }
+  if(STATE.sortMode === "score") filtered.sort((a,b) => (STATE.data[b].score?.score || 0) - (STATE.data[a].score?.score || 0));
+  else if(STATE.sortMode === "rs") filtered.sort((a,b) => (STATE.data[b].mrs?.[STATE.data[b].mrs.length-1] || -999) - (STATE.data[a].mrs?.[STATE.data[a].mrs.length-1] || -999));
+  else filtered.sort();
 
   let html = "";
   filtered.forEach(tk => {
@@ -905,17 +757,11 @@ function renderWatchlist() {
     const active = STATE.selected === tk ? "active" : "";
     const s = d.score ? d.score.score : 0;
     const rs = d.mrs ? d.mrs[d.mrs.length-1] : 0;
-    const rsColor = rs >= 0 ? "var(--teal)" : "var(--red)";
-    const rsStr = (rs >= 0 ? "+" : "") + rs.toFixed(1);
-
     html += `<div class="row ${active}" onclick="selectTicker('${tk}')">
-      <div class="meta">
-        <span class="tk">${tk}</span>
-        <span class="stg">S${d.stage ? d.stage.stage : 1}</span>
-      </div>
+      <div class="meta"><span class="tk">${tk}</span><span class="stg">S${d.stage ? d.stage.stage : 1}</span></div>
       <div style="display:flex; align-items:center; gap:8px;">
         <span class="score-pill" style="background:${scoreColor(s)}22; color:${scoreColor(s)}; border: 1px solid ${scoreColor(s)}55;">${s}</span>
-        <span class="rs-val" style="color:${rsColor};">${rsStr}</span>
+        <span class="rs-val" style="color:${rs >= 0 ? 'var(--teal)' : 'var(--red)'};">${(rs >= 0 ? "+" : "") + rs.toFixed(1)}</span>
       </div>
     </div>`;
   });
@@ -932,7 +778,7 @@ function selectTicker(symbol) {
 
 function buildMansfieldSVG(rows) {
   if(!rows || rows.length === 0) return "";
-  const W = 680, H = 150, padL = 8, padR = 8, padT = 12, padB = 12;
+  const W = 680, H = 140, padL = 8, padR = 8, padT = 12, padB = 12;
   const vals = rows.map(r => r.mrs).filter(v => v != null && isFinite(v));
   if(vals.length < 2) return "";
   const maxV = Math.max(...vals, 5), minV = Math.min(...vals, -5);
@@ -940,53 +786,44 @@ function buildMansfieldSVG(rows) {
   const n = rows.length;
   const stepX = (W - padL - padR) / (n - 1);
   const zeroY = padT + (maxV / range) * (H - padT - padB);
-  function xAt(i) { return padL + i * stepX; }
-  function yAt(v) { return padT + ((maxV - v) / range) * (H - padT - padB); }
 
   let path = "";
   rows.forEach((r, i) => {
     if(r.mrs == null || !isFinite(r.mrs)) return;
-    const x = xAt(i).toFixed(1), y = yAt(r.mrs).toFixed(1);
+    const x = (padL + i * stepX).toFixed(1);
+    const y = (padT + ((maxV - r.mrs) / range) * (H - padT - padB)).toFixed(1);
     path += `${path === "" ? "M" : "L"}${x},${y} `;
   });
 
   return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
     <line x1="${padL}" y1="${zeroY.toFixed(1)}" x2="${W-padR}" y2="${zeroY.toFixed(1)}" stroke="var(--teal)" stroke-opacity="0.4" stroke-dasharray="3,3" stroke-width="1.5"/>
     <path d="${path.trim()}" fill="none" stroke="var(--text)" stroke-width="1.8"/>
-    ${rows.map((r,i) => (r.mrs != null && isFinite(r.mrs)) ? `<circle cx="${xAt(i).toFixed(1)}" cy="${yAt(r.mrs).toFixed(1)}" r="${i === n-1 ? 3.5 : 0}" fill="${r.mrs >= 0 ? 'var(--teal)' : 'var(--red)'}"/>` : '').join('')}
   </svg>`;
 }
 
 function buildScoreHistorySVG(rows) {
   if(!rows || rows.length === 0) return "";
-  const W = 680, H = 150, padL = 8, padR = 8, padT = 12, padB = 12;
+  const W = 680, H = 140, padL = 8, padR = 8, padT = 12, padB = 12;
   const n = rows.length;
   if(n < 2) return "";
   const stepX = (W - padL - padR) / (n - 1);
-  function xAt(i) { return padL + i * stepX; }
-  function yAt(s) { return padT + ((10 - s) / 10) * (H - padT - padB); }
 
   let path = "";
   rows.forEach((r, i) => {
-    const x = xAt(i).toFixed(1), y = yAt(r.score).toFixed(1);
+    const x = (padL + i * stepX).toFixed(1);
+    const y = (padT + ((10 - r.score) / 10) * (H - padT - padB)).toFixed(1);
     path += `${path === "" ? "M" : "L"}${x},${y} `;
   });
 
-  const stage2Y = yAt(6).toFixed(1);
   return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
-    <line x1="${padL}" y1="${stage2Y}" x2="${W-padR}" y2="${stage2Y}" stroke="var(--teal)" stroke-opacity="0.3" stroke-dasharray="2,2"/>
     <path d="${path.trim()}" fill="none" stroke="var(--amber)" stroke-width="2"/>
-    ${rows.map((r,i) => `<circle cx="${xAt(i).toFixed(1)}" cy="${yAt(r.score).toFixed(1)}" r="${i === n-1 ? 3.5 : 1.5}" fill="${scoreColor(r.score)}"/>`).join('')}
   </svg>`;
 }
 
 function renderMainDashboard() {
   const panel = document.getElementById("mainPanel");
   const tk = STATE.selected;
-  if(!tk || !STATE.data[tk]) {
-    panel.innerHTML = `<div class="card empty-state"><div class="icon">👈</div><h3>Select a Ticker</h3><p style="font-size:12px; margin-top:4px;">Choose a stock from the watchlist on the left rail to view its SATA diagnostics.</p></div>`;
-    return;
-  }
+  if(!tk || !STATE.data[tk]) return;
 
   const d = STATE.data[tk];
   if (!d || !d.score || !d.comps) return;
@@ -994,7 +831,6 @@ function renderMainDashboard() {
   const s = d.score.score;
   const rs = d.mrs && d.mrs.length ? d.mrs[d.mrs.length - 1] : 0;
   const chg = d.prevClose ? ((d.lastClose / d.prevClose) - 1) * 100 : 0;
-  const sCol = scoreColor(s);
 
   const prevWk = d.weeklyRows && d.weeklyRows[1] ? d.weeklyRows[1] : null;
   const delta = prevWk ? (s - prevWk.score) : 0;
@@ -1004,29 +840,20 @@ function renderMainDashboard() {
 
   let gaugeCellsHtml = "";
   for(let i = 0; i <= 10; i++) {
-    let cls = "";
-    if(i === s) {
-      if(s >= 8) cls = "active-green";
-      else if(s >= 6) cls = "active-amber";
-      else cls = "active-red";
-    } else if(i < s) {
-      cls = "filled";
-    }
+    let cls = i === s ? (s >= 8 ? "active-green" : (s >= 6 ? "active-amber" : "active-red")) : (i < s ? "filled" : "");
     gaugeCellsHtml += `<div class="gauge-cell ${cls}">${i}</div>`;
   }
 
   const tiles = calculateRSTiles(d.meta);
-  const rangeTxt = s >= 8 ? "Strong" : (s >= 6 ? "Positive" : (s >= 4 ? "Neutral" : "Weak"));
-  const deltaTxt = delta > 0 ? `increased +${delta}` : (delta < 0 ? `decreased ${delta}` : `remained unchanged`);
-  const narrative = `${d.meta.ticker} has a Stage Analysis Technical Attributes (SATA) score of ${s} out of 10, which is in the ${rangeTxt} range and ${deltaTxt} since the prior week.`;
 
+  // Re-architected Comp Items for 1-Column Right Panel
   const compHtml = (d.comps || []).map(c => `
     <div class="comp-item">
       <span class="dot ${c.pass ? 'g' : 'r'}"></span>
       <span class="lbl">${c.label}</span>
     </div>`).join('');
 
-  const tableRowsHtml = (d.weeklyRows || []).slice(0, 15).map(r => {
+  const tableRowsHtml = (d.weeklyRows || []).slice(0, 12).map(r => {
     const rVal = (r.mrs >= 0 ? "+" : "") + r.mrs.toFixed(2);
     const rCol = r.mrs >= 0 ? "var(--teal)" : "var(--red)";
     const stgCol = r.stage === 2 ? "var(--teal)" : (r.stage === 1 ? "var(--blue)" : (r.stage === 3 ? "var(--amber)" : "var(--red)"));
@@ -1043,7 +870,7 @@ function renderMainDashboard() {
     <div class="card top-meta-card">
       <div>
         <div class="tk-big">${d.meta.ticker} <span style="font-size:16px; color:var(--text-dim); font-weight:500;">&middot; ${d.meta.company}</span></div>
-        <div class="tk-name">${d.meta.exch} &middot; Weekly Bar Resolution &middot; ${d.bars.length} Periods Analyzed</div>
+        <div class="tk-name">${d.meta.exch} &middot; Weekly Resolution &middot; ${d.bars.length} Periods</div>
       </div>
       <div class="px-block">
         <div class="px">${d.lastClose.toFixed(2)}</div>
@@ -1051,51 +878,52 @@ function renderMainDashboard() {
       </div>
     </div>
 
-    <!-- MAIN GRID: GAUGE & RS TILES -->
+    <!-- MAIN GRID: LEFT EXPANDED CHARTS vs RIGHT METRICS & 1-COL CHECKLIST -->
     <div class="sata-grid">
-      <!-- LEFT: GAUGE, BREAKDOWN & CHARTS -->
+      <!-- LEFT COLUMN: GAUGE & TALLER CHARTS -->
       <div>
         <div class="card" style="margin-bottom: 16px;">
           <div class="sata-box-header">
-            <span class="box-title">SATA Score</span>
+            <span class="box-title">SATA Score Gauge</span>
             ${deltaHtml}
           </div>
           <div class="sata-gauge-container">${gaugeCellsHtml}</div>
-          <div class="summary-box">${narrative}</div>
-          <div class="box-title" style="margin-bottom: 10px; font-size: 12px;">10-Band Attribute Evaluation</div>
-          <div class="comp-grid">${compHtml}</div>
+          <div class="summary-box">${d.meta.ticker} SATA score: <b>${s}/10</b>.</div>
         </div>
 
-        <!-- CHARTS SECTION -->
-        <div class="card chart-box" style="margin-bottom: 16px;">
-          <!-- 1. LIGHTWEIGHT PRICE CHART -->
+        <div class="card chart-box">
           <div class="chart-header">
-            <span>Weekly Institutional HLC Chart &middot; 30w MA Cloud &middot; 52w Donchian Channel</span>
+            <span>Weekly Institutional HLC Chart &middot; 30w MA Cloud</span>
             <span style="color:var(--teal)">● Live Yahoo Feed</span>
           </div>
           <div class="lw-chart-wrap">
             <div class="lw-chart-container" id="lwChartContainer"></div>
           </div>
 
-          <!-- 2. MANSFIELD RS CHART -->
           <div class="chart-header">
-            <span>Mansfield Relative Strength vs SPX (52-Week Range)</span>
+            <span>Mansfield Relative Strength vs SPX</span>
             <span style="color:${rs >= 0 ? 'var(--teal)' : 'var(--red)'}">${rs >= 0 ? '+' : ''}${rs.toFixed(2)}</span>
           </div>
-          <div class="chart-svg-wrap">${buildMansfieldSVG((d.weeklyRows || []).slice().reverse())}</div>
+          <div class="chart-svg-wrap" style="margin-bottom: 16px;">${buildMansfieldSVG((d.weeklyRows || []).slice().reverse())}</div>
           
-          <!-- 3. SATA SCORE HISTORY -->
-          <div class="chart-header" style="margin-top: 16px;">
-            <span>SATA Composite Score Trajectory (Dashed line = Stage 2 Threshold)</span>
-            <span style="color:${sCol}">${s} / 10</span>
+          <div class="chart-header">
+            <span>SATA Composite Trajectory</span>
+            <span style="color:${scoreColor(s)}">${s} / 10</span>
           </div>
           <div class="chart-svg-wrap">${buildScoreHistorySVG((d.weeklyRows || []).slice().reverse())}</div>
         </div>
       </div>
 
-      <!-- RIGHT: TILES, METADATA & TABLE -->
-      <div>
-        <!-- RS TILES -->
+      <!-- RIGHT COLUMN: 1-COLUMN CHECKLIST + RS TILES + STAGE HISTORY -->
+      <div style="display:flex; flex-direction:column; gap:16px;">
+        
+        <!-- 10-BAND ATTRIBUTE CHECKLIST (RELOCATED TO RIGHT PANEL) -->
+        <div class="card">
+          <div class="box-title" style="margin-bottom:12px; font-size:12px;">10-Band Attribute Evaluation</div>
+          <div class="comp-list">${compHtml}</div>
+        </div>
+
+        <!-- RS PERCENTILE TILES -->
         <div class="rs-tiles">
           <div class="rs-tile">
             <span class="rs-tile-label">Sector</span>
@@ -1108,14 +936,14 @@ function renderMainDashboard() {
             <span class="rs-tile-badge badge-${tiles.industry.badge.toLowerCase()}">${tiles.industry.badge}</span>
           </div>
           <div class="rs-tile">
-            <span class="rs-tile-label">Sub-Industry</span>
+            <span class="rs-tile-label">Sub-Ind</span>
             <span class="rs-tile-pct">${tiles.sub.pct}%</span>
             <span class="rs-tile-badge badge-${tiles.sub.badge.toLowerCase()}">${tiles.sub.badge}</span>
           </div>
         </div>
 
         <!-- METADATA TABLE -->
-        <div class="card" style="margin-bottom: 16px; padding: 0;">
+        <div class="card" style="padding: 0;">
           <table class="meta-table">
             <tr><td>Ticker</td><td>${d.meta.ticker}</td></tr>
             <tr><td>Sector</td><td>${d.meta.sector}</td></tr>
@@ -1125,9 +953,9 @@ function renderMainDashboard() {
           </table>
         </div>
 
-        <!-- WEEKLY TABLE -->
+        <!-- WEEKLY HISTORY TABLE -->
         <div class="card" style="padding: 0;">
-          <div style="padding: 12px 14px; border-bottom: 1px solid var(--line); font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 800; text-transform: uppercase;">Weekly Stage History</div>
+          <div style="padding: 10px 12px; border-bottom: 1px solid var(--line); font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 800; text-transform: uppercase;">Weekly Stage History</div>
           <table class="wk-table">
             <thead>
               <tr><th>Week</th><th>Mansfield RS</th><th>SATA</th><th>Stage</th></tr>
@@ -1135,6 +963,7 @@ function renderMainDashboard() {
             <tbody>${tableRowsHtml}</tbody>
           </table>
         </div>
+
       </div>
     </div>
   `;
@@ -1142,41 +971,23 @@ function renderMainDashboard() {
   requestAnimationFrame(() => renderLightweightChart(d.bars));
 }
 
-/* ============================================================
-   10. BATCH QUEUE & LAZY LOADER
-   ============================================================ */
 async function loadUniverseProgressively() {
   const statusBox = document.getElementById("statusBox");
-  STATE.data = {};
-  STATE.selected = null;
-  
+  STATE.data = {}; STATE.selected = null;
   STATE.universe = await syncLiveTickerUniverse();
 
-  if (STATE.universe.length === 0) {
-    statusBox.innerHTML = `<b style="color:var(--amber)">No Tickers Found</b>`;
-    document.getElementById("listWrap").innerHTML = `<div style="padding:20px; text-align:center; color:var(--text-faint); font-size:12px;">No tickers found for this universe option.</div>`;
-    renderMainDashboard();
-    return;
-  }
-  
+  if (STATE.universe.length === 0) return;
   statusBox.innerHTML = `Fetching SPX benchmark…`;
   
   let spxRes = await fetchYahooWeekly("^GSPC");
   if(!spxRes || !spxRes.bars) spxRes = await fetchYahooWeekly("SPY");
-  if(!spxRes || !spxRes.bars) {
-    statusBox.innerHTML = `<b style="color:var(--red)">SPX Feed Error</b> · Check Network`;
-    return;
-  }
   STATE.spxBars = spxRes.bars;
 
-  const topBatch = STATE.universe.slice(0, 40);
-  const remainingBatch = STATE.universe.slice(40);
+  const topBatch = STATE.universe.slice(0, 30);
   let count = 0;
 
-  statusBox.innerHTML = `Scoring tickers… (<b>0</b>/${topBatch.length})`;
-
-  for(let i = 0; i < topBatch.length; i += 6) {
-    const batch = topBatch.slice(i, i + 6);
+  for(let i = 0; i < topBatch.length; i += 5) {
+    const batch = topBatch.slice(i, i + 5);
     await Promise.all(batch.map(async (meta) => {
       const res = await fetchYahooWeekly(meta.ticker);
       if(res && res.bars && res.bars.length >= 10) {
@@ -1188,75 +999,21 @@ async function loadUniverseProgressively() {
     statusBox.innerHTML = `Scoring tickers… (<b>${Math.min(count, topBatch.length)}</b>/${topBatch.length})`;
     renderWatchlist();
     if(STATE.selected) renderMainDashboard();
-    await new Promise(r => setTimeout(r, 80));
-  }
-
-  let sourceName = 'Leader Sheet';
-  if(STATE.activeSource === 'hot') sourceName = '🔥 3+ TV List';
-  else if(STATE.activeSource === 'sector') sourceName = 'Cap-Weighted Sectors';
-  else if(STATE.activeSource === 'ew_sector') sourceName = 'Equal-Weight Sectors';
-
-  statusBox.innerHTML = `<b>${sourceName} Active</b> · ${Object.keys(STATE.data).length} Tickers`;
-
-  if (remainingBatch.length > 0) {
-    setTimeout(async () => {
-      for(let i = 0; i < remainingBatch.length; i += 5) {
-        const batch = remainingBatch.slice(i, i + 5);
-        await Promise.all(batch.map(async (meta) => {
-          const res = await fetchYahooWeekly(meta.ticker);
-          if(res && res.bars && res.bars.length >= 10) {
-            STATE.data[meta.ticker] = processTickerBars(meta, res.bars, res.chartMeta);
-          }
-        }));
-        renderWatchlist();
-        if(STATE.selected) renderMainDashboard();
-        await new Promise(r => setTimeout(r, 80));
-      }
-      statusBox.innerHTML = `<b>${sourceName} Active</b> · ${Object.keys(STATE.data).length} Scored`;
-    }, 800);
+    await new Promise(r => setTimeout(r, 60));
   }
 }
 
-/* ============================================================
-   11. UI WIRING & INIT
-   ============================================================ */
 function setActivePill(activeBtnId) {
   ["btnUnivSheet", "btnUnivHot", "btnUnivSector", "btnUnivEWSector"].forEach(id => {
     document.getElementById(id).classList.toggle("active", id === activeBtnId);
   });
 }
 
-document.getElementById("btnUnivSheet").addEventListener("click", () => {
-  if (STATE.activeSource === "sheet") return;
-  STATE.activeSource = "sheet";
-  setActivePill("btnUnivSheet");
-  loadUniverseProgressively();
-});
-
-document.getElementById("btnUnivHot").addEventListener("click", () => {
-  if (STATE.activeSource === "hot") return;
-  STATE.activeSource = "hot";
-  setActivePill("btnUnivHot");
-  loadUniverseProgressively();
-});
-
-document.getElementById("btnUnivSector").addEventListener("click", () => {
-  if (STATE.activeSource === "sector") return;
-  STATE.activeSource = "sector";
-  setActivePill("btnUnivSector");
-  loadUniverseProgressively();
-});
-
-document.getElementById("btnUnivEWSector").addEventListener("click", () => {
-  if (STATE.activeSource === "ew_sector") return;
-  STATE.activeSource = "ew_sector";
-  setActivePill("btnUnivEWSector");
-  loadUniverseProgressively();
-});
-
-document.getElementById("btnRefresh").addEventListener("click", () => {
-  loadUniverseProgressively();
-});
+document.getElementById("btnUnivSheet").addEventListener("click", () => { STATE.activeSource = "sheet"; setActivePill("btnUnivSheet"); loadUniverseProgressively(); });
+document.getElementById("btnUnivHot").addEventListener("click", () => { STATE.activeSource = "hot"; setActivePill("btnUnivHot"); loadUniverseProgressively(); });
+document.getElementById("btnUnivSector").addEventListener("click", () => { STATE.activeSource = "sector"; setActivePill("btnUnivSector"); loadUniverseProgressively(); });
+document.getElementById("btnUnivEWSector").addEventListener("click", () => { STATE.activeSource = "ew_sector"; setActivePill("btnUnivEWSector"); loadUniverseProgressively(); });
+document.getElementById("btnRefresh").addEventListener("click", () => loadUniverseProgressively());
 
 document.getElementById("searchBox").addEventListener("input", (e) => {
   STATE.query = e.target.value.trim();
@@ -1272,26 +1029,21 @@ document.querySelectorAll(".seg button").forEach(btn => {
   });
 });
 
-function updateThemeToggleUI() {
-  const theme = document.documentElement.getAttribute("data-theme") || "dark";
-  document.getElementById("optDark").classList.toggle("active", theme === "dark");
-  document.getElementById("optLight").classList.toggle("active", theme === "light");
-}
-
 function setTheme(theme) {
   document.documentElement.setAttribute("data-theme", theme);
-  updateThemeToggleUI();
+  document.getElementById("optDark").classList.toggle("active", theme === "dark");
+  document.getElementById("optLight").classList.toggle("active", theme === "light");
   try { localStorage.setItem('sata-theme', theme); } catch(e) {}
   if (STATE.selected) renderMainDashboard();
 }
+
 document.getElementById("optDark").addEventListener("click", () => setTheme("dark"));
 document.getElementById("optLight").addEventListener("click", () => setTheme("light"));
 
 (function init() {
-  try {
-    const savedTheme = localStorage.getItem('sata-theme') || "dark";
-    setTheme(savedTheme);
-  } catch(e) { setTheme("dark"); }
+  let savedTheme = "dark";
+  try { savedTheme = localStorage.getItem('sata-theme') || "dark"; } catch(e) {}
+  setTheme(savedTheme);
   loadUniverseProgressively();
 })();
 </script>
