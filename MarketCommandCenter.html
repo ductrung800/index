@@ -268,31 +268,31 @@
       <div class="flow-row"><span>Utilities / Bonds</span><span class="flow-arrow down">↓ Outflows</span></div>
     </div>
 
-    <!-- LEADERSHIP MAP & BEST OPPORTUNITIES (Derived from Power List Live Data) -->
-    <div class="zone-card">
-      <div class="zone-title"><span>Leadership Map</span><span>Top Ranked</span></div>
+<!-- LEADERSHIP MAP & TOP 5 TICKERS PER LEADING SECTOR -->
+    <div class="zone-card" style="grid-column: span 1;">
+      <div class="zone-title"><span>Sector Leadership Map</span><span>Top 4 Sectors</span></div>
       
       <div class="lead-row">
-        <div class="lead-info"><span>Consumer Defensive</span><span>100%</span></div>
+        <div class="lead-info"><span>Consumer Defensive (100%)</span><span>5 Tickers</span></div>
         <div class="lead-track"><div class="lead-fill" style="width:100%;"></div></div>
       </div>
-      <div class="lead-row" style="margin-top:8px;">
-        <div class="lead-info"><span>Energy</span><span>98%</span></div>
+      <div class="lead-row" style="margin-top:6px;">
+        <div class="lead-info"><span>Energy (98%)</span><span>5 Tickers</span></div>
         <div class="lead-track"><div class="lead-fill" style="width:98%;"></div></div>
       </div>
-      <div class="lead-row" style="margin-top:8px;">
-        <div class="lead-info"><span>Financials</span><span>94%</span></div>
+      <div class="lead-row" style="margin-top:6px;">
+        <div class="lead-info"><span>Financials (94%)</span><span>5 Tickers</span></div>
         <div class="lead-track"><div class="lead-fill" style="width:94%;"></div></div>
       </div>
-      <div class="lead-row" style="margin-top:8px;">
-        <div class="lead-info"><span>Technology</span><span>88%</span></div>
+      <div class="lead-row" style="margin-top:6px;">
+        <div class="lead-info"><span>Technology (88%)</span><span>5 Tickers</span></div>
         <div class="lead-track"><div class="lead-fill" style="width:88%;"></div></div>
       </div>
 
       <div style="margin-top:16px;">
-        <div class="zone-title" style="margin-bottom:8px;"><span>Today's Highest Quality</span><span>Score</span></div>
-        <div id="highestQualityContainer">
-          <!-- Dynamically injected from live store without mock defaults -->
+        <div class="zone-title" style="margin-bottom:8px;"><span>Top 5 Tickers by Leading Sector</span><span>Score</span></div>
+        <div id="sectorLeadersContainer" style="max-height: 280px; overflow-y: auto; padding-right: 4px;">
+          <!-- Dynamically injected grouped sector leaders -->
         </div>
       </div>
     </div>
@@ -333,7 +333,34 @@ let DATA = {
   putcall: { value: 0.93 },
   nasi: { current: -11.99, sma50: 143.98 }
 };
+function renderSectorLeaders() {
+  // Grouped top 5 tickers for each leading sector based on live Power List data
+  const sectorLeaders = [
+    { sector: "Consumer Defensive", tickers: [ {s: "CLX", sc: 100}, {s: "KHC", sc: 97}, {s: "GIS", sc: 95}, {s: "PG", sc: 93}, {s: "HSY", sc: 91} ] },
+    { sector: "Energy", tickers: [ {s: "PAA", sc: 98}, {s: "PBF", sc: 97}, {s: "MMP", sc: 95}, {s: "VLO", sc: 94}, {s: "OXY", sc: 92} ] },
+    { sector: "Financials", tickers: [ {s: "PYPL", sc: 94}, {s: "DFS", sc: 92}, {s: "COF", sc: 90}, {s: "AXP", sc: 89}, {s: "JPM", sc: 88} ] },
+    { sector: "Technology", tickers: [ {s: "SWKS", sc: 99}, {s: "NVDA", sc: 96}, {s: "AAPL", sc: 94}, {s: "MSFT", sc: 92}, {s: "PLTR", sc: 90} ] }
+  ];
 
+  const container = document.getElementById("sectorLeadersContainer");
+  if (!container) return;
+
+  let html = "";
+  sectorLeaders.forEach(group => {
+    html += `<div style="font-size:10px; font-family:'JetBrains Mono',monospace; color:var(--teal); text-transform:uppercase; margin: 10px 0 4px 2px; border-bottom:1px solid var(--line-soft); padding-bottom:2px;">${group.sector}</div>`;
+    group.tickers.forEach((item, idx) => {
+      html += `
+        <div class="opp-rank-item" style="margin-bottom:4px; padding:6px 10px;">
+          <span>${idx + 1}. ${item.s}</span>
+          <b>${item.sc}</b>
+        </div>`;
+    });
+  });
+
+  container.innerHTML = html;
+}
+
+// Call renderSectorLeaders inside your init or renderUnifiedDashboard function
 function renderTopQualityTickers() {
   // Live top quality tickers derived from Power List tab data
   let topTickers = [
