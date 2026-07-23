@@ -149,13 +149,14 @@
   .chart-box-main { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; flex: 1; min-height: 0; }
   .chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 700; color: var(--text-dim); flex-shrink: 0; }
   
-  /* SIDE-BY-SIDE DUAL CHART WRAPPER */
-  .dual-chart-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; flex: 1; min-height: 280px; margin-bottom: 10px; }
+  /* SIDE-BY-SIDE DUAL CHART ROW */
+  .dual-chart-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; flex: 1; min-height: 260px; margin-bottom: 10px; }
   .lw-chart-wrap { background: var(--chart-bg); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; height: 100%; position: relative; }
   .lw-chart-container { position: absolute; top: 0; left: 0; right: 0; bottom: 0; width: 100%; height: 100%; }
 
-  /* SECONDARY OSCILLATORS (180px) */
-  .chart-svg-wrap { background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; padding: 10px; overflow: hidden; height: 180px; flex-shrink: 0; }
+  /* DUAL OSCILLATOR GRID (WEEKLY vs DAILY ALIGNED) */
+  .osc-grid-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px; }
+  .chart-svg-wrap { background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; padding: 8px; overflow: hidden; height: 140px; flex-shrink: 0; }
   .chart-svg-wrap svg { width: 100%; height: 100%; display: block; }
 
   /* WEEKLY HISTORY TABLE */
@@ -301,7 +302,8 @@ const STATE = {
   activeSource: "sheet",
   universe: FALLBACK_UNIVERSE,
   data: {},
-  spxBars: null,
+  spxWeeklyBars: null,
+  spxDailyBars: null,
   selected: null,
   sortMode: "score",
   query: ""
@@ -499,9 +501,11 @@ function calculateDonchian(data, period) {
   return { highs, lows };
 }
 
-function computeMansfieldRS(stockBars, spxBars) {
-  if(!spxBars || spxBars.length < 2) return stockBars.map(() => 0);
+/* MANSFIELD RS CALCULATION (SUPPORTING WEEKLY PERIOD 52 OR DAILY PERIOD 200) */
+function computeMansfieldRS(stockBars, spxBars, maPeriod = 52) {
+  if(!spxBars || spxBars.length < 2 || !stockBars || stockBars.length < 2) return stockBars ? stockBars.map(() => 0) : [];
   const spxSorted = spxBars.slice().sort((a,b) => a.t - b.t);
+  
   function spxCloseAt(t) {
     let lo = 0, hi = spxSorted.length - 1, ans = spxSorted[0].c;
     while(lo <= hi) {
@@ -512,13 +516,14 @@ function computeMansfieldRS(stockBars, spxBars) {
   }
 
   const ratio = stockBars.map(b => (b.c / spxCloseAt(b.t)) * 100);
-  const maLen = Math.min(52, Math.max(4, Math.floor(ratio.length / 2)));
-  const ratioMA = sma(ratio, maLen);
+  const len = Math.min(maPeriod, Math.max(4, Math.floor(ratio.length / 2)));
+  const ratioMA = sma(ratio, len);
   return ratio.map((r, i) => ratioMA[i] != null ? ((r / ratioMA[i]) - 1) * 100 : 0);
 }
 
 function computeSATA(bars, mrs) {
   const n = bars.length;
+  if (n === 0) return { score: 0, comps: [], maX: [], roc10: 0 };
   const closes = bars.map(b => b.c);
   const maLen = Math.min(30, Math.max(4, Math.floor(n / 2)));
   const maX = sma(closes, maLen);
@@ -528,29 +533,29 @@ function computeSATA(bars, mrs) {
 
   const comps = [];
   const aboveMA = maX[last] != null && price > maX[last];
-  comps.push({ label: `Price > ${maLen}w MA`, pass: !!aboveMA });
+  comps.push({ label: `Price > ${maLen} MA`, pass: !!aboveMA });
 
   const maRising = maX[last] != null && maX[back(4)] != null && maX[last] > maX[back(4)];
-  comps.push({ label: `${maLen}w MA rising (4w)`, pass: !!maRising });
+  comps.push({ label: `${maLen} MA rising`, pass: !!maRising });
 
   let priorHigh10 = -Infinity;
   for(let i = back(10); i < last; i++) priorHigh10 = Math.max(priorHigh10, bars[i].h);
   const breakout = isFinite(priorHigh10) && price > priorHigh10;
-  comps.push({ label: "Breakout (>10w high)", pass: !!breakout });
+  comps.push({ label: "Breakout (>10 pds)", pass: !!breakout });
 
   let priorLow10 = Infinity;
   for(let i = back(10); i < last; i++) priorLow10 = Math.min(priorLow10, bars[i].l);
   const noBreakdown = isFinite(priorLow10) ? price >= priorLow10 : true;
-  comps.push({ label: "No breakdown (10w low)", pass: !!noBreakdown });
+  comps.push({ label: "No breakdown", pass: !!noBreakdown });
 
   const rsPositive = mrs[last] != null && mrs[last] > 0;
-  comps.push({ label: "Mansfield RS > 0 (vs SPX)", pass: !!rsPositive });
+  comps.push({ label: "Mansfield RS > 0", pass: !!rsPositive });
 
   const rsRising = mrs[last] != null && mrs[back(4)] != null && mrs[last] > mrs[back(4)];
-  comps.push({ label: "Mansfield RS rising (4w)", pass: !!rsRising });
+  comps.push({ label: "Mansfield RS rising", pass: !!rsRising });
 
   const roc10 = last - 10 >= 0 ? ((price / closes[last - 10]) - 1) * 100 : 0;
-  comps.push({ label: "Momentum (10w ROC) > 0", pass: roc10 > 0 });
+  comps.push({ label: "Momentum (ROC) > 0", pass: roc10 > 0 });
 
   const roc10prev = last - 14 >= 0 ? ((closes[last - 4] / closes[last - 14]) - 1) * 100 : 0;
   comps.push({ label: "Momentum accelerating", pass: roc10 > roc10prev });
@@ -563,7 +568,7 @@ function computeSATA(bars, mrs) {
 
   let high52 = -Infinity;
   for(let i = back(52); i <= last; i++) high52 = Math.max(high52, bars[i].h);
-  comps.push({ label: "Near 52w high (<15% off)", pass: isFinite(high52) ? price >= high52 * 0.85 : false });
+  comps.push({ label: "Near high (<15% off)", pass: isFinite(high52) ? price >= high52 * 0.85 : false });
 
   const scoreNum = comps.reduce((s, c) => s + (c.pass ? 1 : 0), 0);
   return { score: scoreNum, comps, maX, roc10 };
@@ -623,16 +628,32 @@ function processTickerBars(meta, weeklyBars, chartMeta, dailyBars = []) {
   else if (["NMS", "NASDAQ", "NASDAQGS", "NASDAQGM", "NASDAQCM"].includes(rawExch.toUpperCase())) rawExch = "NASDAQ";
 
   const updatedMeta = { ...meta, company: chartMeta.shortName || chartMeta.longName || meta.company, exch: rawExch };
-  const mrs = computeMansfieldRS(weeklyBars, STATE.spxBars);
-  const sataResult = computeSATA(weeklyBars, mrs);
   
+  // Weekly Calculations
+  const mrsWeekly = computeMansfieldRS(weeklyBars, STATE.spxWeeklyBars, 52);
+  const sataResultWeekly = computeSATA(weeklyBars, mrsWeekly);
+  
+  // Daily Calculations
+  const mrsDaily = computeMansfieldRS(dailyBars, STATE.spxDailyBars, 200);
+  const sataResultDaily = computeSATA(dailyBars, mrsDaily);
+
+  // Daily Score Trajectory History
+  const dailyScores = [];
+  const startDailyIdx = Math.max(0, dailyBars.length - 120);
+  for(let i = startDailyIdx; i < dailyBars.length; i++) {
+    const subBars = dailyBars.slice(0, i + 1);
+    const subMrs = computeMansfieldRS(subBars, STATE.spxDailyBars, 200);
+    const r = computeSATA(subBars, subMrs);
+    dailyScores.push({ date: new Date(dailyBars[i].t), mrs: subMrs[subMrs.length - 1], score: r.score });
+  }
+
+  // Weekly Score Trajectory History
   const weeklyRows = [];
   const histScores = [];
   const startIdx = Math.max(0, weeklyBars.length - 52);
-  
   for(let i = startIdx; i < weeklyBars.length; i++) {
     const subBars = weeklyBars.slice(0, i + 1);
-    const subMrs = computeMansfieldRS(subBars, STATE.spxBars);
+    const subMrs = computeMansfieldRS(subBars, STATE.spxWeeklyBars, 52);
     const r = computeSATA(subBars, subMrs);
     histScores.push(r.score);
     weeklyRows.push({
@@ -649,8 +670,9 @@ function processTickerBars(meta, weeklyBars, chartMeta, dailyBars = []) {
   const roc26 = weeklyBars.length >= 26 ? ((lastClose / weeklyBars[weeklyBars.length - 26].c) - 1) * 100 : 0;
 
   return {
-    meta: updatedMeta, bars: weeklyBars, dailyBars, mrs, score: sataResult, comps: sataResult.comps, stage,
-    weeklyRows: weeklyRows.reverse(),
+    meta: updatedMeta, bars: weeklyBars, dailyBars, mrs: mrsWeekly, mrsDaily,
+    score: sataResultWeekly, scoreDaily: sataResultDaily, comps: sataResultWeekly.comps, stage,
+    weeklyRows: weeklyRows.reverse(), dailyScores,
     lastClose, prevClose, roc26
   };
 }
@@ -697,7 +719,7 @@ function renderWeeklyChart(container, bars) {
 
   const chart = LightweightCharts.createChart(container, {
     width: container.clientWidth || 400,
-    height: container.clientHeight || 300,
+    height: container.clientHeight || 260,
     layout: { background: { type: 'solid', color: chartBg }, textColor: textColor, fontFamily: 'JetBrains Mono, monospace', fontSize: 10 },
     grid: { vertLines: { color: gridLine }, horzLines: { color: gridLine } },
     rightPriceScale: { borderVisible: false, scaleMargins: { top: 0.1, bottom: 0.08 } },
@@ -743,7 +765,7 @@ function renderWeeklyChart(container, bars) {
   return chart;
 }
 
-/* RENDER DAILY CHART (21 EMA CLOUD + DONCHIAN CHANNEL + MONOCHROME HLC BARS MATCHING WATCHLIST TAB) */
+/* RENDER DAILY CHART (21 EMA CLOUD + DONCHIAN CHANNEL + MONOCHROME HLC BARS) */
 function renderDailyChart(container, bars) {
   if (!container || !bars || bars.length === 0) return null;
 
@@ -760,7 +782,7 @@ function renderDailyChart(container, bars) {
 
   const chart = LightweightCharts.createChart(container, {
     width: container.clientWidth || 400,
-    height: container.clientHeight || 300,
+    height: container.clientHeight || 260,
     layout: { background: { type: 'solid', color: chartBg }, textColor: textColor, fontFamily: 'JetBrains Mono, monospace', fontSize: 10 },
     grid: { vertLines: { color: gridLine }, horzLines: { color: gridLine } },
     rightPriceScale: { borderVisible: false, scaleMargins: { top: 0.08, bottom: 0.08 } },
@@ -768,12 +790,10 @@ function renderDailyChart(container, bars) {
     crosshair: { mode: LightweightCharts.CrosshairMode.Normal }
   });
 
-  // Calculate 21 EMA Cloud High/Low & Donchian 20 Channels
   const ema21High = calculateEMA(formattedBars, 21, 'high');
   const ema21Low = calculateEMA(formattedBars, 21, 'low');
   const donchian20 = calculateDonchian(formattedBars, 20);
 
-  // 1. 21 EMA Cloud High Area
   const cloudHighSeries = chart.addAreaSeries({
     topColor: isDark ? 'rgba(168, 85, 247, 0.18)' : 'rgba(147, 51, 234, 0.15)',
     bottomColor: isDark ? 'rgba(168, 85, 247, 0.02)' : 'rgba(147, 51, 234, 0.03)',
@@ -782,7 +802,6 @@ function renderDailyChart(container, bars) {
   });
   cloudHighSeries.setData(ema21High);
 
-  // 2. 21 EMA Cloud Low Area Mask
   const cloudLowMaskSeries = chart.addAreaSeries({
     topColor: chartBg, bottomColor: chartBg,
     lineColor: isDark ? 'rgba(168, 85, 247, 0.25)' : 'rgba(147, 51, 234, 0.25)',
@@ -790,7 +809,6 @@ function renderDailyChart(container, bars) {
   });
   cloudLowMaskSeries.setData(ema21Low);
 
-  // 3. Donchian Channel Lines
   const donchianHighSeries = chart.addLineSeries({
     color: isDark ? 'rgba(245, 185, 66, 0.6)' : 'rgba(185, 120, 26, 0.6)',
     lineWidth: 1, lineStyle: LightweightCharts.LineStyle.Dashed, priceLineVisible: false, lastValueVisible: false
@@ -803,7 +821,6 @@ function renderDailyChart(container, bars) {
   });
   donchianLowSeries.setData(donchian20.lows.filter(d => d.value !== undefined));
 
-  // 4. Monochrome HLC Price Bars (Black vs Pink/Magenta)
   const emaHighMap = new Map(ema21High.map(item => [item.time, item.value]));
   const coloredBars = formattedBars.map(bar => {
     const currentHighEMA = emaHighMap.get(bar.time);
@@ -862,22 +879,22 @@ function selectTicker(symbol) {
   enrichTickerMetadata(symbol);
 }
 
-function buildMansfieldSVG(rows) {
-  if(!rows || rows.length === 0) return "";
-  const W = 680, H = 180, padL = 8, padR = 8, padT = 12, padB = 12;
-  const vals = rows.map(r => r.mrs).filter(v => v != null && isFinite(v));
-  if(vals.length < 2) return "";
-  const maxV = Math.max(...vals, 5), minV = Math.min(...vals, -5);
+function buildMansfieldSVG(vals) {
+  if(!vals || vals.length < 2) return "";
+  const W = 340, H = 140, padL = 8, padR = 8, padT = 10, padB = 10;
+  const validVals = vals.filter(v => v != null && isFinite(v));
+  if(validVals.length < 2) return "";
+  const maxV = Math.max(...validVals, 5), minV = Math.min(...validVals, -5);
   const range = (maxV - minV) || 1;
-  const n = rows.length;
+  const n = vals.length;
   const stepX = (W - padL - padR) / (n - 1);
   const zeroY = padT + (maxV / range) * (H - padT - padB);
 
   let path = "";
-  rows.forEach((r, i) => {
-    if(r.mrs == null || !isFinite(r.mrs)) return;
+  vals.forEach((v, i) => {
+    if(v == null || !isFinite(v)) return;
     const x = (padL + i * stepX).toFixed(1);
-    const y = (padT + ((maxV - r.mrs) / range) * (H - padT - padB)).toFixed(1);
+    const y = (padT + ((maxV - v) / range) * (H - padT - padB)).toFixed(1);
     path += `${path === "" ? "M" : "L"}${x},${y} `;
   });
 
@@ -887,17 +904,16 @@ function buildMansfieldSVG(rows) {
   </svg>`;
 }
 
-function buildScoreHistorySVG(rows) {
-  if(!rows || rows.length === 0) return "";
-  const W = 680, H = 180, padL = 8, padR = 8, padT = 12, padB = 12;
-  const n = rows.length;
-  if(n < 2) return "";
+function buildScoreHistorySVG(scores) {
+  if(!scores || scores.length < 2) return "";
+  const W = 340, H = 140, padL = 8, padR = 8, padT = 10, padB = 10;
+  const n = scores.length;
   const stepX = (W - padL - padR) / (n - 1);
 
   let path = "";
-  rows.forEach((r, i) => {
+  scores.forEach((s, i) => {
     const x = (padL + i * stepX).toFixed(1);
-    const y = (padT + ((10 - r.score) / 10) * (H - padT - padB)).toFixed(1);
+    const y = (padT + ((10 - s) / 10) * (H - padT - padB)).toFixed(1);
     path += `${path === "" ? "M" : "L"}${x},${y} `;
   });
 
@@ -915,7 +931,9 @@ function renderMainDashboard() {
   if (!d || !d.score || !d.comps) return;
 
   const s = d.score.score;
-  const rs = d.mrs && d.mrs.length ? d.mrs[d.mrs.length - 1] : 0;
+  const sDaily = d.scoreDaily ? d.scoreDaily.score : s;
+  const rsWk = d.mrs && d.mrs.length ? d.mrs[d.mrs.length - 1] : 0;
+  const rsD = d.mrsDaily && d.mrsDaily.length ? d.mrsDaily[d.mrsDaily.length - 1] : 0;
   const chg = d.prevClose ? ((d.lastClose / d.prevClose) - 1) * 100 : 0;
 
   const prevWk = d.weeklyRows && d.weeklyRows[1] ? d.weeklyRows[1] : null;
@@ -952,10 +970,17 @@ function renderMainDashboard() {
 
   const metaStr = `${d.meta.sector || 'Equities'} &middot; ${d.meta.industry || 'General'} &middot; ${d.meta.sub || 'General'} &middot; ${d.meta.exch || 'US'}`;
 
+  // Extract Weekly & Daily Data Arrays for Oscillators
+  const weeklyMrsSeries = (d.weeklyRows || []).slice().reverse().map(r => r.mrs);
+  const weeklyScoreSeries = (d.weeklyRows || []).slice().reverse().map(r => r.score);
+  
+  const dailyMrsSeries = (d.dailyScores || []).map(r => r.mrs);
+  const dailyScoreSeries = (d.dailyScores || []).map(r => r.score);
+
   panel.innerHTML = `
     <div class="sata-grid">
       
-      <!-- LEFT COLUMN: INTEGRATED TOP HEADER + DUAL SIDE-BY-SIDE CHARTS + OSCILLATORS -->
+      <!-- LEFT COLUMN: INTEGRATED TOP HEADER + DUAL SIDE-BY-SIDE CHARTS + DUAL OSCILLATOR GRID -->
       <div class="chart-column">
         
         <!-- INTEGRATED TOP HEADER WITH SIDE-BY-SIDE RS TILES -->
@@ -965,7 +990,6 @@ function renderMainDashboard() {
             <div class="tk-name">${metaStr}</div>
           </div>
 
-          <!-- MERGED RS PERCENTILE TILES -->
           <div class="header-rs-tiles">
             <div class="rs-tile">
               <span class="rs-tile-label">Sector</span>
@@ -992,7 +1016,7 @@ function renderMainDashboard() {
 
         <div class="chart-box-main">
           
-          <!-- DUAL SIDE-BY-SIDE CHART ROW -->
+          <!-- DUAL PRICE CHART ROW -->
           <div class="dual-chart-row">
             <div class="lw-chart-wrap">
               <div class="chart-header" style="position:absolute; top:8px; left:12px; right:12px; z-index:2; margin:0; pointer-events:none;">
@@ -1009,21 +1033,46 @@ function renderMainDashboard() {
             </div>
           </div>
 
-          <div class="chart-header">
-            <span>Mansfield Relative Strength vs SPX</span>
-            <span style="color:${rs >= 0 ? 'var(--teal)' : 'var(--red)'}">${rs >= 0 ? '+' : ''}${rs.toFixed(2)}</span>
+          <!-- MANSFIELD RS DUAL ROW (WEEKLY vs DAILY) -->
+          <div class="osc-grid-row">
+            <div>
+              <div class="chart-header">
+                <span>Weekly Mansfield RS vs SPX</span>
+                <span style="color:${rsWk >= 0 ? 'var(--teal)' : 'var(--red)'}">${rsWk >= 0 ? '+' : ''}${rsWk.toFixed(2)}</span>
+              </div>
+              <div class="chart-svg-wrap">${buildMansfieldSVG(weeklyMrsSeries)}</div>
+            </div>
+            <div>
+              <div class="chart-header">
+                <span>Daily Mansfield RS vs SPX</span>
+                <span style="color:${rsD >= 0 ? 'var(--teal)' : 'var(--red)'}">${rsD >= 0 ? '+' : ''}${rsD.toFixed(2)}</span>
+              </div>
+              <div class="chart-svg-wrap">${buildMansfieldSVG(dailyMrsSeries)}</div>
+            </div>
           </div>
-          <div class="chart-svg-wrap" style="margin-bottom: 8px;">${buildMansfieldSVG((d.weeklyRows || []).slice().reverse())}</div>
-          
-          <div class="chart-header">
-            <span>SATA Composite Trajectory</span>
-            <span style="color:${scoreColor(s)}">${s} / 10</span>
+
+          <!-- SATA TRAJECTORY DUAL ROW (WEEKLY vs DAILY) -->
+          <div class="osc-grid-row">
+            <div>
+              <div class="chart-header">
+                <span>Weekly SATA Trajectory</span>
+                <span style="color:${scoreColor(s)}">${s} / 10</span>
+              </div>
+              <div class="chart-svg-wrap">${buildScoreHistorySVG(weeklyScoreSeries)}</div>
+            </div>
+            <div>
+              <div class="chart-header">
+                <span>Daily SATA Trajectory</span>
+                <span style="color:${scoreColor(sDaily)}">${sDaily} / 10</span>
+              </div>
+              <div class="chart-svg-wrap">${buildScoreHistorySVG(dailyScoreSeries)}</div>
+            </div>
           </div>
-          <div class="chart-svg-wrap">${buildScoreHistorySVG((d.weeklyRows || []).slice().reverse())}</div>
+
         </div>
       </div>
 
-      <!-- RIGHT COLUMN: METRICS & TABLES SHIFTED UP -->
+      <!-- RIGHT COLUMN: METRICS & TABLES -->
       <div class="right-panel-scroll">
         
         <div class="card">
@@ -1103,9 +1152,13 @@ async function loadUniverseProgressively() {
   if (STATE.universe.length === 0) return;
   statusBox.innerHTML = `Fetching SPX benchmark…`;
   
-  let spxRes = await fetchYahooSeries("^GSPC", "1wk", "2y");
-  if(!spxRes || !spxRes.bars) spxRes = await fetchYahooSeries("SPY", "1wk", "2y");
-  STATE.spxBars = spxRes.bars;
+  const [spxWk, spxD] = await Promise.all([
+    fetchYahooSeries("^GSPC", "1wk", "2y"),
+    fetchYahooSeries("^GSPC", "1d", "1y")
+  ]);
+  
+  STATE.spxWeeklyBars = spxWk?.bars || [];
+  STATE.spxDailyBars = spxD?.bars || [];
 
   const topBatch = STATE.universe.slice(0, 30);
   const remainingBatch = STATE.universe.slice(30);
