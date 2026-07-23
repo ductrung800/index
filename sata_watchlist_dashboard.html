@@ -90,20 +90,22 @@
   .row .score-pill { font-size: 10.5px; font-weight: 800; width: 26px; text-align: center; border-radius: 4px; padding: 2px 0; }
   .row .rs-val { font-size: 10.5px; font-weight: 700; width: 44px; text-align: right; }
 
-  /* RIGHT PANEL: MAIN DASHBOARD */
+  /* RIGHT PANEL: MAIN DASHBOARD CONTAINER */
   .right-col { display: flex; flex-direction: column; gap: 12px; height: 100%; min-height: 0; flex: 1; }
+
+  /* TOP META CARD - NARROWED TO CHART WIDTH */
   .top-meta-card { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 10px 16px; flex-shrink: 0; }
-  .tk-big { font-size: 24px; font-weight: 800; font-family: 'JetBrains Mono', monospace; letter-spacing: -.02em; display: flex; align-items: center; gap: 10px; }
-  .tk-name { font-size: 12px; color: var(--text-dim); font-weight: 500; margin-top: 1px; }
+  .tk-big { font-size: 22px; font-weight: 800; font-family: 'JetBrains Mono', monospace; letter-spacing: -.02em; display: flex; align-items: center; gap: 10px; }
+  .tk-name { font-size: 11.5px; color: var(--text-dim); font-weight: 600; margin-top: 2px; font-family: 'JetBrains Mono', monospace; }
   .px-block { text-align: right; font-family: 'JetBrains Mono', monospace; }
   .px { font-size: 22px; font-weight: 800; }
   .px-chg { font-size: 12px; font-weight: 700; margin-top: 1px; }
   .px-chg.up { color: var(--teal); } .px-chg.down { color: var(--red); }
 
   /* FULL HEIGHT SATA GRID (LEFT CHARTS vs 450px RIGHT PANEL) */
-  .sata-grid { display: grid; grid-template-columns: 1fr 450px; gap: 14px; flex: 1; min-height: 0; }
+  .sata-grid { display: grid; grid-template-columns: 1fr 450px; gap: 14px; flex: 1; min-height: 0; height: 100%; }
 
-  /* RIGHT PANEL SCROLLABLE CARD CONTAINER WITH ENLARGED FONTS */
+  /* RIGHT PANEL SCROLLABLE CARD CONTAINER */
   .right-panel-scroll { display: flex; flex-direction: column; gap: 12px; height: 100%; min-height: 0; overflow-y: auto; padding-right: 4px; }
   .right-panel-scroll::-webkit-scrollbar { width: 5px; }
   .right-panel-scroll::-webkit-scrollbar-thumb { background: var(--line); border-radius: 4px; }
@@ -124,7 +126,7 @@
 
   .summary-box { font-size: 12.5px; line-height: 1.5; color: var(--text); background: var(--panel2); border-left: 4px solid var(--teal); padding: 8px 12px; border-radius: 0 5px 5px 0; font-family: 'Inter', sans-serif; font-weight: 500; }
 
-  /* 10-BAND CHECKLIST ITEM STYLING (ENLARGED & WIDE) */
+  /* 10-BAND CHECKLIST ITEM STYLING */
   .comp-list { display: flex; flex-direction: column; gap: 6px; }
   .comp-item { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--input-bg); border: 1px solid var(--line); border-radius: 6px; padding: 9px 12px; font-size: 12px; }
   .comp-item .dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
@@ -142,19 +144,13 @@
   .badge-neutral { background: rgba(56,189,248,.15); color: var(--blue); }
   .badge-weak { background: rgba(255,92,114,.15); color: var(--red); }
 
-  /* METADATA TABLE */
-  .meta-table { width: 100%; border-collapse: collapse; font-family: 'JetBrains Mono', monospace; font-size: 12px; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
-  .meta-table td { padding: 8px 12px; border-bottom: 1px solid var(--line-soft); }
-  .meta-table tr:last-child td { border-bottom: none; }
-  .meta-table td:first-child { color: var(--text-dim); font-weight: 600; width: 120px; background: var(--input-bg); }
-  .meta-table td:last-child { color: var(--text); font-weight: 700; text-align: right; }
-
   /* LEFT CHART COLUMN - STRETCHES DYNAMICALLY TO FILL SCREEN */
-  .chart-box-main { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; height: 100%; min-height: 0; }
+  .chart-column { display: flex; flex-direction: column; gap: 12px; height: 100%; min-height: 0; flex: 1; }
+  .chart-box-main { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; flex: 1; min-height: 0; }
   .chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 700; color: var(--text-dim); flex-shrink: 0; }
   
   /* FLEXIBLE FULL HEIGHT LIGHTWEIGHT CHART WRAPPER */
-  .lw-chart-wrap { background: var(--chart-bg); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; flex: 1; min-height: 320px; position: relative; margin-bottom: 10px; }
+  .lw-chart-wrap { background: var(--chart-bg); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; flex: 1; min-height: 280px; position: relative; margin-bottom: 10px; }
   .lw-chart-container { position: absolute; top: 0; left: 0; right: 0; bottom: 0; width: 100%; height: 100%; }
 
   /* DOUBLED HEIGHT FOR SECONDARY OSCILLATORS (180px) */
@@ -873,48 +869,55 @@ function renderMainDashboard() {
     </tr>`;
   }).join('');
 
-  panel.innerHTML = `
-    <!-- TOP META CARD -->
-    <div class="card top-meta-card">
-      <div>
-        <div class="tk-big">${d.meta.ticker} <span style="font-size:15px; color:var(--text-dim); font-weight:500;">&middot; ${d.meta.company}</span></div>
-        <div class="tk-name">${d.meta.exch} &middot; Weekly Resolution &middot; ${d.bars.length} Periods Analyzed</div>
-      </div>
-      <div class="px-block">
-        <div class="px">${d.lastClose.toFixed(2)}</div>
-        <div class="px-chg ${chg >= 0 ? 'up' : 'down'}">${chg >= 0 ? '+' : ''}${chg.toFixed(2)}% (1W)</div>
-      </div>
-    </div>
+  // Clean Meta String: Sector · Industry · Sub-Industry · Exchange
+  const metaStr = `${d.meta.sector || 'Equities'} &middot; ${d.meta.industry || 'General'} &middot; ${d.meta.sub || 'General'} &middot; ${d.meta.exch || 'US'}`;
 
-    <!-- MAIN GRID: FULL HEIGHT LEFT CHART vs 450px SCROLLABLE RIGHT PANEL -->
+  panel.innerHTML = `
+    <!-- MAIN GRID: LEFT COLUMN (TOP META CARD + CHARTS) vs RIGHT COLUMN (GAUGE, CHECKLIST, TILES, TABLE) -->
     <div class="sata-grid">
       
-      <!-- LEFT COLUMN: FULL STRETCHING CANDLESTICK CHART & DOUBLED HEIGHT OSCILLATORS -->
-      <div class="chart-box-main">
-        <div class="chart-header">
-          <span>Weekly Institutional HLC Chart &middot; 30w MA Cloud</span>
-          <span style="color:var(--teal)">● Live Yahoo Feed</span>
-        </div>
+      <!-- LEFT COLUMN: NARROW TOP META CARD + FULL STRETCHING CANDLESTICK CHART & OSCILLATORS -->
+      <div class="chart-column">
         
-        <!-- FLEX GROW CHART WRAPPER THAT ACCURATELY STRETCHES TO BOTTOM -->
-        <div class="lw-chart-wrap">
-          <div class="lw-chart-container" id="lwChartContainer"></div>
+        <!-- NARROW TOP META CARD MATCHING EXACT CHART WIDTH -->
+        <div class="card top-meta-card">
+          <div>
+            <div class="tk-big">${d.meta.ticker} <span style="font-size:15px; color:var(--text-dim); font-weight:500;">&middot; ${d.meta.company}</span></div>
+            <div class="tk-name">${metaStr}</div>
+          </div>
+          <div class="px-block">
+            <div class="px">${d.lastClose.toFixed(2)}</div>
+            <div class="px-chg ${chg >= 0 ? 'up' : 'down'}">${chg >= 0 ? '+' : ''}${chg.toFixed(2)}% (1W)</div>
+          </div>
         </div>
 
-        <div class="chart-header">
-          <span>Mansfield Relative Strength vs SPX</span>
-          <span style="color:${rs >= 0 ? 'var(--teal)' : 'var(--red)'}">${rs >= 0 ? '+' : ''}${rs.toFixed(2)}</span>
+        <!-- MAIN CHART BOX -->
+        <div class="chart-box-main">
+          <div class="chart-header">
+            <span>Weekly Institutional HLC Chart &middot; 30w MA Cloud</span>
+            <span style="color:var(--teal)">● Live Yahoo Feed</span>
+          </div>
+          
+          <!-- FLEX GROW CHART WRAPPER -->
+          <div class="lw-chart-wrap">
+            <div class="lw-chart-container" id="lwChartContainer"></div>
+          </div>
+
+          <div class="chart-header">
+            <span>Mansfield Relative Strength vs SPX</span>
+            <span style="color:${rs >= 0 ? 'var(--teal)' : 'var(--red)'}">${rs >= 0 ? '+' : ''}${rs.toFixed(2)}</span>
+          </div>
+          <div class="chart-svg-wrap" style="margin-bottom: 8px;">${buildMansfieldSVG((d.weeklyRows || []).slice().reverse())}</div>
+          
+          <div class="chart-header">
+            <span>SATA Composite Trajectory</span>
+            <span style="color:${scoreColor(s)}">${s} / 10</span>
+          </div>
+          <div class="chart-svg-wrap">${buildScoreHistorySVG((d.weeklyRows || []).slice().reverse())}</div>
         </div>
-        <div class="chart-svg-wrap" style="margin-bottom: 8px;">${buildMansfieldSVG((d.weeklyRows || []).slice().reverse())}</div>
-        
-        <div class="chart-header">
-          <span>SATA Composite Trajectory</span>
-          <span style="color:${scoreColor(s)}">${s} / 10</span>
-        </div>
-        <div class="chart-svg-wrap">${buildScoreHistorySVG((d.weeklyRows || []).slice().reverse())}</div>
       </div>
 
-      <!-- RIGHT COLUMN: 450px WIDE WITH ALL METRICS AND GAUGE -->
+      <!-- RIGHT COLUMN: 450px WIDE WITH ALL METRICS SHIFTED UP -->
       <div class="right-panel-scroll">
         
         <!-- 1. SATA SCORE GAUGE CARD -->
@@ -952,18 +955,7 @@ function renderMainDashboard() {
           </div>
         </div>
 
-        <!-- 4. METADATA TABLE -->
-        <div class="card" style="padding: 0;">
-          <table class="meta-table">
-            <tr><td>Ticker</td><td>${d.meta.ticker}</td></tr>
-            <tr><td>Sector</td><td>${d.meta.sector}</td></tr>
-            <tr><td>Industry</td><td>${d.meta.industry}</td></tr>
-            <tr><td>Sub-Industry</td><td>${d.meta.sub}</td></tr>
-            <tr><td>Exchange</td><td>${d.meta.exch}</td></tr>
-          </table>
-        </div>
-
-        <!-- 5. WEEKLY HISTORY TABLE -->
+        <!-- 4. WEEKLY HISTORY TABLE -->
         <div class="card" style="padding: 0;">
           <div style="padding: 10px 12px; border-bottom: 1px solid var(--line); font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 800; text-transform: uppercase;">Weekly Stage History</div>
           <table class="wk-table">
@@ -978,6 +970,7 @@ function renderMainDashboard() {
     </div>
   `;
 
+  // Trigger Lightweight Chart sizing after DOM element injection
   requestAnimationFrame(() => {
     setTimeout(() => {
       renderLightweightChart(d.bars);
