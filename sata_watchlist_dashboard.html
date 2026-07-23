@@ -374,7 +374,7 @@ async function syncLiveTickerUniverse() {
 
   for (const build of CORS_PROXIES) {
     try {
-      const res = await fetch(build(SHEET_GVIZ_URL), { cache: "no-store" });
+      const res = await fetch(build(SHEET_GVIZ_URL), { cache: "no-store", signal: AbortSignal.timeout(3500) });
       if (!res.ok) continue;
       const text = await res.text();
       if (!text || text.trim().startsWith('<') || text.includes("ServiceLogin")) continue;
@@ -418,7 +418,8 @@ async function enrichTickerMetadata(symbol) {
       const res = await fetch(build(targetUrl), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
+        signal: AbortSignal.timeout(3500)
       });
       if (!res.ok) continue;
       const json = await res.json();
@@ -567,7 +568,7 @@ async function fetchYahooWeekly(symbol) {
   let json = null;
   for(const build of CORS_PROXIES) {
     try {
-      const res = await fetch(build(targetUrl), { cache: "no-store" });
+      const res = await fetch(build(targetUrl), { cache: "no-store", signal: AbortSignal.timeout(3500) });
       if(res.ok) { 
         json = await res.json(); 
         if (json && json.chart && json.chart.result && json.chart.result[0]) break;
@@ -873,7 +874,6 @@ function renderMainDashboard() {
   const metaStr = `${d.meta.sector || 'Equities'} &middot; ${d.meta.industry || 'General'} &middot; ${d.meta.sub || 'General'} &middot; ${d.meta.exch || 'US'}`;
 
   panel.innerHTML = `
-    <!-- MAIN GRID: LEFT COLUMN (TOP META CARD + CHARTS) vs RIGHT COLUMN (GAUGE, CHECKLIST, TILES, TABLE) -->
     <div class="sata-grid">
       
       <!-- LEFT COLUMN: NARROW TOP META CARD + FULL STRETCHING CANDLESTICK CHART & OSCILLATORS -->
@@ -970,7 +970,6 @@ function renderMainDashboard() {
     </div>
   `;
 
-  // Trigger Lightweight Chart sizing after DOM element injection
   requestAnimationFrame(() => {
     setTimeout(() => {
       renderLightweightChart(d.bars);
@@ -978,6 +977,7 @@ function renderMainDashboard() {
   });
 }
 
+/* FULL UNIVERSE PROGRESSIVE LOADER WITH TIMEOUT SAFETY */
 async function loadUniverseProgressively() {
   const statusBox = document.getElementById("statusBox");
   STATE.data = {}; STATE.selected = null;
@@ -991,6 +991,7 @@ async function loadUniverseProgressively() {
   STATE.spxBars = spxRes.bars;
 
   const topBatch = STATE.universe.slice(0, 30);
+  const remainingBatch = STATE.universe.slice(30);
   let count = 0;
 
   for(let i = 0; i < topBatch.length; i += 5) {
@@ -1007,6 +1008,32 @@ async function loadUniverseProgressively() {
     renderWatchlist();
     if(STATE.selected) renderMainDashboard();
     await new Promise(r => setTimeout(r, 60));
+  }
+
+  let sourceName = 'Leader Sheet';
+  if(STATE.activeSource === 'hot') sourceName = '🔥 3+ TV List';
+  else if(STATE.activeSource === 'sector') sourceName = 'Cap-Weighted Sectors';
+  else if(STATE.activeSource === 'ew_sector') sourceName = 'Equal-Weight Sectors';
+
+  statusBox.innerHTML = `<b>${sourceName} Active</b> · ${Object.keys(STATE.data).length} Tickers`;
+
+  /* PROCESS REMAINING TICKERS IN BACKGROUND */
+  if (remainingBatch.length > 0) {
+    setTimeout(async () => {
+      for(let i = 0; i < remainingBatch.length; i += 5) {
+        const batch = remainingBatch.slice(i, i + 5);
+        await Promise.all(batch.map(async (meta) => {
+          const res = await fetchYahooWeekly(meta.ticker);
+          if(res && res.bars && res.bars.length >= 10) {
+            STATE.data[meta.ticker] = processTickerBars(meta, res.bars, res.chartMeta);
+          }
+        }));
+        renderWatchlist();
+        if(STATE.selected) renderMainDashboard();
+        await new Promise(r => setTimeout(r, 60));
+      }
+      statusBox.innerHTML = `<b>${sourceName} Active</b> · ${Object.keys(STATE.data).length} Scored`;
+    }, 500);
   }
 }
 
@@ -1049,7 +1076,7 @@ document.getElementById("optLight").addEventListener("click", () => setTheme("li
 
 (function init() {
   let savedTheme = "dark";
-  try { savedTheme = localStorage.getItem('sata-theme') || "dark"; } catch(e) {}
+  try { savedTheme = localStorage.setItem('sata-theme') || "dark"; } catch(e) {}
   setTheme(savedTheme);
   loadUniverseProgressively();
 })();
