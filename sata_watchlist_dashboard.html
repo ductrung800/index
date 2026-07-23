@@ -200,7 +200,7 @@
     <div>
       <div class="eyebrow">Oliver Kell &middot; Stan Weinstein Technical Attributes</div>
       <h1>SATA Watchlist Dashboard</h1>
-      <div class="sub">10-Band Composite Strength Gauge &middot; Mansfield RS vs SPX &middot; Real-Time TV Profile Feed</div>
+      <div class="sub">10-Band Composite Strength Gauge &middot; Mansfield RS vs SPX &middot; Real-Time Profile Feed</div>
     </div>
     <div class="hdr-right">
       <div class="status-badge" id="statusBox">Initializing feed…</div>
@@ -245,7 +245,7 @@
     </div>
   </div>
 
-  <footer>SATA Score is an independent 10-band technical composite inspired by Stan Weinstein's Stage Analysis. Live data powered by TradingView & Yahoo Finance.</footer>
+  <footer>SATA Score is an independent 10-band technical composite inspired by Stan Weinstein's Stage Analysis. Live data powered by Yahoo Finance.</footer>
 </div>
 
 <script>
@@ -253,7 +253,6 @@
    1. CONFIG & STATE
    ============================================================ */
 const SHEET_ID = "1DcWbr8T5lTIgSrpoqVteg7ar_H466KZSvZ4p_Eksa1s";
-const DIRECT_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv`;
 const TV_STORAGE_KEY = 'tv_presets_v1';
 
 const CAP_SECTOR_ETFS = [
@@ -331,37 +330,42 @@ function getHot3PlusTickers() {
       .sort((a, b) => b[1] - a[1])
       .map(([ticker]) => ({
         ticker,
-        company: "Fetching Profile…",
-        sector: "Fetching Profile…",
-        industry: "Fetching Profile…",
-        sub: "Fetching Profile…",
+        company: "Momentum Leader",
+        sector: "Equities",
+        industry: "General",
+        sub: "General",
         exch: "US"
       }));
   } catch (e) { return []; }
 }
 
-function parseCSVGrid(text) {
-  const rows = [];
-  let row = [], field = '', inQuotes = false;
-  for(let i=0; i<text.length; i++) {
-    const ch = text[i], next = text[i+1];
-    if(inQuotes) {
-      if(ch === '"' && next === '"') { field += '"'; i++; }
-      else if(ch === '"') { inQuotes = false; }
-      else field += ch;
-    } else {
-      if(ch === '"') { inQuotes = true; }
-      else if(ch === ',') { row.push(field); field = ''; }
-      else if(ch === '\n') { row.push(field); field = ''; rows.push(row); row = []; }
-      else if(ch === '\r') { /* skip */ }
-      else field += ch;
-    }
-  }
-  if(field.length || row.length) { row.push(field); rows.push(row); }
-  return rows;
+/* ============================================================
+   JSONP FETCHERS: BYPASS CORS AND PROXY REQUIREMENT
+   ============================================================ */
+
+function fetchSheetJSONP(sheetId) {
+  return new Promise((resolve) => {
+    const cbName = 'gviz_cb_' + Math.random().toString(36).substring(2, 10);
+    const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json;responseHandler:${cbName}`;
+    
+    const script = document.createElement('script');
+    
+    const cleanup = () => {
+      if (script.parentNode) script.parentNode.removeChild(script);
+      delete window[cbName];
+    };
+
+    window[cbName] = function(data) {
+      cleanup();
+      resolve(data);
+    };
+
+    script.onerror = () => { cleanup(); resolve(null); };
+    script.src = url;
+    document.head.appendChild(script);
+  });
 }
 
-/* NATIVE JSONP FETCHING - BYPASSES ALL CORS & PROXY ISSUES COMPLETELY */
 function fetchYahooJSONP(symbol, interval = '1wk', range = '2y') {
   return new Promise((resolve) => {
     const cbName = 'yahoo_cb_' + Math.random().toString(36).substring(2, 10);
@@ -435,35 +439,33 @@ async function syncLiveTickerUniverse() {
     return EW_SECTOR_ETFS;
   }
 
-  try {
-    const res = await fetch(DIRECT_SHEET_URL, { cache: "no-store" });
-    if (res.ok) {
-      const csvText = await res.text();
-      if (csvText && !csvText.includes("ServiceLogin")) {
-        const grid = parseCSVGrid(csvText).filter(r => r.some(c => c.trim() !== ""));
-        if (grid.length >= 2) {
-          const header = grid[0].map(h => h.trim().toLowerCase().replace(/^"/, '').replace(/"$/, ''));
-          const idx = name => header.findIndex(h => h === name);
-          const cTicker = idx("ticker"), cCompany = idx("company"), cSector = idx("sector"), cIndustry = idx("industry");
-          
-          if (cTicker !== -1) {
-            const liveUniverse = grid.slice(1)
-              .filter(r => (r[cTicker] || "").trim())
-              .map(r => ({
-                ticker: (r[cTicker] || "").trim().toUpperCase().replace(/^"/, '').replace(/"$/, ''),
-                company: (r[cCompany] || "").trim().replace(/^"/, '').replace(/"$/, '') || "Leader Equities",
-                sector: (r[cSector] || "").trim().replace(/^"/, '').replace(/"$/, '') || "Equities",
-                industry: (r[cIndustry] || "").trim().replace(/^"/, '').replace(/"$/, '') || "Momentum Leaders",
-                sub: (r[cIndustry] || "").trim().replace(/^"/, '').replace(/"$/, '') || "Momentum Leaders",
-                exch: "US"
-              }));
-
-            if (liveUniverse.length > 0) return liveUniverse;
-          }
-        }
-      }
+  // Attempt to load sheet via JSONP directly (No CORS needed)
+  const gvizData = await fetchSheetJSONP(SHEET_ID);
+  
+  if (gvizData && gvizData.table && gvizData.table.rows) {
+    const cols = gvizData.table.cols.map(c => (c.label || "").toLowerCase().trim());
+    const iTick = cols.indexOf("ticker");
+    const iComp = cols.indexOf("company");
+    const iSec = cols.indexOf("sector");
+    const iInd = cols.indexOf("industry");
+    
+    if (iTick !== -1) {
+      const liveUniverse = gvizData.table.rows.map(r => {
+        const getVal = (idx) => (idx !== -1 && r.c[idx]) ? (r.c[idx].v || "") : "";
+        const tickerStr = getVal(iTick).toString().trim().toUpperCase();
+        return {
+          ticker: tickerStr,
+          company: getVal(iComp).toString().trim() || "Leader Equities",
+          sector: getVal(iSec).toString().trim() || "Equities",
+          industry: getVal(iInd).toString().trim() || "Momentum Leaders",
+          sub: getVal(iInd).toString().trim() || "Momentum Leaders",
+          exch: "US"
+        };
+      }).filter(item => item.ticker !== "");
+      
+      if (liveUniverse.length > 0) return liveUniverse;
     }
-  } catch(e) {}
+  }
 
   return FALLBACK_UNIVERSE;
 }
@@ -1154,7 +1156,7 @@ async function loadUniverseProgressively() {
     statusBox.innerHTML = `Scoring tickers… (<b>${Math.min(count, topBatch.length)}</b>/${topBatch.length})`;
     renderWatchlist();
     if(STATE.selected) renderMainDashboard();
-    await new Promise(r => setTimeout(r, 60));
+    await new Promise(r => setTimeout(r, 80));
   }
 
   let sourceName = 'Leader Sheet';
@@ -1179,7 +1181,7 @@ async function loadUniverseProgressively() {
         }));
         renderWatchlist();
         if(STATE.selected) renderMainDashboard();
-        await new Promise(r => setTimeout(r, 60));
+        await new Promise(r => setTimeout(r, 80));
       }
       statusBox.innerHTML = `<b>${sourceName} Active</b> · ${Object.keys(STATE.data).length} Scored`;
     }, 300);
