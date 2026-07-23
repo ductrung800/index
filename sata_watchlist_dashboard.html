@@ -149,7 +149,7 @@
   .chart-box-main { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; flex: 1; min-height: 0; }
   .chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--text-dim); flex-shrink: 0; }
   
-  /* SIDE-BY-SIDE DUAL TIMEFRAME COLUMNS */
+  /* DUAL TIMEFRAME COLUMNS */
   .dual-chart-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; flex: 1; min-height: 0; height: 100%; }
   .timeframe-col { display: flex; flex-direction: column; height: 100%; min-height: 0; gap: 6px; }
 
@@ -254,7 +254,6 @@
    ============================================================ */
 const SHEET_ID = "1DcWbr8T5lTIgSrpoqVteg7ar_H466KZSvZ4p_Eksa1s";
 const DIRECT_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv`;
-const GVIZ_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
 const TV_STORAGE_KEY = 'tv_presets_v1';
 
 const CAP_SECTOR_ETFS = [
@@ -315,13 +314,6 @@ let currentWeeklyChart = null;
 let currentDailyChart = null;
 let chartResizeObservers = [];
 
-const PROXY_PROVIDERS = [
-  url => url,
-  url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-  url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
-  url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`
-];
-
 function getHot3PlusTickers() {
   try {
     const raw = localStorage.getItem(TV_STORAGE_KEY);
@@ -369,20 +361,68 @@ function parseCSVGrid(text) {
   return rows;
 }
 
-async function fetchWithRetry(url, options = {}) {
-  for (const proxyBuilder of PROXY_PROVIDERS) {
-    try {
-      const target = proxyBuilder(url);
-      const res = await fetch(target, { ...options, cache: "no-store", signal: AbortSignal.timeout(3500) });
-      if (res.ok) {
-        const text = await res.text();
-        if (text && !text.includes("ServiceLogin") && !text.includes("429 Too Many Requests")) {
-          return text;
+/* NATIVE JSONP FETCHING - BYPASSES ALL CORS & PROXY ISSUES COMPLETELY */
+function fetchYahooJSONP(symbol, interval = '1wk', range = '2y') {
+  return new Promise((resolve) => {
+    const cbName = 'yahoo_cb_' + Math.random().toString(36).substring(2, 10);
+    const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=${interval}&range=${range}&corsDomain=finance.yahoo.com&callback=${cbName}`;
+    
+    const script = document.createElement('script');
+    let completed = false;
+
+    const cleanup = () => {
+      if (script.parentNode) script.parentNode.removeChild(script);
+      delete window[cbName];
+    };
+
+    const timer = setTimeout(() => {
+      if (!completed) {
+        completed = true;
+        cleanup();
+        resolve(null);
+      }
+    }, 4000);
+
+    window[cbName] = function(json) {
+      if (completed) return;
+      completed = true;
+      clearTimeout(timer);
+      cleanup();
+      
+      if (!json || !json.chart || !json.chart.result || !json.chart.result[0]) {
+        resolve(null);
+        return;
+      }
+
+      const result = json.chart.result[0];
+      const timestamps = result.timestamp || [];
+      const quote = result.indicators?.quote?.[0] || {};
+      const bars = [];
+
+      for(let i = 0; i < timestamps.length; i++) {
+        if(quote.open?.[i] != null && quote.high?.[i] != null && quote.low?.[i] != null && quote.close?.[i] != null) {
+          bars.push({
+            t: timestamps[i] * 1000,
+            o: quote.open[i], h: quote.high[i], l: quote.low[i], c: quote.close[i],
+            v: quote.volume?.[i] || 0
+          });
         }
       }
-    } catch(e) {}
-  }
-  return null;
+      resolve({ bars: bars.sort((a,b) => a.t - b.t), chartMeta: result.meta || {} });
+    };
+
+    script.onerror = () => {
+      if (!completed) {
+        completed = true;
+        clearTimeout(timer);
+        cleanup();
+        resolve(null);
+      }
+    };
+
+    script.src = targetUrl;
+    document.head.appendChild(script);
+  });
 }
 
 async function syncLiveTickerUniverse() {
@@ -395,74 +435,37 @@ async function syncLiveTickerUniverse() {
     return EW_SECTOR_ETFS;
   }
 
-  let csvText = await fetchWithRetry(DIRECT_SHEET_URL);
-  if (!csvText) csvText = await fetchWithRetry(GVIZ_SHEET_URL);
+  try {
+    const res = await fetch(DIRECT_SHEET_URL, { cache: "no-store" });
+    if (res.ok) {
+      const csvText = await res.text();
+      if (csvText && !csvText.includes("ServiceLogin")) {
+        const grid = parseCSVGrid(csvText).filter(r => r.some(c => c.trim() !== ""));
+        if (grid.length >= 2) {
+          const header = grid[0].map(h => h.trim().toLowerCase().replace(/^"/, '').replace(/"$/, ''));
+          const idx = name => header.findIndex(h => h === name);
+          const cTicker = idx("ticker"), cCompany = idx("company"), cSector = idx("sector"), cIndustry = idx("industry");
+          
+          if (cTicker !== -1) {
+            const liveUniverse = grid.slice(1)
+              .filter(r => (r[cTicker] || "").trim())
+              .map(r => ({
+                ticker: (r[cTicker] || "").trim().toUpperCase().replace(/^"/, '').replace(/"$/, ''),
+                company: (r[cCompany] || "").trim().replace(/^"/, '').replace(/"$/, '') || "Leader Equities",
+                sector: (r[cSector] || "").trim().replace(/^"/, '').replace(/"$/, '') || "Equities",
+                industry: (r[cIndustry] || "").trim().replace(/^"/, '').replace(/"$/, '') || "Momentum Leaders",
+                sub: (r[cIndustry] || "").trim().replace(/^"/, '').replace(/"$/, '') || "Momentum Leaders",
+                exch: "US"
+              }));
 
-  if (csvText) {
-    const grid = parseCSVGrid(csvText).filter(r => r.some(c => c.trim() !== ""));
-    if (grid.length >= 2) {
-      const header = grid[0].map(h => h.trim().toLowerCase().replace(/^"/, '').replace(/"$/, ''));
-      const idx = name => header.findIndex(h => h === name);
-      const cTicker = idx("ticker"), cCompany = idx("company"), cSector = idx("sector"), cIndustry = idx("industry");
-      
-      if (cTicker !== -1) {
-        const liveUniverse = grid.slice(1)
-          .filter(r => (r[cTicker] || "").trim())
-          .map(r => ({
-            ticker: (r[cTicker] || "").trim().toUpperCase().replace(/^"/, '').replace(/"$/, ''),
-            company: (r[cCompany] || "").trim().replace(/^"/, '').replace(/"$/, '') || "Leader Equities",
-            sector: (r[cSector] || "").trim().replace(/^"/, '').replace(/"$/, '') || "Equities",
-            industry: (r[cIndustry] || "").trim().replace(/^"/, '').replace(/"$/, '') || "Momentum Leaders",
-            sub: (r[cIndustry] || "").trim().replace(/^"/, '').replace(/"$/, '') || "Momentum Leaders",
-            exch: "US"
-          }));
-
-        if (liveUniverse.length > 0) return liveUniverse;
+            if (liveUniverse.length > 0) return liveUniverse;
+          }
+        }
       }
     }
-  }
+  } catch(e) {}
+
   return FALLBACK_UNIVERSE;
-}
-
-async function enrichTickerMetadata(symbol) {
-  if (!STATE.data[symbol] || STATE.data[symbol].meta.isEnriched) return;
-  const targetUrl = "https://scanner.tradingview.com/america/scan";
-  const payload = {
-    symbols: { tickers: [`AMERICA:${symbol}`, `NYSE:${symbol}`, `NASDAQ:${symbol}`, `AMEX:${symbol}`] },
-    columns: ["name", "description", "sector", "industry", "exchange"]
-  };
-
-  for (const proxyBuilder of PROXY_PROVIDERS) {
-    try {
-      const target = proxyBuilder(targetUrl);
-      const res = await fetch(target, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-        signal: AbortSignal.timeout(3500)
-      });
-      if (!res.ok) continue;
-      const json = await res.json();
-      const row = json.data?.[0]?.d;
-      if (!row) continue;
-
-      STATE.data[symbol].meta = {
-        ticker: symbol,
-        company: row[1] || symbol,
-        sector: row[2] || STATE.data[symbol].meta.sector,
-        industry: row[3] || STATE.data[symbol].meta.industry,
-        sub: row[3] || STATE.data[symbol].meta.sub,
-        exch: row[4] || STATE.data[symbol].meta.exch || "US",
-        isEnriched: true
-      };
-
-      if (STATE.selected === symbol) {
-        renderMainDashboard();
-        renderWatchlist();
-      }
-      break;
-    } catch(e) {}
-  }
 }
 
 function sma(arr, len) {
@@ -606,33 +609,6 @@ function scoreColor(score) {
   return "var(--red)";
 }
 
-async function fetchYahooSeries(symbol, interval = '1wk', range = '2y') {
-  const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=${interval}&range=${range}`;
-  const rawText = await fetchWithRetry(targetUrl);
-  if (!rawText) return null;
-
-  try {
-    const json = JSON.parse(rawText);
-    if(!json || !json.chart || !json.chart.result || !json.chart.result[0]) return null;
-    
-    const result = json.chart.result[0];
-    const timestamps = result.timestamp || [];
-    const quote = result.indicators.quote[0] || {};
-    const bars = [];
-
-    for(let i = 0; i < timestamps.length; i++) {
-      if(quote.open[i] != null && quote.high[i] != null && quote.low[i] != null && quote.close[i] != null) {
-        bars.push({
-          t: timestamps[i] * 1000,
-          o: quote.open[i], h: quote.high[i], l: quote.low[i], c: quote.close[i],
-          v: quote.volume[i] || 0
-        });
-      }
-    }
-    return { bars: bars.sort((a,b) => a.t - b.t), chartMeta: result.meta || {} };
-  } catch(e) { return null; }
-}
-
 function processTickerBars(meta, weeklyBars, chartMeta, dailyBars = []) {
   let rawExch = chartMeta.fullExchangeName || chartMeta.exchangeName || meta.exch || "US";
   if (["NYQ", "NYSE"].includes(rawExch.toUpperCase())) rawExch = "NYSE";
@@ -640,15 +616,12 @@ function processTickerBars(meta, weeklyBars, chartMeta, dailyBars = []) {
 
   const updatedMeta = { ...meta, company: chartMeta.shortName || chartMeta.longName || meta.company, exch: rawExch };
   
-  // Weekly Calculations
   const mrsWeekly = computeMansfieldRS(weeklyBars, STATE.spxWeeklyBars, 52);
   const sataResultWeekly = computeSATA(weeklyBars, mrsWeekly);
   
-  // Daily Calculations
   const mrsDaily = computeMansfieldRS(dailyBars, STATE.spxDailyBars, 200);
   const sataResultDaily = computeSATA(dailyBars, mrsDaily);
 
-  // Daily Score Trajectory History
   const dailyScores = [];
   const startDailyIdx = Math.max(0, dailyBars.length - 120);
   for(let i = startDailyIdx; i < dailyBars.length; i++) {
@@ -658,7 +631,6 @@ function processTickerBars(meta, weeklyBars, chartMeta, dailyBars = []) {
     dailyScores.push({ date: new Date(dailyBars[i].t), mrs: subMrs[subMrs.length - 1], score: r.score });
   }
 
-  // Weekly Score Trajectory History
   const weeklyRows = [];
   const histScores = [];
   const startIdx = Math.max(0, weeklyBars.length - 52);
@@ -885,7 +857,6 @@ function selectTicker(symbol) {
   STATE.selected = symbol;
   renderWatchlist();
   renderMainDashboard();
-  enrichTickerMetadata(symbol);
 }
 
 function buildMansfieldSVG(vals) {
@@ -988,7 +959,7 @@ function renderMainDashboard() {
   panel.innerHTML = `
     <div class="sata-grid">
       
-      <!-- LEFT MAIN CONTAINER: DUAL VERTICAL TIMEFRAME COLUMNS -->
+      <!-- LEFT MAIN CONTAINER -->
       <div class="chart-column">
         
         <!-- INTEGRATED TOP HEADER -->
@@ -1075,7 +1046,7 @@ function renderMainDashboard() {
         </div>
       </div>
 
-      <!-- RIGHT COLUMN: METRICS & TABLES -->
+      <!-- RIGHT COLUMN -->
       <div class="right-panel-scroll">
         
         <div class="card">
@@ -1156,8 +1127,8 @@ async function loadUniverseProgressively() {
   statusBox.innerHTML = `Fetching SPX benchmark…`;
   
   const [spxWk, spxD] = await Promise.all([
-    fetchYahooSeries("^GSPC", "1wk", "2y"),
-    fetchYahooSeries("^GSPC", "1d", "1y")
+    fetchYahooJSONP("^GSPC", "1wk", "2y"),
+    fetchYahooJSONP("^GSPC", "1d", "1y")
   ]);
   
   STATE.spxWeeklyBars = spxWk?.bars || [];
@@ -1171,8 +1142,8 @@ async function loadUniverseProgressively() {
     const batch = topBatch.slice(i, i + 3);
     await Promise.all(batch.map(async (meta) => {
       const [wkRes, dRes] = await Promise.all([
-        fetchYahooSeries(meta.ticker, "1wk", "2y"),
-        fetchYahooSeries(meta.ticker, "1d", "1y")
+        fetchYahooJSONP(meta.ticker, "1wk", "2y"),
+        fetchYahooJSONP(meta.ticker, "1d", "1y")
       ]);
       if(wkRes && wkRes.bars && wkRes.bars.length >= 10) {
         STATE.data[meta.ticker] = processTickerBars(meta, wkRes.bars, wkRes.chartMeta, dRes?.bars || []);
@@ -1183,7 +1154,7 @@ async function loadUniverseProgressively() {
     statusBox.innerHTML = `Scoring tickers… (<b>${Math.min(count, topBatch.length)}</b>/${topBatch.length})`;
     renderWatchlist();
     if(STATE.selected) renderMainDashboard();
-    await new Promise(r => setTimeout(r, 120));
+    await new Promise(r => setTimeout(r, 60));
   }
 
   let sourceName = 'Leader Sheet';
@@ -1199,8 +1170,8 @@ async function loadUniverseProgressively() {
         const batch = remainingBatch.slice(i, i + 3);
         await Promise.all(batch.map(async (meta) => {
           const [wkRes, dRes] = await Promise.all([
-            fetchYahooSeries(meta.ticker, "1wk", "2y"),
-            fetchYahooSeries(meta.ticker, "1d", "1y")
+            fetchYahooJSONP(meta.ticker, "1wk", "2y"),
+            fetchYahooJSONP(meta.ticker, "1d", "1y")
           ]);
           if(wkRes && wkRes.bars && wkRes.bars.length >= 10) {
             STATE.data[meta.ticker] = processTickerBars(meta, wkRes.bars, wkRes.chartMeta, dRes?.bars || []);
@@ -1208,10 +1179,10 @@ async function loadUniverseProgressively() {
         }));
         renderWatchlist();
         if(STATE.selected) renderMainDashboard();
-        await new Promise(r => setTimeout(r, 120));
+        await new Promise(r => setTimeout(r, 60));
       }
       statusBox.innerHTML = `<b>${sourceName} Active</b> · ${Object.keys(STATE.data).length} Scored`;
-    }, 500);
+    }, 300);
   }
 }
 
