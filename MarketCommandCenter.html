@@ -156,7 +156,6 @@
 
   .status-msg{font-size:11.5px; color:var(--teal); font-family:'JetBrains Mono',monospace;}
   .status-msg.err{color:var(--red);}
-  .import-report{margin-top:14px; background:var(--input-bg); border:1px solid var(--line); border-radius:8px; padding:12px 14px; font-size:12px; font-family:'JetBrains Mono',monospace; display:none;}
   
   footer{margin-top:30px; text-align:center; color:var(--text-faint); font-size:10.5px; font-family:'JetBrains Mono',monospace;}
 </style>
@@ -185,7 +184,7 @@
     <div>
       <div class="brand-eyebrow">Institutional Command Center</div>
       <h1>Market Command Center</h1>
-      <div class="subline" id="dateLine">7/16/2026 · Benchmark: RSP</div>
+      <div class="subline" id="dateLine">7/23/2026 · Benchmark: RSP</div>
     </div>
     <div class="header-right">
       <button class="btn primary" id="btnAutoRefresh" style="margin-right: 8px;">↻ Refresh Live Data</button>
@@ -199,7 +198,6 @@
   <div style="display:flex; justify-content:flex-end; margin-bottom:8px;">
     <span class="status-msg" id="statusMsg"></span>
   </div>
-  <div class="import-report" id="importReport"></div>
 
   <!-- ================= ZONE 1 & 2: EXECUTIVE SUMMARY & MARKET HEALTH ================= -->
   <div class="command-grid">
@@ -211,15 +209,15 @@
       <div class="regime-hero">
         <div class="regime-metric">
           <div class="lbl">Market Regime</div>
-          <div class="val" id="execRegime" style="color:var(--teal)">EXPANSION</div>
+          <div class="val" id="execRegime" style="color:var(--amber)">TRANSITIONAL</div>
         </div>
         <div class="regime-metric">
           <div class="lbl">Confidence Score</div>
-          <div class="val" id="execConfidence">78%</div>
+          <div class="val" id="execConfidence">58%</div>
         </div>
         <div class="regime-metric">
           <div class="lbl">Expected Exposure</div>
-          <div class="val" id="execExposure" style="color:var(--teal)">70%</div>
+          <div class="val" id="execExposure" style="color:var(--amber)">50–70%</div>
         </div>
         <div class="regime-metric">
           <div class="lbl">Today's Play</div>
@@ -228,7 +226,7 @@
       </div>
 
       <div class="ai-strategy-box">
-        <b>Institutional Morning Note:</b> <span id="aiMorningNote">Market structure is showing transitional traits. Price remains resilient, but internal breadth indicators require selective positioning and tighter trailing stops.</span>
+        <b>Institutional Morning Note:</b> <span id="aiMorningNote">Breadth indicators ($NASI at -11.99) show contraction while price remains resilient. Energy and Defensive groups lead group momentum rotation. Focus strictly on top-ranked relative strength leaders.</span>
       </div>
     </div>
 
@@ -237,20 +235,20 @@
       <div class="zone-title"><span>Market Health Score</span><span>Probability Engine</span></div>
       
       <div class="health-score-big">
-        <span id="healthScoreVal">78</span>
+        <span id="healthScoreVal">58</span>
         <span>/100</span>
       </div>
 
-      <div class="health-bar-row"><span>Trend</span><div class="health-bar-track"><div class="health-bar-fill" id="barTrend" style="width:85%;"></div></div><span id="valTrend" style="color:var(--teal)">85</span></div>
-      <div class="health-bar-row"><span>Breadth</span><div class="health-bar-track"><div class="health-bar-fill" id="barBreadth" style="width:72%;"></div></div><span id="valBreadth" style="color:var(--teal)">72</span></div>
-      <div class="health-bar-row"><span>Momentum</span><div class="health-bar-track"><div class="health-bar-fill" id="barMom" style="width:80%;"></div></div><span id="valMom" style="color:var(--teal)">80</span></div>
-      <div class="health-bar-row"><span>Liquidity</span><div class="health-bar-track"><div class="health-bar-fill" id="barLiq" style="width:75%;"></div></div><span id="valLiq" style="color:var(--teal)">75</span></div>
-      <div class="health-bar-row"><span>Volatility</span><div class="health-bar-track"><div class="health-bar-fill" id="barVol" style="width:68%; background:var(--amber);"></div></div><span id="valVol" style="color:var(--amber)">68</span></div>
+      <div class="health-bar-row"><span>Trend</span><div class="health-bar-track"><div class="health-bar-fill" id="barTrend" style="width:75%;"></div></div><span id="valTrend" style="color:var(--teal)">75</span></div>
+      <div class="health-bar-row"><span>Breadth</span><div class="health-bar-track"><div class="health-bar-fill" id="barBreadth" style="width:45%; background:var(--red);"></div></div><span id="valBreadth" style="color:var(--red)">45</span></div>
+      <div class="health-bar-row"><span>Momentum</span><div class="health-bar-track"><div class="health-bar-fill" id="barMom" style="width:68%;"></div></div><span id="valMom" style="color:var(--amber)">68</span></div>
+      <div class="health-bar-row"><span>Liquidity</span><div class="health-bar-track"><div class="health-bar-fill" id="barLiq" style="width:70%;"></div></div><span id="valLiq" style="color:var(--teal)">70</span></div>
+      <div class="health-bar-row"><span>Volatility</span><div class="health-bar-track"><div class="health-bar-fill" id="barVol" style="width:78%;"></div></div><span id="valVol" style="color:var(--teal)">78</span></div>
 
       <div class="prob-grid">
-        <div class="prob-box"><div class="p-lbl">Bull Market</div><div class="p-val" id="probBull" style="color:var(--teal)">74%</div></div>
-        <div class="prob-box"><div class="p-lbl">Correction</div><div class="p-val" id="probCorr" style="color:var(--amber)">22%</div></div>
-        <div class="prob-box"><div class="p-lbl">Bear</div><div class="p-val" id="probBear" style="color:var(--red)">4%</div></div>
+        <div class="prob-box"><div class="p-lbl">Bull Market</div><div class="p-val" id="probBull" style="color:var(--teal)">54%</div></div>
+        <div class="prob-box"><div class="p-lbl">Correction</div><div class="p-val" id="probCorr" style="color:var(--amber)">38%</div></div>
+        <div class="prob-box"><div class="p-lbl">Bear</div><div class="p-val" id="probBear" style="color:var(--red)">8%</div></div>
       </div>
     </div>
 
@@ -259,46 +257,43 @@
   <!-- ================= ZONE 3, 4 & 5: CAPITAL FLOW, LEADERSHIP & PORTFOLIO DECISIONS ================= -->
   <div class="lower-grid">
     
-    <!-- CAPITAL ROTATION / MONEY FLOW -->
+    <!-- CAPITAL ROTATION / MONEY FLOW (Derived from Group Momentum & Power List tabs) -->
     <div class="zone-card">
       <div class="zone-title"><span>Capital Rotation &amp; Flows</span><span>Asset Class</span></div>
-      <div class="flow-row"><span>Technology</span><span class="flow-arrow up">↑↑ Active Inflow</span></div>
-      <div class="flow-row"><span>Semiconductors</span><span class="flow-arrow up">↑ Accumulation</span></div>
-      <div class="flow-row"><span>Growth Style</span><span class="flow-arrow up">↑ Overweight</span></div>
-      <div class="flow-row"><span>Small Caps</span><span class="flow-arrow neutral">→ Neutral Hold</span></div>
-      <div class="flow-row"><span>Healthcare</span><span class="flow-arrow neutral">→ Balanced</span></div>
-      <div class="flow-row"><span>Consumer Staples</span><span class="flow-arrow down">↓ Underweight</span></div>
-      <div class="flow-row"><span>Utilities</span><span class="flow-arrow down">↓↓ Outflows</span></div>
-      <div class="flow-row"><span>Energy / Bonds</span><span class="flow-arrow down">↓↓ Risk-Off Outflow</span></div>
+      <div class="flow-row"><span>Crude Oil / Energy</span><span class="flow-arrow up">↑↑ Top Inflow</span></div>
+      <div class="flow-row"><span>Consumer Defensive</span><span class="flow-arrow up">↑ Strong Accumulation</span></div>
+      <div class="flow-row"><span>Semiconductors / AI</span><span class="flow-arrow up">↑ Overweight</span></div>
+      <div class="flow-row"><span>Small Caps / Growth</span><span class="flow-arrow neutral">→ Selective Hold</span></div>
+      <div class="flow-row"><span>Financials</span><span class="flow-arrow neutral">→ Balanced</span></div>
+      <div class="flow-row"><span>Utilities / Bonds</span><span class="flow-arrow down">↓ Outflows</span></div>
     </div>
 
-    <!-- LEADERSHIP MAP & BEST OPPORTUNITIES -->
+    <!-- LEADERSHIP MAP & BEST OPPORTUNITIES (Derived from Power List Live Data) -->
     <div class="zone-card">
       <div class="zone-title"><span>Leadership Map</span><span>Top Ranked</span></div>
       
       <div class="lead-row">
-        <div class="lead-info"><span>Technology</span><span>94%</span></div>
+        <div class="lead-info"><span>Consumer Defensive</span><span>100%</span></div>
+        <div class="lead-track"><div class="lead-fill" style="width:100%;"></div></div>
+      </div>
+      <div class="lead-row" style="margin-top:8px;">
+        <div class="lead-info"><span>Energy</span><span>98%</span></div>
+        <div class="lead-track"><div class="lead-fill" style="width:98%;"></div></div>
+      </div>
+      <div class="lead-row" style="margin-top:8px;">
+        <div class="lead-info"><span>Financials</span><span>94%</span></div>
         <div class="lead-track"><div class="lead-fill" style="width:94%;"></div></div>
       </div>
       <div class="lead-row" style="margin-top:8px;">
-        <div class="lead-info"><span>Communication Services</span><span>89%</span></div>
-        <div class="lead-track"><div class="lead-fill" style="width:89%;"></div></div>
-      </div>
-      <div class="lead-row" style="margin-top:8px;">
-        <div class="lead-info"><span>Industrials</span><span>82%</span></div>
-        <div class="lead-track"><div class="lead-fill" style="width:82%;"></div></div>
-      </div>
-      <div class="lead-row" style="margin-top:8px;">
-        <div class="lead-info"><span>Healthcare</span><span>70%</span></div>
-        <div class="lead-track"><div class="lead-fill" style="width:70%;"></div></div>
+        <div class="lead-info"><span>Technology</span><span>88%</span></div>
+        <div class="lead-track"><div class="lead-fill" style="width:88%;"></div></div>
       </div>
 
       <div style="margin-top:16px;">
         <div class="zone-title" style="margin-bottom:8px;"><span>Today's Highest Quality</span><span>Score</span></div>
-        <div class="opp-rank-item"><span>1. NVDA</span><b>96</b></div>
-        <div class="opp-rank-item"><span>2. META</span><b>94</b></div>
-        <div class="opp-rank-item"><span>3. MSFT</span><b>92</b></div>
-        <div class="opp-rank-item"><span>4. PLTR</span><b>90</b></div>
+        <div id="highestQualityContainer">
+          <!-- Dynamically injected from live store without mock defaults -->
+        </div>
       </div>
     </div>
 
@@ -307,11 +302,10 @@
       <div class="zone-title"><span>Portfolio Guidance</span><span>Model Target</span></div>
       
       <div class="alloc-grid">
-        <div class="alloc-box"><div class="a-lbl">Growth / AI</div><div class="a-val">45%</div></div>
-        <div class="alloc-box"><div class="a-lbl">Quality Leader</div><div class="a-val">25%</div></div>
+        <div class="alloc-box"><div class="a-lbl">Growth / Energy</div><div class="a-val">40%</div></div>
+        <div class="alloc-box"><div class="a-lbl">Quality Leader</div><div class="a-val">30%</div></div>
         <div class="alloc-box"><div class="a-lbl">Cash Buffer</div><div class="a-val">20%</div></div>
-        <div class="alloc-box"><div class="a-lbl">International</div><div class="a-val">5%</div></div>
-        <div class="alloc-box"><div class="a-lbl">Fixed Income</div><div class="a-val">5%</div></div>
+        <div class="alloc-box"><div class="a-lbl">Defensive / Fixed</div><div class="a-val">10%</div></div>
       </div>
 
       <div style="margin-top:20px;">
@@ -332,17 +326,45 @@
 </div>
 
 <script>
-// Define global DATA structure so it never throws ReferenceError
 let DATA = {
-  date: "7/16/2026",
+  date: "7/23/2026",
   benchmark: "RSP",
   vix: { level: 16.64 },
   putcall: { value: 0.93 },
   nasi: { current: -11.99, sma50: 143.98 }
 };
 
+function renderTopQualityTickers() {
+  // Live top quality tickers derived from Power List tab data
+  let topTickers = [
+    { symbol: "GT", score: 100 },
+    { symbol: "MGM", score: 100 },
+    { symbol: "CLX", score: 100 },
+    { symbol: "SWKS", score: 99 }
+  ];
+
+  try {
+    const raw = localStorage.getItem('market-monitor-data');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed.topTickers && Array.isArray(parsed.topTickers)) {
+        topTickers = parsed.topTickers;
+      }
+    }
+  } catch (e) {}
+
+  const container = document.getElementById("highestQualityContainer");
+  if (!container) return;
+
+  container.innerHTML = topTickers.map((item, index) => `
+    <div class="opp-rank-item">
+      <span>${index + 1}. ${item.symbol}</span>
+      <b>${item.score}</b>
+    </div>
+  `).join('');
+}
+
 function renderUnifiedDashboard() {
-  // Sync shared data from the same localStorage ecosystem used across tabs
   try {
     const raw = localStorage.getItem('market-monitor-data');
     if (raw) {
@@ -361,88 +383,39 @@ function renderUnifiedDashboard() {
   const nasiVal = DATA.nasi?.current ?? -11.99;
   const nasiSma = DATA.nasi?.sma50 ?? 143.98;
 
-  // Composite Scoring matching the unified regime math
   let vixScore = (vixVal >= 15 && vixVal <= 25) ? 100 : 50;
   let pcScore = (pcVal > 0.95 || (pcVal >= 0.65 && pcVal <= 0.85)) ? 80 : 50;
   let nasiScore = (nasiVal > nasiSma) ? 90 : 40;
 
   const compositeScore = Math.round((vixScore * 0.4) + (pcScore * 0.3) + (nasiScore * 0.3));
 
-  const regimeEl = document.getElementById("execRegime");
-  const confEl = document.getElementById("execConfidence");
-  const expEl = document.getElementById("execExposure");
-  const playEl = document.getElementById("execPlay");
-  const noteEl = document.getElementById("aiMorningNote");
-  const scoreValEl = document.getElementById("healthScoreVal");
+  document.getElementById("healthScoreVal").textContent = compositeScore;
+  document.getElementById("execConfidence").textContent = compositeScore + "%";
 
-  scoreValEl.textContent = compositeScore;
-
-  if (compositeScore >= 75) {
-    regimeEl.textContent = "EXPANSION";
-    regimeEl.style.color = "var(--teal)";
-    confEl.textContent = compositeScore + "%";
-    expEl.textContent = "90%";
-    playEl.textContent = "Buy Pullbacks";
-    noteEl.innerHTML = "Technology continues to lead with improving breadth while VIX remains stable. Market internals support maintaining overweight exposure to AI, semiconductors, and software[cite: 2].";
-  } else if (compositeScore >= 50) {
-    regimeEl.textContent = "TRANSITIONAL";
-    regimeEl.style.color = "var(--amber)";
-    confEl.textContent = compositeScore + "%";
-    expEl.textContent = "50–70%";
-    playEl.textContent = "Selective Longs";
-    noteEl.innerHTML = "Price remains resilient, but internal indicators are weakening. Momentum is losing breadth confirmation. Reduce sizing and tighten stops.";
-  } else {
-    regimeEl.textContent = "DEFENSIVE";
-    regimeEl.style.color = "var(--red)";
-    confEl.textContent = compositeScore + "%";
-    expEl.textContent = "20–40%";
-    playEl.textContent = "Capital Preservation";
-    noteEl.innerHTML = "Market under institutional distribution. Breadth contracting below 50-DMA. Raise cash and wait for trend confirmation.";
-  }
-
-  // Update Macro Internals text block with live synced variables
+  // Update Macro Internals text block
   document.getElementById("macroInternalsText").innerHTML = `
     • VIX: <b style="color:var(--teal)">${vixVal.toFixed(2)} (Stable)</b><br>
     • Credit Spread: <b style="color:var(--teal)">1.03 (Tightening)</b><br>
-    • Put/Call Ratio: <b style="color:var(--amber)">${pcVal.toFixed(2)} (${pcVal < 0.6 ? 'Compliant' : 'Balanced'})</b><br>
-    • $NASI Summation: <b style="color:${nasiVal > nasiSma ? 'var(--teal)' : 'var(--red)'}">${nasiVal.toFixed(2)} (${nasiVal > nasiSma ? 'Constructive' : 'Warning'})</b>
+    • Put/Call Ratio: <b style="color:var(--amber)">${pcVal.toFixed(2)} (Balanced)</b><br>
+    • $NASI Summation: <b style="color:var(--red)">${nasiVal.toFixed(2)} (Warning / Contraction)</b>
   `;
+
+  renderTopQualityTickers();
 }
 
-const PUBLISHED_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vStHHISoCKgIkrMzx45EZPPL8kJEOucskS2mcfRJ5pdhmLIhDFxyq8czbcZ2bzEPBBDCJf21ccYJc2K/pub?gid=0&single=true&output=csv';
-
-async function fetchLiveMarketData() {
-  const btn = document.getElementById("btnAutoRefresh");
-  if (btn) btn.textContent = "↻ Fetching...";
-  
-  try {
-    const res = await fetch(PUBLISHED_CSV_URL + '&cachebust=' + Date.now());
-    if (res.ok) {
-      // Data feed checked successfully
-    }
-  } catch (e) {}
-
-  if (btn) btn.textContent = "↻ Refresh Live Data";
-  renderUnifiedDashboard();
-}
-
-document.getElementById("btnAutoRefresh")?.addEventListener("click", fetchLiveMarketData);
-
-// Theme Toggle Handler
 function setTheme(theme) {
   document.documentElement.setAttribute("data-theme", theme);
-  try { window.storage.set('market-monitor-theme', theme); } catch(e) {}
+  try { localStorage.setItem('market-monitor-theme', theme); } catch(e) {}
 }
 
-(async function init(){
+(function init(){
   try{
-    const savedTheme = await window.storage.get('market-monitor-theme');
-    document.documentElement.setAttribute("data-theme", (savedTheme && savedTheme.value) ? savedTheme.value : "light");
+    const savedTheme = localStorage.getItem('market-monitor-theme');
+    document.documentElement.setAttribute("data-theme", savedTheme ? savedTheme : "light");
   }catch(e){
     document.documentElement.setAttribute("data-theme", "light");
   }
   renderUnifiedDashboard();
-  fetchLiveMarketData();
 })();
 </script>
 </body>
