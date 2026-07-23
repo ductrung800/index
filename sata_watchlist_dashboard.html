@@ -154,7 +154,7 @@
   .lw-chart-wrap { background: var(--chart-bg); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; height: 100%; position: relative; }
   .lw-chart-container { position: absolute; top: 0; left: 0; right: 0; bottom: 0; width: 100%; height: 100%; }
 
-  /* DUAL OSCILLATOR GRID (WEEKLY vs DAILY ALIGNED) */
+  /* DUAL OSCILLATOR GRID */
   .osc-grid-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px; }
   .chart-svg-wrap { background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; padding: 8px; overflow: hidden; height: 140px; flex-shrink: 0; }
   .chart-svg-wrap svg { width: 100%; height: 100%; display: block; }
@@ -252,7 +252,9 @@
    1. CONFIG & STATE
    ============================================================ */
 const SHEET_ID = "1DcWbr8T5lTIgSrpoqVteg7ar_H466KZSvZ4p_Eksa1s";
-const SHEET_GVIZ_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
+// DIRECT SHEET CSV EXPORT ENDPOINT (NO CORS PROXY NEEDED)
+const DIRECT_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv`;
+const GVIZ_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
 const TV_STORAGE_KEY = 'tv_presets_v1';
 
 const CAP_SECTOR_ETFS = [
@@ -313,9 +315,11 @@ let currentWeeklyChart = null;
 let currentDailyChart = null;
 let chartResizeObservers = [];
 
-const CORS_PROXIES = [
-  url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
+/* EXPANDED PROXY ROTATION & DIRECT ATTEMPTS */
+const PROXY_PROVIDERS = [
+  url => url, // Direct call first
   url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+  url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
   url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`
 ];
 
@@ -366,6 +370,22 @@ function parseCSVGrid(text) {
   return rows;
 }
 
+async function fetchWithRetry(url, options = {}) {
+  for (const proxyBuilder of PROXY_PROVIDERS) {
+    try {
+      const target = proxyBuilder(url);
+      const res = await fetch(target, { ...options, cache: "no-store", signal: AbortSignal.timeout(3500) });
+      if (res.ok) {
+        const text = await res.text();
+        if (text && !text.includes("ServiceLogin") && !text.includes("429 Too Many Requests")) {
+          return text;
+        }
+      }
+    } catch(e) {}
+  }
+  return null;
+}
+
 async function syncLiveTickerUniverse() {
   if (STATE.activeSource === "hot") {
     const hotList = getHot3PlusTickers();
@@ -376,35 +396,32 @@ async function syncLiveTickerUniverse() {
     return EW_SECTOR_ETFS;
   }
 
-  for (const build of CORS_PROXIES) {
-    try {
-      const res = await fetch(build(SHEET_GVIZ_URL), { cache: "no-store", signal: AbortSignal.timeout(3500) });
-      if (!res.ok) continue;
-      const text = await res.text();
-      if (!text || text.trim().startsWith('<') || text.includes("ServiceLogin")) continue;
-      
-      const grid = parseCSVGrid(text).filter(r => r.some(c => c.trim() !== ""));
-      if (grid.length < 2) continue;
-      
+  // 1. Try Direct CSV Export first
+  let csvText = await fetchWithRetry(DIRECT_SHEET_URL);
+  if (!csvText) csvText = await fetchWithRetry(GVIZ_SHEET_URL);
+
+  if (csvText) {
+    const grid = parseCSVGrid(csvText).filter(r => r.some(c => c.trim() !== ""));
+    if (grid.length >= 2) {
       const header = grid[0].map(h => h.trim().toLowerCase().replace(/^"/, '').replace(/"$/, ''));
       const idx = name => header.findIndex(h => h === name);
       const cTicker = idx("ticker"), cCompany = idx("company"), cSector = idx("sector"), cIndustry = idx("industry");
       
-      if (cTicker === -1) continue;
+      if (cTicker !== -1) {
+        const liveUniverse = grid.slice(1)
+          .filter(r => (r[cTicker] || "").trim())
+          .map(r => ({
+            ticker: (r[cTicker] || "").trim().toUpperCase().replace(/^"/, '').replace(/"$/, ''),
+            company: (r[cCompany] || "").trim().replace(/^"/, '').replace(/"$/, '') || "Leader Equities",
+            sector: (r[cSector] || "").trim().replace(/^"/, '').replace(/"$/, '') || "Equities",
+            industry: (r[cIndustry] || "").trim().replace(/^"/, '').replace(/"$/, '') || "Momentum Leaders",
+            sub: (r[cIndustry] || "").trim().replace(/^"/, '').replace(/"$/, '') || "Momentum Leaders",
+            exch: "US"
+          }));
 
-      const liveUniverse = grid.slice(1)
-        .filter(r => (r[cTicker] || "").trim())
-        .map(r => ({
-          ticker: (r[cTicker] || "").trim().toUpperCase().replace(/^"/, '').replace(/"$/, ''),
-          company: (r[cCompany] || "").trim().replace(/^"/, '').replace(/"$/, '') || "Leader Equities",
-          sector: (r[cSector] || "").trim().replace(/^"/, '').replace(/"$/, '') || "Equities",
-          industry: (r[cIndustry] || "").trim().replace(/^"/, '').replace(/"$/, '') || "Momentum Leaders",
-          sub: (r[cIndustry] || "").trim().replace(/^"/, '').replace(/"$/, '') || "Momentum Leaders",
-          exch: "US"
-        }));
-
-      if (liveUniverse.length > 0) return liveUniverse;
-    } catch(e) {}
+        if (liveUniverse.length > 0) return liveUniverse;
+      }
+    }
   }
   return FALLBACK_UNIVERSE;
 }
@@ -417,9 +434,10 @@ async function enrichTickerMetadata(symbol) {
     columns: ["name", "description", "sector", "industry", "exchange"]
   };
 
-  for (const build of CORS_PROXIES) {
+  for (const proxyBuilder of PROXY_PROVIDERS) {
     try {
-      const res = await fetch(build(targetUrl), {
+      const target = proxyBuilder(targetUrl);
+      const res = await fetch(target, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -501,7 +519,6 @@ function calculateDonchian(data, period) {
   return { highs, lows };
 }
 
-/* MANSFIELD RS CALCULATION (SUPPORTING WEEKLY PERIOD 52 OR DAILY PERIOD 200) */
 function computeMansfieldRS(stockBars, spxBars, maPeriod = 52) {
   if(!spxBars || spxBars.length < 2 || !stockBars || stockBars.length < 2) return stockBars ? stockBars.map(() => 0) : [];
   const spxSorted = spxBars.slice().sort((a,b) => a.t - b.t);
@@ -593,33 +610,29 @@ function scoreColor(score) {
 
 async function fetchYahooSeries(symbol, interval = '1wk', range = '2y') {
   const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=${interval}&range=${range}`;
-  let json = null;
-  for(const build of CORS_PROXIES) {
-    try {
-      const res = await fetch(build(targetUrl), { cache: "no-store", signal: AbortSignal.timeout(3500) });
-      if(res.ok) { 
-        json = await res.json(); 
-        if (json && json.chart && json.chart.result && json.chart.result[0]) break;
-      }
-    } catch(e) {}
-  }
-  if(!json || !json.chart || !json.chart.result || !json.chart.result[0]) return null;
-  
-  const result = json.chart.result[0];
-  const timestamps = result.timestamp || [];
-  const quote = result.indicators.quote[0] || {};
-  const bars = [];
+  const rawText = await fetchWithRetry(targetUrl);
+  if (!rawText) return null;
 
-  for(let i = 0; i < timestamps.length; i++) {
-    if(quote.open[i] != null && quote.high[i] != null && quote.low[i] != null && quote.close[i] != null) {
-      bars.push({
-        t: timestamps[i] * 1000,
-        o: quote.open[i], h: quote.high[i], l: quote.low[i], c: quote.close[i],
-        v: quote.volume[i] || 0
-      });
+  try {
+    const json = JSON.parse(rawText);
+    if(!json || !json.chart || !json.chart.result || !json.chart.result[0]) return null;
+    
+    const result = json.chart.result[0];
+    const timestamps = result.timestamp || [];
+    const quote = result.indicators.quote[0] || {};
+    const bars = [];
+
+    for(let i = 0; i < timestamps.length; i++) {
+      if(quote.open[i] != null && quote.high[i] != null && quote.low[i] != null && quote.close[i] != null) {
+        bars.push({
+          t: timestamps[i] * 1000,
+          o: quote.open[i], h: quote.high[i], l: quote.low[i], c: quote.close[i],
+          v: quote.volume[i] || 0
+        });
+      }
     }
-  }
-  return { bars: bars.sort((a,b) => a.t - b.t), chartMeta: result.meta || {} };
+    return { bars: bars.sort((a,b) => a.t - b.t), chartMeta: result.meta || {} };
+  } catch(e) { return null; }
 }
 
 function processTickerBars(meta, weeklyBars, chartMeta, dailyBars = []) {
@@ -702,7 +715,6 @@ function calculateRSTiles(targetMeta) {
   };
 }
 
-/* RENDER WEEKLY CHART (30w EMA CLOUD + HLC BARS) */
 function renderWeeklyChart(container, bars) {
   if (!container || !bars || bars.length === 0) return null;
 
@@ -765,7 +777,6 @@ function renderWeeklyChart(container, bars) {
   return chart;
 }
 
-/* RENDER DAILY CHART (21 EMA CLOUD + DONCHIAN CHANNEL + MONOCHROME HLC BARS) */
 function renderDailyChart(container, bars) {
   if (!container || !bars || bars.length === 0) return null;
 
@@ -970,7 +981,6 @@ function renderMainDashboard() {
 
   const metaStr = `${d.meta.sector || 'Equities'} &middot; ${d.meta.industry || 'General'} &middot; ${d.meta.sub || 'General'} &middot; ${d.meta.exch || 'US'}`;
 
-  // Extract Weekly & Daily Data Arrays for Oscillators
   const weeklyMrsSeries = (d.weeklyRows || []).slice().reverse().map(r => r.mrs);
   const weeklyScoreSeries = (d.weeklyRows || []).slice().reverse().map(r => r.score);
   
@@ -980,10 +990,9 @@ function renderMainDashboard() {
   panel.innerHTML = `
     <div class="sata-grid">
       
-      <!-- LEFT COLUMN: INTEGRATED TOP HEADER + DUAL SIDE-BY-SIDE CHARTS + DUAL OSCILLATOR GRID -->
+      <!-- LEFT COLUMN -->
       <div class="chart-column">
         
-        <!-- INTEGRATED TOP HEADER WITH SIDE-BY-SIDE RS TILES -->
         <div class="card top-meta-card">
           <div>
             <div class="tk-big">${d.meta.ticker} <span style="font-size:15px; color:var(--text-dim); font-weight:500;">&middot; ${d.meta.company}</span></div>
@@ -1016,7 +1025,6 @@ function renderMainDashboard() {
 
         <div class="chart-box-main">
           
-          <!-- DUAL PRICE CHART ROW -->
           <div class="dual-chart-row">
             <div class="lw-chart-wrap">
               <div class="chart-header" style="position:absolute; top:8px; left:12px; right:12px; z-index:2; margin:0; pointer-events:none;">
@@ -1033,7 +1041,6 @@ function renderMainDashboard() {
             </div>
           </div>
 
-          <!-- MANSFIELD RS DUAL ROW (WEEKLY vs DAILY) -->
           <div class="osc-grid-row">
             <div>
               <div class="chart-header">
@@ -1051,7 +1058,6 @@ function renderMainDashboard() {
             </div>
           </div>
 
-          <!-- SATA TRAJECTORY DUAL ROW (WEEKLY vs DAILY) -->
           <div class="osc-grid-row">
             <div>
               <div class="chart-header">
@@ -1072,7 +1078,7 @@ function renderMainDashboard() {
         </div>
       </div>
 
-      <!-- RIGHT COLUMN: METRICS & TABLES -->
+      <!-- RIGHT COLUMN -->
       <div class="right-panel-scroll">
         
         <div class="card">
@@ -1164,8 +1170,8 @@ async function loadUniverseProgressively() {
   const remainingBatch = STATE.universe.slice(30);
   let count = 0;
 
-  for(let i = 0; i < topBatch.length; i += 5) {
-    const batch = topBatch.slice(i, i + 5);
+  for(let i = 0; i < topBatch.length; i += 3) {
+    const batch = topBatch.slice(i, i + 3);
     await Promise.all(batch.map(async (meta) => {
       const [wkRes, dRes] = await Promise.all([
         fetchYahooSeries(meta.ticker, "1wk", "2y"),
@@ -1180,7 +1186,7 @@ async function loadUniverseProgressively() {
     statusBox.innerHTML = `Scoring tickers… (<b>${Math.min(count, topBatch.length)}</b>/${topBatch.length})`;
     renderWatchlist();
     if(STATE.selected) renderMainDashboard();
-    await new Promise(r => setTimeout(r, 60));
+    await new Promise(r => setTimeout(r, 120));
   }
 
   let sourceName = 'Leader Sheet';
@@ -1192,8 +1198,8 @@ async function loadUniverseProgressively() {
 
   if (remainingBatch.length > 0) {
     setTimeout(async () => {
-      for(let i = 0; i < remainingBatch.length; i += 5) {
-        const batch = remainingBatch.slice(i, i + 5);
+      for(let i = 0; i < remainingBatch.length; i += 3) {
+        const batch = remainingBatch.slice(i, i + 3);
         await Promise.all(batch.map(async (meta) => {
           const [wkRes, dRes] = await Promise.all([
             fetchYahooSeries(meta.ticker, "1wk", "2y"),
@@ -1205,7 +1211,7 @@ async function loadUniverseProgressively() {
         }));
         renderWatchlist();
         if(STATE.selected) renderMainDashboard();
-        await new Promise(r => setTimeout(r, 60));
+        await new Promise(r => setTimeout(r, 120));
       }
       statusBox.innerHTML = `<b>${sourceName} Active</b> · ${Object.keys(STATE.data).length} Scored`;
     }, 500);
