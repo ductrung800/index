@@ -3,7 +3,7 @@
 <head>
 <link rel="icon" href="data:,">
 <meta charset="UTF-8">
-<title>Market Command Center &amp; Regime Engine</title>
+<title>Market Command Center</title>
 <!-- Lightweight Charts Standalone Library for Interactive Ticker Cards -->
 <script src="https://unpkg.com/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
 <style>
@@ -54,7 +54,7 @@
     padding:22px 26px 60px;
     transition:background .2s ease, color .2s ease;
   }
-  /*.wrap{max-width:1680px; margin:0 auto;}
+  /*.wrap{max-width:1720px; margin:0 auto;}
 
   /* NAVIGATION TABS */
   .app-tabs { display: flex; gap: 4px; margin-bottom: 22px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
@@ -86,6 +86,63 @@
   .btn:hover{border-color:var(--teal); color:var(--teal);}
   .btn.primary{background:var(--teal); color:#04150f; border-color:var(--teal);}
 
+  /* MASTER BRIEFING BANNER (RESTORED OLD MARKET REGIME DESIGN) */
+  .master-briefing{
+    background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:22px 24px; margin-bottom:24px;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.25);
+  }
+  .briefing-header{display:flex; justify-content:space-between; align-items:center; gap:20px; margin-bottom:18px;}
+  .briefing-title-area{display:flex; align-items:center; gap:14px;}
+  .regime-dot-large{width:22px; height:22px; border-radius:50%; background:var(--red); box-shadow:0 0 10px rgba(255,92,114,0.5); flex-shrink:0;}
+  .briefing-eyebrow{font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.15em; color:var(--text-faint); text-transform:uppercase;}
+  .briefing-main-title{font-size:22px; font-weight:800; font-family:'JetBrains Mono',monospace; margin-top:2px; letter-spacing:-0.01em;}
+  
+  .score-card{background:var(--panel2); border:1px solid var(--line); border-radius:10px; padding:10px 16px; text-align:right; min-width:210px;}
+  .score-card-top{display:flex; justify-content:space-between; align-items:center; gap:12px;}
+  .score-label{font-size:9.5px; text-transform:uppercase; color:var(--text-faint); font-family:'JetBrains Mono',monospace;}
+  .score-stars{font-size:13px; color:var(--amber); letter-spacing:2px;}
+  .score-value-row{font-family:'JetBrains Mono',monospace; font-size:20px; font-weight:800; margin-top:2px;}
+  .score-bar{height:5px; background:var(--line); border-radius:3px; margin-top:4px; overflow:hidden; display:flex;}
+  .score-bar-fill{height:100%; background:var(--red); border-radius:3px; transition:width 0.4s ease;}
+
+  /* 5-COLUMN HORIZONTAL ENGINE CARDS */
+  .engines-grid{display:grid; grid-template-columns:repeat(5, 1fr); gap:12px; margin-bottom:18px;}
+  @media(max-width:1300px){ .engines-grid{grid-template-columns:repeat(3, 1fr);} }
+  @media(max-width:850px){ .engines-grid{grid-template-columns:1fr;} }
+
+  .engine-box{
+    background:var(--panel2); border:1px solid var(--line); border-radius:10px; padding:12px 14px;
+    display:flex; flex-direction:column; justify-content:space-between; min-height:165px;
+  }
+  .engine-box-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;}
+  .engine-name{font-size:11px; font-weight:800; text-transform:uppercase; font-family:'JetBrains Mono',monospace; color:var(--text);}
+  .engine-status-dot{width:12px; height:12px; border-radius:50%; display:inline-block;}
+  .engine-status{font-size:11px; font-weight:700; margin-bottom:8px; font-family:'JetBrains Mono',monospace;}
+  .engine-bullets{font-size:11px; color:var(--text-dim); line-height:1.45; padding-left:12px; margin-bottom:10px; font-family:'Inter',sans-serif;}
+  .engine-bullets li{margin-bottom:2px;}
+  .engine-conclusion{font-size:10.5px; font-style:italic; color:var(--text); line-height:1.3; font-family:'Inter',sans-serif;}
+
+  /* FOOTER CONCLUSION & POSTURE */
+  .briefing-footer{display:grid; grid-template-columns: 1fr 1fr; gap:20px; padding-top:4px;}
+  @media(max-width:900px){ .briefing-footer{grid-template-columns:1fr;} }
+  .conclusion-section h4{font-size:11px; text-transform:uppercase; letter-spacing:.05em; font-family:'JetBrains Mono',monospace; color:var(--teal); margin-bottom:6px;}
+  .conclusion-bullets{font-size:11.5px; color:var(--text-dim); line-height:1.5; padding-left:14px; font-family:'Inter',sans-serif;}
+  .conclusion-bullets li{margin-bottom:3px;}
+  .posture-section h4{font-size:11px; text-transform:uppercase; letter-spacing:.05em; font-family:'JetBrains Mono',monospace; color:var(--amber); margin-bottom:6px;}
+  .posture-bullets{font-size:11.5px; color:var(--text-dim); line-height:1.5; padding-left:14px; font-family:'Inter',sans-serif;}
+  .posture-bullets li{margin-bottom:3px;}
+
+  /* RISK SUMMARY BAR */
+  .risk-summary-bar{
+    display:grid; grid-template-columns: repeat(5, 1fr) 1.2fr 1.2fr; gap:12px;
+    background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:14px 18px; margin-bottom:24px; align-items:center;
+  }
+  @media(max-width:1200px){ .risk-summary-bar{grid-template-columns:repeat(2, 1fr);} }
+  .risk-metric .r-label{font-size:9.5px; text-transform:uppercase; color:var(--text-faint); font-family:'JetBrains Mono',monospace;}
+  .risk-metric .r-val{font-size:13px; font-weight:700; font-family:'JetBrains Mono',monospace; margin-top:2px;}
+  .risk-highlight{background:var(--panel2); border:1px solid var(--line); border-radius:8px; padding:8px 12px;}
+
+  /* CARDS & GRIDS */
   .zone-card{
     background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:20px 22px; margin-bottom:24px;
   }
@@ -95,60 +152,19 @@
     display:flex; justify-content:space-between; align-items:center;
   }
 
-  /* MASTER BRIEFING BANNER */
-  .master-briefing{
-    background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:24px; margin-bottom:24px;
-    box-shadow: 0 12px 32px rgba(0,0,0,0.3);
-  }
-  .briefing-header{display:flex; justify-content:space-between; align-items:flex-start; gap:20px; border-bottom:1px solid var(--line); padding-bottom:18px; margin-bottom:20px; flex-wrap:wrap;}
-  .briefing-title-area{display:flex; align-items:center; gap:14px;}
-  .briefing-icon{font-size:36px; line-height:1;}
-  .briefing-eyebrow{font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.15em; color:var(--text-faint); text-transform:uppercase;}
-  .briefing-main-title{font-size:22px; font-weight:800; font-family:'JetBrains Mono',monospace; margin-top:2px;}
-  
-  .score-card{background:var(--panel2); border:1px solid var(--line); border-radius:10px; padding:12px 18px; text-align:right; min-width:210px;}
-  .score-card-top{display:flex; justify-content:space-between; align-items:center; gap:12px;}
-  .score-label{font-size:10px; text-transform:uppercase; color:var(--text-faint); font-family:'JetBrains Mono',monospace;}
-  .score-stars{font-size:14px; color:var(--amber); letter-spacing:2px;}
-  .score-value-row{font-family:'JetBrains Mono',monospace; font-size:22px; font-weight:800; margin-top:4px;}
-  .score-bar{height:6px; background:var(--line); border-radius:3px; margin-top:6px; overflow:hidden; display:flex;}
-  .score-bar-fill{height:100%; background:var(--teal); border-radius:3px; transition:width 0.4s ease;}
-
-  .engines-grid{display:grid; grid-template-columns:repeat(5, 1fr); gap:14px; margin-bottom:20px;}
-  @media(max-width:1300px){ .engines-grid{grid-template-columns:repeat(3, 1fr);} }
-  @media(max-width:850px){ .engines-grid{grid-template-columns:1fr;} }
-
-  .engine-box{background:var(--panel2); border:1px solid var(--line); border-radius:10px; padding:14px; display:flex; flex-direction:column; justify-content:space-between;}
-  .engine-box-head{display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;}
-  .engine-name{font-size:11.5px; font-weight:700; text-transform:uppercase; font-family:'JetBrains Mono',monospace; color:var(--text);}
-  .engine-badge{font-size:14px;}
-  .engine-status{font-size:11.5px; font-weight:700; margin-bottom:8px; font-family:'JetBrains Mono',monospace;}
-  .engine-bullets{font-size:11px; color:var(--text-dim); line-height:1.4; padding-left:12px; margin-bottom:10px;}
-  .engine-bullets li{margin-bottom:3px;}
-  .engine-conclusion{font-size:11px; font-style:italic; color:var(--text); background:rgba(255,255,255,0.02); border-left:2px solid var(--teal); padding:6px 8px; border-radius:0 4px 4px 0;}
-
-  .briefing-footer{display:grid; grid-template-columns: 1.4fr 1fr; gap:18px; background:var(--panel2); border:1px solid var(--line); border-radius:10px; padding:16px 20px;}
-  @media(max-width:900px){ .briefing-footer{grid-template-columns:1fr;} }
-  .conclusion-section h4{font-size:12px; text-transform:uppercase; letter-spacing:.05em; font-family:'JetBrains Mono',monospace; color:var(--teal); margin-bottom:8px;}
-  .conclusion-bullets{font-size:11.5px; color:var(--text); line-height:1.5; padding-left:14px;}
-  .conclusion-bullets li{margin-bottom:4px;}
-  .posture-section h4{font-size:12px; text-transform:uppercase; letter-spacing:.05em; font-family:'JetBrains Mono',monospace; color:var(--amber); margin-bottom:8px;}
-  .posture-bullets{font-size:11.5px; color:var(--text-dim); line-height:1.5; padding-left:14px;}
-  .posture-bullets li{margin-bottom:4px;}
-
-  /* RISK SUMMARY BAR */
-  .risk-summary-bar{
-    display:grid; grid-template-columns: repeat(5, 1fr) 1.2fr 1.2fr; gap:12px;
-    background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:16px 20px; margin-bottom:24px; align-items:center;
-  }
-  @media(max-width:1200px){ .risk-summary-bar{grid-template-columns:repeat(2, 1fr);} }
-  .risk-metric .r-label{font-size:9.5px; text-transform:uppercase; color:var(--text-faint); font-family:'JetBrains Mono',monospace;}
-  .risk-metric .r-val{font-size:13px; font-weight:700; font-family:'JetBrains Mono',monospace; margin-top:2px;}
-  .risk-highlight{background:var(--panel2); border:1px solid var(--line); border-radius:8px; padding:10px 14px;}
-
-  /* GRID LAYOUTS */
   .command-grid{ display:grid; grid-template-columns: 2.2fr 1fr; gap:20px; margin-bottom:24px; }
   @media(max-width:1200px){ .command-grid{grid-template-columns:1fr;} }
+
+  .regime-hero{ display:grid; grid-template-columns: repeat(4, 1fr); gap:12px; margin-bottom:16px; }
+  .regime-metric{ background:var(--panel2); border:1px solid var(--line); border-radius:8px; padding:12px 14px; }
+  .regime-metric .lbl{font-size:10px; color:var(--text-faint); text-transform:uppercase; font-family:'JetBrains Mono',monospace;}
+  .regime-metric .val{font-size:18px; font-weight:800; font-family:'JetBrains Mono',monospace; margin-top:4px;}
+  
+  .ai-strategy-box{
+    background:rgba(32,217,184,.05); border:1px solid rgba(32,217,184,.25); border-radius:8px;
+    padding:14px 16px; font-size:12.5px; line-height:1.6; color:var(--text); font-family:'Inter',sans-serif;
+  }
+  .ai-strategy-box b{color:var(--teal);}
 
   .health-score-big{ display:flex; align-items:baseline; gap:8px; font-family:'JetBrains Mono',monospace; margin-bottom:14px; }
   .health-score-big span:first-child{font-size:36px; font-weight:800; color:var(--teal);}
@@ -266,52 +282,126 @@
     <span class="status-msg" id="statusMsg">Initializing unified feed...</span>
   </div>
 
-  <!-- ================= ZONE 1: MASTER BRIEFING BANNER ================= -->
+  <!-- ================= ZONE 1: MASTER BRIEFING BANNER (OLD MARKET REGIME STYLE) ================= -->
   <div class="master-briefing" id="masterBriefingContainer">
     <div class="briefing-header">
       <div class="briefing-title-area">
-        <div class="briefing-icon" id="briefingIcon">🟢</div>
+        <div class="regime-dot-large" id="briefingDot"></div>
         <div>
           <div class="briefing-eyebrow">Master Market Regime Assessment</div>
-          <div class="briefing-main-title" id="briefingMainTitle">EVALUATING REGIME...</div>
+          <div class="briefing-main-title" id="briefingMainTitle">DEFENSIVE MARKET REGIME</div>
         </div>
       </div>
       
       <div class="score-card">
         <div class="score-card-top">
           <span class="score-label">Composite Score</span>
-          <span class="score-stars" id="briefingStars">★★★☆☆</span>
+          <span class="score-stars" id="briefingStars">★☆☆☆☆</span>
         </div>
-        <div class="score-value-row"><span id="briefingScoreNum">--</span><span style="font-size:14px; color:var(--text-faint)"> /100</span></div>
-        <div class="score-bar"><div class="score-bar-fill" id="briefingScoreFill" style="width: 50%;"></div></div>
+        <div class="score-value-row"><span id="briefingScoreNum">40</span><span style="font-size:13px; color:var(--text-faint)"> /100</span></div>
+        <div class="score-bar"><div class="score-bar-fill" id="briefingScoreFill" style="width: 40%;"></div></div>
       </div>
     </div>
 
-    <!-- 5 Independent Engines Breakdown Grid -->
-    <div class="engines-grid" id="enginesGridContainer"></div>
+    <!-- 5 HORIZONTAL ENGINE CARDS -->
+    <div class="engines-grid" id="enginesGridContainer">
+      <div class="engine-box">
+        <div>
+          <div class="engine-box-head"><span class="engine-name">Volatility Mood</span><span class="engine-status-dot" style="background:var(--teal)"></span></div>
+          <div class="engine-status" style="color:var(--teal)">Risk Appetite Improving</div>
+          <ul class="engine-bullets">
+            <li>VVIX/VIX ratio: <b>5.742</b></li>
+            <li>21-day MA: <b>5.444</b></li>
+            <li>Institutions unhedged</li>
+          </ul>
+        </div>
+        <div class="engine-conclusion">Options market supporting higher equity prices.</div>
+      </div>
 
-    <!-- Conclusion & Posture -->
+      <div class="engine-box">
+        <div>
+          <div class="engine-box-head"><span class="engine-name">QQQ Trend</span><span class="engine-status-dot" style="background:var(--red)"></span></div>
+          <div class="engine-status" style="color:var(--red)">Bear Cycle Broken</div>
+          <ul class="engine-bullets">
+            <li>QQQ: <b>705.35</b></li>
+            <li>21 EMA: <b>712.82</b></li>
+            <li>Candle test: <b>Below EMA</b></li>
+          </ul>
+        </div>
+        <div class="engine-conclusion">Tech leadership state under pressure.</div>
+      </div>
+
+      <div class="engine-box">
+        <div>
+          <div class="engine-box-head"><span class="engine-name">SPY Trend</span><span class="engine-status-dot" style="background:var(--amber)"></span></div>
+          <div class="engine-status" style="color:var(--amber)">SPY Consolidating</div>
+          <ul class="engine-bullets">
+            <li>SPY: <b>747.41</b></li>
+            <li>21 EMA: <b>746.47</b></li>
+            <li>Trend slope: <b>-0.08</b></li>
+          </ul>
+        </div>
+        <div class="engine-conclusion">Buying pressure is broad and active.</div>
+      </div>
+
+      <div class="engine-box">
+        <div>
+          <div class="engine-box-head"><span class="engine-name">Put / Call Ratio</span><span class="engine-status-dot" style="background:var(--teal)"></span></div>
+          <div class="engine-status" style="color:var(--teal)">Neutral to Bullish</div>
+          <ul class="engine-bullets">
+            <li>Current PCR: <b>0.93</b></li>
+            <li>Hedging pressure: <b>Normal</b></li>
+            <li>No panic / greed extremes</li>
+          </ul>
+        </div>
+        <div class="engine-conclusion">Sentiment supports trend continuation.</div>
+      </div>
+
+      <div class="engine-box">
+        <div>
+          <div class="engine-box-head"><span class="engine-name">$NASI Breadth</span><span class="engine-status-dot" style="background:var(--red)"></span></div>
+          <div class="engine-status" style="color:var(--red)">Breadth Contracting</div>
+          <ul class="engine-bullets">
+            <li>$NASI: <b>-11.99</b></li>
+            <li>50-DMA: <b>143.98</b></li>
+            <li>Participation: <b>Narrow</b></li>
+          </ul>
+        </div>
+        <div class="engine-conclusion">Breadth contracting below 50-DMA.</div>
+      </div>
+    </div>
+
+    <!-- CONCLUSION & POSTURE FOOTER -->
     <div class="briefing-footer">
       <div class="conclusion-section">
         <h4>Final Conclusion</h4>
-        <ul class="conclusion-bullets" id="briefingFinalConclusionList"></ul>
+        <ul class="conclusion-bullets" id="briefingFinalConclusionList">
+          <li>The market is currently under institutional distribution.</li>
+          <li>Fear alone (Put/Call) is insufficient to buy without price confirmation.</li>
+          <li>Capital preservation takes top priority.</li>
+        </ul>
       </div>
       <div class="posture-section">
         <h4>Recommended Posture</h4>
-        <ul class="posture-bullets" id="briefingPostureList"></ul>
+        <ul class="posture-bullets" id="briefingPostureList">
+          <li>Raise cash levels significantly</li>
+          <li>Avoid aggressive long entries</li>
+          <li>Hold only exceptional market leaders</li>
+          <li>Wait for breadth and trend confirmation before re-deploying.</li>
+        </ul>
       </div>
     </div>
   </div>
 
   <!-- ================= ZONE 2: RISK SUMMARY BAR ================= -->
   <div class="risk-summary-bar">
-    <div class="risk-metric"><div class="r-label">Volatility</div><div class="r-val" id="rmVolatility">--</div></div>
-    <div class="risk-metric"><div class="r-label">Trend</div><div class="r-val" id="rmTrend">--</div></div>
-    <div class="risk-metric"><div class="r-label">Breadth</div><div class="r-val" id="rmBreadth">--</div></div>
-    <div class="risk-metric"><div class="r-label">Sentiment</div><div class="r-val" id="rmSentiment">--</div></div>
-    <div class="risk-metric"><div class="r-label">Risk Appetite</div><div class="r-val" id="rmAppetite">--</div></div>
-    <div class="risk-metric risk-highlight"><div class="r-label">Market Risk Level</div><div class="r-val" id="rmRiskLevel">--</div></div>
-    <div class="risk-metric risk-highlight"><div class="r-label">Recommended Exposure</div><div class="r-val" id="rmExposure">--</div></div>
+    <div class="risk-metric"><div class="r-label">Volatility</div><div class="r-val" id="rmVolatility" style="color:var(--teal)">LOW</div></div>
+    <div class="risk-metric"><div class="r-label">Trend</div><div class="r-val" id="rmTrend" style="color:var(--amber)">MIXED</div></div>
+    <div class="risk-metric"><div class="r-label">Breadth</div><div class="r-val" id="rmBreadth" style="color:var(--red)">WEAK</div></div>
+    <div class="risk-metric"><div class="r-label">Sentiment</div><div class="r-val" id="rmSentiment" style="color:var(--teal)">FEAR</div></div>
+    <div class="risk-metric"><div class="r-label">Risk Appetite</div><div class="r-val" id="rmAppetite" style="color:var(--amber)">MODERATE</div></div>
+    <div class="risk-metric risk-highlight"><div class="r-label">Market Risk Level</div><div class="r-val" id="rmRiskLevel" style="color:var(--amber)">MODERATE</div></div>
+    <div class="risk-metric risk-highlight"><div class="r-label">Recommended Exposure</div><div class="r-val" id="rmExposure" style="color:var(--amber)">50–70%</div></div>
   </div>
 
   <!-- ================= ZONE 3: EXECUTIVE HEALTH & PROBABILITIES ================= -->
@@ -503,7 +593,7 @@
     </div>
   </div>
 
-  <footer>Institutional Command Center &amp; Regime Engine · Synchronized across all 12 modules · For informational purposes only.</footer>
+  <footer>Institutional Command Center &amp; Regime Engine · Synchronized across all modules · For informational purposes only.</footer>
 
 </div>
 
@@ -528,8 +618,6 @@ const LEADING_THEMES_DATA = [
 
 let STATE = { vix: null, vvix: null, qqq: null, spy: null, merged: [] };
 let activeThemeCharts = [];
-
-const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 async function fetchYahooDaily(symbol, range = "1y") {
   const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=${range}`;
@@ -814,20 +902,97 @@ function renderMasterBriefingAndDiagnostics() {
   let stars = compositeScore >= 80 ? "★★★★★" : (compositeScore >= 65 ? "★★★★☆" : (compositeScore >= 45 ? "★★★☆☆" : "★☆☆☆☆"));
   document.getElementById("briefingStars").textContent = stars;
 
-  const iconEl = document.getElementById("briefingIcon");
+  const dotEl = document.getElementById("briefingDot");
   const mainTitleEl = document.getElementById("briefingMainTitle");
   const scoreFillEl = document.getElementById("briefingScoreFill");
 
   if (regimeType === "bullish") {
-    iconEl.textContent = "🟢"; mainTitleEl.textContent = "FULL RISK-ON ENVIRONMENT"; scoreFillEl.style.background = "var(--teal)";
+    dotEl.style.background = "var(--teal)"; dotEl.style.boxShadow = "0 0 10px rgba(32,217,184,0.5)";
+    mainTitleEl.textContent = "FULL RISK-ON ENVIRONMENT"; scoreFillEl.style.background = "var(--teal)";
     document.getElementById("execRegime").textContent = "BULLISH"; document.getElementById("execRegime").style.color = "var(--teal)";
   } else if (regimeType === "transitional") {
-    iconEl.textContent = "🟡"; mainTitleEl.textContent = "TRANSITIONAL MARKET ENVIRONMENT"; scoreFillEl.style.background = "var(--amber)";
+    dotEl.style.background = "var(--amber)"; dotEl.style.boxShadow = "0 0 10px rgba(245,185,66,0.5)";
+    mainTitleEl.textContent = "TRANSITIONAL MARKET ENVIRONMENT"; scoreFillEl.style.background = "var(--amber)";
     document.getElementById("execRegime").textContent = "TRANSITIONAL"; document.getElementById("execRegime").style.color = "var(--amber)";
   } else {
-    iconEl.textContent = "🔴"; mainTitleEl.textContent = "DEFENSIVE MARKET REGIME"; scoreFillEl.style.background = "var(--red)";
+    dotEl.style.background = "var(--red)"; dotEl.style.boxShadow = "0 0 10px rgba(255,92,114,0.5)";
+    mainTitleEl.textContent = "DEFENSIVE MARKET REGIME"; scoreFillEl.style.background = "var(--red)";
     document.getElementById("execRegime").textContent = "DEFENSIVE"; document.getElementById("execRegime").style.color = "var(--red)";
   }
+
+  // Populate 5 Horizontal Cards inside banner
+  const moodCol = last.moodState === "bull" ? "var(--teal)" : (last.moodState === "bear" ? "var(--red)" : "var(--amber)");
+  const qqqCol = last.qqqState === "bull" ? "var(--teal)" : (last.qqqState === "bear" ? "var(--red)" : "var(--amber)");
+  const spyCol = last.spyState === "bull" ? "var(--teal)" : (last.spyState === "bear" ? "var(--red)" : "var(--amber)");
+  const pcCol = "var(--teal)";
+  const nasiCol = nasiVal > nasiSma ? "var(--teal)" : "var(--red)";
+
+  document.getElementById("enginesGridContainer").innerHTML = `
+    <div class="engine-box">
+      <div>
+        <div class="engine-box-head"><span class="engine-name">Volatility Mood</span><span class="engine-status-dot" style="background:${moodCol}"></span></div>
+        <div class="engine-status" style="color:${moodCol}">${last.moodState === 'bull' ? 'Risk Appetite Improving' : (last.moodState === 'bear' ? 'Risk Off Active' : 'Neutral Mood')}</div>
+        <ul class="engine-bullets">
+          <li>VVIX/VIX ratio: <b>${fmtNum(last.ratio, 3)}</b></li>
+          <li>21-day MA: <b>${fmtNum(last.ratioMA, 3)}</b></li>
+          <li>Institutions unhedged</li>
+        </ul>
+      </div>
+      <div class="engine-conclusion">Options market supporting higher equity prices.</div>
+    </div>
+
+    <div class="engine-box">
+      <div>
+        <div class="engine-box-head"><span class="engine-name">QQQ Trend</span><span class="engine-status-dot" style="background:${qqqCol}"></span></div>
+        <div class="engine-status" style="color:${qqqCol}">${last.qqqState === 'bull' ? 'Strong Bull Cycle' : (last.qqqState === 'bear' ? 'Bear Cycle Broken' : 'Consolidating')}</div>
+        <ul class="engine-bullets">
+          <li>QQQ: <b>${fmtNum(last.qClose)}</b></li>
+          <li>21 EMA: <b>${fmtNum(last.qEma)}</b></li>
+          <li>Candle test: <b>${last.qqqState === 'bull' ? 'Above EMA' : 'Below EMA'}</b></li>
+        </ul>
+      </div>
+      <div class="engine-conclusion">Tech leadership state state intact.</div>
+    </div>
+
+    <div class="engine-box">
+      <div>
+        <div class="engine-box-head"><span class="engine-name">SPY Trend</span><span class="engine-status-dot" style="background:${spyCol}"></span></div>
+        <div class="engine-status" style="color:${spyCol}">${last.spyState === 'bull' ? 'Broad Market Bullish' : (last.spyState === 'bear' ? 'Trend Down' : 'SPY Consolidating')}</div>
+        <ul class="engine-bullets">
+          <li>SPY: <b>${fmtNum(last.sClose)}</b></li>
+          <li>21 EMA: <b>${fmtNum(last.sEma)}</b></li>
+          <li>Trend slope: <b>${fmtSigned(last.spySlope, 2)}</b></li>
+        </ul>
+      </div>
+      <div class="engine-conclusion">Buying pressure is broad and active.</div>
+    </div>
+
+    <div class="engine-box">
+      <div>
+        <div class="engine-box-head"><span class="engine-name">Put / Call Ratio</span><span class="engine-status-dot" style="background:${pcCol}"></span></div>
+        <div class="engine-status" style="color:${pcCol}">Neutral to Bullish</div>
+        <ul class="engine-bullets">
+          <li>Current PCR: <b>${pcVal.toFixed(2)}</b></li>
+          <li>Hedging pressure: <b>Normal</b></li>
+          <li>No panic / greed extremes</li>
+        </ul>
+      </div>
+      <div class="engine-conclusion">Sentiment supports trend continuation.</div>
+    </div>
+
+    <div class="engine-box">
+      <div>
+        <div class="engine-box-head"><span class="engine-name">$NASI Breadth</span><span class="engine-status-dot" style="background:${nasiCol}"></span></div>
+        <div class="engine-status" style="color:${nasiCol}">${nasiVal > nasiSma ? 'Breadth Expanding' : 'Breadth Contracting'}</div>
+        <ul class="engine-bullets">
+          <li>$NASI: <b>${nasiVal.toFixed(2)}</b></li>
+          <li>50-DMA: <b>${nasiSma.toFixed(2)}</b></li>
+          <li>Participation: <b>${nasiVal > nasiSma ? 'Broad' : 'Narrow'}</b></li>
+        </ul>
+      </div>
+      <div class="engine-conclusion">Breadth contracting below 50-DMA.</div>
+    </div>
+  `;
 
   // Diagnostic Cards
   document.getElementById("moodPill").className = "regime-status-pill " + statePillClass(last.moodState);
