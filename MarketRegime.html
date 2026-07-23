@@ -135,6 +135,12 @@
   
   .lw-chart-wrap{background:var(--panel2); border:1px solid var(--line); border-radius:8px; overflow:hidden; position:relative;}
 
+  /* ================= NASI BREADTH PANEL ================= */
+  .nasi-panel{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:18px 20px; margin-bottom:22px;}
+  .nasi-panel-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:10px;}
+  .nasi-panel-title{font-size:13.5px; font-weight:800; text-transform:uppercase; letter-spacing:.05em; font-family:'JetBrains Mono',monospace;}
+  .nasi-panel-hint{font-size:10.5px; color:var(--text-faint); margin-top:3px; font-family:'Inter',sans-serif; font-weight:400;}
+
   /* ================= REGIME HISTORY TABLE ================= */
   .section{margin-bottom:26px;}
   .section-head{background:var(--navy-head); border:1px solid var(--line); border-bottom:none; padding:9px 16px; border-radius:10px 10px 0 0; display:flex; justify-content:space-between; align-items:center;}
@@ -378,6 +384,22 @@
       <div class="lw-chart-wrap" style="height: 420px;">
         <div class="tradingview-widget-container" id="spyTvContainer" style="height:100%;width:100%"></div>
       </div>
+    </div>
+  </div>
+
+  <!-- ================= NASI BREADTH INDICATOR ================= -->
+  <div class="nasi-panel">
+    <div class="nasi-panel-head">
+      <div>
+        <div class="nasi-panel-title">TradingView: $NASI · Nasdaq Summation Index</div>
+        <div class="nasi-panel-hint">No plain NASI ticker exists on TradingView — it's a Pine indicator, not a quoted symbol. Base chart is Nasdaq Composite; click "Indicators" above and search "NASI +" (by Ollie_AllCaps) or "McClellan Summation Index" if it doesn't load automatically below.</div>
+      </div>
+      <div style="display:flex; align-items:center; gap:12px;">
+        <span style="font-size:11px; color:var(--teal); font-family:'JetBrains Mono',monospace;">● Live Feed</span>
+      </div>
+    </div>
+    <div class="lw-chart-wrap" style="height: 420px;">
+      <div class="tradingview-widget-container" id="nasiTvContainer" style="height:100%;width:100%"></div>
     </div>
   </div>
 
@@ -820,6 +842,7 @@ function renderAll() {
 function renderTradingViewWidgets() {
   const qContainer = document.getElementById("qqqTvContainer");
   const sContainer = document.getElementById("spyTvContainer");
+  const nContainer = document.getElementById("nasiTvContainer");
   if (!qContainer || !sContainer) return;
 
   const isDark = (document.documentElement.getAttribute("data-theme") || "dark") === "dark";
@@ -827,15 +850,16 @@ function renderTradingViewWidgets() {
   const bgColor = isDark ? "rgba(16, 22, 37, 1)" : "rgba(255, 255, 255, 1)";
   const gridColor = isDark ? "rgba(33, 42, 61, 1)" : "rgba(221, 226, 236, 1)";
 
-  const createTvWidget = (containerId, symbol) => {
+  const createTvWidget = (containerId, symbol, extraOptions) => {
     const container = document.getElementById(containerId);
+    if (!container) return;
     container.innerHTML = '<div class="tradingview-widget-container__widget" style="height:100%;width:100%"></div>';
     
     const script = document.createElement("script");
     script.type = "text/javascript";
     script.src = "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
     script.async = true;
-    script.innerHTML = JSON.stringify({
+    script.innerHTML = JSON.stringify(Object.assign({
       "autosize": true,
       "symbol": symbol,
       "interval": "D",
@@ -851,12 +875,28 @@ function renderTradingViewWidgets() {
       "save_image": false,
       "hide_volume": true,
       "support_host": "https://www.tradingview.com"
-    });
+    }, extraOptions || {}));
     container.appendChild(script);
   };
 
   createTvWidget("qqqTvContainer", "INDEX:PCQQ");
   createTvWidget("spyTvContainer", "INDEX:PCSP");
+
+  // NASI isn't a plain quoted ticker on TradingView (unlike PCQQ/PCSP) — it's a
+  // Pine Script indicator ("NASI +" by Ollie_AllCaps / McClellan Summation Index)
+  // that has to be applied on top of a base chart. We load the Nasdaq Composite
+  // as the base and attempt to auto-attach the public "NASI +" script by its
+  // script ID. If TradingView doesn't honor that (community scripts aren't
+  // officially supported via this param), the toolbar is left on so you can
+  // click "Indicators" and add "NASI +" or "McClellan Summation Index" yourself,
+  // exactly like your own saved TradingView chart.
+  if (nContainer) {
+    createTvWidget("nasiTvContainer", "NASDAQ:IXIC", {
+      "style": "1",
+      "hide_volume": false,
+      "studies": ["PUB;9hoOBYCy"]
+    });
+  }
 }
 
 /* ============================================================
