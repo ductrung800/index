@@ -344,29 +344,78 @@ function getHot3PlusTickers() {
   } catch (e) { return []; }
 }
 
+function parseCSVGrid(text) {
+  const rows = [];
+  let row = [], field = '', inQuotes = false;
+  for(let i=0; i<text.length; i++) {
+    const ch = text[i], next = text[i+1];
+    if(inQuotes) {
+      if(ch === '"' && next === '"') { field += '"'; i++; }
+      else if(ch === '"') { inQuotes = false; }
+      else field += ch;
+    } else {
+      if(ch === '"') { inQuotes = true; }
+      else if(ch === ',') { row.push(field); field = ''; }
+      else if(ch === '\n') { row.push(field); field = ''; rows.push(row); row = []; }
+      else if(ch === '\r') { /* skip */ }
+      else field += ch;
+    }
+  }
+  if(field.length || row.length) { row.push(field); rows.push(row); }
+  return rows;
+}
+
 function fetchSheetJSONP(sheetId) {
   return new Promise((resolve) => {
-    const cbName = 'gviz_cb_' + Math.random().toString(36).substring(2, 10);
-    const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json;responseHandler:${cbName}`;
+    const cbName = 'gviz_cb_' + Math.floor(Math.random() * 1000000000);
+    const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=responseHandler:${cbName}`;
     
     const script = document.createElement('script');
-    const cleanup = () => {
-      if (script.parentNode) script.parentNode.removeChild(script);
-      delete window[cbName];
-    };
+    let resolved = false;
 
     const timer = setTimeout(() => {
-      cleanup();
-      resolve(null);
-    }, 5000);
+      if (!resolved) {
+        resolved = true;
+        window[cbName] = () => {}; // Safe dummy no-op prevents ReferenceError if script lands late
+        if (script.parentNode) script.parentNode.removeChild(script);
+        resolve(null);
+      }
+    }, 6000);
 
     window[cbName] = function(data) {
-      clearTimeout(timer);
-      cleanup();
-      resolve(data);
+      if (!resolved) {
+        resolved = true;
+        clearTimeout(timer);
+        if (script.parentNode) script.parentNode.removeChild(script);
+        try { delete window[cbName]; } catch(e) { window[cbName] = undefined; }
+        resolve(data);
+      }
     };
 
-    script.onerror = () => { clearTimeout(timer); cleanup(); resolve(null); };
+    window.google = window.google || {};
+    window.google.visualization = window.google.visualization || {};
+    window.google.visualization.Query = window.google.visualization.Query || {};
+    if (!window.google.visualization.Query.setResponse) {
+      window.google.visualization.Query.setResponse = function(data) {
+        if (!resolved) {
+          resolved = true;
+          clearTimeout(timer);
+          if (script.parentNode) script.parentNode.removeChild(script);
+          resolve(data);
+        }
+      };
+    }
+
+    script.onerror = () => {
+      if (!resolved) {
+        resolved = true;
+        clearTimeout(timer);
+        if (script.parentNode) script.parentNode.removeChild(script);
+        window[cbName] = () => {};
+        resolve(null);
+      }
+    };
+
     script.src = url;
     document.head.appendChild(script);
   });
@@ -416,6 +465,7 @@ async function syncLiveTickerUniverse() {
     return EW_SECTOR_ETFS;
   }
 
+  // Attempt 1: Fast direct JSONP
   const gvizData = await fetchSheetJSONP(SHEET_ID);
   
   if (gvizData && gvizData.table && gvizData.table.rows) {
@@ -444,6 +494,40 @@ async function syncLiveTickerUniverse() {
     }).filter(item => item.ticker !== "" && item.ticker.length <= 6 && !item.ticker.includes(" "));
     
     if (liveUniverse.length > 0) return liveUniverse;
+  }
+
+  // Attempt 2: Proxy Fallback for Sheet CSV
+  for (const proxyBuilder of PROXY_PROVIDERS) {
+    try {
+      const rawUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
+      const res = await fetch(proxyBuilder(rawUrl), { cache: "no-store", signal: AbortSignal.timeout(3500) });
+      if (!res.ok) continue;
+      const csvText = await res.text();
+      if (!csvText || csvText.includes("ServiceLogin")) continue;
+
+      const grid = parseCSVGrid(csvText).filter(r => r.some(c => c.trim() !== ""));
+      if (grid.length >= 2) {
+        const header = grid[0].map(h => h.trim().toLowerCase().replace(/^"/, '').replace(/"$/, ''));
+        const idx = name => header.findIndex(h => h === name);
+        const cTicker = idx("ticker") !== -1 ? idx("ticker") : 0;
+        const cCompany = idx("company") !== -1 ? idx("company") : 1;
+        const cSector = idx("sector") !== -1 ? idx("sector") : 2;
+        const cIndustry = idx("industry") !== -1 ? idx("industry") : 3;
+
+        const csvUniverse = grid.slice(1)
+          .map(r => ({
+            ticker: (r[cTicker] || "").trim().toUpperCase().replace(/^"/, '').replace(/"$/, ''),
+            company: (r[cCompany] || "").trim().replace(/^"/, '').replace(/"$/, '') || "Leader Equities",
+            sector: (r[cSector] || "").trim().replace(/^"/, '').replace(/"$/, '') || "Equities",
+            industry: (r[cIndustry] || "").trim().replace(/^"/, '').replace(/"$/, '') || "Momentum Leaders",
+            sub: (r[cIndustry] || "").trim().replace(/^"/, '').replace(/"$/, '') || "Momentum Leaders",
+            exch: "US"
+          }))
+          .filter(item => item.ticker !== "" && item.ticker.length <= 6 && !item.ticker.includes(" "));
+
+        if (csvUniverse.length > 0) return csvUniverse;
+      }
+    } catch(e) {}
   }
 
   return FALLBACK_UNIVERSE;
