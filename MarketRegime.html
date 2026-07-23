@@ -731,7 +731,21 @@ function buildStreakHistoryHTML(rows, stateKey) {
     return `<div class="streak-day" style="background:${col};" title="${r.date}: ${s ? stateLabel(s) : 'n/a'}"></div>`;
   }).join("");
 }
-
+// Sync shared data from index.html / Google Sheet localStorage ecosystem
+try {
+  const sharedDataRaw = localStorage.getItem('market-monitor-data');
+  if (sharedDataRaw) {
+    const parsed = JSON.parse(sharedDataRaw);
+    if (parsed.nasi) {
+      DATA.nasi = parsed.nasi; // Overrides with live sheet $NASI value (-11.99)
+    }
+    if (parsed.putcall) {
+      DATA.putcall = parsed.putcall; // Overrides with live Put/Call ratio
+    }
+  }
+} catch (e) {
+  console.warn("Could not load shared local storage data", e);
+}
 /* ============================================================
    MAIN RENDER & INSTITUTIONAL BRIEFING ENGINE
    ============================================================ */
