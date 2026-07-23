@@ -154,10 +154,11 @@
   .chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 700; color: var(--text-dim); flex-shrink: 0; }
   
   /* FLEXIBLE FULL HEIGHT LIGHTWEIGHT CHART WRAPPER */
-  .lw-chart-wrap { background: var(--chart-bg); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; flex: 1; min-height: 300px; position: relative; margin-bottom: 10px; }
+  .lw-chart-wrap { background: var(--chart-bg); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; flex: 1; min-height: 320px; position: relative; margin-bottom: 10px; }
   .lw-chart-container { position: absolute; top: 0; left: 0; right: 0; bottom: 0; width: 100%; height: 100%; }
 
-  .chart-svg-wrap { background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; padding: 8px; overflow: hidden; height: 90px; flex-shrink: 0; }
+  /* DOUBLED HEIGHT FOR SECONDARY OSCILLATORS (180px) */
+  .chart-svg-wrap { background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; padding: 10px; overflow: hidden; height: 180px; flex-shrink: 0; }
   .chart-svg-wrap svg { width: 100%; height: 100%; display: block; }
 
   /* WEEKLY HISTORY TABLE */
@@ -782,9 +783,10 @@ function selectTicker(symbol) {
   enrichTickerMetadata(symbol);
 }
 
+/* DOUBLED HEIGHT MANSFIELD SVG (H = 180) */
 function buildMansfieldSVG(rows) {
   if(!rows || rows.length === 0) return "";
-  const W = 680, H = 90, padL = 8, padR = 8, padT = 8, padB = 8;
+  const W = 680, H = 180, padL = 8, padR = 8, padT = 12, padB = 12;
   const vals = rows.map(r => r.mrs).filter(v => v != null && isFinite(v));
   if(vals.length < 2) return "";
   const maxV = Math.max(...vals, 5), minV = Math.min(...vals, -5);
@@ -807,9 +809,10 @@ function buildMansfieldSVG(rows) {
   </svg>`;
 }
 
+/* DOUBLED HEIGHT SCORE HISTORY SVG (H = 180) */
 function buildScoreHistorySVG(rows) {
   if(!rows || rows.length === 0) return "";
-  const W = 680, H = 90, padL = 8, padR = 8, padT = 8, padB = 8;
+  const W = 680, H = 180, padL = 8, padR = 8, padT = 12, padB = 12;
   const n = rows.length;
   if(n < 2) return "";
   const stepX = (W - padL - padR) / (n - 1);
@@ -886,7 +889,7 @@ function renderMainDashboard() {
     <!-- MAIN GRID: FULL HEIGHT LEFT CHART vs 450px SCROLLABLE RIGHT PANEL -->
     <div class="sata-grid">
       
-      <!-- LEFT COLUMN: FULL STRETCHING CANDLESTICK CHART & OSCILLATORS -->
+      <!-- LEFT COLUMN: FULL STRETCHING CANDLESTICK CHART & DOUBLED HEIGHT OSCILLATORS -->
       <div class="chart-box-main">
         <div class="chart-header">
           <span>Weekly Institutional HLC Chart &middot; 30w MA Cloud</span>
@@ -975,7 +978,6 @@ function renderMainDashboard() {
     </div>
   `;
 
-  // Trigger Lightweight Chart sizing after DOM element injection
   requestAnimationFrame(() => {
     setTimeout(() => {
       renderLightweightChart(d.bars);
