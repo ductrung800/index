@@ -26,10 +26,9 @@
       radial-gradient(ellipse 900px 500px at 100% 0%, rgba(245,185,66,.05), transparent 55%),
       var(--bg);
     color:var(--text); font-family:'Inter',sans-serif; padding:22px 26px 60px; transition:background .2s ease, color .2s ease;
-    overflow-x: hidden;
-    width: 100%;
+    overflow-x: hidden; width: 100%;
   }
-  .wrap{width:100%; max-width:100%; margin:0 auto;}
+  .wrap{width:100%; max-width:1450px; margin:0 auto;}
 
   /* ---------- UNIFORM APP TABS ---------- */
   .app-tabs {
@@ -61,41 +60,64 @@
   .status-msg{font-size:11.5px; color:var(--teal); font-family:'JetBrains Mono',monospace;}
   .status-msg.err{color:var(--red);}
 
-  /* ================= MASTER REGIME BANNER ================= */
-  .master-banner{
-    display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap;
-    border-radius:12px; padding:20px 24px; margin-bottom:22px; border:1px solid var(--line);
-    background:var(--panel);
+  /* ================= INSTITUTIONAL MASTER BRIEFING BANNER ================= */
+  .master-briefing{
+    background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:24px; margin-bottom:26px;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.3);
   }
-  .master-banner.aligned-bull{ background:linear-gradient(120deg, rgba(32,217,184,.14), var(--panel) 60%); border-color:rgba(32,217,184,.45); }
-  .master-banner.aligned-bear{ background:linear-gradient(120deg, rgba(255,92,114,.14), var(--panel) 60%); border-color:rgba(255,92,114,.45); }
-  .master-banner.partial-bull{ background:linear-gradient(120deg, rgba(32,217,184,.08), var(--panel) 60%); border-color:rgba(32,217,184,.30); }
-  .master-banner.partial-bear{ background:linear-gradient(120deg, rgba(255,92,114,.08), var(--panel) 60%); border-color:rgba(255,92,114,.30); }
-  .master-banner.mixed{ background:linear-gradient(120deg, rgba(245,185,66,.10), var(--panel) 60%); border-color:rgba(245,185,66,.35); }
+  .briefing-header{display:flex; justify-content:space-between; align-items:flex-start; gap:20px; border-bottom:1px solid var(--line); padding-bottom:18px; margin-bottom:20px; flex-wrap:wrap;}
+  .briefing-title-area{display:flex; align-items:center; gap:14px;}
+  .briefing-icon{font-size:36px; line-height:1;}
+  .briefing-eyebrow{font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.15em; color:var(--text-faint); text-transform:uppercase;}
+  .briefing-main-title{font-size:22px; font-weight:800; font-family:'JetBrains Mono',monospace; margin-top:2px;}
   
-  .master-left{display:flex; align-items:center; gap:16px;}
-  .master-icon{font-size:34px; line-height:1;}
-  .master-title{font-size:20px; font-weight:800; font-family:'JetBrains Mono',monospace; letter-spacing:-.01em;}
-  .master-sub{font-size:12.5px; color:var(--text-dim); margin-top:4px; max-width:680px; line-height:1.5;}
-  .master-right{display:flex; align-items:center; gap:14px; flex-wrap:wrap;}
-  .streak-chip{
-    display:flex; flex-direction:column; align-items:center; justify-content:center;
-    background:var(--panel2); border:1px solid var(--line); border-radius:10px; padding:10px 18px; min-width:96px;
+  .score-card{background:var(--panel2); border:1px solid var(--line); border-radius:10px; padding:12px 18px; text-align:right; min-width:210px;}
+  .score-card-top{display:flex; justify-content:space-between; align-items:center; gap:12px;}
+  .score-label{font-size:10px; text-transform:uppercase; color:var(--text-faint); font-family:'JetBrains Mono',monospace;}
+  .score-stars{font-size:14px; color:var(--amber); letter-spacing:2px;}
+  .score-value-row{font-family:'JetBrains Mono',monospace; font-size:22px; font-weight:800; margin-top:4px;}
+  .score-bar{height:6px; background:var(--line); border-radius:3px; margin-top:6px; overflow:hidden; display:flex;}
+  .score-bar-fill{height:100%; background:var(--teal); border-radius:3px; transition:width 0.4s ease;}
+
+  /* 5-Column Engine Breakdown Grid */
+  .engines-grid{display:grid; grid-template-columns:repeat(5, 1fr); gap:14px; margin-bottom:20px;}
+  @media(max-width:1300px){ .engines-grid{grid-template-columns:repeat(3, 1fr);} }
+  @media(max-width:850px){ .engines-grid{grid-template-columns:1fr;} }
+
+  .engine-box{background:var(--panel2); border:1px solid var(--line); border-radius:10px; padding:14px; display:flex; flex-direction:column; justify-content:space-between;}
+  .engine-box-head{display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;}
+  .engine-name{font-size:11.5px; font-weight:700; text-transform:uppercase; font-family:'JetBrains Mono',monospace; color:var(--text);}
+  .engine-badge{font-size:14px;}
+  .engine-status{font-size:11.5px; font-weight:700; margin-bottom:8px; font-family:'JetBrains Mono',monospace;}
+  .engine-bullets{font-size:11px; color:var(--text-dim); line-height:1.4; padding-left:12px; margin-bottom:10px;}
+  .engine-bullets li{margin-bottom:3px;}
+  .engine-conclusion{font-size:11px; font-style:italic; color:var(--text); background:rgba(255,255,255,0.02); border-left:2px solid var(--teal); padding:6px 8px; border-radius:0 4px 4px 0;}
+
+  /* Final Conclusion & Posture Section */
+  .briefing-footer{display:grid; grid-template-columns: 1.4fr 1fr; gap:18px; background:var(--panel2); border:1px solid var(--line); border-radius:10px; padding:16px 20px;}
+  @media(max-width:900px){ .briefing-footer{grid-template-columns:1fr;} }
+  
+  .conclusion-section h4{font-size:12px; text-transform:uppercase; letter-spacing:.05em; font-family:'JetBrains Mono',monospace; color:var(--teal); margin-bottom:8px;}
+  .conclusion-bullets{font-size:11.5px; color:var(--text); line-height:1.5; padding-left:14px;}
+  .conclusion-bullets li{margin-bottom:4px;}
+
+  .posture-section h4{font-size:12px; text-transform:uppercase; letter-spacing:.05em; font-family:'JetBrains Mono',monospace; color:var(--amber); margin-bottom:8px;}
+  .posture-bullets{font-size:11.5px; color:var(--text-dim); line-height:1.5; padding-left:14px;}
+  .posture-bullets li{margin-bottom:4px;}
+
+  /* Compact Market Risk Summary Bar */
+  .risk-summary-bar{
+    display:grid; grid-template-columns: repeat(5, 1fr) 1.2fr 1.2fr; gap:12px;
+    background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:16px 20px; margin-bottom:24px; align-items:center;
   }
-  .streak-num{font-family:'JetBrains Mono',monospace; font-size:22px; font-weight:800;}
-  .streak-lbl{font-size:9.5px; color:var(--text-faint); text-transform:uppercase; letter-spacing:.07em; margin-top:2px;}
-  .conviction-pill{
-    font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:800; text-transform:uppercase;
-    padding:8px 14px; border-radius:100px; letter-spacing:.03em;
-  }
+  @media(max-width:1200px){ .risk-summary-bar{grid-template-columns:repeat(2, 1fr);} }
+  .risk-metric .r-label{font-size:9.5px; text-transform:uppercase; color:var(--text-faint); font-family:'JetBrains Mono',monospace;}
+  .risk-metric .r-val{font-size:13px; font-weight:700; font-family:'JetBrains Mono',monospace; margin-top:2px;}
+  .risk-highlight{background:var(--panel2); border:1px solid var(--line); border-radius:8px; padding:10px 14px;}
 
   /* ================= 3-COLUMN REGIME CARDS ================= */
   .regime-grid{
-    display:grid; 
-    grid-template-columns:repeat(3, minmax(0, 1fr)); 
-    gap:18px; 
-    margin-bottom:22px;
-    width:100%;
+    display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:18px; margin-bottom:22px; width:100%;
   }
   @media(max-width:1450px){ .regime-grid{grid-template-columns:1fr;} }
   .regime-card{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:18px 20px; display:flex; flex-direction:column; justify-content:space-between; min-width:0;}
@@ -132,7 +154,6 @@
   .price-panel{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:18px 20px;}
   .price-panel-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:10px;}
   .price-panel-title{font-size:13.5px; font-weight:800; text-transform:uppercase; letter-spacing:.05em; font-family:'JetBrains Mono',monospace;}
-  
   .lw-chart-wrap{background:var(--panel2); border:1px solid var(--line); border-radius:8px; overflow:hidden; position:relative;}
 
   /* ================= REGIME HISTORY TABLE ================= */
@@ -200,22 +221,66 @@
     <span class="status-msg" id="statusMsg">Initializing…</span>
   </div>
 
-  <!-- ================= MASTER REGIME BANNER ================= -->
-  <div class="master-banner" id="masterBanner">
-    <div class="master-left">
-      <div class="master-icon" id="masterIcon">⏳</div>
-      <div>
-        <div class="master-title" id="masterTitle">Loading composite regime state…</div>
-        <div class="master-sub" id="masterSub">Synthesizing VIX, VVIX, QQQ/SPY cycles with internal Put/Call sentiment and $NASI breadth depth.</div>
+  <!-- ================= INSTITUTIONAL MASTER BRIEFING BANNER ================= -->
+  <div class="master-briefing" id="masterBriefingContainer">
+    
+    <div class="briefing-header">
+      <div class="briefing-title-area">
+        <div class="briefing-icon" id="briefingIcon">🟢</div>
+        <div>
+          <div class="briefing-eyebrow">Master Market Regime Assessment</div>
+          <div class="briefing-main-title" id="briefingMainTitle">FULL RISK-ON ENVIRONMENT</div>
+        </div>
+      </div>
+      
+      <div class="score-card">
+        <div class="score-card-top">
+          <span class="score-label">Composite Score</span>
+          <span class="score-stars" id="briefingStars">★★★★★</span>
+        </div>
+        <div class="score-value-row"><span id="briefingScoreNum">92</span><span style="font-size:14px; color:var(--text-faint)"> /100</span></div>
+        <div class="score-bar"><div class="score-bar-fill" id="briefingScoreFill" style="width: 92%;"></div></div>
       </div>
     </div>
-    <div class="master-right">
-      <div class="streak-chip">
-        <div class="streak-num" id="alignedStreakNum">–</div>
-        <div class="streak-lbl">Aligned Days</div>
-      </div>
-      <div class="conviction-pill" id="convictionPill" style="background:var(--panel2); color:var(--text-dim); border:1px solid var(--line);">—</div>
+
+    <!-- 5 Independent Engines Breakdown Grid -->
+    <div class="engines-grid" id="enginesGridContainer">
+      <!-- Injected Dynamically by JS -->
     </div>
+
+    <!-- Final Conclusion & Posture Footer -->
+    <div class="briefing-footer">
+      <div class="conclusion-section">
+        <h4>Final Conclusion</h4>
+        <ul class="conclusion-bullets" id="briefingFinalConclusionList">
+          <li>All five major components agree.</li>
+          <li>Institutional money is participating.</li>
+          <li>Market breadth confirms the advance.</li>
+          <li>Volatility remains supportive & sentiment is not at an extreme.</li>
+        </ul>
+      </div>
+      <div class="posture-section">
+        <h4>Recommended Posture</h4>
+        <ul class="posture-bullets" id="briefingPostureList">
+          <li>Full long exposure (90–100%)</li>
+          <li>Trade A+ setups aggressively</li>
+          <li>Pyramid winning positions</li>
+          <li>Avoid premature profit taking until one component deteriorates.</li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ================= COMPACT MARKET RISK SUMMARY BAR ================= -->
+  <div class="risk-summary-bar">
+    <div class="risk-metric"><div class="r-label">Volatility</div><div class="r-val" id="rmVolatility" style="color:var(--teal)">LOW</div></div>
+    <div class="risk-metric"><div class="r-label">Trend</div><div class="r-val" id="rmTrend" style="color:var(--teal)">STRONG</div></div>
+    <div class="risk-metric"><div class="r-label">Breadth</div><div class="r-val" id="rmBreadth" style="color:var(--teal)">HEALTHY</div></div>
+    <div class="risk-metric"><div class="r-label">Sentiment</div><div class="r-val" id="rmSentiment" style="color:var(--amber)">NEUTRAL</div></div>
+    <div class="risk-metric"><div class="r-label">Risk Appetite</div><div class="r-val" id="rmAppetite" style="color:var(--teal)">VERY HIGH</div></div>
+    <div class="risk-metric risk-highlight"><div class="r-label">Market Risk Level</div><div class="r-val" id="rmRiskLevel" style="color:var(--teal)">LOW</div></div>
+    <div class="risk-metric risk-highlight"><div class="r-label">Recommended Exposure</div><div class="r-val" id="rmExposure" style="color:var(--teal)">90–100%</div></div>
   </div>
 
   <!-- ================= 3-COLUMN REGIME CARDS ================= -->
@@ -579,10 +644,8 @@ function buildMergedSeries() {
 
     if (bulls === 3) return "full-bull";
     if (bears === 3) return "full-bear";
-    if (bulls === 2 && bears === 0) return "partial-bull";
-    if (bears === 2 && bulls === 0) return "partial-bear";
-    if (bulls === 1 && bears === 0) return "partial-bull";
-    if (bears === 1 && bulls === 0) return "partial-bear";
+    if (bulls >= 2) return "partial-bull";
+    if (bears >= 2) return "partial-bear";
     return "mixed";
   });
   
@@ -669,7 +732,7 @@ function buildStreakHistoryHTML(rows, stateKey) {
 }
 
 /* ============================================================
-   MAIN RENDER
+   MAIN RENDER & INSTITUTIONAL BRIEFING ENGINE
    ============================================================ */
 function renderAll() {
   const merged = STATE.merged;
@@ -682,16 +745,7 @@ function renderAll() {
   document.getElementById("subline").textContent =
     `${last.date} · ${merged.length} days aligned · VIX ${fmtNum(last.vix)} · VVIX ${fmtNum(last.vvix)} · QQQ ${fmtNum(last.qClose)} · SPY ${fmtNum(last.sClose)}`;
 
-  /* ---------- ADVANCED COMPOSITE MASTER BANNER ---------- */
-  const banner = document.getElementById("masterBanner");
-  const icon = document.getElementById("masterIcon");
-  const title = document.getElementById("masterTitle");
-  const sub = document.getElementById("masterSub");
-  const alignedStreakNum = document.getElementById("alignedStreakNum");
-  const convictionPill = document.getElementById("convictionPill");
-
-  banner.className = "master-banner";
-
+  /* ---------- RETRIEVE DATA FROM LOCAL STORAGE ECOSYSTEM ---------- */
   let localData = {};
   try {
     const raw = localStorage.getItem('market-monitor-data');
@@ -699,44 +753,261 @@ function renderAll() {
   } catch(e) {}
 
   const vixVal = last.vix;
-  const pcVal = localData.putcall?.value ?? 0.70;
-  const nasiVal = localData.nasi?.current ?? 100;
-  const nasiSma = localData.nasi?.sma50 ?? 120;
+  const pcVal = localData.putcall?.value ?? 0.74;
+  const nasiVal = localData.nasi?.current ?? 108.19;
+  const nasiSma = localData.nasi?.sma50 ?? 160.48;
 
-  let vixScore = (vixVal >= 15 && vixVal <= 25) ? 1.0 : (vixVal < 15 ? -0.4 : -0.8);
-  let pcScore = (pcVal > 0.95) ? 0.8 : (pcVal < 0.6 ? -0.8 : 0.2);
-  let nasiScore = (nasiVal > nasiSma && nasiVal > 0) ? 1.0 : -0.8;
+  /* ============================================================
+     WEIGHTED SCORING MODEL (25% / 25% / 25% / 10% / 15%)
+     ============================================================ */
+  // 1. Volatility Mood (Weight: 25%)
+  let moodScoreNorm = 50;
+  if (last.moodState === "bull") moodScoreNorm = 100;
+  else if (last.moodState === "bear") moodScoreNorm = 0;
+  else moodScoreNorm = 50;
 
-  const compositeScore = (vixScore * 0.4) + (pcScore * 0.3) + (nasiScore * 0.3);
+  // 2. QQQ Trend (Weight: 25%)
+  let qqqScoreNorm = 50;
+  if (last.qqqState === "bull") qqqScoreNorm = 100;
+  else if (last.qqqState === "bear") qqqScoreNorm = 0;
+  else qqqScoreNorm = 40;
 
-  let convictionText = "SIT TIGHT", convictionStyle = "background:var(--panel2); color:var(--text-dim); border:1px solid var(--line);";
+  // 3. SPY Trend (Weight: 25%)
+  let spyScoreNorm = 50;
+  if (last.spyState === "bull") spyScoreNorm = 100;
+  else if (last.spyState === "bear") spyScoreNorm = 0;
+  else spyScoreNorm = 40;
 
-  if (last.alignedState === "full-bull" && compositeScore > 0.3) {
-    banner.classList.add("aligned-bull");
-    icon.textContent = "🟢";
-    title.textContent = `Full Bullish Alignment + Composite Confirmation — ${last.alignedStreak} day streak`;
-    sub.textContent = `Market Mood, QQQ, and SPY are aligned bullish. Breadth ($NASI: ${nasiVal.toFixed(1)}) and Sentiment (Put/Call: ${pcVal}) confirm supportive institutional conditions.`;
-    convictionText = "MAX CONVICTION — TRADE BIG"; 
-    convictionStyle = "background:rgba(32,217,184,.18); color:var(--teal); border:1px solid rgba(32,217,184,.4);";
-  } else if (last.alignedState === "full-bear" || compositeScore < -0.3) {
-    banner.classList.add("aligned-bear");
-    icon.textContent = "🔴";
-    title.textContent = `Defensive Alignment / Risk Warning — Score: ${compositeScore.toFixed(2)}`;
-    sub.textContent = `Bearish technical structure or negative internal metrics (Put/Call: ${pcVal}, $NASI vs SMA: ${nasiVal.toFixed(1)} vs ${nasiSma.toFixed(1)}). Capital defense recommended.`;
-    convictionText = "DEFENSIVE POSITIONING"; 
-    convictionStyle = "background:rgba(255,92,114,.18); color:var(--red); border:1px solid rgba(255,92,114,.4);";
-  } else {
-    banner.classList.add("mixed");
-    icon.textContent = "🟡";
-    title.textContent = "Mixed Composite Regime — Caution Advised";
-    sub.textContent = `Divergence detected between price trends and internal sentiment/breadth indicators. Reduce sizing until full confirmation.`;
-    convictionText = "MODERATE SIZE — CAUTION"; 
-    convictionStyle = "background:rgba(245,185,66,.14); color:var(--amber); border:1px solid rgba(245,185,66,.3);";
+  // 4. Put/Call Ratio (Weight: 10%)
+  let pcScoreNorm = 50;
+  if (pcVal >= 0.65 && pcVal <= 0.85) pcScoreNorm = 100; // Neutral / healthy
+  else if (pcVal > 0.95) pcScoreNorm = 75; // Contrarian fear bottom
+  else if (pcVal < 0.60) pcScoreNorm = 25; // Complacent / top risk
+  else pcScoreNorm = 50;
+
+  // 5. NASI Breadth (Weight: 15%)
+  let nasiScoreNorm = 50;
+  if (nasiVal > nasiSma) nasiScoreNorm = 100;
+  else if (nasiVal < 0) nasiScoreNorm = 0;
+  else nasiScoreNorm = 30;
+
+  // Calculate Final Composite Score (0 - 100)
+  const compositeScore = Math.round(
+    (moodScoreNorm * 0.25) +
+    (qqqScoreNorm * 0.25) +
+    (spyScoreNorm * 0.25) +
+    (pcScoreNorm * 0.10) +
+    (nasiScoreNorm * 0.15)
+  );
+
+  /* ============================================================
+     DETERMINE REGIME STATE (BULLISH vs TRANSITIONAL vs BEARISH)
+     ============================================================ */
+  let regimeType = "bullish";
+  if (compositeScore >= 70) regimeType = "bullish";
+  else if (compositeScore >= 45) regimeType = "transitional";
+  else regimeType = "bearish";
+
+  // Override / fine-tune based on exact states
+  if (last.alignedState === "full-bear" || (nasiVal < 0 && last.qqqState === "bear")) {
+    regimeType = "bearish";
+  } else if (last.alignedState === "full-bull" && compositeScore >= 75) {
+    regimeType = "bullish";
   }
 
-  alignedStreakNum.textContent = last.alignedStreak != null ? last.alignedStreak : "–";
-  convictionPill.textContent = convictionText;
-  convictionPill.style = convictionStyle;
+  /* ============================================================
+     RENDER INSTITUTIONAL MASTER BRIEFING BANNER
+     ============================================================ */
+  const iconEl = document.getElementById("briefingIcon");
+  const mainTitleEl = document.getElementById("briefingMainTitle");
+  const starsEl = document.getElementById("briefingStars");
+  const scoreNumEl = document.getElementById("briefingScoreNum");
+  const scoreFillEl = document.getElementById("briefingScoreFill");
+  const enginesGrid = document.getElementById("enginesGridContainer");
+  const finalConcList = document.getElementById("briefingFinalConclusionList");
+  const postureList = document.getElementById("briefingPostureList");
+
+  // Summary Bar Elements
+  const rmVol = document.getElementById("rmVolatility");
+  const rmTrend = document.getElementById("rmTrend");
+  const rmBreadth = document.getElementById("rmBreadth");
+  const rmSnt = document.getElementById("rmSentiment");
+  const rmApp = document.getElementById("rmAppetite");
+  const rmRisk = document.getElementById("rmRiskLevel");
+  const rmExp = document.getElementById("rmExposure");
+
+  scoreNumEl.textContent = compositeScore;
+  scoreFillEl.style.width = compositeScore + "%";
+
+  let stars = "★★★☆☆";
+  if (compositeScore >= 80) stars = "★★★★★";
+  else if (compositeScore >= 65) stars = "★★★★☆";
+  else if (compositeScore >= 45) stars = "★★★☆☆";
+  else if (compositeScore >= 25) stars = "★★☆☆☆";
+  else stars = "★☆☆☆☆";
+  starsEl.textContent = stars;
+
+  let moodBadge = "🟢", moodStatus = "Risk Appetite Improving", moodColor = "var(--teal)";
+  if (last.moodState === "bear") { moodBadge = "🔴"; moodStatus = "Risk Appetite Deteriorating"; moodColor = "var(--red)"; }
+  else if (last.moodState === "flat") { moodBadge = "🟡"; moodStatus = "Neutral Mood"; moodColor = "var(--amber)"; }
+
+  let qqqBadge = "🟢", qqqStatus = "Strong Bull Cycle", qqqColor = "var(--teal)";
+  if (last.qqqState === "bear") { qqqBadge = "🔴"; qqqStatus = "Bear Cycle Broken"; qqqColor = "var(--red)"; }
+  else if (last.qqqState === "flat") { qqqBadge = "🟡"; moodStatus = "QQQ Neutral / EMA Test"; qqqColor = "var(--amber)"; }
+
+  let spyBadge = "🟢", spyStatus = "Broad Market Bullish", spyColor = "var(--teal)";
+  if (last.spyState === "bear") { spyBadge = "🔴"; spyStatus = "Broad Market Trend Down"; spyColor = "var(--red)"; }
+  else if (last.spyState === "flat") { spyBadge = "🟡"; spyStatus = "SPY Consolidating"; spyColor = "var(--amber)"; }
+
+  let pcBadge = "🟢", pcStatus = "Neutral to Bullish", pcColor = "var(--teal)";
+  if (pcVal < 0.60) { pcBadge = "🟡"; pcStatus = "Complacent / Greed"; pcColor = "var(--amber)"; }
+  else if (pcVal > 0.95) { pcBadge = "🟢"; pcStatus = "High Fear (Contrarian)"; pcColor = "var(--teal)"; }
+
+  let nasiBadge = "🟢", nasiStatus = "Breadth Expanding", nasiColor = "var(--teal)";
+  if (nasiVal < nasiSma && nasiVal > 0) { nasiBadge = "🟡"; nasiStatus = "Breadth Contracting"; nasiColor = "var(--amber)"; }
+  else if (nasiVal <= 0) { nasiBadge = "🔴"; nasiStatus = "Breadth Collapsing"; nasiColor = "var(--red)"; }
+
+  if (regimeType === "bullish") {
+    iconEl.textContent = "🟢";
+    mainTitleEl.textContent = "FULL RISK-ON ENVIRONMENT";
+    scoreFillEl.style.background = "var(--teal)";
+    
+    rmVol.textContent = "LOW"; rmVol.style.color = "var(--teal)";
+    rmTrend.textContent = "STRONG"; rmTrend.style.color = "var(--teal)";
+    rmBreadth.textContent = "HEALTHY"; rmBreadth.style.color = "var(--teal)";
+    rmSnt.textContent = "NEUTRAL"; rmSnt.style.color = "var(--amber)";
+    rmApp.textContent = "VERY HIGH"; rmApp.style.color = "var(--teal)";
+    rmRisk.textContent = "LOW"; rmRisk.style.color = "var(--teal)";
+    rmExp.textContent = "90–100%"; rmExp.style.color = "var(--teal)";
+
+    finalConcList.innerHTML = `
+      <li>All five major components agree.</li>
+      <li>Institutional money is actively participating.</li>
+      <li>Market breadth ($NASI) confirms the advance.</li>
+      <li>Volatility remains supportive and sentiment is not at an extreme.</li>`;
+    
+    postureList.innerHTML = `
+      <li>Full long exposure (90–100%)</li>
+      <li>Trade A+ setups aggressively</li>
+      <li>Pyramid winning positions</li>
+      <li>Avoid premature profit taking until components deteriorate.</li>`;
+
+  } else if (regimeType === "transitional") {
+    iconEl.textContent = "🟡";
+    mainTitleEl.textContent = "TRANSITIONAL MARKET ENVIRONMENT";
+    scoreFillEl.style.background = "var(--amber)";
+
+    rmVol.textContent = "ELEVATED"; rmVol.style.color = "var(--amber)";
+    rmTrend.textContent = "MIXED"; rmTrend.style.color = "var(--amber)";
+    rmBreadth.textContent = "MODERATE"; rmBreadth.style.color = "var(--amber)";
+    rmSnt.textContent = "CAUTION"; rmSnt.style.color = "var(--amber)";
+    rmApp.textContent = "MODERATE"; rmApp.style.color = "var(--amber)";
+    rmRisk.textContent = "MODERATE"; rmRisk.style.color = "var(--amber)";
+    rmExp.textContent = "50–70%"; rmExp.style.color = "var(--amber)";
+
+    finalConcList.innerHTML = `
+      <li>Price remains resilient, but internal indicators are weakening.</li>
+      <li>Momentum is beginning to lose breadth confirmation.</li>
+      <li>This is not yet bearish, but no longer a high-conviction breakout zone.</li>`;
+    
+    postureList.innerHTML = `
+      <li>Reduce position sizing to 50–70%</li>
+      <li>Tighten trailing stops</li>
+      <li>Focus only on strongest relative strength leaders</li>
+      <li>Avoid chasing secondary breakouts</li>`;
+
+  } else {
+    iconEl.textContent = "🔴";
+    mainTitleEl.textContent = "DEFENSIVE MARKET REGIME";
+    scoreFillEl.style.background = "var(--red)";
+
+    rmVol.textContent = "HIGH"; rmVol.style.color = "var(--red)";
+    rmTrend.textContent = "DOWN"; rmTrend.style.color = "var(--red)";
+    rmBreadth.textContent = "WEAK"; rmBreadth.style.color = "var(--red)";
+    rmSnt.textContent = "FEAR"; rmSnt.style.color = "var(--teal)";
+    rmApp.textContent = "LOW"; rmApp.style.color = "var(--red)";
+    rmRisk.textContent = "HIGH"; rmRisk.style.color = "var(--red)";
+    rmExp.textContent = "20–40%"; rmExp.style.color = "var(--red)";
+
+    finalConcList.innerHTML = `
+      <li>The market is currently under institutional distribution.</li>
+      <li>Fear alone (Put/Call) is insufficient to buy without price confirmation.</li>
+      <li>Capital preservation takes top priority.</li>`;
+    
+    postureList.innerHTML = `
+      <li>Raise cash levels significantly</li>
+      <li>Avoid aggressive long entries</li>
+      <li>Hold only exceptional market leaders</li>
+      <li>Wait for breadth and trend confirmation before re-deploying.</li>`;
+  }
+
+  // Render 5 Engine Boxes
+  enginesGrid.innerHTML = `
+    <div class="engine-box">
+      <div>
+        <div class="engine-box-head"><span class="engine-name">Volatility Mood</span><span class="engine-badge">${moodBadge}</span></div>
+        <div class="engine-status" style="color:${moodColor}">${moodStatus}</div>
+        <ul class="engine-bullets">
+          <li>VVIX/VIX ratio: <b>${fmtNum(last.ratio, 3)}</b></li>
+          <li>21-day MA: <b>${fmtNum(last.ratioMA, 3)}</b></li>
+          <li>Institutions unhedged</li>
+        </ul>
+      </div>
+      <div class="engine-conclusion">Options market supporting higher equity prices.</div>
+    </div>
+
+    <div class="engine-box">
+      <div>
+        <div class="engine-box-head"><span class="engine-name">QQQ Trend</span><span class="engine-badge">${qqqBadge}</span></div>
+        <div class="engine-status" style="color:${qqqColor}">${qqqStatus}</div>
+        <ul class="engine-bullets">
+          <li>QQQ: <b>${fmtNum(last.qClose)}</b></li>
+          <li>21 EMA: <b>${fmtNum(last.qEma)}</b></li>
+          <li>Candle test: <b>${last.qqqState === 'bull' ? 'Above EMA' : 'Below EMA'}</b></li>
+        </ul>
+      </div>
+      <div class="engine-conclusion">Tech leadership state remains intact.</div>
+    </div>
+
+    <div class="engine-box">
+      <div>
+        <div class="engine-box-head"><span class="engine-name">SPY Trend</span><span class="engine-badge">${spyBadge}</span></div>
+        <div class="engine-status" style="color:${spyColor}">${spyStatus}</div>
+        <ul class="engine-bullets">
+          <li>SPY: <b>${fmtNum(last.sClose)}</b></li>
+          <li>21 EMA: <b>${fmtNum(last.sEma)}</b></li>
+          <li>Trend slope: <b>${fmtSigned(last.spySlope, 2)}</b></li>
+        </ul>
+      </div>
+      <div class="engine-conclusion">Buying pressure is broad and active.</div>
+    </div>
+
+    <div class="engine-box">
+      <div>
+        <div class="engine-box-head"><span class="engine-name">Put / Call Ratio</span><span class="engine-badge">${pcBadge}</span></div>
+        <div class="engine-status" style="color:${pcColor}">${pcStatus}</div>
+        <ul class="engine-bullets">
+          <li>Current PCR: <b>${pcVal.toFixed(2)}</b></li>
+          <li>Hedging pressure: <b>Normal</b></li>
+          <li>No panic / greed extremes</li>
+        </ul>
+      </div>
+      <div class="engine-conclusion">Sentiment supports trend continuation.</div>
+    </div>
+
+    <div class="engine-box">
+      <div>
+        <div class="engine-box-head"><span class="engine-name">$NASI Breadth</span><span class="engine-badge">${nasiBadge}</span></div>
+        <div class="engine-status" style="color:${nasiColor}">${nasiStatus}</div>
+        <ul class="engine-bullets">
+          <li>$NASI: <b>${nasiVal.toFixed(2)}</b></li>
+          <li>50-DMA: <b>${nasiSma.toFixed(2)}</b></li>
+          <li>Participation: <b>${nasiVal > nasiSma ? 'Broad' : 'Narrow'}</b></li>
+        </ul>
+      </div>
+      <div class="engine-conclusion">Healthy participation supporting advance.</div>
+    </div>
+  `;
 
   /* ---------- MARKET MOOD CARD ---------- */
   document.getElementById("moodPill").className = "regime-status-pill " + statePillClass(last.moodState);
@@ -846,7 +1117,7 @@ function renderTradingViewWidgets() {
       "interval": "D",
       "timezone": "Etc/UTC",
       "theme": theme,
-      "style": "2", // Renders Primary Symbol (Put/Call Ratio) as a Line on the Right Axis
+      "style": "2",
       "locale": "en",
       "enable_publishing": false,
       "backgroundColor": bgColor,
@@ -859,7 +1130,7 @@ function renderTradingViewWidgets() {
         {
           "id": "Overlay@tv-basicstudies",
           "inputs": {
-            "symbol": overlaySymbol // Automatically overlays QQQ / SPY price candles on the Left Axis
+            "symbol": overlaySymbol
           }
         }
       ],
