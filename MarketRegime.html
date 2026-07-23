@@ -135,12 +135,6 @@
   
   .lw-chart-wrap{background:var(--panel2); border:1px solid var(--line); border-radius:8px; overflow:hidden; position:relative;}
 
-  /* ================= NASI BREADTH PANEL ================= */
-  .nasi-panel{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:18px 20px; margin-bottom:22px;}
-  .nasi-panel-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:10px;}
-  .nasi-panel-title{font-size:13.5px; font-weight:800; text-transform:uppercase; letter-spacing:.05em; font-family:'JetBrains Mono',monospace;}
-  .nasi-panel-hint{font-size:10.5px; color:var(--text-faint); margin-top:3px; font-family:'Inter',sans-serif; font-weight:400;}
-
   /* ================= REGIME HISTORY TABLE ================= */
   .section{margin-bottom:26px;}
   .section-head{background:var(--navy-head); border:1px solid var(--line); border-bottom:none; padding:9px 16px; border-radius:10px 10px 0 0; display:flex; justify-content:space-between; align-items:center;}
@@ -383,27 +377,6 @@
       </div>
       <div class="lw-chart-wrap" style="height: 420px;">
         <div class="tradingview-widget-container" id="spyTvContainer" style="height:100%;width:100%"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ================= NASI BREADTH INDICATOR ================= -->
-  <div class="nasi-panel">
-    <div class="nasi-panel-head">
-      <div>
-        <div class="nasi-panel-title">StockCharts: $NASI · Nasdaq Summation Index</div>
-        <div class="nasi-panel-hint">Real-time breadth via StockCharts API. Embedded read-only chart — click title to open interactive version on stockcharts.com</div>
-      </div>
-      <div style="display:flex; align-items:center; gap:12px;">
-        <span style="font-size:11px; color:var(--teal); font-family:'JetBrains Mono',monospace;">● Live Feed</span>
-      </div>
-    </div>
-    <div class="lw-chart-wrap" style="height: 420px;">
-      <div id="nasiTvContainer" style="height:100%;width:100%;display:flex;align-items:center;justify-content:center;background:var(--panel2);">
-        <iframe src="https://stockcharts.com/h-sc/ui?s=$nasi&p=D&yr=2&type=candlevolume&log=off&theme=dark&style=443894bca7bf" 
-                style="width:100%;height:100%;border:none;border-radius:6px;" 
-                allow="autoplay" title="StockCharts $NASI Daily">
-        </iframe>
       </div>
     </div>
   </div>
@@ -885,7 +858,6 @@ function renderTradingViewWidgets() {
 
   createTvWidget("qqqTvContainer", "INDEX:PCQQ");
   createTvWidget("spyTvContainer", "INDEX:PCSP");
-  // NASI is now embedded via StockCharts iframe — no JS needed
 }
 
 /* ============================================================
