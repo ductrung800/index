@@ -3,7 +3,7 @@
 <head>
 <link rel="icon" href="data:,">
 <meta charset="UTF-8">
-<title>Market Command Center</title>
+<title>Market Command Center &amp; Regime Engine</title>
 <!-- Lightweight Charts Standalone Library for Interactive Ticker Cards -->
 <script src="https://unpkg.com/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
 <style>
@@ -21,6 +21,7 @@
     --teal:#20d9b8;
     --amber:#f5b942;
     --red:#ff5c72;
+    --blue:#38bdf8;
     --navy-head:#131c33;
     --input-bg:#0d1220;
     --chart-bg:#0d1220;
@@ -37,6 +38,7 @@
     --teal:#0b9c82;
     --amber:#b9781a;
     --red:#c93a51;
+    --blue:#0284c7;
     --navy-head:#eef1f8;
     --input-bg:#f4f6fa;
     --chart-bg:#ffffff;
@@ -60,7 +62,7 @@
   .app-tabs a.active { background: var(--panel); color: var(--teal); border-color: var(--line); border-bottom-color: var(--panel); margin-bottom: -1px; }
   .app-tabs a:hover:not(.active) { color: var(--text); background: rgba(255,255,255,0.03); }
 
-  /* ---------- HEADER ---------- */
+  /* HEADER */
   header.top{
     display:flex; justify-content:space-between; align-items:flex-end;
     border-bottom:2px solid var(--line); padding-bottom:14px; margin-bottom:22px; gap:16px; flex-wrap:wrap;
@@ -84,14 +86,8 @@
   .btn:hover{border-color:var(--teal); color:var(--teal);}
   .btn.primary{background:var(--teal); color:#04150f; border-color:var(--teal);}
 
-  /* ---------- COMMAND CENTER ZONES ---------- */
-  .command-grid{
-    display:grid; grid-template-columns: 2.2fr 1fr; gap:20px; margin-bottom:24px;
-  }
-  @media(max-width:1200px){ .command-grid{grid-template-columns:1fr;} }
-
   .zone-card{
-    background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:20px 22px;
+    background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:20px 22px; margin-bottom:24px;
   }
   .zone-title{
     font-size:11px; text-transform:uppercase; letter-spacing:.12em; color:var(--text-faint);
@@ -99,26 +95,62 @@
     display:flex; justify-content:space-between; align-items:center;
   }
 
-  /* 1. Market Regime Hero Box */
-  .regime-hero{
-    display:grid; grid-template-columns: repeat(4, 1fr); gap:12px; margin-bottom:16px;
+  /* MASTER BRIEFING BANNER */
+  .master-briefing{
+    background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:24px; margin-bottom:24px;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.3);
   }
-  .regime-metric{
-    background:var(--panel2); border:1px solid var(--line); border-radius:8px; padding:12px 14px;
-  }
-  .regime-metric .lbl{font-size:10px; color:var(--text-faint); text-transform:uppercase; font-family:'JetBrains Mono',monospace;}
-  .regime-metric .val{font-size:18px; font-weight:800; font-family:'JetBrains Mono',monospace; margin-top:4px;}
+  .briefing-header{display:flex; justify-content:space-between; align-items:flex-start; gap:20px; border-bottom:1px solid var(--line); padding-bottom:18px; margin-bottom:20px; flex-wrap:wrap;}
+  .briefing-title-area{display:flex; align-items:center; gap:14px;}
+  .briefing-icon{font-size:36px; line-height:1;}
+  .briefing-eyebrow{font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.15em; color:var(--text-faint); text-transform:uppercase;}
+  .briefing-main-title{font-size:22px; font-weight:800; font-family:'JetBrains Mono',monospace; margin-top:2px;}
   
-  .ai-strategy-box{
-    background:rgba(32,217,184,.05); border:1px solid rgba(32,217,184,.25); border-radius:8px;
-    padding:14px 16px; font-size:12.5px; line-height:1.6; color:var(--text); font-family:'Inter',sans-serif;
-  }
-  .ai-strategy-box b{color:var(--teal);}
+  .score-card{background:var(--panel2); border:1px solid var(--line); border-radius:10px; padding:12px 18px; text-align:right; min-width:210px;}
+  .score-card-top{display:flex; justify-content:space-between; align-items:center; gap:12px;}
+  .score-label{font-size:10px; text-transform:uppercase; color:var(--text-faint); font-family:'JetBrains Mono',monospace;}
+  .score-stars{font-size:14px; color:var(--amber); letter-spacing:2px;}
+  .score-value-row{font-family:'JetBrains Mono',monospace; font-size:22px; font-weight:800; margin-top:4px;}
+  .score-bar{height:6px; background:var(--line); border-radius:3px; margin-top:6px; overflow:hidden; display:flex;}
+  .score-bar-fill{height:100%; background:var(--teal); border-radius:3px; transition:width 0.4s ease;}
 
-  /* 2. Market Health & Probabilities */
-  .health-score-big{
-    display:flex; align-items:baseline; gap:8px; font-family:'JetBrains Mono',monospace; margin-bottom:14px;
+  .engines-grid{display:grid; grid-template-columns:repeat(5, 1fr); gap:14px; margin-bottom:20px;}
+  @media(max-width:1300px){ .engines-grid{grid-template-columns:repeat(3, 1fr);} }
+  @media(max-width:850px){ .engines-grid{grid-template-columns:1fr;} }
+
+  .engine-box{background:var(--panel2); border:1px solid var(--line); border-radius:10px; padding:14px; display:flex; flex-direction:column; justify-content:space-between;}
+  .engine-box-head{display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;}
+  .engine-name{font-size:11.5px; font-weight:700; text-transform:uppercase; font-family:'JetBrains Mono',monospace; color:var(--text);}
+  .engine-badge{font-size:14px;}
+  .engine-status{font-size:11.5px; font-weight:700; margin-bottom:8px; font-family:'JetBrains Mono',monospace;}
+  .engine-bullets{font-size:11px; color:var(--text-dim); line-height:1.4; padding-left:12px; margin-bottom:10px;}
+  .engine-bullets li{margin-bottom:3px;}
+  .engine-conclusion{font-size:11px; font-style:italic; color:var(--text); background:rgba(255,255,255,0.02); border-left:2px solid var(--teal); padding:6px 8px; border-radius:0 4px 4px 0;}
+
+  .briefing-footer{display:grid; grid-template-columns: 1.4fr 1fr; gap:18px; background:var(--panel2); border:1px solid var(--line); border-radius:10px; padding:16px 20px;}
+  @media(max-width:900px){ .briefing-footer{grid-template-columns:1fr;} }
+  .conclusion-section h4{font-size:12px; text-transform:uppercase; letter-spacing:.05em; font-family:'JetBrains Mono',monospace; color:var(--teal); margin-bottom:8px;}
+  .conclusion-bullets{font-size:11.5px; color:var(--text); line-height:1.5; padding-left:14px;}
+  .conclusion-bullets li{margin-bottom:4px;}
+  .posture-section h4{font-size:12px; text-transform:uppercase; letter-spacing:.05em; font-family:'JetBrains Mono',monospace; color:var(--amber); margin-bottom:8px;}
+  .posture-bullets{font-size:11.5px; color:var(--text-dim); line-height:1.5; padding-left:14px;}
+  .posture-bullets li{margin-bottom:4px;}
+
+  /* RISK SUMMARY BAR */
+  .risk-summary-bar{
+    display:grid; grid-template-columns: repeat(5, 1fr) 1.2fr 1.2fr; gap:12px;
+    background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:16px 20px; margin-bottom:24px; align-items:center;
   }
+  @media(max-width:1200px){ .risk-summary-bar{grid-template-columns:repeat(2, 1fr);} }
+  .risk-metric .r-label{font-size:9.5px; text-transform:uppercase; color:var(--text-faint); font-family:'JetBrains Mono',monospace;}
+  .risk-metric .r-val{font-size:13px; font-weight:700; font-family:'JetBrains Mono',monospace; margin-top:2px;}
+  .risk-highlight{background:var(--panel2); border:1px solid var(--line); border-radius:8px; padding:10px 14px;}
+
+  /* GRID LAYOUTS */
+  .command-grid{ display:grid; grid-template-columns: 2.2fr 1fr; gap:20px; margin-bottom:24px; }
+  @media(max-width:1200px){ .command-grid{grid-template-columns:1fr;} }
+
+  .health-score-big{ display:flex; align-items:baseline; gap:8px; font-family:'JetBrains Mono',monospace; margin-bottom:14px; }
   .health-score-big span:first-child{font-size:36px; font-weight:800; color:var(--teal);}
   .health-score-big span:last-child{font-size:14px; color:var(--text-faint);}
 
@@ -131,7 +163,6 @@
   .prob-box .p-lbl{font-size:9.5px; color:var(--text-faint); text-transform:uppercase; font-family:'JetBrains Mono',monospace;}
   .prob-box .p-val{font-size:16px; font-weight:800; font-family:'JetBrains Mono',monospace; margin-top:4px;}
 
-  /* Lower Sections */
   .lower-grid{display:grid; grid-template-columns: repeat(3, 1fr); gap:20px; margin-bottom:24px;}
   @media(max-width:1100px){ .lower-grid{grid-template-columns:1fr;} }
 
@@ -146,7 +177,52 @@
   .alloc-box .a-lbl{font-size:10px; color:var(--text-faint); text-transform:uppercase;}
   .alloc-box .a-val{font-size:16px; font-weight:800; margin-top:2px; color:var(--text);}
 
+  /* 3-COLUMN REGIME DIAGNOSTIC CARDS */
+  .regime-grid{ display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:18px; margin-bottom:24px; width:100%; }
+  @media(max-width:1450px){ .regime-grid{grid-template-columns:1fr;} }
+  .regime-card{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:18px 20px; display:flex; flex-direction:column; justify-content:space-between; min-width:0;}
+  .regime-card-head{display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:14px; flex-wrap:wrap;}
+  .regime-card-title{font-size:13.5px; font-weight:800; text-transform:uppercase; letter-spacing:.05em; font-family:'JetBrains Mono',monospace;}
+  .regime-card-desc{font-size:11px; color:var(--text-faint); margin-top:3px; font-family:'Inter',sans-serif; font-weight:400;}
+  .regime-status-pill{ font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:800; padding:6px 12px; border-radius:100px; text-transform:uppercase; white-space:nowrap; }
+  .pill-bull{background:rgba(32,217,184,.15); color:var(--teal); border:1px solid rgba(32,217,184,.35);}
+  .pill-bear{background:rgba(255,92,114,.15); color:var(--red); border:1px solid rgba(255,92,114,.35);}
+  .pill-flat{background:rgba(245,185,66,.15); color:var(--amber); border:1px solid rgba(245,185,66,.35);}
+
+  .metric-row{display:grid; grid-template-columns:repeat(2, 1fr); gap:10px; margin-bottom:14px;}
+  .metric-box{background:var(--panel2); border:1px solid var(--line); border-radius:8px; padding:10px 12px; min-width:0;}
+  .metric-box .lbl{font-size:10px; color:var(--text-faint); text-transform:uppercase; letter-spacing:.06em; font-weight:600;}
+  .metric-box .val{font-family:'JetBrains Mono',monospace; font-size:16px; font-weight:800; margin-top:4px;}
+  .metric-box .cap{font-size:10.5px; color:var(--text-dim); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+
+  .chart-svg-wrap{background:var(--panel2); border:1px solid var(--line); border-radius:8px; padding:10px; overflow:hidden; margin-top:4px; width:100%;}
+  .chart-svg-wrap svg{width:100%; height:140px; display:block; max-width:100%;}
+  .chart-caption{font-size:10.5px; color:var(--text-faint); margin-top:6px; font-family:'JetBrains Mono',monospace; display:flex; justify-content:space-between; flex-wrap:wrap; gap:6px;}
+
+  .streak-history{display:flex; gap:3px; margin-top:12px; overflow-x:auto; padding-bottom:4px;}
+  .streak-day{width:8px; height:20px; border-radius:2px; flex-shrink:0;}
+
+  /* TRADINGVIEW SPLIT PANELS */
+  .charts-grid{display:grid; grid-template-columns:repeat(2, 1fr); gap:20px; margin-bottom:24px;}
+  @media(max-width:1200px){ .charts-grid{grid-template-columns:1fr;} }
+  .price-panel{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:18px 20px;}
+  .price-panel-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:10px;}
+  .price-panel-title{font-size:13.5px; font-weight:800; text-transform:uppercase; letter-spacing:.05em; font-family:'JetBrains Mono',monospace;}
+  .lw-chart-wrap{background:var(--panel2); border:1px solid var(--line); border-radius:8px; overflow:hidden; position:relative;}
+
+  /* HISTORY TABLE */
+  .table-wrap{width:100%; overflow-x:auto; border:1px solid var(--line); border-radius:10px; background:var(--panel2); margin-top:10px;}
+  table{width:100%; border-collapse:collapse; min-width:900px;}
+  thead th{font-size:10px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-dim); text-align:right; padding:9px 10px; border-bottom:1px solid var(--line); font-weight:600; white-space:nowrap; background:var(--navy-head);}
+  thead th:first-child{text-align:left;}
+  tbody td{padding:7px 10px; text-align:right; font-family:'JetBrains Mono',monospace; font-size:12px; border-bottom:1px solid var(--line-soft); color:var(--text); white-space:nowrap;}
+  tbody td:first-child{font-weight:700; text-align:left;}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr:hover td{filter:brightness(1.08);}
+  .tag-pill{font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:800; padding:2px 8px; border-radius:4px; display:inline-block;}
+
   .status-msg{font-size:11.5px; color:var(--teal); font-family:'JetBrains Mono',monospace;}
+  .status-msg.err{color:var(--red);}
   
   footer{margin-top:30px; text-align:center; color:var(--text-faint); font-size:10.5px; font-family:'JetBrains Mono',monospace;}
 </style>
@@ -157,8 +233,7 @@
   <!-- ================= APP TABS ================= -->
   <div class="app-tabs">
     <a href="index.html">Market Dashboard</a>
-    <a href="MarketCommandCenter.html" class="active">Market Command Center</a>
-    <a href="MarketRegime.html">Market Regime</a> 
+    <a href="MarketCommandCenter.html" class="active">Market Command Center &amp; Regime</a>
     <a href="stockbee_market_monitor_live.html">Stockbee Monitor</a>
     <a href="sata_watchlist_dashboard.html">SATA Chart</a>
     <a href="PowerList.html">Power List</a>
@@ -173,12 +248,12 @@
 
   <header class="top">
     <div>
-      <div class="brand-eyebrow">Institutional Command Center</div>
+      <div class="brand-eyebrow">Unified Institutional Command &amp; Regime Diagnostics</div>
       <h1>Market Command Center</h1>
-      <div class="subline" id="dateLine">7/23/2026 · Benchmark: RSP</div>
+      <div class="subline" id="subline">7/23/2026 · Syncing multi-timeframe engines...</div>
     </div>
     <div class="header-right">
-      <button class="btn primary" id="btnAutoRefresh" style="margin-right: 8px;">↻ Refresh Live Data</button>
+      <button class="btn primary" id="btnRefresh">↻ Refresh Live Data</button>
       <div class="theme-toggle" id="themeToggle">
         <span class="opt" id="optDark" onclick="setTheme('dark')">Dark</span>
         <span class="opt" id="optLight" onclick="setTheme('light')">Light</span>
@@ -186,70 +261,92 @@
     </div>
   </header>
 
-  <div style="display:flex; justify-content:flex-end; margin-bottom:8px;">
-    <span class="status-msg" id="statusMsg"></span>
+  <div style="display:flex; justify-content:flex-end; margin-bottom:10px;">
+    <span class="status-msg" id="statusMsg">Initializing unified feed...</span>
   </div>
 
-  <!-- ================= ZONE 1 & 2: EXECUTIVE SUMMARY & MARKET HEALTH ================= -->
-  <div class="command-grid">
-    
-    <!-- ZONE 1: EXECUTIVE SUMMARY -->
-    <div class="zone-card">
-      <div class="zone-title"><span>Market Regime &amp; Strategy Directive</span><span style="color:var(--teal)">● Synced Live</span></div>
-      
-      <div class="regime-hero">
-        <div class="regime-metric">
-          <div class="lbl">Market Regime</div>
-          <div class="val" id="execRegime" style="color:var(--amber)">TRANSITIONAL</div>
-        </div>
-        <div class="regime-metric">
-          <div class="lbl">Confidence Score</div>
-          <div class="val" id="execConfidence">58%</div>
-        </div>
-        <div class="regime-metric">
-          <div class="lbl">Expected Exposure</div>
-          <div class="val" id="execExposure" style="color:var(--amber)">50–70%</div>
-        </div>
-        <div class="regime-metric">
-          <div class="lbl">Today's Play</div>
-          <div class="val" style="font-size:13px; margin-top:6px;" id="execPlay">Selective Longs</div>
+  <!-- ================= ZONE 1: MASTER BRIEFING BANNER ================= -->
+  <div class="master-briefing" id="masterBriefingContainer">
+    <div class="briefing-header">
+      <div class="briefing-title-area">
+        <div class="briefing-icon" id="briefingIcon">🟢</div>
+        <div>
+          <div class="briefing-eyebrow">Master Market Regime Assessment</div>
+          <div class="briefing-main-title" id="briefingMainTitle">EVALUATING REGIME...</div>
         </div>
       </div>
-
-      <div class="ai-strategy-box">
-        <b>Institutional Morning Note:</b> <span id="aiMorningNote">Breadth indicators ($NASI at -11.99) show contraction while price remains resilient. Energy and Defensive groups lead group momentum rotation. Focus strictly on top-ranked relative strength leaders.</span>
+      
+      <div class="score-card">
+        <div class="score-card-top">
+          <span class="score-label">Composite Score</span>
+          <span class="score-stars" id="briefingStars">★★★☆☆</span>
+        </div>
+        <div class="score-value-row"><span id="briefingScoreNum">--</span><span style="font-size:14px; color:var(--text-faint)"> /100</span></div>
+        <div class="score-bar"><div class="score-bar-fill" id="briefingScoreFill" style="width: 50%;"></div></div>
       </div>
     </div>
 
-    <!-- ZONE 2: MARKET HEALTH SCORE & PROBABILITY ENGINE -->
-    <div class="zone-card">
-      <div class="zone-title"><span>Market Health Score</span><span>Probability Engine</span></div>
-      
-      <div class="health-score-big">
-        <span id="healthScoreVal">58</span>
-        <span>/100</span>
-      </div>
+    <!-- 5 Independent Engines Breakdown Grid -->
+    <div class="engines-grid" id="enginesGridContainer"></div>
 
+    <!-- Conclusion & Posture -->
+    <div class="briefing-footer">
+      <div class="conclusion-section">
+        <h4>Final Conclusion</h4>
+        <ul class="conclusion-bullets" id="briefingFinalConclusionList"></ul>
+      </div>
+      <div class="posture-section">
+        <h4>Recommended Posture</h4>
+        <ul class="posture-bullets" id="briefingPostureList"></ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= ZONE 2: RISK SUMMARY BAR ================= -->
+  <div class="risk-summary-bar">
+    <div class="risk-metric"><div class="r-label">Volatility</div><div class="r-val" id="rmVolatility">--</div></div>
+    <div class="risk-metric"><div class="r-label">Trend</div><div class="r-val" id="rmTrend">--</div></div>
+    <div class="risk-metric"><div class="r-label">Breadth</div><div class="r-val" id="rmBreadth">--</div></div>
+    <div class="risk-metric"><div class="r-label">Sentiment</div><div class="r-val" id="rmSentiment">--</div></div>
+    <div class="risk-metric"><div class="r-label">Risk Appetite</div><div class="r-val" id="rmAppetite">--</div></div>
+    <div class="risk-metric risk-highlight"><div class="r-label">Market Risk Level</div><div class="r-val" id="rmRiskLevel">--</div></div>
+    <div class="risk-metric risk-highlight"><div class="r-label">Recommended Exposure</div><div class="r-val" id="rmExposure">--</div></div>
+  </div>
+
+  <!-- ================= ZONE 3: EXECUTIVE HEALTH & PROBABILITIES ================= -->
+  <div class="command-grid">
+    <div class="zone-card" style="margin-bottom:0;">
+      <div class="zone-title"><span>Market Strategy Directive</span><span style="color:var(--teal)">● Synced Live</span></div>
+      <div class="regime-hero">
+        <div class="regime-metric"><div class="lbl">Market Regime</div><div class="val" id="execRegime" style="color:var(--amber)">TRANSITIONAL</div></div>
+        <div class="regime-metric"><div class="lbl">Confidence Score</div><div class="val" id="execConfidence">58%</div></div>
+        <div class="regime-metric"><div class="lbl">Expected Exposure</div><div class="val" id="execExposure" style="color:var(--amber)">50–70%</div></div>
+        <div class="regime-metric"><div class="lbl">Today's Play</div><div class="val" style="font-size:13px; margin-top:6px;" id="execPlay">Selective Longs</div></div>
+      </div>
+      <div class="ai-strategy-box">
+        <b>Institutional Morning Note:</b> <span id="aiMorningNote">Breadth indicators ($NASI at -11.99) show contraction while price remains resilient. Energy and Defensive groups lead rotation. Focus strictly on top-ranked relative strength leaders.</span>
+      </div>
+    </div>
+
+    <div class="zone-card" style="margin-bottom:0;">
+      <div class="zone-title"><span>Market Health Score</span><span>Probability Engine</span></div>
+      <div class="health-score-big"><span id="healthScoreVal">58</span><span>/100</span></div>
       <div class="health-bar-row"><span>Trend</span><div class="health-bar-track"><div class="health-bar-fill" id="barTrend" style="width:75%;"></div></div><span id="valTrend" style="color:var(--teal)">75</span></div>
       <div class="health-bar-row"><span>Breadth</span><div class="health-bar-track"><div class="health-bar-fill" id="barBreadth" style="width:45%; background:var(--red);"></div></div><span id="valBreadth" style="color:var(--red)">45</span></div>
       <div class="health-bar-row"><span>Momentum</span><div class="health-bar-track"><div class="health-bar-fill" id="barMom" style="width:68%;"></div></div><span id="valMom" style="color:var(--amber)">68</span></div>
       <div class="health-bar-row"><span>Liquidity</span><div class="health-bar-track"><div class="health-bar-fill" id="barLiq" style="width:70%;"></div></div><span id="valLiq" style="color:var(--teal)">70</span></div>
       <div class="health-bar-row"><span>Volatility</span><div class="health-bar-track"><div class="health-bar-fill" id="barVol" style="width:78%;"></div></div><span id="valVol" style="color:var(--teal)">78</span></div>
-
       <div class="prob-grid">
         <div class="prob-box"><div class="p-lbl">Bull Market</div><div class="p-val" id="probBull" style="color:var(--teal)">54%</div></div>
         <div class="prob-box"><div class="p-lbl">Correction</div><div class="p-val" id="probCorr" style="color:var(--amber)">38%</div></div>
         <div class="prob-box"><div class="p-lbl">Bear</div><div class="p-val" id="probBear" style="color:var(--red)">8%</div></div>
       </div>
     </div>
-
   </div>
 
-  <!-- ================= ZONE 3: CAPITAL FLOW, THEMES MAP & PORTFOLIO ================= -->
-  <div class="lower-grid">
-    
-    <!-- CAPITAL ROTATION / MONEY FLOW -->
-    <div class="zone-card">
+  <!-- ================= ZONE 4: LOWER FLOWS & PORTFOLIO GUIDANCE ================= -->
+  <div class="lower-grid" style="margin-top:24px;">
+    <div class="zone-card" style="margin-bottom:0;">
       <div class="zone-title"><span>Capital Rotation &amp; Flows</span><span>Asset Class</span></div>
       <div class="flow-row"><span>Crude Oil / Energy</span><span class="flow-arrow up">↑↑ Top Inflow</span></div>
       <div class="flow-row"><span>Consumer Defensive</span><span class="flow-arrow up">↑ Strong Accumulation</span></div>
@@ -259,20 +356,17 @@
       <div class="flow-row"><span>Utilities / Bonds</span><span class="flow-arrow down">↓ Outflows</span></div>
     </div>
 
-    <!-- PORTFOLIO GUIDANCE -->
-    <div class="zone-card">
+    <div class="zone-card" style="margin-bottom:0;">
       <div class="zone-title"><span>Portfolio Guidance</span><span>Model Target</span></div>
-      
       <div class="alloc-grid">
         <div class="alloc-box"><div class="a-lbl">Growth / Energy</div><div class="a-val">40%</div></div>
         <div class="alloc-box"><div class="a-lbl">Quality Leader</div><div class="a-val">30%</div></div>
         <div class="alloc-box"><div class="a-lbl">Cash Buffer</div><div class="a-val">20%</div></div>
         <div class="alloc-box"><div class="a-lbl">Defensive / Fixed</div><div class="a-val">10%</div></div>
       </div>
-
-      <div style="margin-top:20px;">
-        <div class="zone-title" style="margin-bottom:10px;"><span>Macro Internals Check</span></div>
-        <div style="font-size:11.5px; font-family:'JetBrains Mono',monospace; line-height:1.6; color:var(--text-dim);" id="macroInternalsText">
+      <div style="margin-top:16px;">
+        <div class="zone-title" style="margin-bottom:6px;"><span>Macro Internals Check</span></div>
+        <div style="font-size:11.5px; font-family:'JetBrains Mono',monospace; line-height:1.5; color:var(--text-dim);" id="macroInternalsText">
           • VIX: <b style="color:var(--teal)">16.64 (Stable)</b><br>
           • Credit Spread: <b style="color:var(--teal)">1.03 (Tightening)</b><br>
           • Put/Call Ratio: <b style="color:var(--amber)">0.93 (Balanced)</b><br>
@@ -281,8 +375,7 @@
       </div>
     </div>
 
-    <!-- ACTIONABLE BRIEFING CARD -->
-    <div class="zone-card">
+    <div class="zone-card" style="margin-bottom:0;">
       <div class="zone-title"><span>Execution Directive</span><span>Institutional</span></div>
       <div style="font-size:12px; line-height:1.6; color:var(--text); font-family:'Inter',sans-serif;">
         <p style="margin-bottom:8px;"><b style="color:var(--teal);">Primary Objective:</b> Protect capital while participating in top-tier defensive and energy momentum rotation.</p>
@@ -290,83 +383,522 @@
         <p><b style="color:var(--teal);">Action:</b> Maintain 20% cash buffer and avoid chasing low-quality setups.</p>
       </div>
     </div>
-
   </div>
 
-  <!-- ================= LEADING THEMES & SECTORS MAP (TradersLab & TV Chart Grid Style) ================= -->
-  <div class="zone-card" style="margin-bottom:24px;">
+  <!-- ================= ZONE 5: 3-COLUMN REGIME DIAGNOSTIC CARDS ================= -->
+  <div class="zone-card" style="margin-top:24px; padding-bottom:10px;">
+    <div class="zone-title"><span>Core Trend Engines Diagnostic</span><span>VVIX/VIX · QQQ 21EMA · SPY 21EMA</span></div>
+    <div class="regime-grid">
+      <!-- MARKET MOOD CARD -->
+      <div class="regime-card">
+        <div>
+          <div class="regime-card-head">
+            <div><div class="regime-card-title">Market Mood</div><div class="regime-card-desc">VVIX/VIX Ratio vs 21 MA. Volatility underlying sentiment.</div></div>
+            <span class="regime-status-pill pill-flat" id="moodPill">—</span>
+          </div>
+          <div class="metric-row">
+            <div class="metric-box"><div class="lbl">VVIX/VIX</div><div class="val" id="moodRatioVal">—</div><div class="cap" id="moodRatioCap">—</div></div>
+            <div class="metric-box"><div class="lbl">21 MA</div><div class="val" id="moodMaVal">—</div><div class="cap" id="moodMaCap">vs ratio</div></div>
+            <div class="metric-box"><div class="lbl">Slope (5d)</div><div class="val" id="moodSlopeVal">—</div><div class="cap" id="moodSlopeCap">momentum</div></div>
+            <div class="metric-box"><div class="lbl">Streak</div><div class="val" id="moodStreakVal">—</div><div class="cap" id="moodStreakCap">days</div></div>
+          </div>
+          <div class="chart-svg-wrap"><svg id="moodSvg" viewBox="0 0 680 140" xmlns="http://www.w3.org/2000/svg"></svg></div>
+          <div class="chart-caption">
+            <span><span style="color:var(--amber)">●</span> VVIX/VIX &nbsp; <span style="color:var(--blue)">●</span> 21 MA</span>
+            <span id="moodRangeCap">120d</span>
+          </div>
+        </div>
+        <div class="streak-history" id="moodHistory"></div>
+      </div>
+
+      <!-- QQQ CYCLE CARD -->
+      <div class="regime-card">
+        <div>
+          <div class="regime-card-head">
+            <div><div class="regime-card-title">QQQ Cycle</div><div class="regime-card-desc">Tech momentum. Entire candle above/below 21 EMA required.</div></div>
+            <span class="regime-status-pill pill-flat" id="qqqCyclePill">—</span>
+          </div>
+          <div class="metric-row">
+            <div class="metric-box"><div class="lbl">QQQ Close</div><div class="val" id="qqqPriceVal">—</div><div class="cap" id="qqqPriceCap">—</div></div>
+            <div class="metric-box"><div class="lbl">21 EMA</div><div class="val" id="qqqEmaVal">—</div><div class="cap" id="qqqEmaCap">slope</div></div>
+            <div class="metric-box"><div class="lbl">Candle Test</div><div class="val" id="qqqCandleVal" style="font-size:12px;">—</div><div class="cap" id="qqqCandleCap">L/H vs EMA</div></div>
+            <div class="metric-box"><div class="lbl">Streak</div><div class="val" id="qqqStreakVal">—</div><div class="cap" id="qqqStreakCap">days</div></div>
+          </div>
+          <div class="chart-svg-wrap"><svg id="qqqCycleSvg" viewBox="0 0 680 140" xmlns="http://www.w3.org/2000/svg"></svg></div>
+          <div class="chart-caption">
+            <span><span style="color:var(--text)">●</span> QQQ &nbsp; <span style="color:var(--blue)">●</span> 21 EMA</span>
+            <span id="qqqRangeCap">120d</span>
+          </div>
+        </div>
+        <div class="streak-history" id="qqqHistory"></div>
+      </div>
+
+      <!-- SPY CYCLE CARD -->
+      <div class="regime-card">
+        <div>
+          <div class="regime-card-head">
+            <div><div class="regime-card-title">SPY Cycle</div><div class="regime-card-desc">Broad market health. Entire candle above/below 21 EMA required.</div></div>
+            <span class="regime-status-pill pill-flat" id="spyCyclePill">—</span>
+          </div>
+          <div class="metric-row">
+            <div class="metric-box"><div class="lbl">SPY Close</div><div class="val" id="spyPriceVal">—</div><div class="cap" id="spyPriceCap">—</div></div>
+            <div class="metric-box"><div class="lbl">21 EMA</div><div class="val" id="spyEmaVal">—</div><div class="cap" id="spyEmaCap">slope</div></div>
+            <div class="metric-box"><div class="lbl">Candle Test</div><div class="val" id="spyCandleVal" style="font-size:12px;">—</div><div class="cap" id="spyCandleCap">L/H vs EMA</div></div>
+            <div class="metric-box"><div class="lbl">Streak</div><div class="val" id="spyStreakVal">—</div><div class="cap" id="spyStreakCap">days</div></div>
+          </div>
+          <div class="chart-svg-wrap"><svg id="spyCycleSvg" viewBox="0 0 680 140" xmlns="http://www.w3.org/2000/svg"></svg></div>
+          <div class="chart-caption">
+            <span><span style="color:var(--text)">●</span> SPY &nbsp; <span style="color:var(--blue)">●</span> 21 EMA</span>
+            <span id="spyRangeCap">120d</span>
+          </div>
+        </div>
+        <div class="streak-history" id="spyHistory"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= ZONE 6: TRADINGVIEW PUT/CALL + PRICE PANELS ================= -->
+  <div class="charts-grid">
+    <div class="price-panel">
+      <div class="price-panel-head">
+        <div class="price-panel-title">TradingView: Put/Call Ratio QQQ (PCQQ) + QQQ Candles</div>
+        <span style="font-size:11px; color:var(--teal); font-family:'JetBrains Mono',monospace;">● Live Feed</span>
+      </div>
+      <div class="lw-chart-wrap" style="height: 380px;">
+        <div class="tradingview-widget-container" id="qqqTvContainer" style="height:100%;width:100%"></div>
+      </div>
+    </div>
+
+    <div class="price-panel">
+      <div class="price-panel-head">
+        <div class="price-panel-title">TradingView: Put/Call Ratio SPY (PCSP) + SPY Candles</div>
+        <span style="font-size:11px; color:var(--teal); font-family:'JetBrains Mono',monospace;">● Live Feed</span>
+      </div>
+      <div class="lw-chart-wrap" style="height: 380px;">
+        <div class="tradingview-widget-container" id="spyTvContainer" style="height:100%;width:100%"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= ZONE 7: LEADING THEMES & SECTORS MAP ================= -->
+  <div class="zone-card">
     <div class="zone-title">
       <span>Leading Themes &amp; Sectors Map (Top 10 Institutional Charts per Theme)</span>
       <span style="color:var(--teal)">● Live TV Screener Sync</span>
     </div>
 
-    <!-- Fully Dynamic AI Insight Banner -->
     <div style="background:rgba(32,217,184,.05); border:1px solid rgba(32,217,184,.2); border-radius:8px; padding:10px 14px; font-size:11.5px; margin-bottom:18px; font-family:'JetBrains Mono',monospace; color:var(--text);">
       <b style="color:var(--teal);">AI INSIGHT:</b> <span id="themeAiInsight">Synthesizing live institutional market regime and breadth momentum engines...</span>
     </div>
 
-    <!-- Theme Sections Container (Top 10 Tickers per Section rendered with TradingView-style charts) -->
-    <div id="themesChartSectionsContainer" style="display:flex; flex-direction:column; gap:24px;">
-      <!-- Dynamically injected theme groups containing top 10 ticker charts -->
+    <div id="themesChartSectionsContainer" style="display:flex; flex-direction:column; gap:24px;"></div>
+  </div>
+
+  <!-- ================= ZONE 8: 3-WAY ALIGNMENT HISTORY TABLE ================= -->
+  <div class="zone-card">
+    <div class="zone-title"><span>3-Way Alignment Regime History</span><span>Most recent 20 sessions</span></div>
+    <div class="table-wrap">
+      <table id="tblHistory"></table>
     </div>
   </div>
 
-  <footer>Institutional Command Center · Synchronized with Market Regime Engine · For informational purposes only, not trading advice.</footer>
+  <footer>Institutional Command Center &amp; Regime Engine · Synchronized across all 12 modules · For informational purposes only.</footer>
 
 </div>
 
 <script>
-let DATA = {
-  date: "7/23/2026",
-  benchmark: "RSP",
-  vix: { level: 16.64 },
-  putcall: { value: 0.93 },
-  nasi: { current: -11.99, sma50: 143.98 }
-};
+const MA_LEN = 21;
+const EMA_LEN = 21;
+const SLOPE_LOOKBACK = 5;
+const HISTORY_BARS = 120;
 
-const LEADING_THEMES_DATA = [
-  {
-    name: "Consumer Defensive",
-    category: "STAPLES & RETAIL LEADERS",
-    tickers: ["CLX", "KHC", "GIS", "PG", "HSY", "WMT", "COST", "PEP", "KO", "CL"]
-  },
-  {
-    name: "Crude Oil / Energy",
-    category: "PIPELINES, LNG & REFINING",
-    tickers: ["PAA", "PBF", "MMP", "VLO", "OXY", "XOM", "CVX", "HAL", "SLB", "PSX"]
-  },
-  {
-    name: "Financials & Fintech",
-    category: "BANKING & PAYMENT RAILS",
-    tickers: ["PYPL", "DFS", "COF", "AXP", "JPM", "BAC", "MS", "GS", "V", "MA"]
-  },
-  {
-    name: "Semiconductors & AI",
-    category: "HARDWARE & INFRASTRUCTURE",
-    tickers: ["SWKS", "NVDA", "AAPL", "MSFT", "PLTR", "AMD", "AVGO", "QCOM", "MU", "AMAT"]
-  }
+const CORS_PROXIES = [
+  url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
+  url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+  url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`
 ];
 
+const LEADING_THEMES_DATA = [
+  { name: "Consumer Defensive", category: "STAPLES & RETAIL LEADERS", tickers: ["CLX", "KHC", "GIS", "PG", "HSY", "WMT", "COST", "PEP", "KO", "CL"] },
+  { name: "Crude Oil / Energy", category: "PIPELINES, LNG & REFINING", tickers: ["PAA", "PBF", "MMP", "VLO", "OXY", "XOM", "CVX", "HAL", "SLB", "PSX"] },
+  { name: "Financials & Fintech", category: "BANKING & PAYMENT RAILS", tickers: ["PYPL", "DFS", "COF", "AXP", "JPM", "BAC", "MS", "GS", "V", "MA"] },
+  { name: "Semiconductors & AI", category: "HARDWARE & INFRASTRUCTURE", tickers: ["SWKS", "NVDA", "AAPL", "MSFT", "PLTR", "AMD", "AVGO", "QCOM", "MU", "AMAT"] }
+];
+
+let STATE = { vix: null, vvix: null, qqq: null, spy: null, merged: [] };
 let activeThemeCharts = [];
 
-function calculateEMA(data, period, key) {
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+async function fetchYahooDaily(symbol, range = "1y") {
+  const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=${range}`;
+  let json = null;
+  for (const build of CORS_PROXIES) {
+    try {
+      const res = await fetch(build(targetUrl), { cache: "no-store" });
+      if (res.ok) {
+        const j = await res.json();
+        if (j && j.chart && j.chart.result && j.chart.result[0]) { json = j; break; }
+      }
+    } catch (e) {}
+  }
+  if (!json) return null;
+  const result = json.chart.result[0];
+  const ts = result.timestamp || [];
+  const q = result.indicators.quote[0] || {};
+  const bars = [];
+  for (let i = 0; i < ts.length; i++) {
+    if (q.close[i] != null) {
+      bars.push({
+        t: ts[i] * 1000,
+        o: q.open[i] != null ? q.open[i] : q.close[i],
+        h: q.high[i] != null ? q.high[i] : q.close[i],
+        l: q.low[i] != null ? q.low[i] : q.close[i],
+        c: q.close[i]
+      });
+    }
+  }
+  return bars.sort((a, b) => a.t - b.t);
+}
+
+function sma(arr, len) {
+  const out = new Array(arr.length).fill(null);
+  let sum = 0;
+  for (let i = 0; i < arr.length; i++) {
+    sum += arr[i];
+    if (i >= len) sum -= arr[i - len];
+    if (i >= len - 1) out[i] = sum / len;
+  }
+  return out;
+}
+
+function ema(arr, len) {
+  const out = new Array(arr.length).fill(null);
+  const k = 2 / (len + 1);
+  let prev = null;
+  for (let i = 0; i < arr.length; i++) {
+    if (arr[i] == null) continue;
+    if (prev == null) { prev = arr[i]; } else { prev = arr[i] * k + prev * (1 - k); }
+    out[i] = prev;
+  }
+  return out;
+}
+
+function calculateEMAObj(data, period, key) {
   const result = [];
   const k = 2 / (period + 1);
-  let ema = 0;
+  let emaVal = 0;
   for (let i = 0; i < data.length; i++) {
     const val = data[i][key];
     if (i < period - 1) {
-      ema += val;
-      if (i === period - 2) ema /= (period - 1);
+      emaVal += val;
+      if (i === period - 2) emaVal /= (period - 1);
     } else if (i === period - 1) {
-      ema = (ema * (period - 1) + val) / period;
-      result.push({ time: data[i].time, value: ema });
+      emaVal = (emaVal * (period - 1) + val) / period;
+      result.push({ time: data[i].time, value: emaVal });
     } else {
-      ema = val * k + ema * (1 - k);
-      result.push({ time: data[i].time, value: ema });
+      emaVal = val * k + emaVal * (1 - k);
+      result.push({ time: data[i].time, value: emaVal });
     }
   }
   return result;
+}
+
+function buildMergedSeries() {
+  const dateKey = ms => new Date(ms).toISOString().slice(0, 10);
+  const vixMap = new Map(STATE.vix.map(b => [dateKey(b.t), b]));
+  const vvixMap = new Map(STATE.vvix.map(b => [dateKey(b.t), b]));
+  const qqqMap = new Map(STATE.qqq.map(b => [dateKey(b.t), b]));
+  const spyMap = new Map(STATE.spy.map(b => [dateKey(b.t), b]));
+
+  const dates = STATE.qqq.map(b => dateKey(b.t)).filter(d => vixMap.has(d) && vvixMap.has(d) && spyMap.has(d));
+
+  const rows = dates.map(d => {
+    const vix = vixMap.get(d).c;
+    const vvix = vvixMap.get(d).c;
+    const q = qqqMap.get(d);
+    const s = spyMap.get(d);
+    return {
+      date: d, vix, vvix, ratio: vvix / vix,
+      qOpen: q.o, qHigh: q.h, qLow: q.l, qClose: q.c,
+      sOpen: s.o, sHigh: s.h, sLow: s.l, sClose: s.c
+    };
+  });
+
+  const ratios = rows.map(r => r.ratio);
+  const ratioMA = sma(ratios, MA_LEN);
+  const qCloses = rows.map(r => r.qClose);
+  const qEma = ema(qCloses, EMA_LEN);
+  const sCloses = rows.map(r => r.sClose);
+  const sEma = ema(sCloses, EMA_LEN);
+
+  const moodSlope = ratioMA.map((v, i) => (v == null || i < SLOPE_LOOKBACK || ratioMA[i - SLOPE_LOOKBACK] == null) ? null : v - ratioMA[i - SLOPE_LOOKBACK]);
+  const qqqSlope = qEma.map((v, i) => (v == null || i < SLOPE_LOOKBACK || qEma[i - SLOPE_LOOKBACK] == null) ? null : v - qEma[i - SLOPE_LOOKBACK]);
+  const spySlope = sEma.map((v, i) => (v == null || i < SLOPE_LOOKBACK || sEma[i - SLOPE_LOOKBACK] == null) ? null : v - sEma[i - SLOPE_LOOKBACK]);
+
+  const moodState = rows.map((r, i) => {
+    if (ratioMA[i] == null || moodSlope[i] == null) return null;
+    if (r.ratio > ratioMA[i] && moodSlope[i] > 0) return "bull";
+    if (r.ratio < ratioMA[i] && moodSlope[i] < 0) return "bear";
+    return "flat";
+  });
+
+  const qqqState = rows.map((r, i) => {
+    if (qEma[i] == null) return null;
+    if (r.qLow > qEma[i]) return "bull";
+    if (r.qHigh < qEma[i]) return "bear";
+    return "flat";
+  });
+
+  const spyState = rows.map((r, i) => {
+    if (sEma[i] == null) return null;
+    if (r.sLow > sEma[i]) return "bull";
+    if (r.sHigh < sEma[i]) return "bear";
+    return "flat";
+  });
+
+  function streaks(states) {
+    const out = new Array(states.length).fill(0);
+    let run = 0, last = null;
+    for (let i = 0; i < states.length; i++) {
+      const s = states[i];
+      if (s == null) { run = 0; last = null; out[i] = 0; continue; }
+      if (s === last) run += 1; else run = 1;
+      last = s;
+      out[i] = run;
+    }
+    return out;
+  }
+
+  const moodStreak = streaks(moodState);
+  const qqqStreak = streaks(qqqState);
+  const spyStreak = streaks(spyState);
+
+  const alignedState = rows.map((r, i) => {
+    const m = moodState[i], q = qqqState[i], s = spyState[i];
+    if (!m || !q || !s) return null;
+    const bulls = [m, q, s].filter(x => x === "bull").length;
+    const bears = [m, q, s].filter(x => x === "bear").length;
+    if (bulls === 3) return "full-bull";
+    if (bears === 3) return "full-bear";
+    if (bulls >= 2) return "partial-bull";
+    if (bears >= 2) return "partial-bear";
+    return "mixed";
+  });
+
+  const alignedStreak = streaks(alignedState);
+
+  return rows.map((r, i) => ({
+    ...r,
+    ratioMA: ratioMA[i], moodSlope: moodSlope[i], moodState: moodState[i], moodStreak: moodStreak[i],
+    qEma: qEma[i], qqqSlope: qqqSlope[i], qqqState: qqqState[i], qqqStreak: qqqStreak[i],
+    sEma: sEma[i], spySlope: spySlope[i], spyState: spyState[i], spyStreak: spyStreak[i],
+    alignedState: alignedState[i], alignedStreak: alignedStreak[i]
+  }));
+}
+
+function fmtNum(v, dp = 2) { return v == null || isNaN(v) ? "—" : v.toFixed(dp); }
+function fmtSigned(v, dp = 2) { return v == null || isNaN(v) ? "—" : (v > 0 ? "+" : "") + v.toFixed(dp); }
+function stateColor(s) {
+  if (s && s.includes("bull")) return "var(--teal)";
+  if (s && s.includes("bear")) return "var(--red)";
+  return "var(--amber)";
+}
+function statePillClass(s) {
+  if (s && s.includes("bull")) return "pill-bull";
+  if (s && s.includes("bear")) return "pill-bear";
+  return "pill-flat";
+}
+function stateLabel(s) {
+  if (s === "bull" || s === "full-bull") return "Bullish";
+  if (s === "bear" || s === "full-bear") return "Bearish";
+  if (s === "partial-bull") return "Partial Bull";
+  if (s === "partial-bear") return "Partial Bear";
+  return "Flat / Mixed";
+}
+
+function buildDualLineSVG(rows, key1, key2, colorKey1, colorKey2) {
+  const W = 680, H = 140, padL = 8, padR = 8, padT = 12, padB = 12;
+  const vals1 = rows.map(r => r[key1]).filter(v => v != null && isFinite(v));
+  const vals2 = rows.map(r => r[key2]).filter(v => v != null && isFinite(v));
+  const all = vals1.concat(vals2);
+  if (all.length < 2) return "";
+  let maxV = Math.max(...all), minV = Math.min(...all);
+  const pad = (maxV - minV) * 0.08 || 1;
+  maxV += pad; minV -= pad;
+  const range = (maxV - minV) || 1;
+  const n = rows.length;
+  const stepX = (W - padL - padR) / Math.max(1, n - 1);
+  function xAt(i) { return padL + i * stepX; }
+  function yAt(v) { return padT + ((maxV - v) / range) * (H - padT - padB); }
+
+  function pathFor(key) {
+    let path = "";
+    rows.forEach((r, i) => {
+      const v = r[key];
+      if (v == null || !isFinite(v)) return;
+      const x = xAt(i).toFixed(1), y = yAt(v).toFixed(1);
+      path += `${path === "" ? "M" : "L"}${x},${y} `;
+    });
+    return path.trim();
+  }
+
+  const p1 = pathFor(key1), p2 = pathFor(key2);
+  const lastIdx = n - 1;
+  const lastX = xAt(lastIdx).toFixed(1);
+  const lastY1 = rows[lastIdx][key1] != null ? yAt(rows[lastIdx][key1]).toFixed(1) : null;
+  const lastY2 = rows[lastIdx][key2] != null ? yAt(rows[lastIdx][key2]).toFixed(1) : null;
+
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" height="100%" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="${p2}" fill="none" stroke="${colorKey2}" stroke-width="1.6" opacity="0.85"/>
+    <path d="${p1}" fill="none" stroke="${colorKey1}" stroke-width="2"/>
+    ${lastY1 ? `<circle cx="${lastX}" cy="${lastY1}" r="3.5" fill="${colorKey1}"/>` : ""}
+    ${lastY2 ? `<circle cx="${lastX}" cy="${lastY2}" r="3" fill="${colorKey2}"/>` : ""}
+  </svg>`;
+}
+
+function buildStreakHistoryHTML(rows, stateKey) {
+  return rows.map(r => {
+    const s = r[stateKey];
+    const col = s == null ? "var(--line)" : stateColor(s);
+    return `<div class="streak-day" style="background:${col};" title="${r.date}: ${s ? stateLabel(s) : 'n/a'}"></div>`;
+  }).join("");
+}
+
+function renderMasterBriefingAndDiagnostics() {
+  const merged = STATE.merged;
+  if (!merged || merged.length === 0) return;
+
+  const recent = merged.slice(-HISTORY_BARS);
+  const last = merged[merged.length - 1];
+  const prev = merged.length > 1 ? merged[merged.length - 2] : null;
+
+  document.getElementById("subline").textContent =
+    `${last.date} · ${merged.length} days aligned · VIX ${fmtNum(last.vix)} · VVIX ${fmtNum(last.vvix)} · QQQ ${fmtNum(last.qClose)} · SPY ${fmtNum(last.sClose)}`;
+
+  let pcVal = 0.93;
+  let nasiVal = -11.99;
+  let nasiSma = 143.98;
+
+  try {
+    const raw = localStorage.getItem('market-monitor-data');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed.putcall?.value) pcVal = parsed.putcall.value;
+      if (parsed.nasi?.current) nasiVal = parsed.nasi.current;
+      if (parsed.nasi?.sma50) nasiSma = parsed.nasi.sma50;
+    }
+  } catch(e) {}
+
+  let moodScoreNorm = last.moodState === "bull" ? 100 : (last.moodState === "bear" ? 0 : 50);
+  let qqqScoreNorm = last.qqqState === "bull" ? 100 : (last.qqqState === "bear" ? 0 : 40);
+  let spyScoreNorm = last.spyState === "bull" ? 100 : (last.spyState === "bear" ? 0 : 40);
+  let pcScoreNorm = (pcVal >= 0.65 && pcVal <= 0.85) ? 100 : (pcVal > 0.95 ? 75 : (pcVal < 0.60 ? 25 : 50));
+  let nasiScoreNorm = nasiVal > nasiSma ? 100 : (nasiVal < 0 ? 0 : 30);
+
+  const compositeScore = Math.round(
+    (moodScoreNorm * 0.25) +
+    (qqqScoreNorm * 0.25) +
+    (spyScoreNorm * 0.25) +
+    (pcScoreNorm * 0.10) +
+    (nasiScoreNorm * 0.15)
+  );
+
+  let regimeType = compositeScore >= 70 ? "bullish" : (compositeScore >= 45 ? "transitional" : "bearish");
+
+  document.getElementById("briefingScoreNum").textContent = compositeScore;
+  document.getElementById("briefingScoreFill").style.width = compositeScore + "%";
+  document.getElementById("healthScoreVal").textContent = compositeScore;
+
+  let stars = compositeScore >= 80 ? "★★★★★" : (compositeScore >= 65 ? "★★★★☆" : (compositeScore >= 45 ? "★★★☆☆" : "★☆☆☆☆"));
+  document.getElementById("briefingStars").textContent = stars;
+
+  const iconEl = document.getElementById("briefingIcon");
+  const mainTitleEl = document.getElementById("briefingMainTitle");
+  const scoreFillEl = document.getElementById("briefingScoreFill");
+
+  if (regimeType === "bullish") {
+    iconEl.textContent = "🟢"; mainTitleEl.textContent = "FULL RISK-ON ENVIRONMENT"; scoreFillEl.style.background = "var(--teal)";
+    document.getElementById("execRegime").textContent = "BULLISH"; document.getElementById("execRegime").style.color = "var(--teal)";
+  } else if (regimeType === "transitional") {
+    iconEl.textContent = "🟡"; mainTitleEl.textContent = "TRANSITIONAL MARKET ENVIRONMENT"; scoreFillEl.style.background = "var(--amber)";
+    document.getElementById("execRegime").textContent = "TRANSITIONAL"; document.getElementById("execRegime").style.color = "var(--amber)";
+  } else {
+    iconEl.textContent = "🔴"; mainTitleEl.textContent = "DEFENSIVE MARKET REGIME"; scoreFillEl.style.background = "var(--red)";
+    document.getElementById("execRegime").textContent = "DEFENSIVE"; document.getElementById("execRegime").style.color = "var(--red)";
+  }
+
+  // Diagnostic Cards
+  document.getElementById("moodPill").className = "regime-status-pill " + statePillClass(last.moodState);
+  document.getElementById("moodPill").textContent = stateLabel(last.moodState);
+  document.getElementById("moodRatioVal").textContent = fmtNum(last.ratio, 3);
+  document.getElementById("moodRatioVal").style.color = stateColor(last.moodState);
+  document.getElementById("moodRatioCap").textContent = prev ? `${last.ratio >= prev.ratio ? "▲" : "▼"} from ${fmtNum(prev.ratio, 3)}` : "—";
+  document.getElementById("moodMaVal").textContent = fmtNum(last.ratioMA, 3);
+  document.getElementById("moodMaCap").textContent = last.ratio > last.ratioMA ? "Ratio above MA" : "Ratio below MA";
+  document.getElementById("moodSlopeVal").textContent = fmtSigned(last.moodSlope, 3);
+  document.getElementById("moodSlopeVal").style.color = last.moodSlope > 0 ? "var(--teal)" : "var(--red)";
+  document.getElementById("moodStreakVal").textContent = last.moodStreak ?? "—";
+  document.getElementById("moodSvg").outerHTML = buildDualLineSVG(recent, "ratio", "ratioMA", "var(--amber)", "var(--blue)").replace("<svg", '<svg id="moodSvg"');
+  document.getElementById("moodHistory").innerHTML = buildStreakHistoryHTML(recent, "moodState");
+
+  document.getElementById("qqqCyclePill").className = "regime-status-pill " + statePillClass(last.qqqState);
+  document.getElementById("qqqCyclePill").textContent = stateLabel(last.qqqState);
+  document.getElementById("qqqPriceVal").textContent = fmtNum(last.qClose);
+  document.getElementById("qqqPriceVal").style.color = stateColor(last.qqqState);
+  document.getElementById("qqqEmaVal").textContent = fmtNum(last.qEma);
+  document.getElementById("qqqCandleVal").textContent = last.qqqState === "bull" ? "Low > EMA ✓" : (last.qqqState === "bear" ? "High < EMA ✓" : "Candle straddles");
+  document.getElementById("qqqStreakVal").textContent = last.qqqStreak ?? "—";
+  document.getElementById("qqqCycleSvg").outerHTML = buildDualLineSVG(recent, "qClose", "qEma", "var(--text)", "var(--blue)").replace("<svg", '<svg id="qqqCycleSvg"');
+  document.getElementById("qqqHistory").innerHTML = buildStreakHistoryHTML(recent, "qqqState");
+
+  document.getElementById("spyCyclePill").className = "regime-status-pill " + statePillClass(last.spyState);
+  document.getElementById("spyCyclePill").textContent = stateLabel(last.spyState);
+  document.getElementById("spyPriceVal").textContent = fmtNum(last.sClose);
+  document.getElementById("spyPriceVal").style.color = stateColor(last.spyState);
+  document.getElementById("spyEmaVal").textContent = fmtNum(last.sEma);
+  document.getElementById("spyCandleVal").textContent = last.spyState === "bull" ? "Low > EMA ✓" : (last.spyState === "bear" ? "High < EMA ✓" : "Candle straddles");
+  document.getElementById("spyStreakVal").textContent = last.spyStreak ?? "—";
+  document.getElementById("spyCycleSvg").outerHTML = buildDualLineSVG(recent, "sClose", "sEma", "var(--text)", "var(--blue)").replace("<svg", '<svg id="spyCycleSvg"');
+  document.getElementById("spyHistory").innerHTML = buildStreakHistoryHTML(recent, "spyState");
+
+  // History Table
+  const histRows = merged.slice(-20).reverse();
+  let head = `<thead><tr><th>Date</th><th>QQQ</th><th>SPY</th><th>VVIX/VIX</th><th>Mood</th><th>QQQ Cycle</th><th>SPY Cycle</th><th>3-Way Alignment</th></tr></thead>`;
+  let body = "<tbody>" + histRows.map(r => `<tr>
+    <td>${r.date}</td><td>${fmtNum(r.qClose)}</td><td>${fmtNum(r.sClose)}</td><td>${fmtNum(r.ratio, 3)}</td>
+    <td><span class="tag-pill" style="background:${stateColor(r.moodState)}22; color:${stateColor(r.moodState)};">${stateLabel(r.moodState)}</span></td>
+    <td><span class="tag-pill" style="background:${stateColor(r.qqqState)}22; color:${stateColor(r.qqqState)};">${stateLabel(r.qqqState)}</span></td>
+    <td><span class="tag-pill" style="background:${stateColor(r.spyState)}22; color:${stateColor(r.spyState)};">${stateLabel(r.spyState)}</span></td>
+    <td><span class="tag-pill" style="background:${stateColor(r.alignedState)}22; color:${stateColor(r.alignedState)};">${stateLabel(r.alignedState)}</span></td>
+  </tr>`).join("") + "</tbody>";
+  document.getElementById("tblHistory").innerHTML = head + body;
+
+  renderTradingViewWidgets();
+}
+
+function renderTradingViewWidgets() {
+  const createTvWidget = (containerId, mainSymbol, overlaySymbol) => {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    const isDark = (document.documentElement.getAttribute("data-theme") || "dark") === "dark";
+    container.innerHTML = '<div class="tradingview-widget-container__widget" style="height:100%;width:100%"></div>';
+    const script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src = "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
+    script.async = true;
+    script.innerHTML = JSON.stringify({
+      "autosize": true, "symbol": mainSymbol, "interval": "D", "timezone": "Etc/UTC",
+      "theme": isDark ? "dark" : "light", "style": "2", "locale": "en", "enable_publishing": false,
+      "backgroundColor": isDark ? "rgba(16, 22, 37, 1)" : "rgba(255, 255, 255, 1)",
+      "gridColor": isDark ? "rgba(33, 42, 61, 1)" : "rgba(221, 226, 236, 1)",
+      "hide_top_toolbar": false, "hide_legend": false, "save_image": false, "hide_volume": true,
+      "studies": [{ "id": "Overlay@tv-basicstudies", "inputs": { "symbol": overlaySymbol } }]
+    });
+    container.appendChild(script);
+  };
+  createTvWidget("qqqTvContainer", "INDEX:PCQQ", "QQQ");
+  createTvWidget("spyTvContainer", "INDEX:PCSP", "SPY");
 }
 
 function generateFallbackOHLC(symbol, count = 120) {
@@ -392,12 +924,7 @@ function generateFallbackOHLC(symbol, count = 120) {
 
 async function fetchThemeTickerOHLC(symbol) {
   const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=6m`;
-  const proxies = [
-    url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
-    url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-    url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`
-  ];
-  for (const proxy of proxies) {
+  for (const proxy of CORS_PROXIES) {
     try {
       const res = await fetch(proxy(targetUrl), { signal: AbortSignal.timeout(4000) });
       if (!res.ok) continue;
@@ -440,9 +967,9 @@ async function renderLeaderThemeCharts() {
           </div>
           <span style="font-size:10.5px; font-family:'JetBrains Mono',monospace; color:var(--teal);">Top 10 Leaders</span>
         </div>
-        <div style="display:grid; grid-template-columns: repeat(5, 1fr); gap:10px;" id="themeGrid-${tIdx}">
+        <div style="display:grid; grid-template-columns: repeat(5, 1fr); gap:10px;">
           ${theme.tickers.map((tk, idx) => `
-            <div id="chart-card-${tIdx}-${idx}" style="background:var(--panel); border:1px solid var(--line); border-radius:8px; overflow:hidden; height:210px; position:relative; display:flex; flex-direction:column;">
+            <div id="chart-card-${tIdx}-${idx}" style="background:var(--panel); border:1px solid var(--line); border-radius:8px; overflow:hidden; height:200px; position:relative; display:flex; flex-direction:column;">
               <div style="position:absolute; top:6px; left:8px; right:8px; z-index:5; display:flex; justify-content:space-between; pointer-events:none;">
                 <span style="font-size:11px; font-weight:800; font-family:'JetBrains Mono',monospace; color:var(--text);">${tk}</span>
                 <span id="stat-${tIdx}-${idx}" style="font-size:9.5px; font-family:'JetBrains Mono',monospace; color:var(--text-dim);">...</span>
@@ -479,8 +1006,7 @@ async function renderLeaderThemeCharts() {
       }
 
       const chart = LightweightCharts.createChart(target, {
-        width: target.clientWidth || 220,
-        height: target.clientHeight || 210,
+        width: target.clientWidth || 220, height: target.clientHeight || 200,
         layout: { background: { type: 'solid', color: chartBg }, textColor: textColor, fontFamily: 'JetBrains Mono, monospace', fontSize: 9 },
         grid: { vertLines: { color: gridLine }, horzLines: { color: gridLine } },
         rightPriceScale: { borderVisible: false, scaleMargins: { top: 0.2, bottom: 0.1 } },
@@ -497,9 +1023,9 @@ async function renderLeaderThemeCharts() {
       observer.observe(target);
       activeThemeCharts.push({ chart, observer });
 
-      const maHighData = calculateEMA(data, 21, 'high');
-      const maLowData = calculateEMA(data, 21, 'low');
-      const ema21Data = calculateEMA(data, 21, 'close');
+      const maHighData = calculateEMAObj(data, 21, 'high');
+      const maLowData = calculateEMAObj(data, 21, 'low');
+      const ema21Data = calculateEMAObj(data, 21, 'close');
 
       const cloudHigh = chart.addAreaSeries({ topColor: 'rgba(200,200,205,0.08)', bottomColor: 'rgba(200,200,205,0.08)', lineColor: 'rgba(255,255,255,0.1)', lineWidth: 1, priceLineVisible: false, lastValueVisible: false });
       cloudHigh.setData(maHighData);
@@ -526,32 +1052,37 @@ async function renderLeaderThemeCharts() {
   });
 }
 
-function updateDynamicAiInsight() {
-  const bannerEl = document.getElementById("themeAiInsight");
-  if (!bannerEl) return;
+function setStatusMsg(txt, isErr = false) {
+  const el = document.getElementById("statusMsg");
+  if (!el) return;
+  el.textContent = txt;
+  el.className = "status-msg" + (isErr ? " err" : "");
+}
 
-  let currentRegime = "TRANSITIONAL";
-  let healthScore = 58;
-  
+async function refreshAllData() {
+  const btn = document.getElementById("btnRefresh");
+  if (btn) btn.textContent = "↻ Fetching…";
+  setStatusMsg("Syncing live market regime feeds...");
+
   try {
-    const raw = localStorage.getItem('market-monitor-data');
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (parsed.regime) currentRegime = parsed.regime;
-      if (parsed.healthScore) healthScore = parsed.healthScore;
-    }
-  } catch(e) {}
+    const vix = await fetchYahooDaily("^VIX", "1y");
+    const vvix = await fetchYahooDaily("^VVIX", "1y");
+    const qqq = await fetchYahooDaily("QQQ", "1y");
+    const spy = await fetchYahooDaily("SPY", "1y");
 
-  let insightText = "";
-  if (healthScore >= 70) {
-    insightText = `Market regime is robust (${currentRegime}, Health: ${healthScore}/100). Institutional accumulation broadening across growth and high-beta sectors. Focus strictly on top relative strength breakouts.`;
-  } else if (healthScore >= 50) {
-    insightText = `Market regime is ${currentRegime} (Health: ${healthScore}/100). Sector rotation active into defensive and energy groups. Restrict new entries to leaders holding above RS 90 with active volume confirmation.`;
-  } else {
-    insightText = `Defensive posture required under current ${currentRegime} conditions (Health: ${healthScore}/100). Prioritize cash preservation and avoid chasing extended setups.`;
+    if (!vix || !vvix || !qqq || !spy) throw new Error("Yahoo Finance feed temporary timeout.");
+
+    STATE.vix = vix; STATE.vvix = vvix; STATE.qqq = qqq; STATE.spy = spy;
+    STATE.merged = buildMergedSeries();
+
+    renderMasterBriefingAndDiagnostics();
+    renderLeaderThemeCharts();
+    setStatusMsg(`✓ Unified sync complete · ${STATE.merged.length} days aligned.`);
+  } catch (e) {
+    setStatusMsg(`Sync status: ${e.message}`, true);
+    renderLeaderThemeCharts();
   }
-
-  bannerEl.textContent = insightText;
+  if (btn) btn.textContent = "↻ Refresh Live Data";
 }
 
 function updateThemeToggleUI(theme) {
@@ -563,19 +1094,18 @@ function setTheme(theme) {
   document.documentElement.setAttribute("data-theme", theme);
   updateThemeToggleUI(theme);
   try { localStorage.setItem('market-monitor-theme', theme); } catch(e) {}
+  if (STATE.merged && STATE.merged.length) renderMasterBriefingAndDiagnostics();
   renderLeaderThemeCharts();
 }
 
+document.getElementById("btnRefresh").addEventListener("click", refreshAllData);
+
 (function init(){
   let savedTheme = "light";
-  try {
-    savedTheme = localStorage.getItem('market-monitor-theme') || "light";
-  } catch(e) {}
-  
+  try { savedTheme = localStorage.getItem('market-monitor-theme') || "light"; } catch(e) {}
   document.documentElement.setAttribute("data-theme", savedTheme);
   updateThemeToggleUI(savedTheme);
-  updateDynamicAiInsight();
-  renderLeaderThemeCharts();
+  refreshAllData();
 })();
 </script>
 </body>
