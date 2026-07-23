@@ -417,11 +417,11 @@ const EMA_LEN = 21;
 const SLOPE_LOOKBACK = 5;
 const HISTORY_BARS = 120;
 
+/* Cleaned CORS Proxies - removed dead freeboard proxy */
 const CORS_PROXIES = [
   url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
-  url => `https://thingproxy.freeboard.io/fetch/${url}`,
-  url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
-  url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`
+  url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+  url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`
 ];
 
 let STATE = { 
@@ -439,7 +439,6 @@ async function fetchYahooDaily(symbol, range = "1y") {
   const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=${range}`;
   let json = null;
 
-  // Direct fetch only when running on local dev server to avoid browser CORS errors
   const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
   
   if (isLocal) {
@@ -827,7 +826,7 @@ function renderAll() {
 }
 
 /* ============================================================
-   LIGHTWEIGHT CHARTS (SPLIT)
+   LIGHTWEIGHT CHARTS (SPLIT DUAL PANELS)
    ============================================================ */
 function renderSplitCharts() {
   const qContainer = document.getElementById("qqqChartContainer");
@@ -878,8 +877,10 @@ function renderSplitCharts() {
   const qqqEmaSeries = STATE.chartQQQ.addLineSeries({ color: "#38bdf8", lineWidth: 2, priceScaleId: 'right', priceLineVisible: false, lastValueVisible: true });
   qqqEmaSeries.setData(merged.map(r => ({ time: r.date, value: r.qEma })).filter(r => r.value != null));
 
-  const pcqqSeries = STATE.chartQQQ.addLineSeries({ color: "#f5b942", lineWidth: 2, priceScaleId: 'left', priceLineVisible: false, lastValueVisible: true });
-  pcqqSeries.setData(merged.map(r => ({ time: r.date, value: r.pcqq })).filter(r => r.value != null));
+  if (STATE.pcqq) {
+    const pcqqSeries = STATE.chartQQQ.addLineSeries({ color: "#f5b942", lineWidth: 2, priceScaleId: 'left', priceLineVisible: false, lastValueVisible: true });
+    pcqqSeries.setData(merged.map(r => ({ time: r.date, value: r.pcqq })).filter(r => r.value != null));
+  }
 
   STATE.chartQQQ.timeScale().fitContent();
 
@@ -896,48 +897,48 @@ function renderSplitCharts() {
   const spyEmaSeries = STATE.chartSPY.addLineSeries({ color: "#38bdf8", lineWidth: 2, priceScaleId: 'right', priceLineVisible: false, lastValueVisible: true });
   spyEmaSeries.setData(merged.map(r => ({ time: r.date, value: r.sEma })).filter(r => r.value != null));
 
-  const pcspSeries = STATE.chartSPY.addLineSeries({ color: "#f5b942", lineWidth: 2, priceScaleId: 'left', priceLineVisible: false, lastValueVisible: true });
-  pcspSeries.setData(merged.map(r => ({ time: r.date, value: r.pcsp })).filter(r => r.value != null));
+  if (STATE.pcsp) {
+    const pcspSeries = STATE.chartSPY.addLineSeries({ color: "#f5b942", lineWidth: 2, priceScaleId: 'left', priceLineVisible: false, lastValueVisible: true });
+    pcspSeries.setData(merged.map(r => ({ time: r.date, value: r.pcsp })).filter(r => r.value != null));
+  }
 
   STATE.chartSPY.timeScale().fitContent();
 }
 
 /* ============================================================
-   FETCH ORCHESTRATION
+   FETCH ORCHESTRATION WITH ISOLATED TRY/CATCH
    ============================================================ */
 async function refreshAll() {
   const btn = document.getElementById("btnRefresh");
   const statusMsg = document.getElementById("statusMsg");
   if (btn) btn.textContent = "↻ Fetching…";
-  statusMsg.textContent = "Fetching VIX, VVIX, QQQ, SPY, PCQQ, and PCSP history…";
+  statusMsg.textContent = "Fetching VIX, VVIX, QQQ, and SPY history…";
   statusMsg.className = "status-msg";
 
   try {
     setStatusMsg("Fetching VIX...");
     const vix = await fetchYahooDaily("^VIX", "1y");
-    await sleep(150);
+    await sleep(100);
 
     setStatusMsg("Fetching VVIX...");
     const vvix = await fetchYahooDaily("^VVIX", "1y");
-    await sleep(150);
+    await sleep(100);
 
     setStatusMsg("Fetching QQQ...");
     const qqq = await fetchYahooDaily("QQQ", "1y");
-    await sleep(150);
+    await sleep(100);
 
     setStatusMsg("Fetching SPY...");
     const spy = await fetchYahooDaily("SPY", "1y");
-    await sleep(150);
-    
-    setStatusMsg("Fetching PCQQ...");
-    const pcqq = await fetchYahooDaily("^PCQQ", "1y");
-    await sleep(150);
-    
-    setStatusMsg("Fetching PCSP...");
-    const pcsp = await fetchYahooDaily("^PCSP", "1y");
+    await sleep(100);
+
+    // Optional Put-Call fetch wrapper (non-blocking if symbol returns 404)
+    let pcqq = null, pcsp = null;
+    try { pcqq = await fetchYahooDaily("^PCQQ", "1y"); } catch(e) {}
+    try { pcsp = await fetchYahooDaily("^PCSP", "1y"); } catch(e) {}
 
     if (!vix || !vvix || !qqq || !spy) {
-      throw new Error("One or more core feeds (VIX / VVIX / QQQ / SPY) failed to load via CORS proxies.");
+      throw new Error("One or more core feeds (VIX / VVIX / QQQ / SPY) failed to load.");
     }
 
     STATE.vix = vix; STATE.vvix = vvix; STATE.qqq = qqq; STATE.spy = spy; 
