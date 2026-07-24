@@ -18,7 +18,6 @@
            CSS VARIABLES (THEMING)
            ========================================================================== */
         :root {
-            /* Dark Theme (Default - Institutional Bloomberg/Aladdin style) */
             --bg-color: #0d1117;
             --panel-bg: #161b22;
             --panel-border: #30363d;
@@ -34,7 +33,6 @@
             --color-warning: #d29922;
 
             --font-main: 'Inter', sans-serif;
-            --font-mono: 'Inter', monospace; /* Using Inter with tabular nums */
             
             --spacing-grid: 16px;
             --radius-panel: 12px;
@@ -65,11 +63,7 @@
         /* ==========================================================================
            RESET & BASE STYLES
            ========================================================================== */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             background-color: var(--bg-color);
@@ -77,7 +71,7 @@
             font-family: var(--font-main);
             font-size: 14px;
             line-height: 1.5;
-            padding: var(--spacing-grid);
+            padding: 22px 26px 60px;
             min-height: 100vh;
             transition: background-color 0.3s ease, color 0.3s ease;
             -webkit-font-smoothing: antialiased;
@@ -86,7 +80,6 @@
         ul { list-style: none; }
         button { cursor: pointer; border: none; outline: none; font-family: inherit; }
 
-        /* Typography */
         h1, h2, h3, h4, h5, h6 { font-weight: 600; }
         .text-up { color: var(--color-up) !important; }
         .text-down { color: var(--color-down) !important; }
@@ -94,6 +87,23 @@
         .text-warning { color: var(--color-warning) !important; }
         .text-secondary { color: var(--text-secondary); }
         .tabular-nums { font-variant-numeric: tabular-nums; }
+
+        /* ==========================================================================
+           APP TABS NAVIGATION
+           ========================================================================== */
+        .app-tabs { 
+            display: flex; gap: 4px; margin-bottom: 26px; border-bottom: 1px solid var(--panel-border); flex-wrap: wrap; 
+        }
+        .app-tabs a { 
+            padding: 10px 20px; text-decoration: none; color: var(--text-secondary); font-size: 11.5px; font-weight: 700; 
+            border: 1px solid transparent; border-bottom: none; border-radius: 8px 8px 0 0; 
+            text-transform: uppercase; letter-spacing: 0.05em; transition: all 0.15s; 
+        }
+        .app-tabs a.active { 
+            background: var(--panel-bg); color: var(--color-neutral); border-color: var(--panel-border); 
+            border-bottom-color: var(--panel-bg); margin-bottom: -1px; 
+        }
+        .app-tabs a:hover:not(.active) { color: var(--text-primary); background: var(--hover-bg); }
 
         /* ==========================================================================
            LAYOUT SYSTEM
@@ -117,272 +127,74 @@
             flex-direction: column;
         }
 
-        .panel:hover {
-            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-        }
-        
-        [data-theme="light"] .panel:hover {
-            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
-        }
+        .panel:hover { box-shadow: 0 8px 32px rgba(0,0,0,0.3); }
+        [data-theme="light"] .panel:hover { box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
 
         .panel-header {
-            font-size: 13px;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            color: var(--text-secondary);
-            font-weight: 600;
-            margin-bottom: 12px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            font-size: 13px; text-transform: uppercase; letter-spacing: 1.5px;
+            color: var(--text-secondary); font-weight: 600; margin-bottom: 12px;
+            display: flex; justify-content: space-between; align-items: center;
         }
 
-        /* Grid specific */
-        .grid-kpi {
-            display: grid;
-            grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr;
-            gap: var(--spacing-grid);
-        }
-
-        .grid-main {
-            display: grid;
-            grid-template-columns: 2fr 4fr 4fr 2fr;
-            gap: var(--spacing-grid);
-            min-height: 400px;
-        }
-
-        .grid-bottom {
-            display: grid;
-            grid-template-columns: 6fr 6fr;
-            gap: var(--spacing-grid);
-        }
+        .grid-kpi { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr; gap: var(--spacing-grid); }
+        .grid-main { display: grid; grid-template-columns: 2fr 4fr 4fr 2fr; gap: var(--spacing-grid); min-height: 400px; }
+        .grid-bottom { display: grid; grid-template-columns: 6fr 6fr; gap: var(--spacing-grid); }
 
         /* ==========================================================================
            HEADER COMPONENTS
            ========================================================================== */
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding-bottom: 8px;
-            border-bottom: 1px solid var(--panel-border);
-        }
-
-        .header-title h1 {
-            font-size: 24px;
-            font-weight: 700;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-        }
-
-        .header-title p {
-            font-size: 12px;
-            color: var(--text-secondary);
-            margin-top: 4px;
-        }
-
-        .header-controls {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .status-badge {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 12px;
-            color: var(--text-secondary);
-        }
-
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background-color: var(--color-up);
-            box-shadow: 0 0 8px var(--color-up);
-        }
+        .header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 8px; border-bottom: 1px solid var(--panel-border); }
+        .header-title h1 { font-size: 24px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+        .header-title p { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+        .header-controls { display: flex; align-items: center; gap: 12px; }
+        
+        .status-badge { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-secondary); }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background-color: var(--color-up); box-shadow: 0 0 8px var(--color-up); }
 
         .btn-outline {
-            background: transparent;
-            border: 1px solid var(--panel-border);
-            color: var(--text-primary);
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 500;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 6px;
+            background: transparent; border: 1px solid var(--panel-border); color: var(--text-primary);
+            padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 500; transition: all 0.2s;
+            display: flex; align-items: center; gap: 6px;
         }
+        .btn-outline:hover { background: var(--hover-bg); border-color: var(--text-secondary); }
 
-        .btn-outline:hover {
-            background: var(--hover-bg);
-            border-color: var(--text-secondary);
-        }
-
-        .theme-toggle {
-            display: flex;
-            background: var(--panel-border);
-            border-radius: 6px;
-            padding: 2px;
-        }
-
-        .theme-toggle button {
-            background: transparent;
-            color: var(--text-secondary);
-            padding: 4px 12px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: 600;
-            transition: all 0.2s;
-        }
-
-        .theme-toggle button.active {
-            background: var(--panel-bg);
-            color: var(--text-primary);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
+        .theme-toggle { display: flex; background: var(--panel-border); border-radius: 6px; padding: 2px; }
+        .theme-toggle button { background: transparent; color: var(--text-secondary); padding: 4px 12px; border-radius: 4px; font-size: 12px; font-weight: 600; transition: all 0.2s; }
+        .theme-toggle button.active { background: var(--panel-bg); color: var(--text-primary); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
 
         /* ==========================================================================
            KPI CARDS
            ========================================================================== */
-        .kpi-value {
-            font-size: 42px;
-            font-weight: 700;
-            line-height: 1.1;
-            margin: 8px 0;
-        }
-
-        .kpi-subtext {
-            font-size: 12px;
-            color: var(--text-secondary);
-        }
-
-        /* Specific KPI Layouts */
-        .kpi-regime {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
+        .kpi-value { font-size: 42px; font-weight: 700; line-height: 1.1; margin: 8px 0; }
+        .kpi-subtext { font-size: 12px; color: var(--text-secondary); }
+        .kpi-regime { display: flex; justify-content: space-between; align-items: center; }
         .kpi-regime-left { flex: 1; }
-        .kpi-regime-right {
-            width: 80px;
-            height: 80px;
-            position: relative;
-        }
-
-        .regime-status {
-            font-size: 20px;
-            font-weight: 700;
-            color: var(--color-up);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin: 4px 0 8px 0;
-        }
-
-        .mini-chart-container {
-            height: 40px;
-            width: 100%;
-            margin-top: auto;
-        }
+        .kpi-regime-right { width: 80px; height: 80px; position: relative; }
+        .regime-status { font-size: 20px; font-weight: 700; color: var(--color-up); display: flex; align-items: center; gap: 8px; margin: 4px 0 8px 0; }
+        .mini-chart-container { height: 40px; width: 100%; margin-top: auto; }
 
         /* ==========================================================================
            TABLES & LISTS
            ========================================================================== */
-        .data-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 13px;
-        }
+        .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .data-table th { text-align: left; padding: 8px 12px; color: var(--text-secondary); font-weight: 500; font-size: 11px; text-transform: uppercase; border-bottom: 1px solid var(--panel-border); white-space: nowrap; }
+        .data-table td { padding: 10px 12px; border-bottom: 1px solid var(--panel-border); color: var(--text-primary); font-variant-numeric: tabular-nums; }
+        .data-table tr:last-child td { border-bottom: none; }
+        .data-table tbody tr:hover { background-color: var(--hover-bg); }
+        .heatmap-cell { text-align: center; font-weight: 600; border-radius: 4px; padding: 4px 8px !important; margin: 2px; }
 
-        .data-table th {
-            text-align: left;
-            padding: 8px 12px;
-            color: var(--text-secondary);
-            font-weight: 500;
-            font-size: 11px;
-            text-transform: uppercase;
-            border-bottom: 1px solid var(--panel-border);
-            white-space: nowrap;
-        }
-
-        .data-table td {
-            padding: 10px 12px;
-            border-bottom: 1px solid var(--panel-border);
-            color: var(--text-primary);
-            font-variant-numeric: tabular-nums;
-        }
-
-        .data-table tr:last-child td {
-            border-bottom: none;
-        }
-
-        .data-table tbody tr:hover {
-            background-color: var(--hover-bg);
-        }
-
-        /* Heatmap specific cells */
-        .heatmap-cell {
-            text-align: center;
-            font-weight: 600;
-            border-radius: 4px;
-            padding: 4px 8px !important;
-            margin: 2px;
-        }
-
-        /* Rank Lists (Left Panel) */
-        .rank-section {
-            margin-bottom: 20px;
-        }
-        
-        .rank-section-title {
-            font-size: 11px;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 8px;
-        }
-
-        .rank-item {
-            display: flex;
-            align-items: center;
-            padding: 6px 0;
-            font-size: 13px;
-        }
-
-        .rank-num {
-            width: 20px;
-            height: 20px;
-            background-color: var(--panel-border);
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 11px;
-            margin-right: 12px;
-            font-weight: 600;
-        }
-        
+        .rank-section { margin-bottom: 20px; }
+        .rank-section-title { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+        .rank-item { display: flex; align-items: center; padding: 6px 0; font-size: 13px; }
+        .rank-num { width: 20px; height: 20px; background-color: var(--panel-border); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 11px; margin-right: 12px; font-weight: 600; }
         .rank-item.top .rank-num { background-color: var(--color-up-bg); color: var(--color-up); }
         .rank-item.bottom .rank-num { background-color: var(--color-down-bg); color: var(--color-down); }
-
         .rank-name { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .rank-ticker { width: 50px; color: var(--text-secondary); }
+        .rank-ticker { width: 50px; color: var(--text-secondary); font-weight: 600; }
         .rank-score { width: 40px; text-align: right; }
         .rank-change { width: 50px; text-align: right; font-weight: 600; }
 
-        /* Badge */
-        .badge {
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
         .badge.leader { background-color: var(--color-up-bg); color: var(--color-up); }
         .badge.improving { background-color: rgba(88, 166, 255, 0.1); color: var(--color-neutral); }
         .badge.weakening { background-color: rgba(210, 153, 34, 0.1); color: var(--color-warning); }
@@ -391,30 +203,20 @@
         /* ==========================================================================
            CHARTS CONTAINERS
            ========================================================================== */
-        .chart-container {
-            position: relative;
-            flex: 1;
-            width: 100%;
-            height: 100%;
-            min-height: 250px;
-        }
-        
-        /* How to read section */
-        .how-to-read {
-            margin-top: auto;
-            border-top: 1px solid var(--panel-border);
-            padding-top: 16px;
-            font-size: 11px;
-            color: var(--text-secondary);
-        }
+        .chart-container { position: relative; flex: 1; width: 100%; height: 100%; min-height: 250px; }
+        .how-to-read { margin-top: auto; border-top: 1px solid var(--panel-border); padding-top: 16px; font-size: 11px; color: var(--text-secondary); }
         .how-to-read p { margin-bottom: 6px; }
 
-        /* Responsive */
+        /* OVERLAY */
+        #loadingOverlay { position: fixed; inset: 0; background: var(--bg-color); opacity: 0.98; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .spinner { border: 3px solid var(--panel-border); border-top: 3px solid var(--color-neutral); border-radius: 50%; width: 40px; height: 40px; animation: spin 0.8s linear infinite; margin-bottom: 16px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
         @media (max-width: 1600px) {
             .grid-kpi { grid-template-columns: repeat(4, 1fr); }
             .kpi-panel-1 { grid-column: span 2; }
             .grid-main { grid-template-columns: 3fr 5fr 4fr; }
-            .grid-main > .panel:last-child { display: none; } /* Hide heatmap on smaller screens for layout integrity */
+            .grid-main > .panel:last-child { display: none; }
         }
         @media (max-width: 1200px) {
             .grid-main { grid-template-columns: 1fr; }
@@ -424,7 +226,32 @@
 </head>
 <body>
 
-<div class="dashboard-container">
+    <!-- APP TABS -->
+    <div class="app-tabs">
+      <a href="index.html">Market Dashboard</a>
+      <a href="MarketCommandCenter.html">Market Command Center</a>
+      <a href="market_breadth.html">Market Breadth</a>
+      <a href="MarketRegime.html">Market Regime</a> 
+      <a href="stockbee_market_monitor_live.html">Stockbee Monitor</a>
+      <a href="sata_watchlist_dashboard.html">SATA Chart</a>
+      <a href="PowerList.html">Power List</a>
+      <a href="liquid_leaders.html">Liquid Leaders</a>
+      <a href="group_momentum.html">Group Momentum</a>
+      <a href="industry_rs_quadrant.html">Industry RS</a>
+      <a href="rs_radar.html" class="active">RS Radar</a>
+      <a href="PriceStructure.html">Price Structure</a>
+      <a href="StageAnalysis.html">Stage Analysis</a>
+      <a href="tv_watchlist.html">TradingView Watchlist</a>
+      <a href="PortfolioManagement.html">Portfolio Management</a>
+      <a href="Playbook.html">Playbook</a>
+    </div>
+
+<div id="loadingOverlay">
+    <div class="spinner"></div>
+    <div style="font-size: 11px; text-transform: uppercase; font-weight: 700; color: var(--color-neutral); letter-spacing: 1px;" id="loadStatus">Initializing Live Feeds...</div>
+</div>
+
+<div class="dashboard-container" id="mainDashboard" style="visibility: hidden;">
     
     <!-- HEADER -->
     <header class="header">
@@ -435,9 +262,9 @@
         <div class="header-controls">
             <div class="status-badge">
                 <div class="status-dot"></div>
-                Status: <span class="text-up">Active (48 Streams)</span>
+                Status: <span class="text-up" id="streamStatus">Active (Live Streams)</span>
             </div>
-            <button class="btn-outline">
+            <button class="btn-outline" onclick="fetchLiveData()">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"></path><path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path><path d="M3 22v-6h6"></path><path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path></svg>
                 Refresh Data
             </button>
@@ -455,25 +282,25 @@
             <div class="kpi-regime">
                 <div class="kpi-regime-left">
                     <div class="panel-header" style="margin-bottom: 4px;">Market RS Regime</div>
-                    <div class="regime-status">
+                    <div class="regime-status" id="regimeTitle">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4z"></path><path d="M8 8V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                        RISK ON / EXPANSION
+                        ANALYZING...
                     </div>
-                    <div class="kpi-subtext" style="margin-bottom: 8px;">Leadership Broadening<br>Improving internals across cyclical sectors</div>
+                    <div class="kpi-subtext" style="margin-bottom: 8px;" id="regimeSubtext">Processing market internals</div>
                 </div>
                 <div class="kpi-regime-right">
                     <canvas id="gaugeConfidence"></canvas>
-                    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: 700; font-size: 18px;">84%</div>
+                    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: 700; font-size: 18px;" id="gaugeLabel">--%</div>
                 </div>
             </div>
             <div style="display: flex; gap: 24px; margin-top: 12px; border-top: 1px solid var(--panel-border); padding-top: 12px;">
                 <div>
                     <div class="panel-header" style="font-size: 10px; margin-bottom: 2px;">RS Confidence</div>
-                    <div class="text-up" style="font-weight: 600; font-size: 13px;">STRONG</div>
+                    <div class="text-up" style="font-weight: 600; font-size: 13px;" id="kpiConfText">--</div>
                 </div>
                 <div>
                     <div class="panel-header" style="font-size: 10px; margin-bottom: 2px;">Market Breadth</div>
-                    <div class="text-up" style="font-weight: 600; font-size: 13px;">POSITIVE</div>
+                    <div class="text-up" style="font-weight: 600; font-size: 13px;" id="kpiBreadthText">--</div>
                 </div>
             </div>
         </div>
@@ -481,38 +308,38 @@
         <!-- KPI 2 -->
         <div class="panel">
             <div class="panel-header">Sectors Outperforming</div>
-            <div class="kpi-value">7 <span style="font-size: 20px; color: var(--text-secondary);">/ 11</span></div>
+            <div class="kpi-value"><span id="kpiSectorsOut">0</span> <span style="font-size: 20px; color: var(--text-secondary);">/ 11</span></div>
             <div class="mini-chart-container"><canvas id="miniChartSectors"></canvas></div>
         </div>
 
         <!-- KPI 3 -->
         <div class="panel">
             <div class="panel-header">Industries Outperforming</div>
-            <div class="kpi-value">32 <span style="font-size: 20px; color: var(--text-secondary);">/ 59</span></div>
+            <div class="kpi-value"><span id="kpiIndsOut">0</span> <span style="font-size: 20px; color: var(--text-secondary);">/ 15</span></div>
             <div class="mini-chart-container"><canvas id="miniChartInd"></canvas></div>
         </div>
 
         <!-- KPI 4 -->
         <div class="panel">
             <div class="panel-header">Strength Score (Avg)</div>
-            <div class="kpi-value">62</div>
-            <div class="kpi-subtext text-up">+6 vs prev. week</div>
+            <div class="kpi-value" id="kpiAvgStr">0</div>
+            <div class="kpi-subtext" id="kpiAvgStrSub">-- vs SPY</div>
             <div class="mini-chart-container"><canvas id="miniChartStrength"></canvas></div>
         </div>
 
         <!-- KPI 5 -->
         <div class="panel">
             <div class="panel-header">Leadership Concentration</div>
-            <div class="kpi-value text-up">LOW</div>
-            <div class="kpi-subtext">Broad Leadership</div>
+            <div class="kpi-value text-neutral" id="kpiConc">--</div>
+            <div class="kpi-subtext" id="kpiConcSub">--</div>
             <div class="mini-chart-container"><canvas id="miniChartConc"></canvas></div>
         </div>
 
         <!-- KPI 6 -->
         <div class="panel">
             <div class="panel-header">RS Momentum</div>
-            <div class="kpi-value text-up" style="font-size: 28px; line-height: 1.6;">IMPROVING</div>
-            <div class="kpi-subtext text-up">+5 vs prev. week</div>
+            <div class="kpi-value" style="font-size: 24px; line-height: 1.8;" id="kpiMom">--</div>
+            <div class="kpi-subtext" id="kpiMomSub">--</div>
             <div class="mini-chart-container"><canvas id="miniChartMom"></canvas></div>
         </div>
 
@@ -520,7 +347,7 @@
         <div class="panel">
             <div class="panel-header">Update</div>
             <div class="kpi-value text-up" style="font-size: 28px; line-height: 1.6;">LIVE</div>
-            <div class="kpi-subtext">Last: <span id="clockTime">8:45 AM ET</span></div>
+            <div class="kpi-subtext">Last: <span id="clockTime">--</span></div>
         </div>
     </div>
 
@@ -531,7 +358,6 @@
         <div class="panel">
             <div class="panel-header">
                 RS Leadership Rankings
-                <a href="#" style="color: var(--color-neutral); text-decoration: none; font-size: 11px;">View All</a>
             </div>
             
             <div class="rank-section">
@@ -558,10 +384,9 @@
                 <div class="panel-header" style="font-size: 11px;">How To Read</div>
                 <p><strong>RS Score:</strong> 0-100 (vs SPY)</p>
                 <p>> 60 = Outperforming<br>< 40 = Underperforming</p>
-                <p><strong>Momentum:</strong> 1W & 1M acceleration</p>
+                <p><strong>Momentum:</strong> 1W acceleration</p>
                 <p><strong>Trend:</strong> 1M & 3M direction</p>
-                <p><strong>Breadth:</strong> % components > 200DMA</p>
-                <p><strong>Position</strong> in quadrant shows Strength vs Trend.</p>
+                <p><strong>Breadth:</strong> Distance from 200DMA</p>
             </div>
         </div>
 
@@ -579,7 +404,7 @@
 
         <!-- Center Right: Line Chart -->
         <div class="panel">
-            <div class="panel-header">RS Performance Trend (Sectors)</div>
+            <div class="panel-header">RS Performance Trend (Sectors, 60D)</div>
             <div class="chart-container">
                 <canvas id="lineChart"></canvas>
             </div>
@@ -590,7 +415,6 @@
             <div class="panel-header">RS Score Heatmap</div>
             <div style="display: flex; gap: 16px; margin-bottom: 12px; border-bottom: 1px solid var(--panel-border); padding-bottom: 8px;">
                 <span style="color: var(--color-neutral); font-weight: 600; font-size: 12px; border-bottom: 2px solid var(--color-neutral);">Sectors</span>
-                <span style="color: var(--text-secondary); font-size: 12px; cursor: pointer;">Industries</span>
             </div>
             <table class="data-table">
                 <thead>
@@ -622,7 +446,7 @@
                             <th>1M Δ</th>
                             <th>Trend<br><span style="font-size: 9px; text-transform: none;">(1M)</span></th>
                             <th>Trend<br><span style="font-size: 9px; text-transform: none;">(3M)</span></th>
-                            <th>Breadth<br><span style="font-size: 9px; text-transform: none;">(% > 200MA)</span></th>
+                            <th>Breadth<br><span style="font-size: 9px; text-transform: none;">(Proxy)</span></th>
                             <th>Momentum<br><span style="font-size: 9px; text-transform: none;">(1W)</span></th>
                             <th>Position</th>
                         </tr>
@@ -640,7 +464,7 @@
             <div style="display: flex; gap: 24px;">
                 <!-- Top 10 -->
                 <div style="flex: 1;">
-                    <div class="rank-section-title text-up" style="border-bottom: 1px solid var(--panel-border); padding-bottom: 8px; margin-bottom: 0;">Top 10 Industries (RS Score)</div>
+                    <div class="rank-section-title text-up" style="border-bottom: 1px solid var(--panel-border); padding-bottom: 8px; margin-bottom: 0;">Top Industries (RS Score)</div>
                     <table class="data-table">
                         <thead>
                             <tr>
@@ -656,7 +480,7 @@
                 
                 <!-- Bottom 10 -->
                 <div style="flex: 1;">
-                    <div class="rank-section-title text-down" style="border-bottom: 1px solid var(--panel-border); padding-bottom: 8px; margin-bottom: 0;">Bottom 10 Industries (RS Score)</div>
+                    <div class="rank-section-title text-down" style="border-bottom: 1px solid var(--panel-border); padding-bottom: 8px; margin-bottom: 0;">Bottom Industries (RS Score)</div>
                     <table class="data-table">
                         <thead>
                             <tr>
@@ -674,7 +498,7 @@
     </div>
     
     <div style="text-align: center; color: var(--text-muted); font-size: 11px; margin-top: 16px;">
-        RS Score = Percentage vs SPY (Normalized to 0-100) &nbsp;|&nbsp; Data Delayed 15 Min &nbsp;|&nbsp; Source: Multi-Exchange Data Engine
+        RS Score = Percentage vs SPY (Normalized to 0-100) &nbsp;|&nbsp; Data Fetched Live &nbsp;|&nbsp; Source: Yahoo Finance Proxy
     </div>
 
 </div>
@@ -683,82 +507,176 @@
      JAVASCRIPT LOGIC
      ========================================================================== -->
 <script>
-    // --- Mock Data Generation (Realistic Financial Data) ---
-    const sectorsData = [
-        { name: 'Technology', ticker: 'XLK', rs: 80, d1w: 5, d1m: 12, trend1m: 1, trend3m: 1, breadth: 78, mom: 1.8, pos: 'Leaders' },
-        { name: 'Industrials', ticker: 'XLI', rs: 70, d1w: 6, d1m: 10, trend1m: 1, trend3m: 1, breadth: 72, mom: 2.1, pos: 'Leaders' },
-        { name: 'Financials', ticker: 'XLF', rs: 68, d1w: 5, d1m: 8, trend1m: 1, trend3m: 1, breadth: 65, mom: 1.6, pos: 'Leaders' },
-        { name: 'Comm. Services', ticker: 'XLC', rs: 64, d1w: 3, d1m: 6, trend1m: 1, trend3m: 0, breadth: 58, mom: 0.9, pos: 'Leaders' },
-        { name: 'Materials', ticker: 'XLB', rs: 49, d1w: -1, d1m: -1, trend1m: 0, trend3m: -1, breadth: 45, mom: -0.2, pos: 'At Risk' },
-        { name: 'Energy', ticker: 'XLE', rs: 40, d1w: -2, d1m: -3, trend1m: -1, trend3m: -1, breadth: 32, mom: -0.8, pos: 'Weakening' },
-        { name: 'Consumer Discretionary', ticker: 'XLY', rs: 36, d1w: -3, d1m: -5, trend1m: -1, trend3m: -1, breadth: 28, mom: -1.1, pos: 'Weakening' },
-        { name: 'Health Care', ticker: 'XLV', rs: 28, d1w: -5, d1m: -8, trend1m: -1, trend3m: -1, breadth: 22, mom: -1.5, pos: 'Laggards' },
-        { name: 'Real Estate', ticker: 'XLRE', rs: 27, d1w: -4, d1m: -6, trend1m: -1, trend3m: -1, breadth: 21, mom: -1.2, pos: 'Laggards' },
-        { name: 'Consumer Staples', ticker: 'XLP', rs: 55, d1w: 1, d1m: 2, trend1m: 1, trend3m: -1, breadth: 60, mom: 0.1, pos: 'Improving' },
-        { name: 'Utilities', ticker: 'XLU', rs: 22, d1w: -3, d1m: -7, trend1m: -1, trend3m: -1, breadth: 15, mom: -0.9, pos: 'Laggards' }
+    // --- Configuration & State ---
+    const SECTORS = [
+        {tk: 'XLK', n: 'Technology', col: '#3fb950'}, {tk: 'XLI', n: 'Industrials', col: '#58a6ff'}, 
+        {tk: 'XLF', n: 'Financials', col: '#388bfd'}, {tk: 'XLC', n: 'Comm. Services', col: '#a371f7'},
+        {tk: 'XLB', n: 'Materials', col: '#8b949e'}, {tk: 'XLE', n: 'Energy', col: '#d29922'},
+        {tk: 'XLY', n: 'Cons Disc', col: '#e36209'}, {tk: 'XLV', n: 'Health Care', col: '#f85149'},
+        {tk: 'XLRE', n: 'Real Estate', col: '#da3633'}, {tk: 'XLP', n: 'Cons Staples', col: '#484f58'}, 
+        {tk: 'XLU', n: 'Utilities', col: '#c9d1d9'}
     ];
 
-    const indTop = [
-        { name: 'Oil & Gas Exploration', rs: 71, d1w: 7.2, d1m: 11.4 },
-        { name: 'Mobile Payments', rs: 63, d1w: 4.8, d1m: 8.1 },
-        { name: 'Agribusiness', rs: 60, d1w: 3.6, d1m: 6.3 },
-        { name: 'China Internet', rs: 57, d1w: 5.7, d1m: 9.2 },
-        { name: 'Insurance', rs: 54, d1w: 3.2, d1m: 4.1 },
-        { name: 'Transportation', rs: 51, d1w: 2.0, d1m: 3.5 },
-        { name: 'Cybersecurity', rs: 49, d1w: 4.1, d1m: 6.0 },
-        { name: 'Biotech', rs: 46, d1w: 1.3, d1m: -0.2 },
-        { name: 'Timber', rs: 45, d1w: 1.6, d1m: 2.2 },
-        { name: 'FinTech', rs: 44, d1w: 2.3, d1m: 3.1 }
+    const INDUSTRIES = [
+        {tk: 'SMH', n: 'Semiconductors'}, {tk: 'XBI', n: 'Biotech'}, {tk: 'KRE', n: 'Regional Banks'},
+        {tk: 'XRT', n: 'Retail'}, {tk: 'JETS', n: 'Global Jets'}, {tk: 'ITA', n: 'Aerospace'},
+        {tk: 'GDX', n: 'Gold Miners'}, {tk: 'XOP', n: 'Oil & Gas'}, {tk: 'TAN', n: 'Solar'},
+        {tk: 'IGV', n: 'Software'}, {tk: 'COPX', n: 'Copper'}, {tk: 'FINX', n: 'FinTech'},
+        {tk: 'CIBR', n: 'Cybersecurity'}, {tk: 'IHI', n: 'Med Devices'}, {tk: 'ITB', n: 'Homebuilders'}
     ];
 
-    const indBot = [
-        { name: 'Global Jets', rs: 31, d1w: -0.9, d1m: -4.5 },
-        { name: 'Semiconductor Equip.', rs: 29, d1w: -1.0, d1m: -3.6 },
-        { name: 'IPOs', rs: 26, d1w: -1.3, d1m: -5.4 },
-        { name: 'Space', rs: 23, d1w: -0.7, d1m: -3.7 },
-        { name: 'Electric Cars', rs: 20, d1w: -0.6, d1m: -2.1 },
-        { name: 'Solar', rs: 17, d1w: -0.9, d1m: -3.0 },
-        { name: 'Uranium', rs: 14, d1w: -1.1, d1m: -4.4 },
-        { name: 'Clean Energy', rs: 13, d1w: -1.2, d1m: -4.2 },
-        { name: 'Lithium', rs: 9, d1w: -1.0, d1m: -2.8 },
-        { name: 'Quantum-Tech', rs: 7, d1w: -0.7, d1m: -1.9 }
+    const ALL_TICKERS = ['SPY', ...SECTORS.map(s=>s.tk), ...INDUSTRIES.map(i=>i.tk)];
+    const STATE = { data: {}, sectors: [], industries: [] };
+
+    // Chart instances
+    let scatterChart = null;
+    let lineChart = null;
+    let miniCharts = {};
+
+    const PROXY_PROVIDERS = [
+        url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+        url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`
     ];
 
-    const dailyTop = [
-        { name: 'Transportation', tk: 'IYT', score: 88.19, chg: 15.8 },
-        { name: 'Aerospace & Defense', tk: 'ITA', score: 78.23, chg: 12.0 },
-        { name: 'Semiconductors', tk: 'SMH', score: 71.45, chg: 11.5 }
-    ];
-    const weeklyTop = [
-        { name: 'Copper Miners', tk: 'COPX', score: 78.37, chg: 29.3 },
-        { name: 'Silver Miners', tk: 'SIL', score: 75.28, chg: 20.8 },
-        { name: 'Timber', tk: 'WOOD', score: 68.49, chg: 23.4 }
-    ];
-    const dailyBot = [
-        { name: 'Global Jets', tk: 'JETS', score: 29.32, chg: -18.9 },
-        { name: 'Medical Devices', tk: 'IHI', score: 49.44, chg: -22.0 },
-        { name: 'Regional Banks', tk: 'KRE', score: 57.15, chg: -14.6 }
-    ];
-    const weeklyBot = [
-        { name: 'Global Jets', tk: 'JETS', score: 29.32, chg: -32.8 },
-        { name: 'Medical Devices', tk: 'IHI', score: 49.44, chg: -29.0 },
-        { name: 'Regional Banks', tk: 'KRE', score: 57.15, chg: -22.8 }
-    ];
+    Chart.defaults.color = '#8b949e';
+    Chart.defaults.font.family = "'Inter', sans-serif";
+
+    // --- Data Fetching ---
+    async function fetchYahooSeries(symbol) {
+        const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=6mo`;
+        for (const proxyBuilder of PROXY_PROVIDERS) {
+            try {
+                const res = await fetch(proxyBuilder(targetUrl), { cache: "no-store", signal: AbortSignal.timeout(5000) });
+                if (!res.ok) continue;
+                const json = JSON.parse(await res.text());
+                if (!json?.chart?.result?.[0]) continue;
+                const q = json.chart.result[0].indicators.quote[0];
+                const bars = [];
+                for(let i=0; i<q.close.length; i++) {
+                    if(q.close[i] != null) bars.push({ c: q.close[i], h: q.high[i], l: q.low[i] });
+                }
+                return bars;
+            } catch(e) {}
+        }
+        return null;
+    }
+
+    async function fetchLiveData() {
+        document.getElementById('loadingOverlay').style.display = 'flex';
+        document.getElementById('mainDashboard').style.visibility = 'hidden';
+        const status = document.getElementById('loadStatus');
+        
+        let count = 0;
+        for (let i = 0; i < ALL_TICKERS.length; i++) {
+            const tk = ALL_TICKERS[i];
+            const bars = await fetchYahooSeries(tk);
+            if (bars && bars.length > 20) STATE.data[tk] = bars;
+            count++;
+            status.innerHTML = `Fetching Live Stream... (${count}/${ALL_TICKERS.length})`;
+            await new Promise(r => setTimeout(r, 100)); // Rate limit protection
+        }
+
+        document.getElementById('loadingOverlay').style.display = 'none';
+        document.getElementById('mainDashboard').style.visibility = 'visible';
+        processAndRender();
+    }
+
+    // --- Processing ---
+    function processAndRender() {
+        const spyBars = STATE.data['SPY'];
+        if (!spyBars) return;
+
+        const calcPerf = (bars, days) => {
+            if (!bars || bars.length <= days) return 0;
+            return ((bars[bars.length-1].c / bars[bars.length-1-days].c) - 1) * 100;
+        };
+
+        const spy1d = calcPerf(spyBars, 1);
+        const spy1w = calcPerf(spyBars, 5);
+        const spy1m = calcPerf(spyBars, 21);
+        const spy3m = calcPerf(spyBars, 63);
+
+        const buildGroup = (list) => {
+            let res = [];
+            list.forEach(item => {
+                const bars = STATE.data[item.tk];
+                if (!bars) return;
+                
+                const d1d = calcPerf(bars, 1) - spy1d;
+                const d1w = calcPerf(bars, 5) - spy1w;
+                const d1m = calcPerf(bars, 21) - spy1m;
+                const d3m = calcPerf(bars, 63) - spy3m;
+                
+                const c = bars[bars.length-1].c;
+                const sma200 = bars.length > 100 ? bars.slice(-100).reduce((sum, b) => sum + b.c, 0) / 100 : c; // Using 100d as proxy since we pull 6mo
+                let breadthProxy = Math.min(Math.max(Math.round(((c / sma200) - 1) * 200 + 50), 0), 100);
+
+                res.push({
+                    name: item.n, ticker: item.tk, color: item.col || '#8b949e',
+                    d1d, d1w, d1m, d3m,
+                    rsRaw: (d1m + (d3m||d1m)) / 2, // Combined base
+                    mom: d1w,
+                    breadth: breadthProxy,
+                    bars: bars
+                });
+            });
+
+            // Normalize RS Score 0-100
+            if(res.length > 0) {
+                const maxRs = Math.max(...res.map(r => r.rsRaw));
+                const minRs = Math.min(...res.map(r => r.rsRaw));
+                res.forEach(r => {
+                    r.rs = Math.round(((r.rsRaw - minRs) / (maxRs - minRs || 1)) * 100);
+                    r.trend1m = r.d1m > 0 ? 1 : -1;
+                    r.trend3m = r.d3m > 0 ? 1 : -1;
+                    
+                    const isStrong = r.rs >= 50;
+                    const isMomPos = r.mom >= 0;
+                    if (isStrong && isMomPos) r.pos = 'Leaders';
+                    else if (!isStrong && isMomPos) r.pos = 'Improving';
+                    else if (isStrong && !isMomPos) r.pos = 'Laggards';
+                    else r.pos = 'Weakening';
+                });
+            }
+            return res.sort((a,b) => b.rs - a.rs);
+        };
+
+        STATE.sectors = buildGroup(SECTORS);
+        STATE.industries = buildGroup(INDUSTRIES);
+
+        // Sorting for side panels
+        const allGroups = [...STATE.sectors, ...STATE.industries];
+        const sortBy = (arr, key, asc = false) => [...arr].sort((a,b) => asc ? a[key] - b[key] : b[key] - a[key]);
+        
+        const dailyTop = sortBy(allGroups, 'd1d').slice(0,3).map(x => ({name: x.name, tk: x.ticker, score: x.rs, chg: x.d1d}));
+        const dailyBot = sortBy(allGroups, 'd1d', true).slice(0,3).map(x => ({name: x.name, tk: x.ticker, score: x.rs, chg: x.d1d}));
+        const weeklyTop = sortBy(allGroups, 'd1w').slice(0,3).map(x => ({name: x.name, tk: x.ticker, score: x.rs, chg: x.d1w}));
+        const weeklyBot = sortBy(allGroups, 'd1w', true).slice(0,3).map(x => ({name: x.name, tk: x.ticker, score: x.rs, chg: x.d1w}));
+
+        populateRankList('dailyTop3', dailyTop, 'top');
+        populateRankList('weeklyTop3', weeklyTop, 'top');
+        populateRankList('dailyBot3', dailyBot, 'bottom');
+        populateRankList('weeklyBot3', weeklyBot, 'bottom');
+        
+        populateSectorTable();
+        populateIndustryTables();
+        
+        updateKPIs();
+        renderCharts(spyBars);
+    }
 
     // --- Helpers ---
     const formatSign = (val) => val > 0 ? `+${val}` : val;
     const getColorClass = (val) => val > 0 ? 'text-up' : (val < 0 ? 'text-down' : 'text-neutral');
-    
-    // Heatmap color generator
     const getHeatmapColor = (score, isDark) => {
-        if (score >= 70) return isDark ? '#1a7f37' : '#2ea043'; // Green
-        if (score >= 60) return isDark ? '#238636' : '#3fb950'; // Light Green
-        if (score >= 50) return isDark ? '#9e6a03' : '#d29922'; // Yellow/Olive
-        if (score >= 40) return isDark ? '#b05c04' : '#e36209'; // Orange
-        return isDark ? '#da3633' : '#f85149'; // Red
+        if (score >= 70) return isDark ? '#1a7f37' : '#2ea043';
+        if (score >= 60) return isDark ? '#238636' : '#3fb950';
+        if (score >= 50) return isDark ? '#9e6a03' : '#d29922';
+        if (score >= 40) return isDark ? '#b05c04' : '#e36209';
+        return isDark ? '#da3633' : '#f85149';
     };
 
-    // --- DOM Population ---
+    // --- DOM Updaters ---
     function populateRankList(elementId, data, type) {
         const el = document.getElementById(elementId);
         let html = '';
@@ -769,8 +687,8 @@
                     <div class="rank-num">${i + 1}</div>
                     <div class="rank-name">${item.name}</div>
                     <div class="rank-ticker">${item.tk}</div>
-                    <div class="rank-score tabular-nums">${item.score.toFixed(2)}</div>
-                    <div class="rank-change ${chgClass} tabular-nums">${formatSign(item.chg)}</div>
+                    <div class="rank-score tabular-nums">${item.score.toFixed(0)}</div>
+                    <div class="rank-change ${chgClass} tabular-nums">${formatSign(item.chg.toFixed(1))}</div>
                 </div>
             `;
         });
@@ -780,13 +698,10 @@
     function populateSectorTable() {
         const tbody = document.getElementById('sectorTableBody');
         const heatBody = document.getElementById('heatmapTableBody');
-        let tHtml = '';
-        let hHtml = '';
-        
+        let tHtml = ''; let hHtml = '';
         const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
 
-        sectorsData.forEach(s => {
-            // Main Table
+        STATE.sectors.forEach(s => {
             const trendIcon = (val) => val > 0 ? `<span class="text-up">↑</span>` : (val < 0 ? `<span class="text-down">↓</span>` : `<span class="text-neutral">→</span>`);
             const badgeClass = s.pos.toLowerCase().replace(' ', '-');
             
@@ -794,22 +709,20 @@
                 <tr>
                     <td style="font-weight: 600;">${s.name}</td>
                     <td>${s.rs}</td>
-                    <td class="${getColorClass(s.d1w)}">${formatSign(s.d1w)}</td>
-                    <td class="${getColorClass(s.d1m)}">${formatSign(s.d1m)}</td>
+                    <td class="${getColorClass(s.d1w)}">${formatSign(s.d1w.toFixed(1))}</td>
+                    <td class="${getColorClass(s.d1m)}">${formatSign(s.d1m.toFixed(1))}</td>
                     <td>${trendIcon(s.trend1m)}</td>
                     <td>${trendIcon(s.trend3m)}</td>
                     <td>${s.breadth}%</td>
-                    <td class="${getColorClass(s.mom)}">${formatSign(s.mom)}</td>
+                    <td class="${getColorClass(s.mom)}">${formatSign(s.mom.toFixed(1))}</td>
                     <td><span class="badge ${badgeClass}">${s.pos}</span></td>
                 </tr>
             `;
-
-            // Heatmap Table
             hHtml += `
                 <tr>
                     <td>${s.name}</td>
                     <td class="heatmap-cell" style="background-color: ${getHeatmapColor(s.rs, isDark)}; color: #fff;">${s.rs}</td>
-                    <td class="heatmap-cell" style="background-color: ${getHeatmapColor(s.rs + s.d1w * 2, isDark)}; color: #fff;">${formatSign(s.d1w)}</td>
+                    <td class="heatmap-cell" style="background-color: ${getHeatmapColor(s.rs + s.d1w * 2, isDark)}; color: #fff;">${formatSign(s.d1w.toFixed(1))}</td>
                 </tr>
             `;
         });
@@ -818,7 +731,7 @@
     }
 
     function populateIndustryTables() {
-        const renderRows = (data, isTop) => {
+        const renderRows = (data) => {
             return data.map((item, i) => `
                 <tr>
                     <td class="tabular-nums" style="color:var(--text-secondary); width:20px;">${i + 1}</td>
@@ -829,219 +742,178 @@
                 </tr>
             `).join('');
         };
-        document.getElementById('indTopBody').innerHTML = renderRows(indTop, true);
-        document.getElementById('indBotBody').innerHTML = renderRows(indBot, false);
+        const indTop = STATE.industries.slice(0,10);
+        const indBot = [...STATE.industries].reverse().slice(0,10);
+        document.getElementById('indTopBody').innerHTML = renderRows(indTop);
+        document.getElementById('indBotBody').innerHTML = renderRows(indBot);
     }
 
-    // --- Chart.js Setup ---
-    Chart.defaults.color = '#8b949e';
-    Chart.defaults.font.family = "'Inter', sans-serif";
+    function updateKPIs() {
+        const avgRS = Math.round(STATE.sectors.reduce((acc, s) => acc + s.rs, 0) / STATE.sectors.length);
+        const secsOut = STATE.sectors.filter(s => s.rs >= 50).length;
+        const indsOut = STATE.industries.filter(i => i.rs >= 50).length;
+        
+        document.getElementById('kpiSectorsOut').innerText = secsOut;
+        document.getElementById('kpiIndsOut').innerText = indsOut;
+        document.getElementById('kpiAvgStr').innerText = avgRS;
+        
+        let avgMom = STATE.sectors.reduce((acc, s) => acc + s.mom, 0) / STATE.sectors.length;
+        const momEl = document.getElementById('kpiMom');
+        momEl.innerText = avgMom >= 0 ? 'IMPROVING' : 'WEAKENING';
+        momEl.className = `kpi-value ${getColorClass(avgMom)}`;
 
-    let scatterChart, lineChart;
+        const top2Conc = (STATE.sectors[0].rs + STATE.sectors[1].rs) / 2;
+        const concEl = document.getElementById('kpiConc');
+        if(top2Conc > 80) { concEl.innerText = 'HIGH'; concEl.className = 'kpi-value text-down'; }
+        else { concEl.innerText = 'LOW'; concEl.className = 'kpi-value text-up'; }
 
-    function initCharts() {
-        // Shared options for mini charts
-        const miniOptions = {
-            responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { display: false }, tooltip: { enabled: false } },
-            scales: { x: { display: false }, y: { display: false } },
-            layout: { padding: 0 }
-        };
+        // Regime
+        const regimeTitle = document.getElementById('regimeTitle');
+        const gaugeLabel = document.getElementById('gaugeLabel');
+        const conf = Math.round((secsOut / 11) * 100);
+        
+        gaugeLabel.innerText = `${conf}%`;
+        if (conf >= 60) {
+            regimeTitle.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4z"></path><path d="M8 8V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg> RISK ON / EXPANSION`;
+            regimeTitle.style.color = 'var(--color-up)';
+            document.getElementById('kpiConfText').innerText = 'STRONG';
+            document.getElementById('kpiConfText').className = 'text-up';
+            document.getElementById('kpiBreadthText').innerText = 'POSITIVE';
+            document.getElementById('kpiBreadthText').className = 'text-up';
+        } else {
+            regimeTitle.innerHTML = `RISK OFF / CONTRACTION`;
+            regimeTitle.style.color = 'var(--color-down)';
+            document.getElementById('kpiConfText').innerText = 'WEAK';
+            document.getElementById('kpiConfText').className = 'text-down';
+            document.getElementById('kpiBreadthText').innerText = 'NEGATIVE';
+            document.getElementById('kpiBreadthText').className = 'text-down';
+        }
+    }
 
-        // Mini Bar 1
-        new Chart(document.getElementById('miniChartSectors'), {
+    // --- Charting ---
+    function renderCharts(spyBars) {
+        // Destroy existing to prevent canvas reuse bugs
+        if(scatterChart) scatterChart.destroy();
+        if(lineChart) lineChart.destroy();
+        Object.keys(miniCharts).forEach(k => { if(miniCharts[k]) miniCharts[k].destroy(); });
+
+        const miniOptions = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: false } }, scales: { x: { display: false }, y: { display: false } }, layout: { padding: 0 } };
+
+        miniCharts['sectors'] = new Chart(document.getElementById('miniChartSectors'), {
             type: 'bar',
-            data: { labels: ['1','2','3','4','5','6','7','8','9','10','11'], datasets: [{ data: [3,4,3,5,6,8,7,6,5,4,2], backgroundColor: '#3fb950', borderRadius: 2 }] },
+            data: { labels: STATE.sectors.map(s=>s.tk), datasets: [{ data: STATE.sectors.map(s=>s.rs), backgroundColor: STATE.sectors.map(s => s.rs >= 50 ? '#3fb950' : '#f85149'), borderRadius: 2 }] },
             options: miniOptions
         });
 
-        // Mini Bar 2
-        new Chart(document.getElementById('miniChartInd'), {
+        miniCharts['inds'] = new Chart(document.getElementById('miniChartInd'), {
             type: 'bar',
-            data: { labels: Array.from({length:20}, (_,i)=>i), datasets: [{ data: Array.from({length:20}, ()=>Math.random()*10), backgroundColor: '#3fb950', borderRadius: 2 }] },
+            data: { labels: STATE.industries.map(i=>i.tk), datasets: [{ data: STATE.industries.map(i=>i.rs), backgroundColor: STATE.industries.map(i => i.rs >= 50 ? '#3fb950' : '#f85149'), borderRadius: 2 }] },
             options: miniOptions
         });
 
-        // Mini Lines
-        const createSparkline = (id, color, dataArr) => {
-            new Chart(document.getElementById(id), {
-                type: 'line',
-                data: { labels: Array.from({length: dataArr.length}, (_,i)=>i), datasets: [{ data: dataArr, borderColor: color, borderWidth: 2, tension: 0.3, pointRadius: 0 }] },
-                options: miniOptions
-            });
-        };
-        createSparkline('miniChartStrength', '#3fb950', [40,45,42,50,55,58,62]);
-        createSparkline('miniChartConc', '#58a6ff', [80,75,60,50,45,40,35]);
-        createSparkline('miniChartMom', '#3fb950', [0,2,1,3,5,4,6]);
-
-        // Gauge Confidence (Doughnut)
-        new Chart(document.getElementById('gaugeConfidence'), {
+        const conf = Math.round((STATE.sectors.filter(s => s.rs >= 50).length / 11) * 100);
+        miniCharts['gauge'] = new Chart(document.getElementById('gaugeConfidence'), {
             type: 'doughnut',
-            data: { datasets: [{ data: [84, 16], backgroundColor: ['#3fb950', 'rgba(63, 185, 80, 0.1)'], borderWidth: 0, cutout: '80%' }] },
-            options: { ...miniOptions, animation: { duration: 2000, easing: 'easeOutQuart' } }
+            data: { datasets: [{ data: [conf, 100-conf], backgroundColor: [conf >= 50 ? '#3fb950' : '#f85149', 'rgba(139, 148, 158, 0.1)'], borderWidth: 0, cutout: '80%' }] },
+            options: { ...miniOptions, animation: { duration: 1500, easing: 'easeOutQuart' } }
         });
 
-        // --- Scatter Chart (Quadrant Map) ---
-        // Custom plugin to draw quadrants
+        // Scatter
         const quadrantPlugin = {
             id: 'quadrants',
             beforeDraw: (chart) => {
                 const { ctx, chartArea: { top, bottom, left, right }, scales: { x, y } } = chart;
-                ctx.save();
-                ctx.beginPath();
-                // Draw crosshairs at x=50, y=0
-                const xPos = x.getPixelForValue(50);
-                const yPos = y.getPixelForValue(0);
-                
+                ctx.save(); ctx.beginPath();
+                const xPos = x.getPixelForValue(50); const yPos = y.getPixelForValue(0);
                 ctx.strokeStyle = document.documentElement.getAttribute('data-theme') === 'dark' ? '#30363d' : '#d0d7de';
                 ctx.lineWidth = 1;
-                
-                // Vertical line
-                ctx.moveTo(xPos, top); ctx.lineTo(xPos, bottom);
-                // Horizontal line
-                ctx.moveTo(left, yPos); ctx.lineTo(right, yPos);
-                ctx.stroke();
-                
-                // Draw Text labels
-                ctx.font = "bold 9px 'Inter'";
+                ctx.moveTo(xPos, top); ctx.lineTo(xPos, bottom); ctx.moveTo(left, yPos); ctx.lineTo(right, yPos); ctx.stroke();
+                ctx.font = "bold 9px 'Inter'"; ctx.textAlign = 'center';
                 ctx.fillStyle = document.documentElement.getAttribute('data-theme') === 'dark' ? '#484f58' : '#8c959f';
-                ctx.textAlign = 'center';
-                
                 ctx.fillText('IMPROVING / WEAK', xPos/2 + left/2, top + 15);
-                ctx.fillStyle = '#3fb950'; // Green text for top right
-                ctx.fillText('IMPROVING / STRONG (LEADERS)', xPos + (right-xPos)/2, top + 15);
-                ctx.fillStyle = '#f85149'; // Red for bottom left
-                ctx.fillText('WEAKENING / LAGGARDS', xPos/2 + left/2, bottom - 10);
-                ctx.fillStyle = '#d29922'; // Yellow for bottom right
-                ctx.fillText('WEAKENING / STRONG', xPos + (right-xPos)/2, bottom - 10);
-                
+                ctx.fillStyle = '#3fb950'; ctx.fillText('IMPROVING / STRONG (LEADERS)', xPos + (right-xPos)/2, top + 15);
+                ctx.fillStyle = '#f85149'; ctx.fillText('WEAKENING / LAGGARDS', xPos/2 + left/2, bottom - 10);
+                ctx.fillStyle = '#d29922'; ctx.fillText('WEAKENING / STRONG', xPos + (right-xPos)/2, bottom - 10);
                 ctx.restore();
             }
         };
-
-        const scatterData = sectorsData.map(s => ({
-            x: s.rs,
-            y: s.mom * 10, // Exaggerate momentum for visual spread
-            r: Math.max(s.rs / 5, 4), // Bubble size based on RS
-            label: s.name,
-            color: s.rs >= 50 && s.mom >= 0 ? '#3fb950' : (s.rs < 50 && s.mom >= 0 ? '#238636' : (s.rs >= 50 && s.mom < 0 ? '#d29922' : '#f85149'))
-        }));
 
         scatterChart = new Chart(document.getElementById('scatterChart'), {
             type: 'bubble',
             data: {
                 datasets: [{
-                    data: scatterData,
-                    backgroundColor: scatterData.map(d => d.color),
-                    borderColor: 'rgba(0,0,0,0.2)',
-                    borderWidth: 1
+                    data: STATE.sectors.map(s => ({ x: s.rs, y: s.mom * 10, r: Math.max(s.rs / 5, 4), label: s.name, color: s.rs >= 50 && s.mom >= 0 ? '#3fb950' : (s.rs < 50 && s.mom >= 0 ? '#238636' : (s.rs >= 50 && s.mom < 0 ? '#d29922' : '#f85149')) })),
+                    backgroundColor: (ctx) => ctx.raw ? ctx.raw.color : '#fff',
+                    borderColor: 'rgba(0,0,0,0.2)', borderWidth: 1
                 }]
             },
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        callbacks: {
-                            label: (ctx) => `${ctx.raw.label} (RS: ${ctx.raw.x}, Mom: ${(ctx.raw.y/10).toFixed(1)})`
-                        }
-                    }
-                },
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => `${ctx.raw.label} (RS: ${ctx.raw.x}, Mom: ${(ctx.raw.y/10).toFixed(1)})` } } },
                 scales: {
-                    x: {
-                        min: 0, max: 100,
-                        title: { display: true, text: 'RELATIVE STRENGTH (vs SPY)' },
-                        grid: { display: false }
-                    },
-                    y: {
-                        min: -50, max: 50,
-                        title: { display: true, text: 'RS MOMENTUM [1W Acceleration]' },
-                        grid: { display: false }
-                    }
+                    x: { min: 0, max: 100, title: { display: true, text: 'RELATIVE STRENGTH (vs SPY)' }, grid: { display: false } },
+                    y: { min: -50, max: 50, title: { display: true, text: 'RS MOMENTUM [1W Acceleration]' }, grid: { display: false } }
                 }
             },
             plugins: [quadrantPlugin]
         });
 
-        // --- Line Chart (Trend) ---
-        const generateRandomWalk = (start, length, volatility) => {
-            let res = [start];
-            for(let i=1; i<length; i++) res.push(res[i-1] + (Math.random() - 0.5) * volatility);
-            return res;
-        };
+        // Line Chart (60D Historical RS vs SPY)
+        const days = Math.min(60, spyBars.length);
+        const labels = Array.from({length: days}, (_, i) => i);
         
-        const months = ['Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'];
-        const labels = Array.from({length: 60}, (_,i) => i % 10 === 0 ? months[Math.floor(i/10)] : '');
+        const lineDatasets = STATE.sectors.map(s => {
+            const histData = [];
+            const b = s.bars;
+            if (b && b.length >= days) {
+                const startB = b[b.length - days].c;
+                const startSpy = spyBars[spyBars.length - days].c;
+                const baseRatio = startB / startSpy;
+                for(let i=0; i<days; i++) {
+                    const r = b[b.length - days + i].c / spyBars[spyBars.length - days + i].c;
+                    histData.push((r / baseRatio) * 100);
+                }
+            }
+            return { label: s.name, data: histData, borderColor: s.color, tension: 0.3, pointRadius: 0, borderWidth: 2 };
+        });
 
         lineChart = new Chart(document.getElementById('lineChart'), {
             type: 'line',
-            data: {
-                labels: labels,
-                datasets: [
-                    { label: 'Technology', data: generateRandomWalk(100, 60, 2), borderColor: '#3fb950', tension: 0.3, pointRadius: 0, borderWidth: 2 },
-                    { label: 'Industrials', data: generateRandomWalk(95, 60, 1.5), borderColor: '#58a6ff', tension: 0.3, pointRadius: 0, borderWidth: 2 },
-                    { label: 'Financials', data: generateRandomWalk(90, 60, 1.5), borderColor: '#388bfd', tension: 0.3, pointRadius: 0, borderWidth: 2 },
-                    { label: 'Comm. Services', data: generateRandomWalk(85, 60, 2), borderColor: '#a371f7', tension: 0.3, pointRadius: 0, borderWidth: 2 },
-                    { label: 'Materials', data: generateRandomWalk(80, 60, 1.5), borderColor: '#8b949e', tension: 0.3, pointRadius: 0, borderWidth: 2 },
-                    { label: 'Energy', data: generateRandomWalk(75, 60, 3), borderColor: '#d29922', tension: 0.3, pointRadius: 0, borderWidth: 2 },
-                    { label: 'Health Care', data: generateRandomWalk(70, 60, 1), borderColor: '#f85149', tension: 0.3, pointRadius: 0, borderWidth: 2 },
-                    { label: 'Utilities', data: generateRandomWalk(65, 60, 1), borderColor: '#da3633', tension: 0.3, pointRadius: 0, borderWidth: 2 },
-                ]
-            },
+            data: { labels: labels, datasets: lineDatasets.filter(d => d.data.length > 0) },
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'top',
-                        labels: { boxWidth: 10, usePointStyle: true, pointStyle: 'line', font: {size: 11} }
-                    }
-                },
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { position: 'top', labels: { boxWidth: 10, usePointStyle: true, pointStyle: 'line', font: {size: 11} } } },
                 scales: {
-                    x: { grid: { display: false }, ticks: { maxTicksLimit: 6 } },
+                    x: { display: false },
                     y: { grid: { color: document.documentElement.getAttribute('data-theme') === 'dark' ? '#30363d' : '#d0d7de' } }
                 }
             }
         });
     }
 
-    // --- Theme Management ---
+    // --- Theme & Time ---
     function setTheme(theme) {
         document.documentElement.setAttribute('data-theme', theme);
         document.getElementById('btnDark').classList.toggle('active', theme === 'dark');
         document.getElementById('btnLight').classList.toggle('active', theme === 'light');
-        
-        // Update charts to reflect new colors
         if(scatterChart) scatterChart.update();
-        if(lineChart) {
-            lineChart.options.scales.y.grid.color = theme === 'dark' ? '#30363d' : '#d0d7de';
-            lineChart.update();
-        }
-        // Regenerate heatmap colors based on theme
-        populateSectorTable();
+        if(lineChart) { lineChart.options.scales.y.grid.color = theme === 'dark' ? '#30363d' : '#d0d7de'; lineChart.update(); }
+        if(STATE.sectors.length > 0) populateSectorTable();
     }
 
-    // --- Clock ---
     function updateClock() {
         const now = new Date();
-        const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }) + ' ET';
-        document.getElementById('clockTime').textContent = timeStr;
+        document.getElementById('clockTime').textContent = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }) + ' ET';
     }
 
-    // --- Initialization ---
     window.onload = () => {
-        populateRankList('dailyTop3', dailyTop, 'top');
-        populateRankList('weeklyTop3', weeklyTop, 'top');
-        populateRankList('dailyBot3', dailyBot, 'bottom');
-        populateRankList('weeklyBot3', weeklyBot, 'bottom');
+        let savedTheme = "dark";
+        try { savedTheme = localStorage.getItem('sata-theme') || "dark"; } catch(e) {}
+        setTheme(savedTheme);
+        updateClock();
+        setInterval(updateClock, 60000);
         
-        populateSectorTable();
-        populateIndustryTables();
-        
-        initCharts();
-        
-        setInterval(updateClock, 60000); // Update time every minute
+        fetchLiveData(); // Start trickle fetch
     };
 </script>
 </body>
