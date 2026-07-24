@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Industry RS Matrix · Stage Analysis Dashboard</title>
+<link rel="icon" href="data:,">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap');
+  
+  :root {
+    --bg: #0a0e16; --panel: #101625; --panel2: #0d1220; --line: #212a3d; --line-soft: #1a2233;
+    --text: #e7ebf3; --text-dim: #8b93a8; --text-faint: #59617a;
+    --teal: #20d9b8; --amber: #f5b942; --red: #ff5c72; --blue: #38bdf8;
+    --navy-head: #131c33; --input-bg: #0d1220;
+    
+    /* Quadrant Colors - Dark Mode */
+    --quad-strong: rgba(16, 185, 129, 0.08);
+    --quad-improve: rgba(20, 184, 166, 0.08);
+    --quad-weaken: rgba(245, 158, 11, 0.08);
+    --quad-weak: rgba(225, 29, 72, 0.08);
+    --dot-fill: #38bdf8;
+    --dot-hover: #bae6fd;
+    --quad-text: rgba(255,255,255,0.1);
+  }
+  html[data-theme="light"] {
+    --bg: #f4f6fa; --panel: #ffffff; --panel2: #ffffff; --line: #dde2ec; --line-soft: #e9edf4;
+    --text: #151b2c; --text-dim: #5b6478; --text-faint: #8a92a6;
+    --teal: #0b9c82; --amber: #b9781a; --red: #c93a51; --blue: #0284c7;
+    --navy-head: #eef1f8; --input-bg: #f4f6fa;
+    
+    /* Quadrant Colors - Light Mode */
+    --quad-strong: #ecfdf5;
+    --quad-improve: #f0fdf4;
+    --quad-weaken: #fff1f2;
+    --quad-weak: #ffe4e6;
+    --dot-fill: #2563eb;
+    --dot-hover: #1d4ed8;
+    --quad-text: rgba(0,0,0,0.05);
+  }
+  
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    height: 100%; width: 100%; overflow: hidden;
+    background:
+      radial-gradient(ellipse 1200px 500px at 15% -5%, rgba(32,217,184,.06), transparent 60%),
+      radial-gradient(ellipse 900px 500px at 100% 0%, rgba(255,92,114,.05), transparent 55%),
+      var(--bg);
+    color: var(--text); font-family: 'Inter', sans-serif; padding: 14px 18px;
+    transition: background .2s ease, color .2s ease;
+  }
+
+  /* .wrap { width: 100%; height: 100%; display: flex; flex-direction: column; }
+
+  /* NAVIGATION TABS */
+  .app-tabs { display: flex; gap: 4px; margin-bottom: 12px; border-bottom: 1px solid var(--line); flex-shrink: 0; overflow-x: auto; }
+  .app-tabs::-webkit-scrollbar { display: none; }
+  .app-tabs a { padding: 8px 16px; text-decoration: none; color: var(--text-dim); font-size: 11px; font-weight: 600; border: 1px solid transparent; border-bottom: none; border-radius: 6px 6px 0 0; text-transform: uppercase; letter-spacing: 0.04em; transition: all 0.15s; font-family: 'JetBrains Mono', monospace; white-space: nowrap; }
+  .app-tabs a.active { background: var(--panel); color: var(--teal); border-color: var(--line); border-bottom-color: var(--panel); margin-bottom: -1px; }
+  .app-tabs a:hover:not(.active) { color: var(--text); background: rgba(255,255,255,0.03); }
+
+  /* HEADER */
+  header.top { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid var(--line); padding-bottom: 10px; margin-bottom: 12px; gap: 16px; flex-shrink: 0; }
+  .eyebrow { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: .16em; color: var(--teal); text-transform: uppercase; font-weight: 700; }
+  h1 { font-size: 22px; font-weight: 800; letter-spacing: -.02em; margin-top: 2px; }
+  .sub { color: var(--text-dim); font-size: 11.5px; margin-top: 2px; font-family: 'JetBrains Mono', monospace; }
+  .hdr-right { display: flex; align-items: center; gap: 10px; }
+  .status-badge { font-family: 'JetBrains Mono', monospace; font-size: 11px; background: var(--panel2); border: 1px solid var(--line); padding: 5px 10px; border-radius: 6px; color: var(--text-dim); }
+  .status-badge b { color: var(--teal); }
+
+  .theme-toggle { display: flex; align-items: center; gap: 4px; background: var(--panel); border: 1px solid var(--line); border-radius: 100px; padding: 3px; cursor: pointer; }
+  .theme-toggle .opt { font-size: 10.5px; padding: 4px 10px; border-radius: 100px; color: var(--text-faint); font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+  .theme-toggle .opt.active { background: var(--teal); color: #04150f; }
+
+  .btn { background: var(--panel); border: 1px solid var(--line); color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; padding: 6px 12px; border-radius: 6px; cursor: pointer; transition: all .15s; }
+  .btn:hover { border-color: var(--teal); color: var(--teal); }
+
+  /* MAIN MATRIX LAYOUT */
+  .layout { display: flex; flex-direction: column; gap: 14px; flex: 1; min-height: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; position: relative; }
+  
+  .controls-bar { display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; border-bottom: 1px solid var(--line); background: var(--panel2); flex-shrink: 0; flex-wrap: wrap; gap: 12px; }
+  .controls-left h2 { font-size: 13px; font-weight: 800; color: var(--text); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 2px; }
+  .controls-left p { font-size: 11px; font-weight: 500; color: var(--text-dim); }
+  
+  .controls-right { display: flex; align-items: center; gap: 12px; }
+  input.search { background: var(--input-bg); border: 1px solid var(--line); border-radius: 6px; color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 11.5px; padding: 6px 10px; width: 220px; }
+  input.search:focus { outline: none; border-color: var(--teal); }
+  
+  .filter-pills { display: flex; background: var(--input-bg); border: 1px solid var(--line); border-radius: 6px; padding: 2px; }
+  .filter-pills button { background: transparent; border: none; color: var(--text-dim); font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 800; padding: 6px 12px; border-radius: 4px; cursor: pointer; transition: all .15s; text-transform: uppercase; }
+  .filter-pills button.active { background: var(--panel2); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+  
+  /* SVG MATRIX CONTAINER */
+  .matrix-container { flex: 1; position: relative; padding: 20px; display: flex; flex-direction: column; min-height: 0; }
+  .matrix-svg-wrapper { flex: 1; position: relative; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--panel2); box-shadow: inset 0 2px 10px rgba(0,0,0,0.1); }
+  svg.quadrant-svg { width: 100%; height: 100%; display: block; }
+
+  .axis-label { position: absolute; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 800; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; background: var(--panel); border: 1px solid var(--line); padding: 4px 8px; border-radius: 4px; z-index: 10; }
+  .axis-label.x-axis { bottom: 30px; right: 40px; }
+  .axis-label.y-axis { top: 40px; left: 10px; writing-mode: vertical-rl; transform: rotate(180deg); }
+
+  /* HOVER DATA CARD */
+  .hover-card { position: absolute; bottom: 40px; left: 60px; background: var(--panel2); border: 1px solid var(--line); box-shadow: 0 10px 25px rgba(0,0,0,0.5); border-radius: 10px; padding: 16px; width: 280px; z-index: 50; display: none; font-family: 'Inter', sans-serif; }
+  .hover-card.visible { display: block; animation: popIn 0.15s ease-out forwards; }
+  @keyframes popIn { 0% { opacity: 0; transform: scale(0.95); } 100% { opacity: 1; transform: scale(1); } }
+  
+  .hc-head { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid var(--line); padding-bottom: 10px; margin-bottom: 12px; }
+  .hc-ticker { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 800; color: var(--blue); letter-spacing: 0.05em; margin-bottom: 2px; }
+  .hc-name { font-size: 14px; font-weight: 800; color: var(--text); line-height: 1.2; }
+  .hc-close { cursor: pointer; color: var(--text-dim); font-size: 14px; font-weight: 800; background: none; border: none; padding: 0; line-height: 1; }
+  .hc-close:hover { color: var(--text); }
+  
+  .hc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+  .hc-box { background: var(--input-bg); border: 1px solid var(--line); border-radius: 6px; padding: 10px; text-align: center; }
+  .hc-box-lbl { font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; margin-bottom: 4px; }
+  .hc-box-val { font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 800; color: var(--teal); }
+  .hc-box-sub { font-size: 10px; font-weight: 600; color: var(--text-faint); margin-top: 4px; }
+  
+  .hc-foot { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--line); padding-top: 10px; }
+  .hc-price { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--text-dim); }
+  .hc-price b { color: var(--text); font-size: 13px; }
+  .hc-badge { font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 800; padding: 3px 6px; border-radius: 4px; text-transform: uppercase; }
+  .badge-strong { background: rgba(32,217,184,.15); color: var(--teal); border: 1px solid rgba(32,217,184,.3); }
+  .badge-improving { background: rgba(56,189,248,.15); color: var(--blue); border: 1px solid rgba(56,189,248,.3); }
+  .badge-weakening { background: rgba(245,185,66,.15); color: var(--amber); border: 1px solid rgba(245,185,66,.3); }
+  .badge-weak { background: rgba(255,92,114,.15); color: var(--red); border: 1px solid rgba(255,92,114,.3); }
+
+  /* SVG Inner elements */
+  .plot-point { cursor: pointer; transition: transform 0.1s ease; }
+  .plot-point circle { transition: all 0.15s ease; }
+  .plot-point:hover circle.core { fill: var(--dot-hover); r: 6; }
+  .plot-point:hover circle.glow { fill: var(--dot-hover); opacity: 0.2; r: 14; }
+  .plot-point text { pointer-events: none; }
+  .plot-point:hover text { font-size: 11px; font-weight: 800; fill: var(--text); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ================= APP TABS ================= -->
+  <div class="app-tabs">
+    <a href="index.html">Market Dashboard</a>
+    <a href="MarketCommandCenter.html">Market Command Center</a>
+    <a href="MarketRegime.html">Market Regime</a> 
+    <a href="stockbee_market_monitor_live.html">Stockbee Monitor</a>
+    <a href="sata_watchlist_dashboard.html">SATA Chart</a>
+    <a href="PowerList.html">Power List</a>
+    <a href="liquid_leaders.html">Liquid Leaders</a>
+    <a href="group_momentum.html">Group Momentum</a>
+    <a href="industry_rs_quadrant.html" class="active">Industry RS</a>
+    <a href="PriceStructure.html">Price Structure</a>
+    <a href="StageAnalysis.html">Stage Analysis</a>
+    <a href="tv_watchlist.html">TradingView Watchlist</a>
+    <a href="PortfolioManagement.html">Portfolio Management</a>
+    <a href="Playbook.html">Playbook</a>
+  </div>
+
+  <header class="top">
+    <div>
+      <div class="eyebrow">Oliver Kell &middot; Market Internals</div>
+      <h1>Industry Quadrant Matrix</h1>
+      <div class="sub">Stock Industry Performance – Weekly × Monthly Absolute Strength &middot; Client-Side Native Fetch</div>
+    </div>
+    <div class="hdr-right">
+      <div class="status-badge" id="statusBox">Initializing feed…</div>
+      <button class="btn" id="btnRefresh">↻ Refresh Matrix</button>
+      <div class="theme-toggle" id="themeToggle">
+        <span class="opt" id="optDark">Dark</span>
+        <span class="opt" id="optLight">Light</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="layout">
+    
+    <div class="controls-bar">
+      <div class="controls-left">
+        <h2>Top-Down Absolute Strength</h2>
+        <p>Top-right quadrant indicates institutional momentum leaders (Strongest ↗️).</p>
+      </div>
+      <div class="controls-right">
+        <input type="text" id="searchInput" class="search" placeholder="Search Industry or Ticker..." />
+        <div class="filter-pills" id="quadrantFilters">
+          <button class="active" data-quad="ALL">ALL</button>
+          <button data-quad="STRONG">STRONG</button>
+          <button data-quad="IMPROVING">IMPROVING</button>
+          <button data-quad="WEAKENING">WEAKENING</button>
+          <button data-quad="WEAK">WEAK</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="matrix-container">
+      <div class="axis-label y-axis">Monthly RS Percentile ➔</div>
+      <div class="axis-label x-axis">Weekly RS Percentile ➔</div>
+      
+      <div class="matrix-svg-wrapper" id="svgWrapper">
+        <svg id="scatterPlotSvg" class="quadrant-svg" viewBox="0 0 1000 600" preserveAspectRatio="none">
+          <!-- Dynamic Content Injected Here -->
+        </svg>
+      </div>
+
+      <!-- Hover Data Card -->
+      <div id="hoverCard" class="hover-card">
+        <div class="hc-head">
+          <div>
+            <div class="hc-ticker" id="hcTicker">TICKER</div>
+            <div class="hc-name" id="hcName">Industry Name</div>
+          </div>
+          <button class="hc-close" onclick="closeHoverCard()">✕</button>
+        </div>
+        <div class="hc-grid">
+          <div class="hc-box">
+            <div class="hc-box-lbl">Weekly RS Rank</div>
+            <div class="hc-box-val" id="hcWkRank">0 / 100</div>
+            <div class="hc-box-sub">1W: <span id="hcWkPct">0.00%</span></div>
+          </div>
+          <div class="hc-box">
+            <div class="hc-box-lbl">Monthly RS Rank</div>
+            <div class="hc-box-val" style="color: var(--blue);" id="hcMoRank">0 / 100</div>
+            <div class="hc-box-sub">1M: <span id="hcMoPct">0.00%</span></div>
+          </div>
+        </div>
+        <div class="hc-foot">
+          <div class="hc-price">Price: <b id="hcPrice">$0.00</b></div>
+          <div class="hc-badge" id="hcBadge">QUADRANT</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+/* ============================================================
+   1. UNIVERSE CONFIGURATION
+   ============================================================ */
+const ETF_UNIVERSE = [
+  // Sectors
+  { ticker: "XLK", name: "Technology" }, { ticker: "XLF", name: "Financials" }, { ticker: "XLV", name: "Health Care" },
+  { ticker: "XLE", name: "Energy" }, { ticker: "XLY", name: "Cons Disc" }, { ticker: "XLI", name: "Industrials" },
+  { ticker: "XLC", name: "Comm Svcs" }, { ticker: "XLP", name: "Cons Stpl" }, { ticker: "XLRE", name: "Real Estate" },
+  { ticker: "XLB", name: "Materials" }, { ticker: "XLU", name: "Utilities" },
+  // Industries & Themes
+  { ticker: "SMH", name: "Semiconductors" }, { ticker: "XBI", name: "Biotech" }, { ticker: "KRE", name: "Regional Banks" },
+  { ticker: "XRT", name: "Retail" }, { ticker: "JETS", name: "Global Jets" }, { ticker: "ITA", name: "Aerospace" },
+  { ticker: "IPO", name: "IPO" }, { ticker: "GDX", name: "Gold Miners" }, { ticker: "XOP", name: "Oil & Gas" },
+  { ticker: "TAN", name: "Solar" }, { ticker: "IGV", name: "Software" }, { ticker: "URA", name: "Uranium" },
+  { ticker: "COPX", name: "Copper Miners" }, { ticker: "REMX", name: "Rare Earth" }, { ticker: "FINX", name: "FinTech" },
+  { ticker: "IYT", name: "Transport" }, { ticker: "LIT", name: "Lithium" }, { ticker: "CIBR", name: "Cybersecurity" },
+  { ticker: "SLX", name: "Steel" }, { ticker: "IHI", name: "Med Devices" }, { ticker: "SIL", name: "Silver Miners" },
+  { ticker: "ARKG", name: "Genomics" }, { ticker: "QTUM", name: "Quantum" }, { ticker: "AIQ", name: "AI" },
+  { ticker: "ITB", name: "Home Construction" }, { ticker: "ROBO", name: "Robotics" }, { ticker: "IBIT", name: "Bitcoin" },
+  { ticker: "SOCL", name: "Social Media" }, { ticker: "KWEB", name: "China Internet" }
+];
+
+const STATE = {
+  data: [],
+  query: "",
+  activeQuad: "ALL",
+  hoveredIndex: null
+};
+
+/* ============================================================
+   2. CORS-FREE JSONP ENGINE
+   ============================================================ */
+function fetchYahooJSONP(symbol, interval = '1d', range = '3mo') {
+  return new Promise((resolve) => {
+    const cbName = 'yahoo_cb_' + Math.random().toString(36).substring(2, 10);
+    const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=${interval}&range=${range}&corsDomain=finance.yahoo.com&callback=${cbName}`;
+    
+    const script = document.createElement('script');
+    let completed = false;
+
+    const cleanup = () => {
+      if (script.parentNode) script.parentNode.removeChild(script);
+      delete window[cbName];
+    };
+
+    const timer = setTimeout(() => {
+      if (!completed) {
+        completed = true;
+        cleanup();
+        resolve(null);
+      }
+    }, 4000);
+
+    window[cbName] = function(json) {
+      if (completed) return;
+      completed = true;
+      clearTimeout(timer);
+      cleanup();
+      
+      if (!json || !json.chart || !json.chart.result || !json.chart.result[0]) {
+        resolve(null);
+        return;
+      }
+
+      const result = json.chart.result[0];
+      const timestamps = result.timestamp || [];
+      const quote = result.indicators?.quote?.[0] || {};
+      const bars = [];
+
+      for(let i = 0; i < timestamps.length; i++) {
+        if(quote.open?.[i] != null && quote.high?.[i] != null && quote.low?.[i] != null && quote.close?.[i] != null) {
+          bars.push({
+            t: timestamps[i] * 1000,
+            c: quote.close[i]
+          });
+        }
+      }
+      resolve({ bars: bars.sort((a,b) => a.t - b.t) });
+    };
+
+    script.onerror = () => {
+      if (!completed) {
+        completed = true;
+        clearTimeout(timer);
+        cleanup();
+        resolve(null);
+      }
+    };
+
+    script.src = targetUrl;
+    document.head.appendChild(script);
+  });
+}
+
+/* ============================================================
+   3. DATA PROCESSING & RANKING
+   ============================================================ */
+async function loadMatrixData() {
+  const statusBox = document.getElementById("statusBox");
+  STATE.data = [];
+  
+  let processed = [];
+  let count = 0;
+
+  for (let i = 0; i < ETF_UNIVERSE.length; i++) {
+    const meta = ETF_UNIVERSE[i];
+    const res = await fetchYahooJSONP(meta.ticker, "1d", "3mo");
+    
+    if (res && res.bars && res.bars.length >= 22) {
+      const bars = res.bars;
+      const c_now = bars[bars.length - 1].c;
+      const c_1w = bars[bars.length - 6].c; // 5 days ago
+      const c_1m = bars[bars.length - 22].c; // 21 days ago
+      
+      processed.push({
+        ticker: meta.ticker,
+        name: meta.name,
+        price: c_now,
+        raw_1w: ((c_now / c_1w) - 1) * 100,
+        raw_1m: ((c_now / c_1m) - 1) * 100
+      });
+    }
+    
+    count++;
+    statusBox.innerHTML = `Calculating ETF performance... (<b>${count}</b>/${ETF_UNIVERSE.length})`;
+    await new Promise(r => setTimeout(r, 60)); // Trickle-load to protect IP
+  }
+
+  // Calculate Percentile Rankings
+  if (processed.length > 0) {
+    // 1W Rank
+    processed.sort((a, b) => a.raw_1w - b.raw_1w);
+    processed.forEach((item, idx) => {
+      item.weekly_rs = Math.round((idx / (processed.length - 1)) * 100);
+    });
+
+    // 1M Rank
+    processed.sort((a, b) => a.raw_1m - b.raw_1m);
+    processed.forEach((item, idx) => {
+      item.monthly_rs = Math.round((idx / (processed.length - 1)) * 100);
+      
+      // Assign Quadrant
+      if (item.weekly_rs >= 50 && item.monthly_rs >= 50) item.quadrant = "STRONG";
+      else if (item.weekly_rs >= 50 && item.monthly_rs < 50) item.quadrant = "IMPROVING";
+      else if (item.weekly_rs < 50 && item.monthly_rs >= 50) item.quadrant = "WEAKENING";
+      else item.quadrant = "WEAK";
+    });
+  }
+
+  STATE.data = processed;
+  statusBox.innerHTML = `<b>Matrix Active</b> · ${processed.length} Industries Scored`;
+  drawMatrix();
+}
+
+/* ============================================================
+   4. SVG RENDERING ENGINE
+   ============================================================ */
+function drawMatrix() {
+  const svg = document.getElementById("scatterPlotSvg");
+  
+  // Filter Data
+  const filtered = STATE.data.filter(d => {
+    const matchSearch = d.name.toLowerCase().includes(STATE.query) || d.ticker.toLowerCase().includes(STATE.query);
+    const matchQuad = STATE.activeQuad === "ALL" || d.quadrant === STATE.activeQuad;
+    return matchSearch && matchQuad;
+  });
+
+  // Base SVG Content (Quadrants & Lines)
+  let html = `
+    <!-- Top-Left: Weakening -->
+    <rect x="0" y="0" width="500" height="300" fill="var(--quad-weaken)" />
+    <!-- Top-Right: Strong -->
+    <rect x="500" y="0" width="500" height="300" fill="var(--quad-strong)" />
+    <!-- Bottom-Left: Weak -->
+    <rect x="0" y="300" width="500" height="300" fill="var(--quad-weak)" />
+    <!-- Bottom-Right: Improving -->
+    <rect x="500" y="300" width="500" height="300" fill="var(--quad-improve)" />
+
+    <!-- Crosshairs -->
+    <line x1="500" y1="0" x2="500" y2="600" stroke="var(--line)" stroke-width="1.5" stroke-dasharray="6,6" />
+    <line x1="0" y1="300" x2="1000" y2="300" stroke="var(--line)" stroke-width="1.5" stroke-dasharray="6,6" />
+
+    <!-- Watermarks -->
+    <text x="250" y="40" text-anchor="middle" fill="var(--quad-text)" font-size="20" font-weight="900" font-family="'JetBrains Mono', monospace" letter-spacing="0.1em">WEAKENING</text>
+    <text x="750" y="40" text-anchor="middle" fill="var(--quad-text)" font-size="20" font-weight="900" font-family="'JetBrains Mono', monospace" letter-spacing="0.1em">STRONG ↗</text>
+    <text x="250" y="580" text-anchor="middle" fill="var(--quad-text)" font-size="20" font-weight="900" font-family="'JetBrains Mono', monospace" letter-spacing="0.1em">WEAK</text>
+    <text x="750" y="580" text-anchor="middle" fill="var(--quad-text)" font-size="20" font-weight="900" font-family="'JetBrains Mono', monospace" letter-spacing="0.1em">IMPROVING</text>
+  `;
+
+  // Plot Points
+  filtered.forEach((d, idx) => {
+    // Map 0-100 Percentile to SVG coordinates (padding 30px)
+    const cx = 30 + (d.weekly_rs / 100) * 940;
+    const cy = 570 - (d.monthly_rs / 100) * 540;
+    
+    // We bind the data index directly into the group for efficient event delegation
+    html += `
+      <g class="plot-point" data-ticker="${d.ticker}">
+        <circle class="glow" cx="${cx}" cy="${cy}" r="0" fill="transparent" />
+        <circle class="core" cx="${cx}" cy="${cy}" r="4.5" fill="var(--dot-fill)" stroke="var(--bg)" stroke-width="1.5" />
+        <text x="${cx + 8}" y="${cy + 3}" fill="var(--text-dim)" font-size="9.5" font-weight="700" font-family="'Inter', sans-serif">
+          ${d.name}
+        </text>
+      </g>
+    `;
+  });
+
+  svg.innerHTML = html;
+  attachHoverEvents();
+}
+
+/* ============================================================
+   5. INTERACTIVITY & TOOLTIPS
+   ============================================================ */
+function attachHoverEvents() {
+  const points = document.querySelectorAll('.plot-point');
+  points.forEach(pt => {
+    pt.addEventListener('mouseenter', (e) => {
+      const ticker = pt.getAttribute('data-ticker');
+      const data = STATE.data.find(d => d.ticker === ticker);
+      if (data) openHoverCard(data);
+    });
+  });
+}
+
+function openHoverCard(d) {
+  const card = document.getElementById('hoverCard');
+  
+  document.getElementById('hcTicker').innerText = d.ticker;
+  document.getElementById('hcName').innerText = d.name;
+  
+  document.getElementById('hcWkRank').innerText = `${d.weekly_rs} / 100`;
+  const wPct = d.raw_1w >= 0 ? `+${d.raw_1w.toFixed(2)}%` : `${d.raw_1w.toFixed(2)}%`;
+  document.getElementById('hcWkPct').innerText = wPct;
+  document.getElementById('hcWkPct').style.color = d.raw_1w >= 0 ? "var(--teal)" : "var(--red)";
+
+  document.getElementById('hcMoRank').innerText = `${d.monthly_rs} / 100`;
+  const mPct = d.raw_1m >= 0 ? `+${d.raw_1m.toFixed(2)}%` : `${d.raw_1m.toFixed(2)}%`;
+  document.getElementById('hcMoPct').innerText = mPct;
+  document.getElementById('hcMoPct').style.color = d.raw_1m >= 0 ? "var(--teal)" : "var(--red)";
+
+  document.getElementById('hcPrice').innerText = `$${d.price.toFixed(2)}`;
+  
+  const badge = document.getElementById('hcBadge');
+  badge.innerText = d.quadrant;
+  badge.className = `hc-badge badge-${d.quadrant.toLowerCase()}`;
+
+  card.classList.add('visible');
+}
+
+function closeHoverCard() {
+  document.getElementById('hoverCard').classList.remove('visible');
+}
+
+// UI Controls Binding
+document.getElementById('searchInput').addEventListener('input', (e) => {
+  STATE.query = e.target.value.toLowerCase().trim();
+  drawMatrix();
+});
+
+document.querySelectorAll('#quadrantFilters button').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    document.querySelectorAll('#quadrantFilters button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    STATE.activeQuad = btn.getAttribute('data-quad');
+    drawMatrix();
+  });
+});
+
+document.getElementById('btnRefresh').addEventListener('click', () => {
+  closeHoverCard();
+  loadMatrixData();
+});
+
+/* ============================================================
+   6. THEME INITIALIZATION
+   ============================================================ */
+function setTheme(theme) {
+  document.documentElement.setAttribute("data-theme", theme);
+  document.getElementById("optDark").classList.toggle("active", theme === "dark");
+  document.getElementById("optLight").classList.toggle("active", theme === "light");
+  try { localStorage.setItem('sata-theme', theme); } catch(e) {}
+}
+
+document.getElementById("optDark").addEventListener("click", () => setTheme("dark"));
+document.getElementById("optLight").addEventListener("click", () => setTheme("light"));
+
+(function init() {
+  let savedTheme = "dark";
+  try { savedTheme = localStorage.getItem('sata-theme') || "dark"; } catch(e) {}
+  setTheme(savedTheme);
+  
+  // Hide tooltip when clicking anywhere in the matrix wrapper
+  document.getElementById('svgWrapper').addEventListener('click', (e) => {
+    if(!e.target.closest('.plot-point')) closeHoverCard();
+  });
+
+  loadMatrixData();
+})();
+</script>
+</body>
+</html>
