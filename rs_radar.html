@@ -338,8 +338,8 @@
         .grid-main > .panel:nth-child(4) { grid-column: span 1; }
         .grid-main > .panel { min-height: 500px; }
 
-        .grid-bottom > .panel:nth-child(1) { grid-column: span 6; }
-        .grid-bottom > .panel:nth-child(2) { grid-column: span 6; }
+        .grid-bottom > .panel:nth-child(1) { grid-column: span 5; }
+        .grid-bottom > .panel:nth-child(2) { grid-column: span 7; }
         .grid-bottom > .panel { min-height: 330px; }
 
         .kpi-value { font-size: 34px; margin: 6px 0; }
@@ -366,6 +366,33 @@
         .grid-main > .panel:nth-child(4) .data-table td { padding-left: 5px; padding-right: 5px; font-size: 9.5px; }
 
         #loadingOverlay { background: var(--bg-color); }
+
+        /* RS quadrant labels, legend and unified industry matrix */
+        .quadrant-legend {
+            display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+            margin-top:10px; padding-top:9px; border-top:1px solid var(--panel-border);
+            color:var(--text-secondary); font:600 9.5px var(--font-mono);
+        }
+        .quadrant-legend .legend-item{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+        .quadrant-legend .legend-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+        .quadrant-legend .legend-note{margin-left:auto;color:var(--text-muted);font-weight:500}
+        .industry-controls{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+        .industry-filter{
+            border:1px solid var(--panel-border);background:var(--panel-bg);color:var(--text-secondary);
+            padding:6px 9px;border-radius:6px;font:700 9px var(--font-mono);text-transform:uppercase;
+            letter-spacing:.05em;cursor:pointer
+        }
+        .industry-filter:hover{color:var(--text-primary);background:var(--hover-bg)}
+        .industry-filter.active{color:var(--color-neutral);border-color:var(--color-neutral);background:rgba(88,166,255,.08)}
+        .table-scroll{overflow:auto;width:100%;max-height:430px}
+        .table-scroll .data-table{min-width:900px}
+        .heatmap-tabs{display:flex;gap:12px;margin-bottom:10px;border-bottom:1px solid var(--panel-border)}
+        .heatmap-tab{padding:0 0 7px;background:none;color:var(--text-secondary);font:700 9px var(--font-mono);text-transform:uppercase;border-bottom:2px solid transparent}
+        .heatmap-tab.active{color:var(--color-neutral);border-bottom-color:var(--color-neutral)}
+        @media(max-width:1400px){
+            .grid-bottom > .panel:nth-child(1),.grid-bottom > .panel:nth-child(2){grid-column:1/-1}
+        }
+
 
         @media (min-width: 2200px) {
             body { padding-left: 12px; padding-right: 12px; }
@@ -589,9 +616,12 @@
             <div class="chart-container">
                 <canvas id="scatterChart"></canvas>
             </div>
-            <div style="display: flex; gap: 16px; margin-top: 12px; font-size: 12px; color: var(--text-secondary);">
-                <span>Bubble Size = RS Score</span>
-                <span>Color = RS Momentum</span>
+            <div class="quadrant-legend" aria-label="RS quadrant legend">
+                <span class="legend-item"><span class="legend-dot" style="background:#3fb950"></span>Leading</span>
+                <span class="legend-item"><span class="legend-dot" style="background:#38bdf8"></span>Improving</span>
+                <span class="legend-item"><span class="legend-dot" style="background:#d29922"></span>Weakening</span>
+                <span class="legend-item"><span class="legend-dot" style="background:#f85149"></span>Lagging</span>
+                <span class="legend-note">Bubble size = RS score · X = relative strength · Y = 1W RS momentum</span>
             </div>
         </div>
 
@@ -606,8 +636,9 @@
         <!-- Right: Heatmap -->
         <div class="panel">
             <div class="panel-header">RS Score Heatmap</div>
-            <div style="display: flex; gap: 16px; margin-bottom: 12px; border-bottom: 1px solid var(--panel-border); padding-bottom: 8px;">
-                <span style="color: var(--color-neutral); font-weight: 600; font-size: 12px; border-bottom: 2px solid var(--color-neutral);">Sectors</span>
+            <div class="heatmap-tabs">
+                <button class="heatmap-tab active" id="heatmapSectorTab" onclick="setHeatmapUniverse('sectors')">Sectors</button>
+                <button class="heatmap-tab" id="heatmapIndustryTab" onclick="setHeatmapUniverse('industries')">Industries</button>
             </div>
             <table class="data-table">
                 <thead>
@@ -651,47 +682,41 @@
             </div>
         </div>
 
-        <!-- Industry Leaders/Laggards -->
+        <!-- Unified Industry RS Matrix -->
         <div class="panel">
-            <div class="panel-header">Industry RS Leaders & Laggards</div>
-            <div style="display: flex; gap: 24px;">
-                <!-- Top 10 -->
-                <div style="flex: 1;">
-                    <div class="rank-section-title text-up" style="border-bottom: 1px solid var(--panel-border); padding-bottom: 8px; margin-bottom: 0;">Top Industries (RS Score)</div>
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th></th>
-                                <th>RS Score</th>
-                                <th>1W Δ</th>
-                                <th>1M Δ</th>
-                            </tr>
-                        </thead>
-                        <tbody id="indTopBody"></tbody>
-                    </table>
-                </div>
-                
-                <!-- Bottom 10 -->
-                <div style="flex: 1;">
-                    <div class="rank-section-title text-down" style="border-bottom: 1px solid var(--panel-border); padding-bottom: 8px; margin-bottom: 0;">Bottom Industries (RS Score)</div>
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th></th>
-                                <th>RS Score</th>
-                                <th>1W Δ</th>
-                                <th>1M Δ</th>
-                            </tr>
-                        </thead>
-                        <tbody id="indBotBody"></tbody>
-                    </table>
-                </div>
+            <div class="panel-header"><span>Industry RS Matrix</span><span id="industryCountLabel">15 groups</span></div>
+            <div class="industry-controls" aria-label="Industry position filters">
+                <button class="industry-filter active" data-filter="All" onclick="setIndustryFilter('All', this)">All</button>
+                <button class="industry-filter" data-filter="Leaders" onclick="setIndustryFilter('Leaders', this)">Leaders</button>
+                <button class="industry-filter" data-filter="Improving" onclick="setIndustryFilter('Improving', this)">Improving</button>
+                <button class="industry-filter" data-filter="Weakening" onclick="setIndustryFilter('Weakening', this)">Weakening</button>
+                <button class="industry-filter" data-filter="Laggards" onclick="setIndustryFilter('Laggards', this)">Laggards</button>
+            </div>
+            <div class="table-scroll">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Industry</th>
+                            <th>Ticker</th>
+                            <th>RS Score<br><span style="font-size:9px;text-transform:none">(within universe)</span></th>
+                            <th>1D Δ</th>
+                            <th>1W Δ</th>
+                            <th>1M Δ</th>
+                            <th>Trend<br><span style="font-size:9px;text-transform:none">(1M)</span></th>
+                            <th>Trend<br><span style="font-size:9px;text-transform:none">(3M)</span></th>
+                            <th>Breadth<br><span style="font-size:9px;text-transform:none">(Proxy)</span></th>
+                            <th>Momentum<br><span style="font-size:9px;text-transform:none">(1W)</span></th>
+                            <th>Position</th>
+                        </tr>
+                    </thead>
+                    <tbody id="industryTableBody"></tbody>
+                </table>
             </div>
         </div>
     </div>
     
     <div style="text-align: center; color: var(--text-muted); font-size: 11px; margin-top: 16px;">
-        RS Score = Percentage vs SPY (Normalized to 0-100) &nbsp;|&nbsp; Data Fetched Live &nbsp;|&nbsp; Source: Yahoo Finance Proxy
+        RS Score = Cross-sectional percentile within each universe (relative performance vs SPY, normalized 0–100) &nbsp;|&nbsp; Data Fetched Live &nbsp;|&nbsp; Source: Yahoo Finance Proxy
     </div>
 
 </div>
@@ -827,8 +852,8 @@
                     const isMomPos = r.mom >= 0;
                     if (isStrong && isMomPos) r.pos = 'Leaders';
                     else if (!isStrong && isMomPos) r.pos = 'Improving';
-                    else if (isStrong && !isMomPos) r.pos = 'Laggards';
-                    else r.pos = 'Weakening';
+                    else if (isStrong && !isMomPos) r.pos = 'Weakening';
+                    else r.pos = 'Laggards';
                 });
             }
             return res.sort((a,b) => b.rs - a.rs);
@@ -891,7 +916,7 @@
     function populateSectorTable() {
         const tbody = document.getElementById('sectorTableBody');
         const heatBody = document.getElementById('heatmapTableBody');
-        let tHtml = ''; let hHtml = '';
+        let tHtml = '';
         const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
 
         STATE.sectors.forEach(s => {
@@ -911,34 +936,70 @@
                     <td><span class="badge ${badgeClass}">${s.pos}</span></td>
                 </tr>
             `;
-            hHtml += `
-                <tr>
-                    <td>${s.name}</td>
-                    <td class="heatmap-cell" style="background-color: ${getHeatmapColor(s.rs, isDark)}; color: #fff;">${s.rs}</td>
-                    <td class="heatmap-cell" style="background-color: ${getHeatmapColor(s.rs + s.d1w * 2, isDark)}; color: #fff;">${formatSign(s.d1w.toFixed(1))}</td>
-                </tr>
-            `;
         });
         tbody.innerHTML = tHtml;
-        heatBody.innerHTML = hHtml;
+        populateHeatmap();
+    }
+
+    let activeIndustryFilter = 'All';
+    let activeHeatmapUniverse = 'sectors';
+
+    function positionBadgeClass(position) {
+        return String(position || '').toLowerCase().replace(/\s+/g, '-');
     }
 
     function populateIndustryTables() {
-        const renderRows = (data) => {
-            return data.map((item, i) => `
-                <tr>
-                    <td class="tabular-nums" style="color:var(--text-secondary); width:20px;">${i + 1}</td>
-                    <td style="font-weight:500;">${item.name}</td>
-                    <td class="tabular-nums">${item.rs}</td>
-                    <td class="${getColorClass(item.d1w)} tabular-nums">${formatSign(item.d1w.toFixed(1))}</td>
-                    <td class="${getColorClass(item.d1m)} tabular-nums">${formatSign(item.d1m.toFixed(1))}</td>
-                </tr>
-            `).join('');
-        };
-        const indTop = STATE.industries.slice(0,10);
-        const indBot = [...STATE.industries].reverse().slice(0,10);
-        document.getElementById('indTopBody').innerHTML = renderRows(indTop);
-        document.getElementById('indBotBody').innerHTML = renderRows(indBot);
+        const tbody = document.getElementById('industryTableBody');
+        if (!tbody) return;
+        const trendIcon = (val) => val > 0 ? `<span class="text-up">↑</span>` : (val < 0 ? `<span class="text-down">↓</span>` : `<span class="text-neutral">→</span>`);
+        const rows = activeIndustryFilter === 'All'
+            ? STATE.industries
+            : STATE.industries.filter(item => item.pos === activeIndustryFilter);
+
+        tbody.innerHTML = rows.map(item => `
+            <tr>
+                <td style="font-weight:600">${item.name}</td>
+                <td class="tabular-nums text-secondary" style="font-weight:700">${item.ticker}</td>
+                <td class="tabular-nums">${item.rs}</td>
+                <td class="${getColorClass(item.d1d)} tabular-nums">${formatSign(item.d1d.toFixed(1))}</td>
+                <td class="${getColorClass(item.d1w)} tabular-nums">${formatSign(item.d1w.toFixed(1))}</td>
+                <td class="${getColorClass(item.d1m)} tabular-nums">${formatSign(item.d1m.toFixed(1))}</td>
+                <td>${trendIcon(item.trend1m)}</td>
+                <td>${trendIcon(item.trend3m)}</td>
+                <td class="tabular-nums">${item.breadth}%</td>
+                <td class="${getColorClass(item.mom)} tabular-nums">${formatSign(item.mom.toFixed(1))}</td>
+                <td><span class="badge ${positionBadgeClass(item.pos)}">${item.pos}</span></td>
+            </tr>
+        `).join('');
+        const count = document.getElementById('industryCountLabel');
+        if (count) count.textContent = `${rows.length} of ${STATE.industries.length} groups`;
+    }
+
+    function setIndustryFilter(filter, button) {
+        activeIndustryFilter = filter;
+        document.querySelectorAll('.industry-filter').forEach(btn => btn.classList.toggle('active', btn === button));
+        populateIndustryTables();
+    }
+
+    function setHeatmapUniverse(universe) {
+        activeHeatmapUniverse = universe;
+        document.getElementById('heatmapSectorTab')?.classList.toggle('active', universe === 'sectors');
+        document.getElementById('heatmapIndustryTab')?.classList.toggle('active', universe === 'industries');
+        populateHeatmap();
+    }
+
+    function populateHeatmap() {
+        const heatBody = document.getElementById('heatmapTableBody');
+        if (!heatBody) return;
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        const rows = activeHeatmapUniverse === 'industries' ? STATE.industries : STATE.sectors;
+        heatBody.innerHTML = rows.map(item => `
+            <tr>
+                <td title="${item.ticker}">${item.name}</td>
+                <td class="heatmap-cell" style="background-color:${getHeatmapColor(item.rs, isDark)};color:#fff">${item.rs}</td>
+                <td class="heatmap-cell" style="background-color:${getHeatmapColor(item.rs + item.d1w * 2, isDark)};color:#fff">${formatSign(item.d1w.toFixed(1))}</td>
+            </tr>
+        `).join('');
     }
 
     function updateKPIs() {
@@ -1023,10 +1084,37 @@
                 ctx.moveTo(xPos, top); ctx.lineTo(xPos, bottom); ctx.moveTo(left, yPos); ctx.lineTo(right, yPos); ctx.stroke();
                 ctx.font = "bold 9px 'Inter'"; ctx.textAlign = 'center';
                 ctx.fillStyle = document.documentElement.getAttribute('data-theme') === 'dark' ? '#484f58' : '#8c959f';
-                ctx.fillText('IMPROVING / WEAK', xPos/2 + left/2, top + 15);
-                ctx.fillStyle = '#3fb950'; ctx.fillText('IMPROVING / STRONG (LEADERS)', xPos + (right-xPos)/2, top + 15);
-                ctx.fillStyle = '#f85149'; ctx.fillText('WEAKENING / LAGGARDS', xPos/2 + left/2, bottom - 10);
-                ctx.fillStyle = '#d29922'; ctx.fillText('WEAKENING / STRONG', xPos + (right-xPos)/2, bottom - 10);
+                ctx.fillText('IMPROVING', xPos/2 + left/2, top + 15);
+                ctx.fillStyle = '#3fb950'; ctx.fillText('LEADING', xPos + (right-xPos)/2, top + 15);
+                ctx.fillStyle = '#f85149'; ctx.fillText('LAGGING', xPos/2 + left/2, bottom - 10);
+                ctx.fillStyle = '#d29922'; ctx.fillText('WEAKENING', xPos + (right-xPos)/2, bottom - 10);
+                ctx.restore();
+            }
+        };
+
+        const bubbleLabelPlugin = {
+            id: 'bubbleLabels',
+            afterDatasetsDraw(chart) {
+                const { ctx, chartArea } = chart;
+                const dataset = chart.data.datasets[0];
+                const meta = chart.getDatasetMeta(0);
+                ctx.save();
+                meta.data.forEach((point, index) => {
+                    const raw = dataset.data[index];
+                    if (!raw || point.x < chartArea.left || point.x > chartArea.right || point.y < chartArea.top || point.y > chartArea.bottom) return;
+                    const radius = point.options.radius || raw.r || 5;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'bottom';
+                    ctx.font = "700 10px 'JetBrains Mono', monospace";
+                    ctx.fillStyle = document.documentElement.getAttribute('data-theme') === 'dark' ? '#e7ebf3' : '#151b2c';
+                    ctx.fillText(raw.ticker, point.x, point.y - radius - 4);
+                    if (chart.width >= 900) {
+                        ctx.textBaseline = 'top';
+                        ctx.font = "500 8px 'Inter', sans-serif";
+                        ctx.fillStyle = document.documentElement.getAttribute('data-theme') === 'dark' ? '#8b93a8' : '#5b6478';
+                        ctx.fillText(raw.label, point.x, point.y + radius + 4);
+                    }
+                });
                 ctx.restore();
             }
         };
@@ -1035,20 +1123,35 @@
             type: 'bubble',
             data: {
                 datasets: [{
-                    data: STATE.sectors.map(s => ({ x: s.rs, y: s.mom * 10, r: Math.max(s.rs / 5, 4), label: s.name, color: s.rs >= 50 && s.mom >= 0 ? '#3fb950' : (s.rs < 50 && s.mom >= 0 ? '#238636' : (s.rs >= 50 && s.mom < 0 ? '#d29922' : '#f85149')) })),
+                    data: STATE.sectors.map(s => {
+                        const strong = s.rs >= 50;
+                        const positiveMomentum = s.mom >= 0;
+                        let quadrant, color;
+                        if (strong && positiveMomentum) { quadrant = 'Leading'; color = '#3fb950'; }
+                        else if (!strong && positiveMomentum) { quadrant = 'Improving'; color = '#38bdf8'; }
+                        else if (strong && !positiveMomentum) { quadrant = 'Weakening'; color = '#d29922'; }
+                        else { quadrant = 'Lagging'; color = '#f85149'; }
+                        return { x:s.rs, y:s.mom*10, r:Math.max(s.rs/6,5), ticker:s.ticker, label:s.name, quadrant, color };
+                    }),
                     backgroundColor: (ctx) => ctx.raw ? ctx.raw.color : '#fff',
                     borderColor: 'rgba(0,0,0,0.2)', borderWidth: 1
                 }]
             },
             options: {
                 responsive: true, maintainAspectRatio: false,
-                plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => `${ctx.raw.label} (RS: ${ctx.raw.x}, Mom: ${(ctx.raw.y/10).toFixed(1)})` } } },
+                plugins: {
+                    legend: { display:false },
+                    tooltip: { callbacks: {
+                        title: items => items.length ? `${items[0].raw.ticker} — ${items[0].raw.label}` : '',
+                        label: ctx => [`Quadrant: ${ctx.raw.quadrant}`, `RS Score: ${ctx.raw.x}`, `RS Momentum: ${(ctx.raw.y/10).toFixed(1)}`]
+                    }}
+                },
                 scales: {
                     x: { min: 0, max: 100, title: { display: true, text: 'RELATIVE STRENGTH (vs SPY)' }, grid: { display: false } },
                     y: { min: -50, max: 50, title: { display: true, text: 'RS MOMENTUM [1W Acceleration]' }, grid: { display: false } }
                 }
             },
-            plugins: [quadrantPlugin]
+            plugins: [quadrantPlugin, bubbleLabelPlugin]
         });
 
         // Line Chart (60D Historical RS vs SPY)
@@ -1091,7 +1194,7 @@
         document.getElementById('btnLight').classList.toggle('active', theme === 'light');
         if(scatterChart) scatterChart.update();
         if(lineChart) { lineChart.options.scales.y.grid.color = theme === 'dark' ? '#30363d' : '#d0d7de'; lineChart.update(); }
-        if(STATE.sectors.length > 0) populateSectorTable();
+        if(STATE.sectors.length > 0) { populateSectorTable(); populateIndustryTables(); populateHeatmap(); }
     }
 
     function updateClock() {
