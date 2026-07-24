@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>RS Radar Matrix</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&family=JetBrains+Mono:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f4f6fa;
+    --card: #ffffff;
+    --line: #e2e8f0;
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    --text-faint: #94a3b8;
+    --blue: #2563eb;
+    --blue-light: #eff6ff;
+    --green: #059669;
+    --green-light: #ecfdf5;
+    --red: #e11d48;
+    --red-light: #ffe4e6;
+    --pink: #db2777;
+    --amber: #f59e0b;
+    --slate-800: #1e293b;
+    --slate-50: #f8fafc;
+  }
+  
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text-main); font-family: 'Inter', sans-serif; padding: 16px; overflow-y: scroll; }
+  
+  /* Utilities */
+  .flex { display: flex; } .flex-col { flex-direction: column; } .flex-wrap { flex-wrap: wrap; }
+  .items-center { align-items: center; } .items-end { align-items: flex-end; } .items-start { align-items: flex-start; }
+  .justify-between { justify-content: space-between; } .justify-center { justify-content: center; } .justify-end { justify-content: flex-end; }
+  .gap-1 { gap: 0.25rem; } .gap-2 { gap: 0.5rem; } .gap-3 { gap: 0.75rem; } .gap-4 { gap: 1rem; } .gap-6 { gap: 1.5rem; }
+  .grid { display: grid; }
+  .grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+  .grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+  .grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
+  .grid-cols-5 { grid-template-columns: repeat(5, 1fr); }
+  .grid-cols-6 { grid-template-columns: repeat(6, 1fr); }
+  .grid-cols-12 { grid-template-columns: repeat(12, 1fr); }
+  .col-span-3 { grid-column: span 3; } .col-span-4 { grid-column: span 4; } .col-span-9 { grid-column: span 9; }
+  .w-full { width: 100%; } .h-full { height: 100%; } .flex-1 { flex: 1; }
+  
+  .p-2 { padding: 0.5rem; } .p-3 { padding: 0.75rem; } .p-4 { padding: 1rem; }
+  .px-1 { padding-left: 0.25rem; padding-right: 0.25rem; } .px-2 { padding-left: 0.5rem; padding-right: 0.5rem; }
+  .py-05 { padding-top: 0.125rem; padding-bottom: 0.125rem; } .py-1 { padding-top: 0.25rem; padding-bottom: 0.25rem; }
+  .pt-2 { padding-top: 0.5rem; } .pb-2 { padding-bottom: 0.5rem; }
+  
+  .border { border: 1px solid var(--line); } .border-t { border-top: 1px solid var(--line); } .border-b { border-bottom: 1px solid var(--line); }
+  .border-l-4 { border-left: 4px solid; }
+  .rounded { border-radius: 0.25rem; } .rounded-md { border-radius: 0.375rem; } .rounded-lg { border-radius: 0.5rem; } .rounded-full { border-radius: 9999px; }
+  .shadow-sm { box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05); }
+  
+  .bg-white { background: var(--card); } .bg-slate-50 { background: var(--slate-50); }
+  .bg-blue { background: var(--blue); color: white; } .bg-blue-light { background: var(--blue-light); color: var(--blue); }
+  .bg-green-light { background: var(--green-light); color: var(--green); }
+  .bg-red-light { background: var(--red-light); color: var(--red); }
+  .bg-pink { background: var(--pink); color: white; }
+  
+  .text-xs { font-size: 0.75rem; line-height: 1rem; } .text-sm { font-size: 0.875rem; line-height: 1.25rem; }
+  .text-lg { font-size: 1.125rem; line-height: 1.75rem; } .text-2xl { font-size: 1.5rem; line-height: 2rem; } .text-3xl { font-size: 1.875rem; line-height: 2.25rem; }
+  .text-10 { font-size: 10px; } .text-9 { font-size: 9px; }
+  
+  .font-medium { font-weight: 500; } .font-bold { font-weight: 700; } .font-black { font-weight: 900; }
+  .uppercase { text-transform: uppercase; } .tracking-wider { letter-spacing: 0.05em; }
+  .truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .text-center { text-align: center; } .text-right { text-align: right; }
+  
+  .text-blue { color: var(--blue); } .text-green { color: var(--green); } .text-red { color: var(--red); } .text-muted { color: var(--text-muted); }
+  
+  /* Tabs */
+  .app-tabs { display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 2px solid var(--line); overflow-x: auto; }
+  .app-tabs::-webkit-scrollbar { display: none; }
+  .app-tabs a { padding: 10px 20px; font-size: 12px; font-weight: 800; color: var(--text-muted); text-decoration: none; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 2px solid transparent; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+  .app-tabs a.active { color: var(--blue); border-bottom-color: var(--blue); }
+  .app-tabs a:hover:not(.active) { color: var(--text-main); }
+  
+  /* Custom components */
+  .ratio-bar-wrap { width: 100%; height: 8px; background: var(--slate-50); border-radius: 99px; overflow: hidden; margin: 6px 0; }
+  .scroll-y { overflow-y: auto; }
+  .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+  .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--line); border-radius: 4px; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { padding: 8px; text-align: left; }
+  thead { background: var(--slate-50); border-bottom: 1px solid var(--line); }
+</style>
+</head>
+<body>
+
+  <!-- ================= APP TABS ================= -->
+  <div class="app-tabs">
+    <a href="index.html">Market Dashboard</a>
+    <a href="MarketCommandCenter.html">Market Command Center</a>
+    <a href="MarketRegime.html">Market Regime</a> 
+    <a href="stockbee_market_monitor_live.html">Stockbee Monitor</a>
+    <a href="sata_watchlist_dashboard.html">SATA Chart</a>
+    <a href="PowerList.html">Power List</a>
+    <a href="liquid_leaders.html">Liquid Leaders</a>
+    <a href="group_momentum.html">Group Momentum</a>
+    <a href="industry_rs_quadrant.html">Industry RS</a>
+    <a href="rs_radar.html" class="active">RS Radar</a>
+    <a href="PriceStructure.html">Price Structure</a>
+    <a href="StageAnalysis.html">Stage Analysis</a>
+    <a href="tv_watchlist.html">TradingView Watchlist</a>
+    <a href="PortfolioManagement.html">Portfolio Management</a>
+    <a href="Playbook.html">Playbook</a>
+  </div>
+
+  <div class="w-full h-full">
+    <div class="grid grid-cols-12 gap-4">
+      
+      <!-- Left Column: Rank Movers -->
+      <div class="col-span-3 flex flex-col gap-4">
+        
+        <!-- Daily Rank Up -->
+        <div class="bg-white border rounded-lg p-3 shadow-sm">
+          <div class="text-10 font-black text-main uppercase border-l-4 border-blue pl-2 mb-3">Daily Rank Up</div>
+          <div class="flex flex-col gap-2">
+             <div class="border rounded p-2 flex justify-between items-center hover:border-blue transition-colors cursor-pointer">
+                <div class="flex items-center gap-3">
+                   <div class="bg-green-light text-green border border-green px-2 py-1 rounded text-10 font-black">71</div>
+                   <div><div class="text-xs font-black text-blue">GDX</div><div class="text-9 text-muted">Gold Miners</div></div>
+                </div>
+                <div class="text-right"><div class="text-xs font-black text-main">$76.68</div><div class="text-10 font-bold text-green">+42 pts</div></div>
+             </div>
+             <div class="border rounded p-2 flex justify-between items-center hover:border-blue transition-colors cursor-pointer">
+                <div class="flex items-center gap-3">
+                   <div class="bg-red-light text-red border border-red px-2 py-1 rounded text-10 font-black">38</div>
+                   <div><div class="text-xs font-black text-blue">POWR</div><div class="text-9 text-muted">Power-Grid</div></div>
+                </div>
+                <div class="text-right"><div class="text-xs font-black text-main">$26.90</div><div class="text-10 font-bold text-green">+33 pts</div></div>
+             </div>
+             <div class="border rounded p-2 flex justify-between items-center hover:border-blue transition-colors cursor-pointer">
+                <div class="flex items-center gap-3">
+                   <div class="bg-green-light text-green border border-green px-2 py-1 rounded text-10 font-black">62</div>
+                   <div><div class="text-xs font-black text-blue">SIL</div><div class="text-9 text-muted">Silver Miners</div></div>
+                </div>
+                <div class="text-right"><div class="text-xs font-black text-main">$77.40</div><div class="text-10 font-bold text-green">+29 pts</div></div>
+             </div>
+          </div>
+        </div>
+
+        <!-- Daily Rank Down -->
+        <div class="bg-white border rounded-lg p-3 shadow-sm">
+          <div class="text-10 font-black text-main uppercase border-l-4 border-red pl-2 mb-3">Daily Rank Down</div>
+          <div class="flex flex-col gap-2">
+             <div class="border rounded p-2 flex justify-between items-center hover:border-red transition-colors cursor-pointer">
+                <div class="flex items-center gap-3">
+                   <div class="bg-green-light text-green border border-green px-2 py-1 rounded text-10 font-black">62</div>
+                   <div><div class="text-xs font-black text-blue">FINX</div><div class="text-9 text-muted">FinTech</div></div>
+                </div>
+                <div class="text-right"><div class="text-xs font-black text-main">$25.52</div><div class="text-10 font-bold text-red">-38 pts</div></div>
+             </div>
+             <div class="border rounded p-2 flex justify-between items-center hover:border-red transition-colors cursor-pointer">
+                <div class="flex items-center gap-3">
+                   <div class="bg-red-light text-red border border-red px-2 py-1 rounded text-10 font-black">43</div>
+                   <div><div class="text-xs font-black text-blue">KIE</div><div class="text-9 text-muted">Insurance</div></div>
+                </div>
+                <div class="text-right"><div class="text-xs font-black text-main">$62.73</div><div class="text-10 font-bold text-red">-28 pts</div></div>
+             </div>
+             <div class="border rounded p-2 flex justify-between items-center hover:border-red transition-colors cursor-pointer">
+                <div class="flex items-center gap-3">
+                   <div class="bg-red-light text-red border border-red px-2 py-1 rounded text-10 font-black">19</div>
+                   <div><div class="text-xs font-black text-blue">IGV</div><div class="text-9 text-muted">Tech-Software</div></div>
+                </div>
+                <div class="text-right"><div class="text-xs font-black text-main">$89.02</div><div class="text-10 font-bold text-red">-24 pts</div></div>
+             </div>
+          </div>
+        </div>
+        
+        <!-- Weekly Rank Up -->
+        <div class="bg-white border rounded-lg p-3 shadow-sm">
+          <div class="text-10 font-black text-main uppercase border-l-4 border-blue pl-2 mb-3">Weekly Rank Up</div>
+          <div class="flex flex-col gap-2">
+             <div class="border rounded p-2 flex justify-between items-center hover:border-blue transition-colors cursor-pointer">
+                <div class="flex items-center gap-3">
+                   <div class="bg-green-light text-green border border-green px-2 py-1 rounded text-10 font-black">71</div>
+                   <div><div class="text-xs font-black text-blue">GDX</div><div class="text-9 text-muted">Gold Miners</div></div>
+                </div>
+                <div class="text-right"><div class="text-xs font-black text-main">$76.68</div><div class="text-10 font-bold text-green">+66 pts</div></div>
+             </div>
+             <div class="border rounded p-2 flex justify-between items-center hover:border-blue transition-colors cursor-pointer">
+                <div class="flex items-center gap-3">
+                   <div class="bg-green-light text-green border border-green px-2 py-1 rounded text-10 font-black">90</div>
+                   <div><div class="text-xs font-black text-blue">COPX</div><div class="text-9 text-muted">Copper Miners</div></div>
+                </div>
+                <div class="text-right"><div class="text-xs font-black text-main">$79.99</div><div class="text-10 font-bold text-green">+57 pts</div></div>
+             </div>
+             <div class="border rounded p-2 flex justify-between items-center hover:border-blue transition-colors cursor-pointer">
+                <div class="flex items-center gap-3">
+                   <div class="bg-green-light text-green border border-green px-2 py-1 rounded text-10 font-black">62</div>
+                   <div><div class="text-xs font-black text-blue">WGMI</div><div class="text-9 text-muted">Bitcoin Miners</div></div>
+                </div>
+                <div class="text-right"><div class="text-xs font-black text-main">$57.16</div><div class="text-10 font-bold text-green">+52 pts</div></div>
+             </div>
+          </div>
+        </div>
+
+        <!-- Weekly Rank Down -->
+        <div class="bg-white border rounded-lg p-3 shadow-sm">
+          <div class="text-10 font-black text-main uppercase border-l-4 border-red pl-2 mb-3">Weekly Rank Down</div>
+          <div class="flex flex-col gap-2">
+             <div class="border rounded p-2 flex justify-between items-center hover:border-red transition-colors cursor-pointer">
+                <div class="flex items-center gap-3">
+                   <div class="bg-red-light text-red border border-red px-2 py-1 rounded text-10 font-black">29</div>
+                   <div><div class="text-xs font-black text-blue">CIBR</div><div class="text-9 text-muted">Cybersecurity</div></div>
+                </div>
+                <div class="text-right"><div class="text-xs font-black text-main">$89.33</div><div class="text-10 font-bold text-red">-57 pts</div></div>
+             </div>
+             <div class="border rounded p-2 flex justify-between items-center hover:border-red transition-colors cursor-pointer">
+                <div class="flex items-center gap-3">
+                   <div class="bg-red-light text-red border border-red px-2 py-1 rounded text-10 font-black">19</div>
+                   <div><div class="text-xs font-black text-blue">IGV</div><div class="text-9 text-muted">Tech-Software</div></div>
+                </div>
+                <div class="text-right"><div class="text-xs font-black text-main">$89.02</div><div class="text-10 font-bold text-red">-52 pts</div></div>
+             </div>
+             <div class="border rounded p-2 flex justify-between items-center hover:border-red transition-colors cursor-pointer">
+                <div class="flex items-center gap-3">
+                   <div class="bg-green-light text-green border border-green px-2 py-1 rounded text-10 font-black">62</div>
+                   <div><div class="text-xs font-black text-blue">IPAY</div><div class="text-9 text-muted">Mobile Payments</div></div>
+                </div>
+                <div class="text-right"><div class="text-xs font-black text-main">$48.45</div><div class="text-10 font-bold text-red">-38 pts</div></div>
+             </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right Column: Sector & Industry Tables -->
+      <div class="col-span-9 flex flex-col gap-4">
+        
+        <!-- Sector Leaders Table -->
+        <div class="bg-white border rounded-lg shadow-sm">
+          <div class="p-3 bg-slate-50 border-b border-l-4 border-l-blue flex justify-between items-center">
+            <div class="text-xs font-black text-main uppercase">Sector Leaders</div>
+          </div>
+          <table class="w-full text-left text-xs font-bold text-muted">
+            <thead class="bg-slate-50 border-b text-10">
+              <tr>
+                <th class="p-2 w-10">Now</th><th class="p-2 w-10">1D</th><th class="p-2 w-10">1W</th><th class="p-2 w-10">1M</th>
+                <th class="p-2">Ticker</th><th class="p-2">Name</th><th class="p-2">RS Day%</th><th class="p-2">RS Wk%</th><th class="p-2">RS Mth%</th><th class="p-2">52W High</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                <td class="p-2"><div class="bg-green-light text-green border border-green px-2 py-1 rounded text-center">100</div></td>
+                <td class="p-2"><div class="bg-green-light text-green border border-green px-2 py-1 rounded text-center">100</div></td>
+                <td class="p-2"><div class="bg-green-light text-green border border-green px-2 py-1 rounded text-center">81</div></td>
+                <td class="p-2"><div class="bg-red-light text-red border border-red px-2 py-1 rounded text-center">5</div></td>
+                <td class="p-2 text-blue font-black">RSPG</td><td class="p-2 text-main">Energy</td>
+                <td class="p-2 text-green">+1.51%</td><td class="p-2 text-green">+5.26%</td><td class="p-2 text-green">+8.32%</td><td class="p-2 text-main">-6.09%</td>
+              </tr>
+              <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                <td class="p-2"><div class="bg-green-light text-green border border-green px-2 py-1 rounded text-center">71</div></td>
+                <td class="p-2"><div class="bg-slate-50 border px-2 py-1 rounded text-center">14</div></td>
+                <td class="p-2"><div class="bg-slate-50 border px-2 py-1 rounded text-center">10</div></td>
+                <td class="p-2"><div class="bg-green-light text-green border border-green px-2 py-1 rounded text-center">67</div></td>
+                <td class="p-2 text-blue font-black">RSPU</td><td class="p-2 text-main">Utilities</td>
+                <td class="p-2 text-green">+2.39%</td><td class="p-2 text-green">+2.52%</td><td class="p-2 text-green">+2.42%</td><td class="p-2 text-main">-3.16%</td>
+              </tr>
+              <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                <td class="p-2"><div class="bg-green-light text-green border border-green px-2 py-1 rounded text-center">71</div></td>
+                <td class="p-2"><div class="bg-green-light text-green border border-green px-2 py-1 rounded text-center">81</div></td>
+                <td class="p-2"><div class="bg-green-light text-green border border-green px-2 py-1 rounded text-center">90</div></td>
+                <td class="p-2"><div class="bg-green-light text-green border border-green px-2 py-1 rounded text-center">76</div></td>
+                <td class="p-2 text-blue font-black">RSPF</td><td class="p-2 text-main">Financials</td>
+                <td class="p-2 text-red">-0.35%</td><td class="p-2 text-green">+0.24%</td><td class="p-2 text-green">+5.33%</td><td class="p-2 text-main">-1.82%</td>
+              </tr>
+              <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                <td class="p-2"><div class="bg-green-light text-green border border-green px-2 py-1 rounded text-center">62</div></td>
+                <td class="p-2"><div class="bg-green-light text-green border border-green px-2 py-1 rounded text-center">57</div></td>
+                <td class="p-2"><div class="bg-slate-50 border px-2 py-1 rounded text-center">14</div></td>
+                <td class="p-2"><div class="bg-red-light text-red border border-red px-2 py-1 rounded text-center">24</div></td>
+                <td class="p-2 text-blue font-black">RSPS</td><td class="p-2 text-main">Cons Stpl</td>
+                <td class="p-2 text-green">+0.44%</td><td class="p-2 text-green">+2.56%</td><td class="p-2 text-green">+4.28%</td><td class="p-2 text-main">-7.97%</td>
+              </tr>
+              <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                <td class="p-2"><div class="bg-green-light text-green border border-green px-2 py-1 rounded text-center">57</div></td>
+                <td class="p-2"><div class="bg-red-light text-red border border-red px-2 py-1 rounded text-center">19</div></td>
+                <td class="p-2"><div class="bg-red-light text-red border border-red px-2 py-1 rounded text-center">5</div></td>
+                <td class="p-2"><div class="bg-green-light text-green border border-green px-2 py-1 rounded text-center">71</div></td>
+                <td class="p-2 text-blue font-black">RSPM</td><td class="p-2 text-main">Materials</td>
+                <td class="p-2 text-green">+1.66%</td><td class="p-2 text-green">+2.12%</td><td class="p-2 text-red">-1.12%</td><td class="p-2 text-main">-6.23%</td>
+              </tr>
+              <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                <td class="p-2"><div class="bg-slate-50 border px-2 py-1 rounded text-center">48</div></td>
+                <td class="p-2"><div class="bg-green-light text-green border border-green px-2 py-1 rounded text-center">57</div></td>
+                <td class="p-2"><div class="bg-slate-50 border px-2 py-1 rounded text-center">14</div></td>
+                <td class="p-2"><div class="bg-slate-50 border px-2 py-1 rounded text-center">33</div></td>
+                <td class="p-2 text-blue font-black">RSPR</td><td class="p-2 text-main">Real Estate</td>
+                <td class="p-2 text-red">-0.32%</td><td class="p-2 text-green">+1.62%</td><td class="p-2 text-green">+1.72%</td><td class="p-2 text-main">-2.38%</td>
+              </tr>
+              <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                <td class="p-2"><div class="bg-red-light text-red border border-red px-2 py-1 rounded text-center">24</div></td>
+                <td class="p-2"><div class="bg-red-light text-red border border-red px-2 py-1 rounded text-center">5</div></td>
+                <td class="p-2"><div class="bg-red-light text-red border border-red px-2 py-1 rounded text-center">5</div></td>
+                <td class="p-2"><div class="bg-green-light text-green border border-green px-2 py-1 rounded text-center">95</div></td>
+                <td class="p-2 text-blue font-black">RSPN</td><td class="p-2 text-main">Industrials</td>
+                <td class="p-2 text-green">+0.52%</td><td class="p-2 text-green">+1.07%</td><td class="p-2 text-red">-0.37%</td><td class="p-2 text-main">-2.91%</td>
+              </tr>
+              <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                <td class="p-2"><div class="bg-red-light text-red border border-red px-2 py-1 rounded text-center">19</div></td>
+                <td class="p-2"><div class="bg-red-light text-red border border-red px-2 py-1 rounded text-center">19</div></td>
+                <td class="p-2"><div class="bg-red-light text-red border border-red px-2 py-1 rounded text-center">0</div></td>
+                <td class="p-2"><div class="bg-green-light text-green border border-green px-2 py-1 rounded text-center">81</div></td>
+                <td class="p-2 text-blue font-black">RSPT</td><td class="p-2 text-main">Technology</td>
+                <td class="p-2 text-red">-0.61%</td><td class="p-2 text-green">+0.08%</td><td class="p-2 text-red">-7.05%</td><td class="p-2 text-main">-10.73%</td>
+              </tr>
+              <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                <td class="p-2"><div class="bg-red-light text-red border border-red px-2 py-1 rounded text-center">19</div></td>
+                <td class="p-2"><div class="bg-slate-50 border px-2 py-1 rounded text-center">43</div></td>
+                <td class="p-2"><div class="bg-slate-50 border px-2 py-1 rounded text-center">43</div></td>
+                <td class="p-2"><div class="bg-green-light text-green border border-green px-2 py-1 rounded text-center">52</div></td>
+                <td class="p-2 text-blue font-black">RSPH</td><td class="p-2 text-main">Health Care</td>
+                <td class="p-2 text-red">-1.07%</td><td class="p-2 text-red">-0.03%</td><td class="p-2 text-green">+5.73%</td><td class="p-2 text-main">-4.64%</td>
+              </tr>
+              <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                <td class="p-2"><div class="bg-slate-50 border px-2 py-1 rounded text-center">14</div></td>
+                <td class="p-2"><div class="bg-slate-50 border px-2 py-1 rounded text-center">14</div></td>
+                <td class="p-2"><div class="bg-slate-50 border px-2 py-1 rounded text-center">48</div></td>
+                <td class="p-2"><div class="bg-red-light text-red border border-red px-2 py-1 rounded text-center">0</div></td>
+                <td class="p-2 text-blue font-black">RSPC</td><td class="p-2 text-main">Comm Svcs</td>
+                <td class="p-2 text-red">-0.32%</td><td class="p-2 text-red">-1.19%</td><td class="p-2 text-green">+0.69%</td><td class="p-2 text-main">-14.31%</td>
+              </tr>
+              <tr class="hover:bg-slate-50 cursor-pointer">
+                <td class="p-2"><div class="bg-red-light text-red border border-red px-2 py-1 rounded text-center">0</div></td>
+                <td class="p-2"><div class="bg-slate-50 border px-2 py-1 rounded text-center">14</div></td>
+                <td class="p-2"><div class="bg-red-light text-red border border-red px-2 py-1 rounded text-center">5</div></td>
+                <td class="p-2"><div class="bg-green-light text-green border border-green px-2 py-1 rounded text-center">62</div></td>
+                <td class="p-2 text-blue font-black">RSPD</td><td class="p-2 text-main">Cons Disc</td>
+                <td class="p-2 text-red">-0.43%</td><td class="p-2 text-red">-0.23%</td><td class="p-2 text-red">-0.98%</td><td class="p-2 text-main">-9.15%</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <!-- Industry RS Rank Tables -->
+        <div class="grid grid-cols-3 gap-4">
+          
+          <!-- Table 1 -->
+          <div class="bg-white border rounded-lg shadow-sm">
+            <div class="p-3 bg-slate-50 border-b border-l-4 border-l-blue flex justify-between items-center">
+              <div class="text-xs font-black text-main uppercase">Industry RS Rank</div>
+              <div class="text-10 font-bold text-muted">RS Rank ↓</div>
+            </div>
+            <table class="w-full text-left text-[10px] font-bold text-muted">
+              <thead class="bg-slate-50 border-b">
+                <tr><th class="p-2 w-8">Now</th><th class="p-2 w-8">1D</th><th class="p-2 w-8">1W</th><th class="p-2 w-8">1M</th><th class="p-2">Ticker</th><th class="p-2">Name</th><th class="p-2">RS Wk%</th></tr>
+              </thead>
+              <tbody>
+                <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                  <td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">100</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">81</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">67</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">57</div></td>
+                  <td class="p-2 text-blue font-black">WOOD</td><td class="p-2 text-main">Timber</td><td class="p-2 text-green">+3.50%</td>
+                </tr>
+                <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                  <td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">100</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">100</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">86</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">5</div></td>
+                  <td class="p-2 text-blue font-black">XOP</td><td class="p-2 text-main">Oil & Gas Exp.</td><td class="p-2 text-green">+8.18%</td>
+                </tr>
+                <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                  <td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">100</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">90</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">67</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">5</div></td>
+                  <td class="p-2 text-blue font-black">MOO</td><td class="p-2 text-main">Agribusiness</td><td class="p-2 text-green">+2.96%</td>
+                </tr>
+                <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                  <td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">95</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">100</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">62</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">62</div></td>
+                  <td class="p-2 text-blue font-black">BOAT</td><td class="p-2 text-main">Marine Shipping</td><td class="p-2 text-green">+2.56%</td>
+                </tr>
+                <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                  <td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">90</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">81</div></td><td class="p-2"><div class="bg-slate-50 border px-1 py-05 rounded text-center">33</div></td><td class="p-2"><div class="bg-slate-50 border px-1 py-05 rounded text-center">38</div></td>
+                  <td class="p-2 text-blue font-black">COPX</td><td class="p-2 text-main">Copper Miners</td><td class="p-2 text-green">+4.56%</td>
+                </tr>
+                <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                  <td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">86</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">67</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">100</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">95</div></td>
+                  <td class="p-2 text-blue font-black">IAI</td><td class="p-2 text-main">Broker-Dealers</td><td class="p-2 text-red">-2.36%</td>
+                </tr>
+                <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                  <td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">81</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">57</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">52</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">0</div></td>
+                  <td class="p-2 text-blue font-black">SLX</td><td class="p-2 text-main">Steel</td><td class="p-2 text-green">+0.81%</td>
+                </tr>
+                <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                  <td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">71</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">29</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">5</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">29</div></td>
+                  <td class="p-2 text-blue font-black">GDX</td><td class="p-2 text-main">Gold Miners</td><td class="p-2 text-green">+4.65%</td>
+                </tr>
+                <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                  <td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">71</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">62</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">71</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">67</div></td>
+                  <td class="p-2 text-blue font-black">XRT</td><td class="p-2 text-main">Retail</td><td class="p-2 text-green">+0.58%</td>
+                </tr>
+                <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                  <td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">71</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">90</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">100</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">0</div></td>
+                  <td class="p-2 text-blue font-black">KWEB</td><td class="p-2 text-main">China Internet</td><td class="p-2 text-red">-1.10%</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          
+          <!-- Table 2 -->
+          <div class="bg-white border rounded-lg shadow-sm">
+            <div class="p-3 bg-slate-50 border-b flex justify-between items-center"></div>
+            <table class="w-full text-left text-[10px] font-bold text-muted mt-[-1px]">
+              <thead class="bg-slate-50 border-b border-t">
+                <tr><th class="p-2 w-8">Now</th><th class="p-2 w-8">1D</th><th class="p-2 w-8">1W</th><th class="p-2 w-8">1M</th><th class="p-2">Ticker</th><th class="p-2">Name</th><th class="p-2">RS Wk%</th></tr>
+              </thead>
+              <tbody>
+                <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                  <td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">62</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">81</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">29</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">62</div></td>
+                  <td class="p-2 text-blue font-black">IYT</td><td class="p-2 text-main">Transportation</td><td class="p-2 text-green">+1.45%</td>
+                </tr>
+                <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                  <td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">62</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">81</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">100</div></td><td class="p-2"><div class="bg-slate-50 border px-1 py-05 rounded text-center">38</div></td>
+                  <td class="p-2 text-blue font-black">IPAY</td><td class="p-2 text-main">Mobile Payme...</td><td class="p-2 text-red">-1.69%</td>
+                </tr>
+                <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                  <td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">62</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">100</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">95</div></td><td class="p-2"><div class="bg-slate-50 border px-1 py-05 rounded text-center">38</div></td>
+                  <td class="p-2 text-blue font-black">FINX</td><td class="p-2 text-main">FinTech</td><td class="p-2 text-red">-1.27%</td>
+                </tr>
+                <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                  <td class="p-2"><div class="bg-slate-50 border px-1 py-05 rounded text-center">48</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">57</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">10</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">81</div></td>
+                  <td class="p-2 text-blue font-black">BLOK</td><td class="p-2 text-main">Blockchain</td><td class="p-2 text-green">+1.94%</td>
+                </tr>
+                <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                  <td class="p-2"><div class="bg-slate-50 border px-1 py-05 rounded text-center">43</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">71</div></td><td class="p-2"><div class="bg-slate-50 border px-1 py-05 rounded text-center">48</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">76</div></td>
+                  <td class="p-2 text-blue font-black">KIE</td><td class="p-2 text-main">Insurance</td><td class="p-2 text-green">+1.97%</td>
+                </tr>
+                <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                  <td class="p-2"><div class="bg-slate-50 border px-1 py-05 rounded text-center">38</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">5</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">0</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">100</div></td>
+                  <td class="p-2 text-blue font-black">POWR</td><td class="p-2 text-main">Power-Grid</td><td class="p-2 text-green">+1.10%</td>
+                </tr>
+                <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                  <td class="p-2"><div class="bg-slate-50 border px-1 py-05 rounded text-center">33</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">19</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">10</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">100</div></td>
+                  <td class="p-2 text-blue font-black">SMH</td><td class="p-2 text-main">Semiconductor</td><td class="p-2 text-green">+0.33%</td>
+                </tr>
+                <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                  <td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">29</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">14</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">0</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">29</div></td>
+                  <td class="p-2 text-blue font-black">URA</td><td class="p-2 text-main">Uranium</td><td class="p-2 text-green">+1.16%</td>
+                </tr>
+                <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                  <td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">29</div></td><td class="p-2"><div class="bg-slate-50 border px-1 py-05 rounded text-center">38</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">86</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">19</div></td>
+                  <td class="p-2 text-blue font-black">CIBR</td><td class="p-2 text-main">Cybersecurity</td><td class="p-2 text-red">-3.09%</td>
+                </tr>
+                <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                  <td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">19</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">14</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">5</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">52</div></td>
+                  <td class="p-2 text-blue font-black">ICLN</td><td class="p-2 text-main">Clean Energy</td><td class="p-2 text-red">-1.87%</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          
+          <!-- Table 3 -->
+          <div class="bg-white border rounded-lg shadow-sm">
+            <div class="p-3 bg-slate-50 border-b flex justify-between items-center"></div>
+            <table class="w-full text-left text-[10px] font-bold text-muted mt-[-1px]">
+              <thead class="bg-slate-50 border-b border-t">
+                <tr><th class="p-2 w-8">Now</th><th class="p-2 w-8">1D</th><th class="p-2 w-8">1W</th><th class="p-2 w-8">1M</th><th class="p-2">Ticker</th><th class="p-2">Name</th><th class="p-2">RS Wk%</th></tr>
+              </thead>
+              <tbody>
+                <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                  <td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">19</div></td><td class="p-2"><div class="bg-slate-50 border px-1 py-05 rounded text-center">43</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">71</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">0</div></td>
+                  <td class="p-2 text-blue font-black">IGV</td><td class="p-2 text-main">Tech-Software</td><td class="p-2 text-red">-4.30%</td>
+                </tr>
+                <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                  <td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">14</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">0</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">5</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">81</div></td>
+                  <td class="p-2 text-blue font-black">ITA</td><td class="p-2 text-main">Aerospace</td><td class="p-2 text-red">-1.28%</td>
+                </tr>
+                <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                  <td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">14</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">10</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">29</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">19</div></td>
+                  <td class="p-2 text-blue font-black">TAN</td><td class="p-2 text-main">Solar</td><td class="p-2 text-red">-2.77%</td>
+                </tr>
+                <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                  <td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">14</div></td><td class="p-2"><div class="bg-slate-50 border px-1 py-05 rounded text-center">14</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">0</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">100</div></td>
+                  <td class="p-2 text-blue font-black">QTUM</td><td class="p-2 text-main">Quantum-Tech</td><td class="p-2 text-red">-1.12%</td>
+                </tr>
+                <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                  <td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">14</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">0</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">57</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">0</div></td>
+                  <td class="p-2 text-blue font-black">WQTM</td><td class="p-2 text-main">Pure-Quantum</td><td class="p-2 text-red">-0.88%</td>
+                </tr>
+                <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                  <td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">14</div></td><td class="p-2"><div class="bg-slate-50 border px-1 py-05 rounded text-center">14</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">71</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">0</div></td>
+                  <td class="p-2 text-blue font-black">PEJ</td><td class="p-2 text-main">Leisure</td><td class="p-2 text-green">+0.18%</td>
+                </tr>
+                <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                  <td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">14</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">24</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">24</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">19</div></td>
+                  <td class="p-2 text-blue font-black">IHI</td><td class="p-2 text-main">Med. Devices</td><td class="p-2 text-green">+0.08%</td>
+                </tr>
+                <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                  <td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">14</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">19</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">0</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">95</div></td>
+                  <td class="p-2 text-blue font-black">IPO</td><td class="p-2 text-main">IPO</td><td class="p-2 text-red">-1.08%</td>
+                </tr>
+                <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                  <td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">10</div></td><td class="p-2"><div class="bg-slate-50 border px-1 py-05 rounded text-center">14</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">0</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">0</div></td>
+                  <td class="p-2 text-blue font-black">UFO</td><td class="p-2 text-main">Space</td><td class="p-2 text-red">-2.62%</td>
+                </tr>
+                <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                  <td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">10</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">19</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">5</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">19</div></td>
+                  <td class="p-2 text-blue font-black">KARS</td><td class="p-2 text-main">Electric Cars</td><td class="p-2 text-red">-1.10%</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          
+        </div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
