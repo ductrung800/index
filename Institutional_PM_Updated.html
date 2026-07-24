@@ -3,6 +3,7 @@
 <head>
 <link rel="icon" href="data:,">
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Institutional Update</title>
 <!-- Lightweight Charts Standalone Library for Interactive Ticker Cards -->
 <script src="https://unpkg.com/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
@@ -300,6 +301,105 @@ header.top{margin-bottom:8px;padding-bottom:10px}
 @media(max-width:1450px){.pm-command-strip{grid-template-columns:repeat(3,1fr)}.engines-grid{grid-template-columns:repeat(3,1fr)}.risk-summary-bar{grid-template-columns:repeat(4,1fr)}.lower-grid{grid-template-columns:1fr 1fr}.lower-grid .zone-card:last-child{grid-column:1/-1}}
 @media(max-width:900px){body{padding:10px}.pm-command-strip,.engines-grid,.risk-summary-bar,.lower-grid{grid-template-columns:1fr}.command-grid{grid-template-columns:1fr}.pm-scenario-note{grid-template-columns:1fr}.regime-hero{grid-template-columns:1fr 1fr}}
 
+
+
+/* ===== TRUE FULL-SCREEN / ULTRAWIDE LAYOUT OVERRIDE ===== */
+html{
+  width:100%;
+  min-height:100%;
+  background:var(--bg);
+  overflow-x:hidden;
+}
+body{
+  width:100%;
+  min-width:0;
+  min-height:100vh;
+  margin:0;
+  padding:8px 10px 36px;
+  overflow-x:hidden;
+}
+.wrap{
+  width:100%;
+  max-width:none !important;
+  min-width:0;
+  margin:0 !important;
+  padding:0;
+}
+
+/* Keep the navigation on one compact institutional row on wide screens. */
+.app-tabs{
+  width:100%;
+  max-width:none;
+  margin-left:0;
+  margin-right:0;
+  gap:2px;
+}
+.app-tabs a{
+  flex:0 0 auto;
+  padding:8px clamp(8px,.62vw,16px);
+  font-size:clamp(8px,.52vw,11px);
+}
+
+/* All principal dashboard zones span the complete browser width. */
+header.top,
+.pm-command-strip,
+.master-briefing,
+.risk-summary-bar,
+.command-grid,
+.lower-grid,
+.zone-card,
+.charts-grid,
+footer{
+  width:100%;
+  max-width:none;
+  min-width:0;
+}
+
+/* Prevent grid children and charts from forcing artificial page width. */
+.pm-command-strip > *,
+.engines-grid > *,
+.risk-summary-bar > *,
+.command-grid > *,
+.lower-grid > *,
+.regime-grid > *,
+.charts-grid > *{
+  min-width:0;
+}
+.lw-chart-wrap,
+.tradingview-widget-container,
+.chart-svg-wrap,
+.table-wrap,
+#themesChartSectionsContainer{
+  width:100%;
+  max-width:100%;
+  min-width:0;
+}
+iframe, canvas, svg{
+  max-width:100%;
+}
+
+/* Use the extra space available on 2K/4K and ultrawide monitors. */
+@media (min-width:1921px){
+  body{padding:8px 12px 42px;}
+  .pm-command-strip{grid-template-columns:1.55fr repeat(5,minmax(0,1fr));}
+  .engines-grid{grid-template-columns:repeat(5,minmax(0,1fr));}
+  .risk-summary-bar{grid-template-columns:repeat(5,minmax(0,1fr)) 1.2fr 1.2fr;}
+  .command-grid{grid-template-columns:minmax(0,2fr) minmax(420px,.8fr);}
+  .lower-grid{grid-template-columns:1.25fr 1fr 1.15fr;}
+  .regime-grid{grid-template-columns:repeat(3,minmax(0,1fr));}
+  .charts-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+}
+
+/* Compact laptop/tablet fallback without horizontal clipping. */
+@media (max-width:1200px){
+  body{padding:8px 9px 30px;}
+  .app-tabs{overflow-x:auto;flex-wrap:nowrap;scrollbar-width:thin;}
+}
+@media (max-width:700px){
+  body{padding:6px 7px 24px;}
+  .regime-hero{grid-template-columns:1fr;}
+}
+
 </style>
 </head>
 <body>
@@ -307,11 +407,10 @@ header.top{margin-bottom:8px;padding-bottom:10px}
 
   <!-- ================= APP TABS ================= -->
 
-  <!-- APP TABS -->
   <div class="app-tabs">
     <a href="index.html">Market Dashboard</a>
     <a href="MarketCommandCenter.html">Market Command Center</a>
-    <a href="Institutional_PM_Updated.html.html" class="active">Institutional Update</a>
+    <a href="Institutional_PM_Updated.html" class="active">Institutional Update</a>
     <a href="market_breadth.html">Market Breadth</a>
     <a href="rs_radar.html" >RS Radar</a>
     <a href="MarketRegime.html">Market Regime</a> 
@@ -325,7 +424,7 @@ header.top{margin-bottom:8px;padding-bottom:10px}
     <a href="tv_watchlist.html">TradingView Watchlist</a>
     <a href="PortfolioManagement.html">Portfolio Management</a>
     <a href="Playbook.html">Playbook</a>
-  </div>
+  </div
   
   <!-- ================= APP TABS ================= -->
 
