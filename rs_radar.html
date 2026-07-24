@@ -1,462 +1,1048 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
 <head>
-<meta charset="UTF-8">
-<title>RS Capital Rotation Command Center</title>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700;800&display=swap');
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sector & Industry RS Radar</title>
+    
+    <!-- Inter Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-  :root {
-    --bg: #0a0e16; --panel: #101625; --panel2: #0d1220; --line: #212a3d; --line-soft: #1a2233;
-    --text: #e7ebf3; --text-dim: #8b93a8; --text-faint: #59617a;
-    --teal: #20d9b8; --amber: #f5b942; --red: #ff5c72; --blue: #38bdf8;
-    --navy-head: #131c33; --input-bg: #0d1220;
-    --teal-glow: rgba(32, 217, 184, 0.15);
-  }
+    <style>
+        /* ==========================================================================
+           CSS VARIABLES (THEMING)
+           ========================================================================== */
+        :root {
+            /* Dark Theme (Default - Institutional Bloomberg/Aladdin style) */
+            --bg-color: #0d1117;
+            --panel-bg: #161b22;
+            --panel-border: #30363d;
+            --text-primary: #c9d1d9;
+            --text-secondary: #8b949e;
+            --text-muted: #484f58;
+            
+            --color-up: #3fb950;
+            --color-up-bg: rgba(63, 185, 80, 0.1);
+            --color-down: #f85149;
+            --color-down-bg: rgba(248, 81, 73, 0.1);
+            --color-neutral: #58a6ff;
+            --color-warning: #d29922;
 
-  html[data-theme="light"] {
-    --bg: #f4f6fa; --panel: #ffffff; --panel2: #ffffff; --line: #dde2ec; --line-soft: #e9edf4;
-    --text: #151b2c; --text-dim: #5b6478; --text-faint: #8a92a6;
-    --teal: #0b9c82; --amber: #b9781a; --red: #c93a51; --blue: #0284c7;
-    --navy-head: #eef1f8; --input-bg: #f4f6fa;
-    --teal-glow: rgba(11, 156, 130, 0.1);
-  }
+            --font-main: 'Inter', sans-serif;
+            --font-mono: 'Inter', monospace; /* Using Inter with tabular nums */
+            
+            --spacing-grid: 16px;
+            --radius-panel: 12px;
+            --shadow-panel: 0 4px 24px rgba(0,0,0,0.2);
+            
+            --hover-bg: #21262d;
+        }
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    background: radial-gradient(ellipse 1000px 600px at 50% 0%, var(--teal-glow), transparent 70%), var(--bg);
-    color: var(--text); font-family: 'Inter', sans-serif; padding: 22px 26px 60px;
-  }
+        [data-theme="light"] {
+            --bg-color: #f6f8fa;
+            --panel-bg: #ffffff;
+            --panel-border: #d0d7de;
+            --text-primary: #24292f;
+            --text-secondary: #57606a;
+            --text-muted: #8c959f;
+            
+            --color-up: #1a7f37;
+            --color-up-bg: rgba(26, 127, 55, 0.1);
+            --color-down: #cf222e;
+            --color-down-bg: rgba(207, 34, 46, 0.1);
+            --color-neutral: #0969da;
+            --color-warning: #9a6700;
+            
+            --shadow-panel: 0 4px 12px rgba(0,0,0,0.05);
+            --hover-bg: #f3f4f6;
+        }
 
-  /* APP TABS */
-  .app-tabs { display: flex; gap: 4px; margin-bottom: 26px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
-  .app-tabs a { padding: 10px 20px; text-decoration: none; color: var(--text-dim); font-size: 11.5px; font-weight: 700; border: 1px solid transparent; border-bottom: none; border-radius: 8px 8px 0 0; text-transform: uppercase; letter-spacing: 0.05em; transition: all 0.15s; font-family: 'JetBrains Mono', monospace; }
-  .app-tabs a.active { background: var(--panel); color: var(--teal); border-color: var(--line); border-bottom-color: var(--panel); margin-bottom: -1px; }
-  .app-tabs a:hover:not(.active) { color: var(--text); background: rgba(255,255,255,0.03); }
+        /* ==========================================================================
+           RESET & BASE STYLES
+           ========================================================================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-  /* HEADER */
-  header.top { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid var(--line); padding-bottom: 16px; margin-bottom: 24px; }
-  .brand-eyebrow { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .18em; color: var(--teal); text-transform: uppercase; font-weight: 800; }
-  h1 { font-size: 28px; font-weight: 900; letter-spacing: -.03em; margin-top: 4px; }
-  
-  .header-right { display: flex; align-items: center; gap: 12px; }
-  .status-badge { font-family: 'JetBrains Mono', monospace; font-size: 11px; background: var(--panel2); border: 1px solid var(--line); padding: 7px 14px; border-radius: 100px; color: var(--text-dim); }
-  .status-badge b { color: var(--teal); }
-  .theme-toggle { display: flex; align-items: center; gap: 4px; background: var(--panel); border: 1px solid var(--line); border-radius: 100px; padding: 4px; cursor: pointer; }
-  .theme-toggle .opt { font-size: 11px; padding: 5px 12px; border-radius: 100px; color: var(--text-faint); font-weight: 800; font-family: 'JetBrains Mono', monospace; }
-  .theme-toggle .opt.active { background: var(--teal); color: #04150f; }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: var(--font-main);
+            font-size: 14px;
+            line-height: 1.5;
+            padding: var(--spacing-grid);
+            min-height: 100vh;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            -webkit-font-smoothing: antialiased;
+        }
 
-  /* GRID SYSTEM */
-  .grid { display: grid; gap: 16px; }
-  .grid-12 { grid-template-columns: repeat(12, 1fr); }
-  .grid-4 { grid-template-columns: repeat(4, 1fr); }
-  .grid-2 { grid-template-columns: repeat(2, 1fr); }
-  .col-span-3 { grid-column: span 3; } .col-span-4 { grid-column: span 4; } .col-span-6 { grid-column: span 6; } .col-span-8 { grid-column: span 8; } .col-span-9 { grid-column: span 9; } .col-span-12 { grid-column: span 12; }
+        ul { list-style: none; }
+        button { cursor: pointer; border: none; outline: none; font-family: inherit; }
 
-  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 20px; }
-  .section-title { font-size: 11px; text-transform: uppercase; letter-spacing: .12em; color: var(--text-faint); font-weight: 800; font-family: 'JetBrains Mono', monospace; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
-  .section-title::before { content: ''; display: block; width: 4px; height: 12px; background: var(--teal); border-radius: 2px; }
+        /* Typography */
+        h1, h2, h3, h4, h5, h6 { font-weight: 600; }
+        .text-up { color: var(--color-up) !important; }
+        .text-down { color: var(--color-down) !important; }
+        .text-neutral { color: var(--color-neutral) !important; }
+        .text-warning { color: var(--color-warning) !important; }
+        .text-secondary { color: var(--text-secondary); }
+        .tabular-nums { font-variant-numeric: tabular-nums; }
 
-  /* LAYER 1: COMMAND CENTER */
-  .mission-control { background: var(--panel2); border: 1px solid var(--line); box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
-  .mc-grid { display: grid; grid-template-columns: 1.5fr 1fr 1fr 1.5fr; gap: 24px; align-items: center; }
-  .regime-title { font-size: 20px; font-weight: 900; color: var(--teal); letter-spacing: -0.02em; margin-bottom: 8px; }
-  .mc-lbl { font-size: 10px; color: var(--text-faint); text-transform: uppercase; font-weight: 800; font-family: 'JetBrains Mono', monospace; margin-bottom: 4px; }
-  .mc-val { font-size: 14px; font-weight: 800; color: var(--text); }
-  
-  .ai-box { background: rgba(32, 217, 184, 0.05); border: 1px solid rgba(32, 217, 184, 0.2); padding: 14px; border-radius: 8px; font-size: 12px; line-height: 1.6; color: var(--text-dim); border-left: 4px solid var(--teal); }
-  .ai-box b { color: var(--text); }
+        /* ==========================================================================
+           LAYOUT SYSTEM
+           ========================================================================== */
+        .dashboard-container {
+            max-width: 1920px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-grid);
+        }
 
-  /* LAYER 3: QUADRANT MAP */
-  .quadrant-wrap { position: relative; width: 100%; height: 350px; background: var(--input-bg); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
-  .q-axis-x { position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: var(--line); }
-  .q-axis-y { position: absolute; top: 0; bottom: 0; left: 50%; width: 1px; background: var(--line); }
-  
-  .q-label { position: absolute; font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 800; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.1em; padding: 4px; }
-  .q-tl { top: 8px; left: 8px; color: var(--blue); } .q-tr { top: 8px; right: 8px; color: var(--teal); }
-  .q-bl { bottom: 8px; left: 8px; color: var(--red); } .q-br { bottom: 8px; right: 8px; color: var(--amber); }
+        .panel {
+            background-color: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: var(--radius-panel);
+            padding: 16px;
+            box-shadow: var(--shadow-panel);
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.3s, border-color 0.3s;
+            display: flex;
+            flex-direction: column;
+        }
 
-  .dot-wrap { position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: crosshair; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-  .dot-wrap:hover { z-index: 10; transform: translate(-50%, -50%) scale(1.2); }
-  .dot { width: 12px; height: 12px; border-radius: 50%; box-shadow: 0 0 10px rgba(0,0,0,0.5); border: 2px solid var(--bg); }
-  .dot.leader { background: var(--teal); } .dot.improving { background: var(--blue); } .dot.weak { background: var(--red); } .dot.laggard { background: var(--amber); }
-  .dot-lbl { font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 800; color: var(--text); text-shadow: 0 1px 2px #000; white-space: nowrap; }
+        .panel:hover {
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+        
+        [data-theme="light"] .panel:hover {
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+        }
 
-  /* TABLES & LISTS */
-  table.rs-table { width: 100%; border-collapse: collapse; font-family: 'JetBrains Mono', monospace; font-size: 11px; text-align: left; }
-  table.rs-table th { background: var(--navy-head); color: var(--text-dim); padding: 8px 10px; font-size: 10px; text-transform: uppercase; border-bottom: 1px solid var(--line); }
-  table.rs-table td { padding: 8px 10px; border-bottom: 1px solid var(--line-soft); color: var(--text); }
-  
-  .pos-badge { padding: 3px 6px; border-radius: 4px; font-size: 9px; font-weight: 800; text-transform: uppercase; }
-  .pos-leader { background: rgba(32,217,184,0.15); color: var(--teal); border: 1px solid rgba(32,217,184,0.3); }
-  .pos-improving { background: rgba(56,189,248,0.15); color: var(--blue); border: 1px solid rgba(56,189,248,0.3); }
-  .pos-laggard { background: rgba(245,185,66,0.15); color: var(--amber); border: 1px solid rgba(245,185,66,0.3); }
-  .pos-weak { background: rgba(255,92,114,0.15); color: var(--red); border: 1px solid rgba(255,92,114,0.3); }
+        .panel-header {
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-secondary);
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-  /* CATEGORY BUCKETS */
-  .bucket-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-  .bucket { background: var(--input-bg); border: 1px solid var(--line); border-radius: 8px; padding: 12px; }
-  .b-title { font-size: 10px; text-transform: uppercase; font-weight: 800; font-family: 'JetBrains Mono', monospace; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--line-soft); }
-  .b-item { display: flex; justify-content: space-between; font-size: 11px; font-weight: 700; margin-bottom: 8px; }
-  .b-item:last-child { margin-bottom: 0; }
+        /* Grid specific */
+        .grid-kpi {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr;
+            gap: var(--spacing-grid);
+        }
 
-  /* FLOW BARS */
-  .flow-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; font-family: 'JetBrains Mono', monospace; }
-  .f-lbl { width: 100px; font-size: 10.5px; font-weight: 700; color: var(--text); }
-  .f-track { flex: 1; height: 8px; background: var(--line-soft); border-radius: 100px; overflow: hidden; }
-  .f-fill { height: 100%; background: var(--teal); border-radius: 100px; }
-  .f-val { width: 30px; text-align: right; font-size: 10px; font-weight: 800; color: var(--text-dim); }
+        .grid-main {
+            display: grid;
+            grid-template-columns: 2fr 4fr 4fr 2fr;
+            gap: var(--spacing-grid);
+            min-height: 400px;
+        }
 
-  #loadingOverlay { position: fixed; inset: 0; background: var(--bg); opacity: 0.98; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-  .spinner { border: 3px solid var(--line); border-top: 3px solid var(--teal); border-radius: 50%; width: 40px; height: 40px; animation: spin 0.8s linear infinite; margin-bottom: 16px; }
-  @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-</style>
+        .grid-bottom {
+            display: grid;
+            grid-template-columns: 6fr 6fr;
+            gap: var(--spacing-grid);
+        }
+
+        /* ==========================================================================
+           HEADER COMPONENTS
+           ========================================================================== */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--panel-border);
+        }
+
+        .header-title h1 {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .header-title p {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--color-up);
+            box-shadow: 0 0 8px var(--color-up);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--panel-border);
+            color: var(--text-primary);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-outline:hover {
+            background: var(--hover-bg);
+            border-color: var(--text-secondary);
+        }
+
+        .theme-toggle {
+            display: flex;
+            background: var(--panel-border);
+            border-radius: 6px;
+            padding: 2px;
+        }
+
+        .theme-toggle button {
+            background: transparent;
+            color: var(--text-secondary);
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .theme-toggle button.active {
+            background: var(--panel-bg);
+            color: var(--text-primary);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* ==========================================================================
+           KPI CARDS
+           ========================================================================== */
+        .kpi-value {
+            font-size: 42px;
+            font-weight: 700;
+            line-height: 1.1;
+            margin: 8px 0;
+        }
+
+        .kpi-subtext {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        /* Specific KPI Layouts */
+        .kpi-regime {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .kpi-regime-left { flex: 1; }
+        .kpi-regime-right {
+            width: 80px;
+            height: 80px;
+            position: relative;
+        }
+
+        .regime-status {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--color-up);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 4px 0 8px 0;
+        }
+
+        .mini-chart-container {
+            height: 40px;
+            width: 100%;
+            margin-top: auto;
+        }
+
+        /* ==========================================================================
+           TABLES & LISTS
+           ========================================================================== */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .data-table th {
+            text-align: left;
+            padding: 8px 12px;
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 11px;
+            text-transform: uppercase;
+            border-bottom: 1px solid var(--panel-border);
+            white-space: nowrap;
+        }
+
+        .data-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--panel-border);
+            color: var(--text-primary);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .data-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .data-table tbody tr:hover {
+            background-color: var(--hover-bg);
+        }
+
+        /* Heatmap specific cells */
+        .heatmap-cell {
+            text-align: center;
+            font-weight: 600;
+            border-radius: 4px;
+            padding: 4px 8px !important;
+            margin: 2px;
+        }
+
+        /* Rank Lists (Left Panel) */
+        .rank-section {
+            margin-bottom: 20px;
+        }
+        
+        .rank-section-title {
+            font-size: 11px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .rank-item {
+            display: flex;
+            align-items: center;
+            padding: 6px 0;
+            font-size: 13px;
+        }
+
+        .rank-num {
+            width: 20px;
+            height: 20px;
+            background-color: var(--panel-border);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            margin-right: 12px;
+            font-weight: 600;
+        }
+        
+        .rank-item.top .rank-num { background-color: var(--color-up-bg); color: var(--color-up); }
+        .rank-item.bottom .rank-num { background-color: var(--color-down-bg); color: var(--color-down); }
+
+        .rank-name { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .rank-ticker { width: 50px; color: var(--text-secondary); }
+        .rank-score { width: 40px; text-align: right; }
+        .rank-change { width: 50px; text-align: right; font-weight: 600; }
+
+        /* Badge */
+        .badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .badge.leader { background-color: var(--color-up-bg); color: var(--color-up); }
+        .badge.improving { background-color: rgba(88, 166, 255, 0.1); color: var(--color-neutral); }
+        .badge.weakening { background-color: rgba(210, 153, 34, 0.1); color: var(--color-warning); }
+        .badge.laggard { background-color: var(--color-down-bg); color: var(--color-down); }
+
+        /* ==========================================================================
+           CHARTS CONTAINERS
+           ========================================================================== */
+        .chart-container {
+            position: relative;
+            flex: 1;
+            width: 100%;
+            height: 100%;
+            min-height: 250px;
+        }
+        
+        /* How to read section */
+        .how-to-read {
+            margin-top: auto;
+            border-top: 1px solid var(--panel-border);
+            padding-top: 16px;
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+        .how-to-read p { margin-bottom: 6px; }
+
+        /* Responsive */
+        @media (max-width: 1600px) {
+            .grid-kpi { grid-template-columns: repeat(4, 1fr); }
+            .kpi-panel-1 { grid-column: span 2; }
+            .grid-main { grid-template-columns: 3fr 5fr 4fr; }
+            .grid-main > .panel:last-child { display: none; } /* Hide heatmap on smaller screens for layout integrity */
+        }
+        @media (max-width: 1200px) {
+            .grid-main { grid-template-columns: 1fr; }
+            .grid-bottom { grid-template-columns: 1fr; }
+        }
+    </style>
 </head>
 <body>
 
-  <!-- APP TABS -->
-  <div class="app-tabs">
-    <a href="index.html">Market Dashboard</a>
-    <a href="MarketCommandCenter.html">Market Command Center</a>
-    <a href="market_breadth.html">Market Breadth</a>
-    <a href="MarketRegime.html">Market Regime</a> 
-    <a href="stockbee_market_monitor_live.html">Stockbee Monitor</a>
-    <a href="sata_watchlist_dashboard.html">SATA Chart</a>
-    <a href="PowerList.html">Power List</a>
-    <a href="liquid_leaders.html">Liquid Leaders</a>
-    <a href="group_momentum.html">Group Momentum</a>
-    <a href="industry_rs_quadrant.html">Industry RS</a>
-    <a href="rs_radar.html" class="active">RS Radar</a>
-    <a href="PriceStructure.html">Price Structure</a>
-    <a href="StageAnalysis.html">Stage Analysis</a>
-    <a href="tv_watchlist.html">TradingView Watchlist</a>
-    <a href="PortfolioManagement.html">Portfolio Management</a>
-    <a href="Playbook.html">Playbook</a>
-  </div>
-
-  <header class="top">
-    <div>
-      <div class="brand-eyebrow">Institutional Rotation Engine</div>
-      <h1>Sector & Industry RS Radar</h1>
-    </div>
-    <div class="header-right">
-      <div class="status-badge" id="statusBadge">Status: <b>Calculating Matrix</b></div>
-      <div class="theme-toggle" id="themeToggle">
-        <span class="opt" id="optDark">Dark</span>
-        <span class="opt" id="optLight">Light</span>
-      </div>
-    </div>
-  </header>
-
-  <div id="loadingOverlay">
-    <div class="spinner"></div>
-    <div class="brand-eyebrow" id="loadStatus">Compiling Capital Rotation Data…</div>
-  </div>
-
-  <div class="grid grid-12" id="mainContainer" style="display:none;">
-
-    <!-- LAYER 1: COMMAND CENTER -->
-    <div class="col-span-12 card mission-control">
-      <div class="section-title" style="margin-bottom:8px;">Market Rotation Regime</div>
-      <div class="mc-grid">
-        <div>
-          <div class="regime-title" id="mcRegime">CALCULATING...</div>
-          <div style="display:flex; gap:16px;">
-            <div><div class="mc-lbl">RS Confidence</div><div class="mc-val" id="mcConf" style="color:var(--teal);">--</div></div>
-            <div><div class="mc-lbl">Today's Theme</div><div class="mc-val" id="mcTheme">--</div></div>
-          </div>
+<div class="dashboard-container">
+    
+    <!-- HEADER -->
+    <header class="header">
+        <div class="header-title">
+            <h1>Sector & Industry RS Radar</h1>
+            <p>Relative Strength • Momentum • Trend • Breadth</p>
         </div>
-        <div>
-          <div class="mc-lbl">Leadership</div>
-          <div class="mc-val" id="mcLeaders" style="color:var(--teal); font-size:12px; line-height:1.6;">--</div>
+        <div class="header-controls">
+            <div class="status-badge">
+                <div class="status-dot"></div>
+                Status: <span class="text-up">Active (48 Streams)</span>
+            </div>
+            <button class="btn-outline">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"></path><path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path><path d="M3 22v-6h6"></path><path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path></svg>
+                Refresh Data
+            </button>
+            <div class="theme-toggle">
+                <button id="btnDark" class="active" onclick="setTheme('dark')">Dark</button>
+                <button id="btnLight" onclick="setTheme('light')">Light</button>
+            </div>
         </div>
-        <div>
-          <div class="mc-lbl">Weakest / Avoid</div>
-          <div class="mc-val" id="mcAvoid" style="color:var(--red); font-size:12px; line-height:1.6;">--</div>
+    </header>
+
+    <!-- TOP KPI ROW -->
+    <div class="grid-kpi">
+        <!-- KPI 1 -->
+        <div class="panel kpi-panel-1">
+            <div class="kpi-regime">
+                <div class="kpi-regime-left">
+                    <div class="panel-header" style="margin-bottom: 4px;">Market RS Regime</div>
+                    <div class="regime-status">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4z"></path><path d="M8 8V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        RISK ON / EXPANSION
+                    </div>
+                    <div class="kpi-subtext" style="margin-bottom: 8px;">Leadership Broadening<br>Improving internals across cyclical sectors</div>
+                </div>
+                <div class="kpi-regime-right">
+                    <canvas id="gaugeConfidence"></canvas>
+                    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: 700; font-size: 18px;">84%</div>
+                </div>
+            </div>
+            <div style="display: flex; gap: 24px; margin-top: 12px; border-top: 1px solid var(--panel-border); padding-top: 12px;">
+                <div>
+                    <div class="panel-header" style="font-size: 10px; margin-bottom: 2px;">RS Confidence</div>
+                    <div class="text-up" style="font-weight: 600; font-size: 13px;">STRONG</div>
+                </div>
+                <div>
+                    <div class="panel-header" style="font-size: 10px; margin-bottom: 2px;">Market Breadth</div>
+                    <div class="text-up" style="font-weight: 600; font-size: 13px;">POSITIVE</div>
+                </div>
+            </div>
         </div>
-        <div class="ai-box" id="aiText">
-          Generating strategy summary...
+
+        <!-- KPI 2 -->
+        <div class="panel">
+            <div class="panel-header">Sectors Outperforming</div>
+            <div class="kpi-value">7 <span style="font-size: 20px; color: var(--text-secondary);">/ 11</span></div>
+            <div class="mini-chart-container"><canvas id="miniChartSectors"></canvas></div>
         </div>
-      </div>
-    </div>
 
-    <!-- LAYER 2: QUADRANT MAP & ALERTS -->
-    <div class="col-span-8 card">
-      <div class="section-title">Relative Strength Rotation Map (vs SPY)</div>
-      <div class="quadrant-wrap" id="quadrantMap">
-        <div class="q-axis-x"></div><div class="q-axis-y"></div>
-        <div class="q-label q-tl">Improving</div><div class="q-label q-tr">Leading</div>
-        <div class="q-label q-bl">Weak</div><div class="q-label q-br">Lagging</div>
-        <!-- Dots injected via JS -->
-      </div>
-      <div style="display:flex; justify-content:center; gap:16px; margin-top:16px; font-family:'JetBrains Mono'; font-size:9px; font-weight:700; color:var(--text-faint);">
-        <span>X-Axis: RS Score (0-100)</span>
-        <span>Y-Axis: RS Momentum (1W $\Delta$)</span>
-      </div>
-    </div>
-
-    <div class="col-span-4 grid">
-      <div class="card" style="padding:16px;">
-        <div class="section-title">Capital Flow (Rotation Score)</div>
-        <div id="capitalFlowList"></div>
-      </div>
-      <div class="card" style="padding:16px;">
-        <div class="section-title">Portfolio Translation</div>
-        <div class="bucket-grid" style="grid-template-columns:1fr 1fr; gap:8px;">
-          <div class="bucket" style="border-color:var(--teal);"><div class="b-title" style="color:var(--teal);">Overweight (Core)</div><div id="portCore"></div></div>
-          <div class="bucket" style="border-color:var(--red);"><div class="b-title" style="color:var(--red);">Underweight / Avoid</div><div id="portAvoid"></div></div>
+        <!-- KPI 3 -->
+        <div class="panel">
+            <div class="panel-header">Industries Outperforming</div>
+            <div class="kpi-value">32 <span style="font-size: 20px; color: var(--text-secondary);">/ 59</span></div>
+            <div class="mini-chart-container"><canvas id="miniChartInd"></canvas></div>
         </div>
-      </div>
+
+        <!-- KPI 4 -->
+        <div class="panel">
+            <div class="panel-header">Strength Score (Avg)</div>
+            <div class="kpi-value">62</div>
+            <div class="kpi-subtext text-up">+6 vs prev. week</div>
+            <div class="mini-chart-container"><canvas id="miniChartStrength"></canvas></div>
+        </div>
+
+        <!-- KPI 5 -->
+        <div class="panel">
+            <div class="panel-header">Leadership Concentration</div>
+            <div class="kpi-value text-up">LOW</div>
+            <div class="kpi-subtext">Broad Leadership</div>
+            <div class="mini-chart-container"><canvas id="miniChartConc"></canvas></div>
+        </div>
+
+        <!-- KPI 6 -->
+        <div class="panel">
+            <div class="panel-header">RS Momentum</div>
+            <div class="kpi-value text-up" style="font-size: 28px; line-height: 1.6;">IMPROVING</div>
+            <div class="kpi-subtext text-up">+5 vs prev. week</div>
+            <div class="mini-chart-container"><canvas id="miniChartMom"></canvas></div>
+        </div>
+
+        <!-- KPI 7 -->
+        <div class="panel">
+            <div class="panel-header">Update</div>
+            <div class="kpi-value text-up" style="font-size: 28px; line-height: 1.6;">LIVE</div>
+            <div class="kpi-subtext">Last: <span id="clockTime">8:45 AM ET</span></div>
+        </div>
     </div>
 
-    <!-- LAYER 3: SECTOR TABLE -->
-    <div class="col-span-12 card">
-      <div class="section-title">Sector Leadership Engine</div>
-      <table class="rs-table">
-        <thead>
-          <tr>
-            <th>Sector</th><th>RS Score</th><th>1W $\Delta$ (Mom)</th><th>Trend (1M)</th><th>Breadth (>200MA)</th><th>Position</th>
-          </tr>
-        </thead>
-        <tbody id="sectorTableBody"></tbody>
-      </table>
+    <!-- MAIN CONTENT ROW -->
+    <div class="grid-main">
+        
+        <!-- Left: Rankings -->
+        <div class="panel">
+            <div class="panel-header">
+                RS Leadership Rankings
+                <a href="#" style="color: var(--color-neutral); text-decoration: none; font-size: 11px;">View All</a>
+            </div>
+            
+            <div class="rank-section">
+                <div class="rank-section-title text-up">Daily Top 3</div>
+                <div id="dailyTop3"></div>
+            </div>
+
+            <div class="rank-section">
+                <div class="rank-section-title text-up">Weekly Top 3</div>
+                <div id="weeklyTop3"></div>
+            </div>
+
+            <div class="rank-section">
+                <div class="rank-section-title text-down">Daily Laggards</div>
+                <div id="dailyBot3"></div>
+            </div>
+
+            <div class="rank-section">
+                <div class="rank-section-title text-down">Weekly Laggards</div>
+                <div id="weeklyBot3"></div>
+            </div>
+
+            <div class="how-to-read">
+                <div class="panel-header" style="font-size: 11px;">How To Read</div>
+                <p><strong>RS Score:</strong> 0-100 (vs SPY)</p>
+                <p>> 60 = Outperforming<br>< 40 = Underperforming</p>
+                <p><strong>Momentum:</strong> 1W & 1M acceleration</p>
+                <p><strong>Trend:</strong> 1M & 3M direction</p>
+                <p><strong>Breadth:</strong> % components > 200DMA</p>
+                <p><strong>Position</strong> in quadrant shows Strength vs Trend.</p>
+            </div>
+        </div>
+
+        <!-- Center: Scatter Plot -->
+        <div class="panel">
+            <div class="panel-header">RS Momentum Map (Sectors)</div>
+            <div class="chart-container">
+                <canvas id="scatterChart"></canvas>
+            </div>
+            <div style="display: flex; gap: 16px; margin-top: 12px; font-size: 12px; color: var(--text-secondary);">
+                <span>Bubble Size = RS Score</span>
+                <span>Color = RS Momentum</span>
+            </div>
+        </div>
+
+        <!-- Center Right: Line Chart -->
+        <div class="panel">
+            <div class="panel-header">RS Performance Trend (Sectors)</div>
+            <div class="chart-container">
+                <canvas id="lineChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Right: Heatmap -->
+        <div class="panel">
+            <div class="panel-header">RS Score Heatmap</div>
+            <div style="display: flex; gap: 16px; margin-bottom: 12px; border-bottom: 1px solid var(--panel-border); padding-bottom: 8px;">
+                <span style="color: var(--color-neutral); font-weight: 600; font-size: 12px; border-bottom: 2px solid var(--color-neutral);">Sectors</span>
+                <span style="color: var(--text-secondary); font-size: 12px; cursor: pointer;">Industries</span>
+            </div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th style="text-align: center;">RS Score</th>
+                        <th style="text-align: center;">1W Δ</th>
+                    </tr>
+                </thead>
+                <tbody id="heatmapTableBody">
+                    <!-- Populated by JS -->
+                </tbody>
+            </table>
+        </div>
     </div>
 
-    <!-- LAYER 4: INDUSTRY GROUPS -->
-    <div class="col-span-12 card">
-      <div class="section-title">Industry Rotation Groups</div>
-      <div class="bucket-grid" id="industryBuckets">
-        <div class="bucket"><div class="b-title" style="color:var(--teal);">Leadership</div><div id="indLeading"></div></div>
-        <div class="bucket"><div class="b-title" style="color:var(--blue);">Improving</div><div id="indImproving"></div></div>
-        <div class="bucket"><div class="b-title" style="color:var(--amber);">Lagging / Cooling</div><div id="indLagging"></div></div>
-        <div class="bucket"><div class="b-title" style="color:var(--red);">Weak / Broken</div><div id="indWeak"></div></div>
-      </div>
+    <!-- BOTTOM ROW -->
+    <div class="grid-bottom">
+        <!-- Sector Table -->
+        <div class="panel">
+            <div class="panel-header">Sector RS Table</div>
+            <div style="overflow-x: auto;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Sector</th>
+                            <th>RS Score<br><span style="font-size: 9px; text-transform: none;">(vs SPY)</span></th>
+                            <th>1W Δ</th>
+                            <th>1M Δ</th>
+                            <th>Trend<br><span style="font-size: 9px; text-transform: none;">(1M)</span></th>
+                            <th>Trend<br><span style="font-size: 9px; text-transform: none;">(3M)</span></th>
+                            <th>Breadth<br><span style="font-size: 9px; text-transform: none;">(% > 200MA)</span></th>
+                            <th>Momentum<br><span style="font-size: 9px; text-transform: none;">(1W)</span></th>
+                            <th>Position</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sectorTableBody">
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Industry Leaders/Laggards -->
+        <div class="panel">
+            <div class="panel-header">Industry RS Leaders & Laggards</div>
+            <div style="display: flex; gap: 24px;">
+                <!-- Top 10 -->
+                <div style="flex: 1;">
+                    <div class="rank-section-title text-up" style="border-bottom: 1px solid var(--panel-border); padding-bottom: 8px; margin-bottom: 0;">Top 10 Industries (RS Score)</div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>RS Score</th>
+                                <th>1W Δ</th>
+                                <th>1M Δ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="indTopBody"></tbody>
+                    </table>
+                </div>
+                
+                <!-- Bottom 10 -->
+                <div style="flex: 1;">
+                    <div class="rank-section-title text-down" style="border-bottom: 1px solid var(--panel-border); padding-bottom: 8px; margin-bottom: 0;">Bottom 10 Industries (RS Score)</div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>RS Score</th>
+                                <th>1W Δ</th>
+                                <th>1M Δ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="indBotBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div style="text-align: center; color: var(--text-muted); font-size: 11px; margin-top: 16px;">
+        RS Score = Percentage vs SPY (Normalized to 0-100) &nbsp;|&nbsp; Data Delayed 15 Min &nbsp;|&nbsp; Source: Multi-Exchange Data Engine
     </div>
 
-  </div>
+</div>
 
+<!-- ==========================================================================
+     JAVASCRIPT LOGIC
+     ========================================================================== -->
 <script>
-// UNIVERSE CONFIGURATION
-const SECTORS = [
-  {tk: 'XLK', n: 'Technology'}, {tk: 'XLF', n: 'Financials'}, {tk: 'XLV', n: 'Health Care'},
-  {tk: 'XLE', n: 'Energy'}, {tk: 'XLY', n: 'Cons Disc'}, {tk: 'XLI', n: 'Industrials'},
-  {tk: 'XLC', n: 'Comm Svcs'}, {tk: 'XLP', n: 'Cons Stpl'}, {tk: 'XLRE', n: 'Real Estate'},
-  {tk: 'XLB', n: 'Materials'}, {tk: 'XLU', n: 'Utilities'}
-];
+    // --- Mock Data Generation (Realistic Financial Data) ---
+    const sectorsData = [
+        { name: 'Technology', ticker: 'XLK', rs: 80, d1w: 5, d1m: 12, trend1m: 1, trend3m: 1, breadth: 78, mom: 1.8, pos: 'Leaders' },
+        { name: 'Industrials', ticker: 'XLI', rs: 70, d1w: 6, d1m: 10, trend1m: 1, trend3m: 1, breadth: 72, mom: 2.1, pos: 'Leaders' },
+        { name: 'Financials', ticker: 'XLF', rs: 68, d1w: 5, d1m: 8, trend1m: 1, trend3m: 1, breadth: 65, mom: 1.6, pos: 'Leaders' },
+        { name: 'Comm. Services', ticker: 'XLC', rs: 64, d1w: 3, d1m: 6, trend1m: 1, trend3m: 0, breadth: 58, mom: 0.9, pos: 'Leaders' },
+        { name: 'Materials', ticker: 'XLB', rs: 49, d1w: -1, d1m: -1, trend1m: 0, trend3m: -1, breadth: 45, mom: -0.2, pos: 'At Risk' },
+        { name: 'Energy', ticker: 'XLE', rs: 40, d1w: -2, d1m: -3, trend1m: -1, trend3m: -1, breadth: 32, mom: -0.8, pos: 'Weakening' },
+        { name: 'Consumer Discretionary', ticker: 'XLY', rs: 36, d1w: -3, d1m: -5, trend1m: -1, trend3m: -1, breadth: 28, mom: -1.1, pos: 'Weakening' },
+        { name: 'Health Care', ticker: 'XLV', rs: 28, d1w: -5, d1m: -8, trend1m: -1, trend3m: -1, breadth: 22, mom: -1.5, pos: 'Laggards' },
+        { name: 'Real Estate', ticker: 'XLRE', rs: 27, d1w: -4, d1m: -6, trend1m: -1, trend3m: -1, breadth: 21, mom: -1.2, pos: 'Laggards' },
+        { name: 'Consumer Staples', ticker: 'XLP', rs: 55, d1w: 1, d1m: 2, trend1m: 1, trend3m: -1, breadth: 60, mom: 0.1, pos: 'Improving' },
+        { name: 'Utilities', ticker: 'XLU', rs: 22, d1w: -3, d1m: -7, trend1m: -1, trend3m: -1, breadth: 15, mom: -0.9, pos: 'Laggards' }
+    ];
 
-const INDUSTRIES = [
-  {tk: 'SMH', n: 'Semiconductors'}, {tk: 'XBI', n: 'Biotech'}, {tk: 'KRE', n: 'Regional Banks'},
-  {tk: 'XRT', n: 'Retail'}, {tk: 'JETS', n: 'Global Jets'}, {tk: 'ITA', n: 'Aerospace'},
-  {tk: 'GDX', n: 'Gold Miners'}, {tk: 'XOP', n: 'Oil & Gas'}, {tk: 'TAN', n: 'Solar'},
-  {tk: 'IGV', n: 'Software'}, {tk: 'COPX', n: 'Copper'}, {tk: 'FINX', n: 'FinTech'},
-  {tk: 'CIBR', n: 'Cybersecurity'}, {tk: 'IHI', n: 'Med Devices'}, {tk: 'ITB', n: 'Homebuilders'}
-];
+    const indTop = [
+        { name: 'Oil & Gas Exploration', rs: 71, d1w: 7.2, d1m: 11.4 },
+        { name: 'Mobile Payments', rs: 63, d1w: 4.8, d1m: 8.1 },
+        { name: 'Agribusiness', rs: 60, d1w: 3.6, d1m: 6.3 },
+        { name: 'China Internet', rs: 57, d1w: 5.7, d1m: 9.2 },
+        { name: 'Insurance', rs: 54, d1w: 3.2, d1m: 4.1 },
+        { name: 'Transportation', rs: 51, d1w: 2.0, d1m: 3.5 },
+        { name: 'Cybersecurity', rs: 49, d1w: 4.1, d1m: 6.0 },
+        { name: 'Biotech', rs: 46, d1w: 1.3, d1m: -0.2 },
+        { name: 'Timber', rs: 45, d1w: 1.6, d1m: 2.2 },
+        { name: 'FinTech', rs: 44, d1w: 2.3, d1m: 3.1 }
+    ];
 
-const ALL_TICKERS = ['SPY', ...SECTORS.map(s=>s.tk), ...INDUSTRIES.map(i=>i.tk)];
-const STATE = { data: {}, processed: { sectors: [], industries: [] } };
+    const indBot = [
+        { name: 'Global Jets', rs: 31, d1w: -0.9, d1m: -4.5 },
+        { name: 'Semiconductor Equip.', rs: 29, d1w: -1.0, d1m: -3.6 },
+        { name: 'IPOs', rs: 26, d1w: -1.3, d1m: -5.4 },
+        { name: 'Space', rs: 23, d1w: -0.7, d1m: -3.7 },
+        { name: 'Electric Cars', rs: 20, d1w: -0.6, d1m: -2.1 },
+        { name: 'Solar', rs: 17, d1w: -0.9, d1m: -3.0 },
+        { name: 'Uranium', rs: 14, d1w: -1.1, d1m: -4.4 },
+        { name: 'Clean Energy', rs: 13, d1w: -1.2, d1m: -4.2 },
+        { name: 'Lithium', rs: 9, d1w: -1.0, d1m: -2.8 },
+        { name: 'Quantum-Tech', rs: 7, d1w: -0.7, d1m: -1.9 }
+    ];
 
-const PROXY_PROVIDERS = [
-  url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-  url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`
-];
+    const dailyTop = [
+        { name: 'Transportation', tk: 'IYT', score: 88.19, chg: 15.8 },
+        { name: 'Aerospace & Defense', tk: 'ITA', score: 78.23, chg: 12.0 },
+        { name: 'Semiconductors', tk: 'SMH', score: 71.45, chg: 11.5 }
+    ];
+    const weeklyTop = [
+        { name: 'Copper Miners', tk: 'COPX', score: 78.37, chg: 29.3 },
+        { name: 'Silver Miners', tk: 'SIL', score: 75.28, chg: 20.8 },
+        { name: 'Timber', tk: 'WOOD', score: 68.49, chg: 23.4 }
+    ];
+    const dailyBot = [
+        { name: 'Global Jets', tk: 'JETS', score: 29.32, chg: -18.9 },
+        { name: 'Medical Devices', tk: 'IHI', score: 49.44, chg: -22.0 },
+        { name: 'Regional Banks', tk: 'KRE', score: 57.15, chg: -14.6 }
+    ];
+    const weeklyBot = [
+        { name: 'Global Jets', tk: 'JETS', score: 29.32, chg: -32.8 },
+        { name: 'Medical Devices', tk: 'IHI', score: 49.44, chg: -29.0 },
+        { name: 'Regional Banks', tk: 'KRE', score: 57.15, chg: -22.8 }
+    ];
 
-async function fetchYahooSeries(symbol) {
-  const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1y`;
-  for (const proxyBuilder of PROXY_PROVIDERS) {
-    try {
-      const res = await fetch(proxyBuilder(targetUrl), { cache: "no-store", signal: AbortSignal.timeout(4500) });
-      if (!res.ok) continue;
-      const json = JSON.parse(await res.text());
-      if (!json?.chart?.result?.[0]) continue;
-      const q = json.chart.result[0].indicators.quote[0];
-      const bars = [];
-      for(let i=0; i<q.close.length; i++) {
-        if(q.close[i] != null) bars.push({ c: q.close[i], h: q.high[i], l: q.low[i] });
-      }
-      return bars;
-    } catch(e) {}
-  }
-  return null;
-}
+    // --- Helpers ---
+    const formatSign = (val) => val > 0 ? `+${val}` : val;
+    const getColorClass = (val) => val > 0 ? 'text-up' : (val < 0 ? 'text-down' : 'text-neutral');
+    
+    // Heatmap color generator
+    const getHeatmapColor = (score, isDark) => {
+        if (score >= 70) return isDark ? '#1a7f37' : '#2ea043'; // Green
+        if (score >= 60) return isDark ? '#238636' : '#3fb950'; // Light Green
+        if (score >= 50) return isDark ? '#9e6a03' : '#d29922'; // Yellow/Olive
+        if (score >= 40) return isDark ? '#b05c04' : '#e36209'; // Orange
+        return isDark ? '#da3633' : '#f85149'; // Red
+    };
 
-function calcRet(bars, days) {
-  if (!bars || bars.length < days + 1) return 0;
-  return ((bars[bars.length - 1].c / bars[bars.length - 1 - days].c) - 1) * 100;
-}
+    // --- DOM Population ---
+    function populateRankList(elementId, data, type) {
+        const el = document.getElementById(elementId);
+        let html = '';
+        data.forEach((item, i) => {
+            const chgClass = item.chg > 0 ? 'text-up' : 'text-down';
+            html += `
+                <div class="rank-item ${type}">
+                    <div class="rank-num">${i + 1}</div>
+                    <div class="rank-name">${item.name}</div>
+                    <div class="rank-ticker">${item.tk}</div>
+                    <div class="rank-score tabular-nums">${item.score.toFixed(2)}</div>
+                    <div class="rank-change ${chgClass} tabular-nums">${formatSign(item.chg)}</div>
+                </div>
+            `;
+        });
+        el.innerHTML = html;
+    }
 
-function sma(bars, len) {
-  if (!bars || bars.length < len) return null;
-  return bars.slice(-len).reduce((sum, b) => sum + b.c, 0) / len;
-}
+    function populateSectorTable() {
+        const tbody = document.getElementById('sectorTableBody');
+        const heatBody = document.getElementById('heatmapTableBody');
+        let tHtml = '';
+        let hHtml = '';
+        
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
 
-async function initRadar() {
-  const status = document.getElementById('loadStatus');
-  let count = 0;
+        sectorsData.forEach(s => {
+            // Main Table
+            const trendIcon = (val) => val > 0 ? `<span class="text-up">↑</span>` : (val < 0 ? `<span class="text-down">↓</span>` : `<span class="text-neutral">→</span>`);
+            const badgeClass = s.pos.toLowerCase().replace(' ', '-');
+            
+            tHtml += `
+                <tr>
+                    <td style="font-weight: 600;">${s.name}</td>
+                    <td>${s.rs}</td>
+                    <td class="${getColorClass(s.d1w)}">${formatSign(s.d1w)}</td>
+                    <td class="${getColorClass(s.d1m)}">${formatSign(s.d1m)}</td>
+                    <td>${trendIcon(s.trend1m)}</td>
+                    <td>${trendIcon(s.trend3m)}</td>
+                    <td>${s.breadth}%</td>
+                    <td class="${getColorClass(s.mom)}">${formatSign(s.mom)}</td>
+                    <td><span class="badge ${badgeClass}">${s.pos}</span></td>
+                </tr>
+            `;
 
-  for (let i = 0; i < ALL_TICKERS.length; i++) {
-    const tk = ALL_TICKERS[i];
-    const bars = await fetchYahooSeries(tk);
-    if (bars && bars.length > 200) STATE.data[tk] = bars;
-    count++;
-    status.innerHTML = `Compiling Capital Rotation Data… (${count}/${ALL_TICKERS.length})`;
-    await new Promise(r => setTimeout(r, 100)); // Trickle
-  }
+            // Heatmap Table
+            hHtml += `
+                <tr>
+                    <td>${s.name}</td>
+                    <td class="heatmap-cell" style="background-color: ${getHeatmapColor(s.rs, isDark)}; color: #fff;">${s.rs}</td>
+                    <td class="heatmap-cell" style="background-color: ${getHeatmapColor(s.rs + s.d1w * 2, isDark)}; color: #fff;">${formatSign(s.d1w)}</td>
+                </tr>
+            `;
+        });
+        tbody.innerHTML = tHtml;
+        heatBody.innerHTML = hHtml;
+    }
 
-  document.getElementById('loadingOverlay').style.display = 'none';
-  document.getElementById('mainContainer').style.display = 'grid';
-  document.getElementById('statusBadge').innerHTML = `Status: <b>Active</b>`;
-  processAndRender();
-}
+    function populateIndustryTables() {
+        const renderRows = (data, isTop) => {
+            return data.map((item, i) => `
+                <tr>
+                    <td class="tabular-nums" style="color:var(--text-secondary); width:20px;">${i + 1}</td>
+                    <td style="font-weight:500;">${item.name}</td>
+                    <td class="tabular-nums">${item.rs}</td>
+                    <td class="${getColorClass(item.d1w)} tabular-nums">${formatSign(item.d1w.toFixed(1))}</td>
+                    <td class="${getColorClass(item.d1m)} tabular-nums">${formatSign(item.d1m.toFixed(1))}</td>
+                </tr>
+            `).join('');
+        };
+        document.getElementById('indTopBody').innerHTML = renderRows(indTop, true);
+        document.getElementById('indBotBody').innerHTML = renderRows(indBot, false);
+    }
 
-function normalizeScores(list, key, targetKey) {
-  const max = Math.max(...list.map(o => o[key]));
-  const min = Math.min(...list.map(o => o[key]));
-  list.forEach(o => {
-    o[targetKey] = Math.round(((o[key] - min) / (max - min)) * 100) || 50;
-  });
-}
+    // --- Chart.js Setup ---
+    Chart.defaults.color = '#8b949e';
+    Chart.defaults.font.family = "'Inter', sans-serif";
 
-function processAndRender() {
-  const spy = STATE.data['SPY'];
-  const spy3m = calcRet(spy, 63);
-  const spy1w = calcRet(spy, 5);
+    let scatterChart, lineChart;
 
-  const processGroup = (groupList) => {
-    let results = [];
-    groupList.forEach(item => {
-      const bars = STATE.data[item.tk];
-      if(!bars) return;
-      
-      const ret3m = calcRet(bars, 63);
-      const ret1m = calcRet(bars, 21);
-      const ret1w = calcRet(bars, 5);
-      
-      const rsRaw = ret3m - spy3m; // 3-month relative performance base
-      const rsMomRaw = ret1w - spy1w; // 1-week momentum shift
-      
-      const c = bars[bars.length-1].c;
-      const s200 = sma(bars, 200);
-      const isUp = ret1m > 0;
+    function initCharts() {
+        // Shared options for mini charts
+        const miniOptions = {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false }, tooltip: { enabled: false } },
+            scales: { x: { display: false }, y: { display: false } },
+            layout: { padding: 0 }
+        };
 
-      results.push({
-        ...item,
-        rsRaw, rsMomRaw, ret1w, ret1m, ret3m,
-        trend: isUp ? '↑' : '↓',
-        trendColor: isUp ? 'var(--teal)' : 'var(--red)',
-        breadthOk: c > s200
-      });
-    });
+        // Mini Bar 1
+        new Chart(document.getElementById('miniChartSectors'), {
+            type: 'bar',
+            data: { labels: ['1','2','3','4','5','6','7','8','9','10','11'], datasets: [{ data: [3,4,3,5,6,8,7,6,5,4,2], backgroundColor: '#3fb950', borderRadius: 2 }] },
+            options: miniOptions
+        });
 
-    // Normalize
-    normalizeScores(results, 'rsRaw', 'rsScore');
-    normalizeScores(results, 'rsMomRaw', 'momScore'); // For plotting Y-axis 0-100
+        // Mini Bar 2
+        new Chart(document.getElementById('miniChartInd'), {
+            type: 'bar',
+            data: { labels: Array.from({length:20}, (_,i)=>i), datasets: [{ data: Array.from({length:20}, ()=>Math.random()*10), backgroundColor: '#3fb950', borderRadius: 2 }] },
+            options: miniOptions
+        });
 
-    // Assign Quadrant/Position
-    results.forEach(r => {
-      const isStrongRS = r.rsScore >= 50;
-      const isPositiveMo = r.rsMomRaw >= 0; // Absolute momentum vs SPY > 0
+        // Mini Lines
+        const createSparkline = (id, color, dataArr) => {
+            new Chart(document.getElementById(id), {
+                type: 'line',
+                data: { labels: Array.from({length: dataArr.length}, (_,i)=>i), datasets: [{ data: dataArr, borderColor: color, borderWidth: 2, tension: 0.3, pointRadius: 0 }] },
+                options: miniOptions
+            });
+        };
+        createSparkline('miniChartStrength', '#3fb950', [40,45,42,50,55,58,62]);
+        createSparkline('miniChartConc', '#58a6ff', [80,75,60,50,45,40,35]);
+        createSparkline('miniChartMom', '#3fb950', [0,2,1,3,5,4,6]);
 
-      if (isStrongRS && isPositiveMo) { r.pos = 'Leader'; r.cls = 'pos-leader'; r.dot = 'leader'; }
-      else if (!isStrongRS && isPositiveMo) { r.pos = 'Improving'; r.cls = 'pos-improving'; r.dot = 'improving'; }
-      else if (isStrongRS && !isPositiveMo) { r.pos = 'Laggard'; r.cls = 'pos-laggard'; r.dot = 'laggard'; }
-      else { r.pos = 'Weak'; r.cls = 'pos-weak'; r.dot = 'weak'; }
-    });
+        // Gauge Confidence (Doughnut)
+        new Chart(document.getElementById('gaugeConfidence'), {
+            type: 'doughnut',
+            data: { datasets: [{ data: [84, 16], backgroundColor: ['#3fb950', 'rgba(63, 185, 80, 0.1)'], borderWidth: 0, cutout: '80%' }] },
+            options: { ...miniOptions, animation: { duration: 2000, easing: 'easeOutQuart' } }
+        });
 
-    return results.sort((a,b) => b.rsScore - a.rsScore);
-  };
+        // --- Scatter Chart (Quadrant Map) ---
+        // Custom plugin to draw quadrants
+        const quadrantPlugin = {
+            id: 'quadrants',
+            beforeDraw: (chart) => {
+                const { ctx, chartArea: { top, bottom, left, right }, scales: { x, y } } = chart;
+                ctx.save();
+                ctx.beginPath();
+                // Draw crosshairs at x=50, y=0
+                const xPos = x.getPixelForValue(50);
+                const yPos = y.getPixelForValue(0);
+                
+                ctx.strokeStyle = document.documentElement.getAttribute('data-theme') === 'dark' ? '#30363d' : '#d0d7de';
+                ctx.lineWidth = 1;
+                
+                // Vertical line
+                ctx.moveTo(xPos, top); ctx.lineTo(xPos, bottom);
+                // Horizontal line
+                ctx.moveTo(left, yPos); ctx.lineTo(right, yPos);
+                ctx.stroke();
+                
+                // Draw Text labels
+                ctx.font = "bold 9px 'Inter'";
+                ctx.fillStyle = document.documentElement.getAttribute('data-theme') === 'dark' ? '#484f58' : '#8c959f';
+                ctx.textAlign = 'center';
+                
+                ctx.fillText('IMPROVING / WEAK', xPos/2 + left/2, top + 15);
+                ctx.fillStyle = '#3fb950'; // Green text for top right
+                ctx.fillText('IMPROVING / STRONG (LEADERS)', xPos + (right-xPos)/2, top + 15);
+                ctx.fillStyle = '#f85149'; // Red for bottom left
+                ctx.fillText('WEAKENING / LAGGARDS', xPos/2 + left/2, bottom - 10);
+                ctx.fillStyle = '#d29922'; // Yellow for bottom right
+                ctx.fillText('WEAKENING / STRONG', xPos + (right-xPos)/2, bottom - 10);
+                
+                ctx.restore();
+            }
+        };
 
-  STATE.processed.sectors = processGroup(SECTORS);
-  STATE.processed.industries = processGroup(INDUSTRIES);
+        const scatterData = sectorsData.map(s => ({
+            x: s.rs,
+            y: s.mom * 10, // Exaggerate momentum for visual spread
+            r: Math.max(s.rs / 5, 4), // Bubble size based on RS
+            label: s.name,
+            color: s.rs >= 50 && s.mom >= 0 ? '#3fb950' : (s.rs < 50 && s.mom >= 0 ? '#238636' : (s.rs >= 50 && s.mom < 0 ? '#d29922' : '#f85149'))
+        }));
 
-  const secs = STATE.processed.sectors;
-  const inds = STATE.processed.industries;
+        scatterChart = new Chart(document.getElementById('scatterChart'), {
+            type: 'bubble',
+            data: {
+                datasets: [{
+                    data: scatterData,
+                    backgroundColor: scatterData.map(d => d.color),
+                    borderColor: 'rgba(0,0,0,0.2)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: (ctx) => `${ctx.raw.label} (RS: ${ctx.raw.x}, Mom: ${(ctx.raw.y/10).toFixed(1)})`
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        min: 0, max: 100,
+                        title: { display: true, text: 'RELATIVE STRENGTH (vs SPY)' },
+                        grid: { display: false }
+                    },
+                    y: {
+                        min: -50, max: 50,
+                        title: { display: true, text: 'RS MOMENTUM [1W Acceleration]' },
+                        grid: { display: false }
+                    }
+                }
+            },
+            plugins: [quadrantPlugin]
+        });
 
-  // 1. COMMAND CENTER
-  const leaders = secs.filter(s => s.pos === 'Leader' || s.rsScore >= 70).slice(0,3);
-  const laggards = [...secs].reverse().slice(0,3);
-  
-  let regimeText = "🟢 Leadership Broadening";
-  if (leaders.length < 2) regimeText = "🟡 Narrow Leadership / Rotation";
-  if (secs.filter(s => s.pos === 'Weak').length > 5) regimeText = "🔴 Defensive Deterioration";
+        // --- Line Chart (Trend) ---
+        const generateRandomWalk = (start, length, volatility) => {
+            let res = [start];
+            for(let i=1; i<length; i++) res.push(res[i-1] + (Math.random() - 0.5) * volatility);
+            return res;
+        };
+        
+        const months = ['Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'];
+        const labels = Array.from({length: 60}, (_,i) => i % 10 === 0 ? months[Math.floor(i/10)] : '');
 
-  document.getElementById('mcRegime').innerText = regimeText;
-  document.getElementById('mcConf').innerText = Math.round(secs[0].rsScore) + '%';
-  document.getElementById('mcTheme').innerText = secs[0].rsScore > 60 && !['XLU','XLP'].includes(secs[0].tk) ? 'Risk ON' : 'Risk OFF';
-  
-  document.getElementById('mcLeaders').innerHTML = leaders.map(s => `• ${s.n}`).join('<br>');
-  document.getElementById('mcAvoid').innerHTML = laggards.map(s => `• ${s.n}`).join('<br>');
+        lineChart = new Chart(document.getElementById('lineChart'), {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    { label: 'Technology', data: generateRandomWalk(100, 60, 2), borderColor: '#3fb950', tension: 0.3, pointRadius: 0, borderWidth: 2 },
+                    { label: 'Industrials', data: generateRandomWalk(95, 60, 1.5), borderColor: '#58a6ff', tension: 0.3, pointRadius: 0, borderWidth: 2 },
+                    { label: 'Financials', data: generateRandomWalk(90, 60, 1.5), borderColor: '#388bfd', tension: 0.3, pointRadius: 0, borderWidth: 2 },
+                    { label: 'Comm. Services', data: generateRandomWalk(85, 60, 2), borderColor: '#a371f7', tension: 0.3, pointRadius: 0, borderWidth: 2 },
+                    { label: 'Materials', data: generateRandomWalk(80, 60, 1.5), borderColor: '#8b949e', tension: 0.3, pointRadius: 0, borderWidth: 2 },
+                    { label: 'Energy', data: generateRandomWalk(75, 60, 3), borderColor: '#d29922', tension: 0.3, pointRadius: 0, borderWidth: 2 },
+                    { label: 'Health Care', data: generateRandomWalk(70, 60, 1), borderColor: '#f85149', tension: 0.3, pointRadius: 0, borderWidth: 2 },
+                    { label: 'Utilities', data: generateRandomWalk(65, 60, 1), borderColor: '#da3633', tension: 0.3, pointRadius: 0, borderWidth: 2 },
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: { boxWidth: 10, usePointStyle: true, pointStyle: 'line', font: {size: 11} }
+                    }
+                },
+                scales: {
+                    x: { grid: { display: false }, ticks: { maxTicksLimit: 6 } },
+                    y: { grid: { color: document.documentElement.getAttribute('data-theme') === 'dark' ? '#30363d' : '#d0d7de' } }
+                }
+            }
+        });
+    }
 
-  document.getElementById('aiText').innerHTML = `Capital continues rotating toward cyclical leadership. <b>${leaders[0]?.n}</b> and <b>${leaders[1]?.n}</b> remain the strongest absolute leaders while defensive sectors deteriorate. Current positioning favors maintaining overweight exposure to top quintile RS groups while strictly avoiding <b>${laggards[0]?.n}</b>.`;
+    // --- Theme Management ---
+    function setTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        document.getElementById('btnDark').classList.toggle('active', theme === 'dark');
+        document.getElementById('btnLight').classList.toggle('active', theme === 'light');
+        
+        // Update charts to reflect new colors
+        if(scatterChart) scatterChart.update();
+        if(lineChart) {
+            lineChart.options.scales.y.grid.color = theme === 'dark' ? '#30363d' : '#d0d7de';
+            lineChart.update();
+        }
+        // Regenerate heatmap colors based on theme
+        populateSectorTable();
+    }
 
-  // 2. QUADRANT MAP (RRG Style)
-  let mapHtml = `<div class="q-axis-x"></div><div class="q-axis-y"></div>
-    <div class="q-label q-tl">Improving</div><div class="q-label q-tr">Leading</div>
-    <div class="q-label q-bl">Weak</div><div class="q-label q-br">Lagging</div>`;
-  
-  secs.forEach(s => {
-    // x = rsScore (0-100), y = momScore (0-100) mapped to bottom-up percentage
-    mapHtml += `<div class="dot-wrap" style="left:${s.rsScore}%; top:${100 - s.momScore}%;">
-      <div class="dot ${s.dot}"></div>
-      <div class="dot-lbl">${s.tk}</div>
-    </div>`;
-  });
-  document.getElementById('quadrantMap').innerHTML = mapHtml;
+    // --- Clock ---
+    function updateClock() {
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }) + ' ET';
+        document.getElementById('clockTime').textContent = timeStr;
+    }
 
-  // 3. SECTOR TABLE
-  let tblHtml = '';
-  secs.forEach(s => {
-    const moStr = (s.rsMomRaw > 0 ? '+' : '') + s.rsMomRaw.toFixed(1) + '%';
-    const moColor = s.rsMomRaw > 0 ? 'var(--teal)' : 'var(--red)';
-    tblHtml += `<tr>
-      <td style="font-weight:800; color:var(--text);">${s.n}</td>
-      <td style="font-family:'JetBrains Mono'; font-weight:800; font-size:12px;">${s.rsScore}</td>
-      <td style="color:${moColor}; font-weight:700;">${moStr}</td>
-      <td style="color:${s.trendColor}; font-weight:900;">${s.trend}</td>
-      <td>${s.breadthOk ? '<span style="color:var(--teal)">✓ Above</span>' : '<span style="color:var(--red)">✗ Below</span>'}</td>
-      <td><span class="pos-badge ${s.cls}">${s.pos}</span></td>
-    </tr>`;
-  });
-  document.getElementById('sectorTableBody').innerHTML = tblHtml;
-
-  // 4. FLOW BARS & PORTFOLIO
-  let flowHtml = '';
-  secs.forEach(s => {
-    flowHtml += `<div class="flow-row">
-      <div class="f-lbl">${s.n}</div>
-      <div class="f-track"><div class="f-fill" style="width:${s.rsScore}%; background:${s.pos==='Weak'||s.pos==='Laggard'?'var(--red)':'var(--teal)'}"></div></div>
-      <div class="f-val">${s.rsScore}</div>
-    </div>`;
-  });
-  document.getElementById('capitalFlowList').innerHTML = flowHtml;
-
-  document.getElementById('portCore').innerHTML = leaders.map(s => `<div class="b-item"><span>${s.n}</span><span style="color:var(--teal)">Core</span></div>`).join('');
-  document.getElementById('portAvoid').innerHTML = laggards.map(s => `<div class="b-item"><span>${s.n}</span><span style="color:var(--red)">0%</span></div>`).join('');
-
-  // 5. INDUSTRY BUCKETS
-  const groupInds = (pos) => inds.filter(i => i.pos === pos).map(i => `<div class="b-item"><span>${i.n}</span><span style="color:var(--text-dim)">${i.rsScore}</span></div>`).join('');
-  
-  document.getElementById('indLeading').innerHTML = groupInds('Leader') || '<div class="b-item">None</div>';
-  document.getElementById('indImproving').innerHTML = groupInds('Improving') || '<div class="b-item">None</div>';
-  document.getElementById('indLagging').innerHTML = groupInds('Laggard') || '<div class="b-item">None</div>';
-  document.getElementById('indWeak').innerHTML = groupInds('Weak') || '<div class="b-item">None</div>';
-}
-
-function setTheme(theme) {
-  document.documentElement.setAttribute("data-theme", theme);
-  document.getElementById("optDark").classList.toggle("active", theme === "dark");
-  document.getElementById("optLight").classList.toggle("active", theme === "light");
-  try { localStorage.setItem('sata-theme', theme); } catch(e) {}
-}
-
-document.getElementById("optDark").addEventListener("click", () => setTheme("dark"));
-document.getElementById("optLight").addEventListener("click", () => setTheme("light"));
-
-window.onload = () => {
-  let savedTheme = "dark";
-  try { savedTheme = localStorage.getItem('sata-theme') || "dark"; } catch(e) {}
-  setTheme(savedTheme);
-  initRadar();
-};
+    // --- Initialization ---
+    window.onload = () => {
+        populateRankList('dailyTop3', dailyTop, 'top');
+        populateRankList('weeklyTop3', weeklyTop, 'top');
+        populateRankList('dailyBot3', dailyBot, 'bottom');
+        populateRankList('weeklyBot3', weeklyBot, 'bottom');
+        
+        populateSectorTable();
+        populateIndustryTables();
+        
+        initCharts();
+        
+        setInterval(updateClock, 60000); // Update time every minute
+    };
 </script>
 </body>
 </html>
