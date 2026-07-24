@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Market Breadth Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&family=JetBrains+Mono:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f4f6fa; --card: #ffffff; --line: #e2e8f0; --text-main: #0f172a; --text-muted: #64748b; --text-faint: #94a3b8;
+    --blue: #2563eb; --blue-light: #eff6ff; --green: #059669; --green-light: #ecfdf5; --red: #e11d48; --red-light: #ffe4e6;
+    --pink: #db2777; --amber: #f59e0b; --slate-800: #1e293b; --slate-50: #f8fafc;
+  }
+  
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text-main); font-family: 'Inter', sans-serif; padding: 16px; overflow-y: scroll; }
+  
+  /* Utilities */
+  .flex { display: flex; } .flex-col { flex-direction: column; } .items-center { align-items: center; } .items-end { align-items: flex-end; }
+  .justify-between { justify-content: space-between; } .justify-center { justify-content: center; }
+  .gap-1 { gap: 0.25rem; } .gap-2 { gap: 0.5rem; } .gap-3 { gap: 0.75rem; } .gap-4 { gap: 1rem; }
+  .grid { display: grid; } .grid-cols-2 { grid-template-columns: repeat(2, 1fr); } .grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
+  .grid-cols-5 { grid-template-columns: repeat(5, 1fr); } .grid-cols-6 { grid-template-columns: repeat(6, 1fr); } .grid-cols-12 { grid-template-columns: repeat(12, 1fr); }
+  .col-span-4 { grid-column: span 4; } .w-full { width: 100%; } .h-full { height: 100%; } .flex-1 { flex: 1; }
+  
+  .p-2 { padding: 0.5rem; } .p-3 { padding: 0.75rem; } .p-4 { padding: 1rem; }
+  .px-1 { padding-left: 0.25rem; padding-right: 0.25rem; } .px-2 { padding-left: 0.5rem; padding-right: 0.5rem; }
+  .py-05 { padding-top: 0.125rem; padding-bottom: 0.125rem; } .py-1 { padding-top: 0.25rem; padding-bottom: 0.25rem; }
+  .border { border: 1px solid var(--line); } .border-t { border-top: 1px solid var(--line); } .border-b { border-bottom: 1px solid var(--line); }
+  .border-l-4 { border-left: 4px solid; } .rounded { border-radius: 0.25rem; } .rounded-lg { border-radius: 0.5rem; } .rounded-full { border-radius: 9999px; }
+  .shadow-sm { box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05); }
+  
+  .bg-white { background: var(--card); } .bg-slate-50 { background: var(--slate-50); }
+  .bg-blue { background: var(--blue); color: white; } .bg-blue-light { background: var(--blue-light); color: var(--blue); }
+  .bg-green-light { background: var(--green-light); color: var(--green); } .bg-red-light { background: var(--red-light); color: var(--red); } .bg-pink { background: var(--pink); color: white; }
+  
+  .text-xs { font-size: 0.75rem; } .text-sm { font-size: 0.875rem; } .text-lg { font-size: 1.125rem; } .text-3xl { font-size: 1.875rem; }
+  .text-10 { font-size: 10px; } .text-9 { font-size: 9px; }
+  .font-bold { font-weight: 700; } .font-black { font-weight: 900; } .uppercase { text-transform: uppercase; } .tracking-wider { letter-spacing: 0.05em; }
+  .truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .text-center { text-align: center; } .text-right { text-align: right; }
+  .text-blue { color: var(--blue); } .text-green { color: var(--green); } .text-red { color: var(--red); } .text-muted { color: var(--text-muted); }
+  
+  /* Tabs */
+  .app-tabs { display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 2px solid var(--line); overflow-x: auto; }
+  .app-tabs::-webkit-scrollbar { display: none; }
+  .app-tabs a { padding: 10px 20px; font-size: 12px; font-weight: 800; color: var(--text-muted); text-decoration: none; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 2px solid transparent; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+  .app-tabs a.active { color: var(--blue); border-bottom-color: var(--blue); }
+  .app-tabs a:hover:not(.active) { color: var(--text-main); }
+  
+  /* Custom components */
+  .ratio-bar-wrap { width: 100%; height: 8px; background: var(--slate-50); border-radius: 99px; overflow: hidden; margin: 6px 0; }
+  .scroll-y { overflow-y: auto; }
+  .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+  .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--line); border-radius: 4px; }
+  
+  /* Initial Loader */
+  #loadingOverlay { position: fixed; inset: 0; background: rgba(255,255,255,0.9); z-index: 50; display: flex; flex-col; align-items: center; justify-content: center; }
+  .spinner { border: 4px solid var(--line); border-top: 4px solid var(--blue); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 16px; }
+  @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+  <!-- App Navigation -->
+  <div class="app-tabs">
+    <a href="index.html">Market Dashboard</a>
+    <a href="MarketCommandCenter.html">Market Command Center</a>
+    <a href="market_breadth.html" class="active">Market Breadth</a>
+    <a href="MarketRegime.html">Market Regime</a> 
+    <a href="stockbee_market_monitor_live.html">Stockbee Monitor</a>
+    <a href="sata_watchlist_dashboard.html">SATA Chart</a>
+    <a href="PowerList.html">Power List</a>
+    <a href="liquid_leaders.html">Liquid Leaders</a>
+    <a href="group_momentum.html">Group Momentum</a>
+    <a href="industry_rs_quadrant.html" class="active">Industry RS</a>
+    <a href="PriceStructure.html">Price Structure</a>
+    <a href="StageAnalysis.html">Stage Analysis</a>
+    <a href="tv_watchlist.html">TradingView Watchlist</a>
+    <a href="PortfolioManagement.html">Portfolio Management</a>
+    <a href="Playbook.html">Playbook</a>
+  </div>
+
+  <div id="loadingOverlay">
+    <div class="spinner"></div>
+    <div class="text-sm font-black text-blue uppercase tracking-wider" id="loadStatus">Initializing Telemetry...</div>
+  </div>
+
+  <div class="w-full h-full" id="dashboardContent" style="display:none;">
+    
+    <!-- Top SMAs -->
+    <div class="grid grid-cols-4 gap-4">
+      <div class="bg-white border rounded-lg p-4 flex flex-col justify-center gap-4 shadow-sm">
+        <div>
+          <div class="flex justify-between text-xs font-bold text-muted"><span>New Highs vs New Lows</span><span class="text-blue" id="hlPct">0%</span></div>
+          <div class="ratio-bar-wrap"><div class="bg-blue h-full" id="hlBar" style="width: 50%"></div></div>
+          <div class="flex justify-between text-10 font-bold"><span class="text-blue" id="hlHigh">0 Highs</span><span class="text-red" id="hlLow">0 Lows</span></div>
+        </div>
+        <div>
+          <div class="flex justify-between text-xs font-bold text-muted"><span>Advance vs Decline</span><span class="text-blue" id="adPct">0%</span></div>
+          <div class="ratio-bar-wrap"><div class="bg-blue h-full" id="adBar" style="width: 50%"></div></div>
+          <div class="flex justify-between text-10 font-bold"><span class="text-blue" id="adAdv">0 Advance</span><span class="text-red" id="adDec">0 Decline</span></div>
+        </div>
+      </div>
+      
+      <div class="bg-white border rounded-lg p-4 flex flex-col justify-between shadow-sm">
+        <div><div class="text-10 font-bold text-muted uppercase tracking-wider">Short-Term Trend</div><div class="text-sm font-black mt-1">% > SMA 20</div></div>
+        <div class="flex justify-between items-end mt-2"><div class="text-3xl font-black" id="sma20Val">0%</div><div class="text-10 font-bold px-2 py-1 rounded" id="sma20Badge">Loading</div></div>
+        <div class="flex justify-between items-center mt-3 pt-2 border-t text-10 font-bold"><div class="bg-slate-50 px-2 py-05 rounded uppercase border">Proxy</div><div class="text-muted">Mega-Cap 50</div></div>
+      </div>
+
+      <div class="bg-white border rounded-lg p-4 flex flex-col justify-between shadow-sm">
+        <div><div class="text-10 font-bold text-muted uppercase tracking-wider">Medium-Term Trend</div><div class="text-sm font-black mt-1">% > SMA 50</div></div>
+        <div class="flex justify-between items-end mt-2"><div class="text-3xl font-black" id="sma50Val">0%</div><div class="text-10 font-bold px-2 py-1 rounded" id="sma50Badge">Loading</div></div>
+        <div class="flex justify-between items-center mt-3 pt-2 border-t text-10 font-bold"><div class="bg-slate-50 px-2 py-05 rounded uppercase border">Proxy</div><div class="text-muted">Mega-Cap 50</div></div>
+      </div>
+
+      <div class="bg-white border rounded-lg p-4 flex flex-col justify-between shadow-sm">
+        <div><div class="text-10 font-bold text-muted uppercase tracking-wider">Long-Term Trend</div><div class="text-sm font-black mt-1">% > SMA 200</div></div>
+        <div class="flex justify-between items-end mt-2"><div class="text-3xl font-black" id="sma200Val">0%</div><div class="text-10 font-bold px-2 py-1 rounded" id="sma200Badge">Loading</div></div>
+        <div class="flex justify-between items-center mt-3 pt-2 border-t text-10 font-bold"><div class="bg-slate-50 px-2 py-05 rounded uppercase border">Proxy</div><div class="text-muted">Mega-Cap 50</div></div>
+      </div>
+    </div>
+
+    <!-- Macro Lens -->
+    <div class="flex justify-between items-center bg-slate-800 text-white p-3 rounded-lg mt-4 shadow-sm">
+      <div class="flex items-center gap-4">
+        <div class="text-10 font-black uppercase bg-white text-slate-800 px-2 py-1 rounded">Macro Lens</div>
+        <div class="text-10 font-bold text-faint uppercase tracking-wider">Gold/SPY Ratio</div>
+        <div class="text-sm font-black" id="macroRatio">0.0000</div>
+      </div>
+      <div class="text-10 font-black" id="macroStatus">Loading...</div>
+    </div>
+
+    <!-- Middle Grid: Conditions & Analytics -->
+    <div class="grid grid-cols-12 gap-4 mt-4">
+      <div class="col-span-4 bg-white border rounded-lg p-3 flex flex-col shadow-sm">
+        <div class="flex justify-between items-center border-l-4 border-blue px-2 mb-2">
+          <div class="text-sm font-black">Market Conditions (SPY)</div>
+        </div>
+        <div class="border rounded bg-slate-50 h-48 flex items-center justify-center overflow-hidden">
+          <img src="https://charts2.finviz.com/chart.ashx?t=SPY&ty=c&ta=1&p=d" class="w-full h-full object-contain" alt="SPY" />
+        </div>
+      </div>
+
+      <div class="col-span-4 bg-white border rounded-lg p-3 flex flex-col shadow-sm">
+        <div class="flex justify-between items-center border-l-4 border-blue px-2 mb-2">
+          <div class="text-sm font-black">Market Conditions (QQQ)</div>
+        </div>
+        <div class="border rounded bg-slate-50 h-48 flex items-center justify-center overflow-hidden">
+          <img src="https://charts2.finviz.com/chart.ashx?t=QQQ&ty=c&ta=1&p=d" class="w-full h-full object-contain" alt="QQQ" />
+        </div>
+      </div>
+
+      <div class="col-span-4 flex flex-col gap-4">
+        <div class="bg-white border rounded-lg p-3 shadow-sm">
+          <div class="text-10 font-bold text-muted uppercase tracking-wider mb-2">Market Performance (SPY)</div>
+          <div class="grid grid-cols-4 gap-2 text-center" id="spyPerfGrid">
+            <!-- Injected via JS -->
+          </div>
+        </div>
+        <div class="bg-white border rounded-lg p-3 shadow-sm">
+          <div class="text-9 font-bold text-muted uppercase tracking-wider mb-2">Risk Appetite (Factor/SPY)</div>
+          <div class="grid grid-cols-2 gap-2 text-center text-9 font-bold text-muted" id="factorGrid">
+            <!-- Injected via JS -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Index Cards -->
+    <div class="grid grid-cols-6 gap-4 mt-4" id="indexCardsGrid">
+       <!-- Injected via JS -->
+    </div>
+
+    <!-- Ranked Lists -->
+    <div class="grid grid-cols-5 gap-4 mt-4 h-[350px]">
+      <div class="bg-white border rounded-lg shadow-sm flex flex-col overflow-hidden">
+        <div class="p-2 bg-slate-50 border-b text-10 font-black uppercase text-main">Index ETFs (1W)</div>
+        <div class="flex-1 scroll-y custom-scrollbar p-2 flex flex-col gap-1" id="listIndex"></div>
+      </div>
+      <div class="bg-white border rounded-lg shadow-sm flex flex-col overflow-hidden">
+        <div class="p-2 bg-slate-50 border-b text-10 font-black uppercase text-main">Sector Performance (1W)</div>
+        <div class="flex-1 scroll-y custom-scrollbar p-2 flex flex-col gap-1" id="listSector"></div>
+      </div>
+      <div class="bg-white border rounded-lg shadow-sm flex flex-col overflow-hidden">
+        <div class="p-2 bg-slate-50 border-b text-10 font-black uppercase text-main">Industry Performance (1W)</div>
+        <div class="flex-1 scroll-y custom-scrollbar p-2 flex flex-col gap-1" id="listIndustry"></div>
+      </div>
+      <div class="bg-white border rounded-lg shadow-sm flex flex-col overflow-hidden">
+        <div class="p-2 bg-slate-50 border-b text-10 font-black uppercase text-main">Leveraged ETFs (1W)</div>
+        <div class="flex-1 scroll-y custom-scrollbar p-2 flex flex-col gap-1" id="listLeveraged"></div>
+      </div>
+      <div class="bg-white border rounded-lg shadow-sm flex flex-col overflow-hidden">
+        <div class="p-2 bg-slate-50 border-b text-10 font-black uppercase text-main">Theme Tracker (1W)</div>
+        <div class="flex-1 scroll-y custom-scrollbar p-2 flex flex-col gap-1" id="listTheme"></div>
+      </div>
+    </div>
+
+    <!-- Daily/Weekly Movers -->
+    <div class="grid grid-cols-4 gap-4 mt-4" id="moversGrid">
+      <div class="bg-white border rounded-lg p-3 shadow-sm"><div class="text-10 font-black text-main uppercase border-l-4 border-green pl-2 mb-3">Daily Leaders</div><div class="flex flex-col gap-2" id="dayLead"></div></div>
+      <div class="bg-white border rounded-lg p-3 shadow-sm"><div class="text-10 font-black text-main uppercase border-l-4 border-red pl-2 mb-3">Daily Laggards</div><div class="flex flex-col gap-2" id="dayLag"></div></div>
+      <div class="bg-white border rounded-lg p-3 shadow-sm"><div class="text-10 font-black text-main uppercase border-l-4 border-green pl-2 mb-3">Weekly Leaders</div><div class="flex flex-col gap-2" id="wkLead"></div></div>
+      <div class="bg-white border rounded-lg p-3 shadow-sm"><div class="text-10 font-black text-main uppercase border-l-4 border-red pl-2 mb-3">Weekly Laggards</div><div class="flex flex-col gap-2" id="wkLag"></div></div>
+    </div>
+  </div>
+
+<script>
+/* ============================================================
+   1. CONFIG & UNIVERSE
+   ============================================================ */
+const BREADTH_PROXY = ['AAPL','MSFT','NVDA','AMZN','META','GOOGL','BRK-B','TSLA','AVGO','JPM','UNH','V','XOM','JNJ','MA','PG','HD','COST','ABBV','MRK','CRM','CVX','PEP','ADBE','AMD','WMT','BAC','ACN','MCD','LIN','TMO','CSCO','ABT','NFLX','DHR','ORCL','TXN','WFC','INTC','CMCSA','PFE','PM','COP','VZ','NEE','IBM','RTX','HON','QCOM','UNP'];
+const INDEX_ETFS = ['QQQ','IWO','QQQE','UUP','TLT','IWM','SPY','RSP','IBIT','DIA'];
+const SECTOR_ETFS = ['XLK','XLF','XLV','XLE','XLY','XLI','XLC','XLP','XLRE','XLB','XLU'];
+const LEV_ETFS = ['SOXL','TQQQ','UPRO','FAS','SPXL','SOXS','SQQQ'];
+const INDUSTRY_ETFS = ['SMH','XBI','KRE','XRT','JETS','ITA','IPO','GDX','XOP','TAN','IGV','URA','COPX','REMX','FINX','IYT','LIT','CIBR','SLX','IHI','SIL'];
+const THEME_ETFS = ['ARKG','QTUM','AIQ','ITB','ROBO','SOCL','KWEB'];
+const FACTORS = [{name:'Momentum', tk:'SPMO'}, {name:'Growth', tk:'QQQ'}, {name:'Value', tk:'VLUE'}, {name:'Low Vol', tk:'VYM'}];
+const ALL_TICKERS = [...new Set([...BREADTH_PROXY, ...INDEX_ETFS, ...SECTOR_ETFS, ...LEV_ETFS, ...INDUSTRY_ETFS, ...THEME_ETFS, 'GLD', '^VIX', 'BTC-USD', 'SPMO', 'VLUE', 'VYM'])];
+
+const STATE = { data: {} };
+const PROXY_PROVIDERS = [
+  url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+  url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`
+];
+
+/* ============================================================
+   2. DATA ENGINE
+   ============================================================ */
+async function fetchYahooSeries(symbol) {
+  const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1y`;
+  for (const proxyBuilder of PROXY_PROVIDERS) {
+    try {
+      const res = await fetch(proxyBuilder(targetUrl), { cache: "no-store", signal: AbortSignal.timeout(4500) });
+      if (!res.ok) continue;
+      const json = JSON.parse(await res.text());
+      if (!json?.chart?.result?.[0]) continue;
+
+      const result = json.chart.result[0];
+      const t = result.timestamp || [];
+      const q = result.indicators?.quote?.[0] || {};
+      const bars = [];
+      for(let i=0; i<t.length; i++) {
+        if(q.close?.[i] != null) bars.push({ c: q.close[i], h: q.high[i], l: q.low[i] });
+      }
+      return bars;
+    } catch(e) {}
+  }
+  return null;
+}
+
+function sma(bars, len) {
+  if (bars.length < len) return null;
+  const slice = bars.slice(-len);
+  return slice.reduce((sum, b) => sum + b.c, 0) / len;
+}
+
+function perf(bars, days) {
+  if (bars.length < days + 1) return 0;
+  const current = bars[bars.length - 1].c;
+  const past = bars[bars.length - 1 - days].c;
+  return ((current / past) - 1) * 100;
+}
+
+/* ============================================================
+   3. HYDRATION ENGINE
+   ============================================================ */
+async function buildDashboard() {
+  const status = document.getElementById('loadStatus');
+  let count = 0;
+
+  // Staggered fetching to avoid 429 errors
+  for (let i = 0; i < ALL_TICKERS.length; i++) {
+    const tk = ALL_TICKERS[i];
+    const bars = await fetchYahooSeries(tk);
+    if (bars && bars.length > 20) {
+      STATE.data[tk] = bars;
+    }
+    count++;
+    status.innerHTML = `Syncing Live Feeds... (${count}/${ALL_TICKERS.length})`;
+    await new Promise(r => setTimeout(r, 150));
+  }
+
+  document.getElementById('loadingOverlay').style.display = 'none';
+  document.getElementById('dashboardContent').style.display = 'block';
+  renderAll();
+}
+
+function renderAll() {
+  // 1. BREADTH (Mega-Cap Proxy)
+  let a20 = 0, a50 = 0, a200 = 0, adv = 0, dec = 0, high = 0, low = 0, valid = 0;
+  BREADTH_PROXY.forEach(tk => {
+    const bars = STATE.data[tk];
+    if(!bars) return;
+    valid++;
+    const c = bars[bars.length-1].c;
+    const s20 = sma(bars, 20); const s50 = sma(bars, 50); const s200 = sma(bars, 200);
+    if (s20 && c > s20) a20++;
+    if (s50 && c > s50) a50++;
+    if (s200 && c > s200) a200++;
+    if (c > bars[bars.length-2].c) adv++; else dec++;
+    
+    const max252 = Math.max(...bars.slice(-252).map(b => b.h));
+    const min252 = Math.min(...bars.slice(-252).map(b => b.l));
+    if (c >= max252 * 0.98) high++;
+    if (c <= min252 * 1.02) low++;
+  });
+
+  const p20 = ((a20/valid)*100).toFixed(1); const p50 = ((a50/valid)*100).toFixed(1); const p200 = ((a200/valid)*100).toFixed(1);
+  const upBadge = '<div class="bg-green-light text-green px-2 py-1 rounded">+Pos</div>';
+  const dnBadge = '<div class="bg-red-light text-red px-2 py-1 rounded">-Neg</div>';
+  
+  document.getElementById('sma20Val').innerText = `${p20}%`; document.getElementById('sma20Badge').innerHTML = p20 > 50 ? upBadge : dnBadge;
+  document.getElementById('sma50Val').innerText = `${p50}%`; document.getElementById('sma50Badge').innerHTML = p50 > 50 ? upBadge : dnBadge;
+  document.getElementById('sma200Val').innerText = `${p200}%`; document.getElementById('sma200Badge').innerHTML = p200 > 50 ? upBadge : dnBadge;
+
+  const totalAD = adv + dec;
+  const adP = totalAD ? ((adv/totalAD)*100).toFixed(0) : 0;
+  document.getElementById('adPct').innerText = `${adP}%`; document.getElementById('adBar').style.width = `${adP}%`;
+  document.getElementById('adAdv').innerText = `${adv} Advance`; document.getElementById('adDec').innerText = `${dec} Decline`;
+
+  const totalHL = high + low;
+  const hlP = totalHL ? ((high/totalHL)*100).toFixed(0) : 0;
+  document.getElementById('hlPct').innerText = `${hlP}%`; document.getElementById('hlBar').style.width = `${hlP}%`;
+  document.getElementById('hlHigh').innerText = `${high} Highs`; document.getElementById('hlLow').innerText = `${low} Lows`;
+
+  // 2. MACRO LENS
+  if (STATE.data['GLD'] && STATE.data['SPY']) {
+    const rNow = STATE.data['GLD'][STATE.data['GLD'].length-1].c / STATE.data['SPY'][STATE.data['SPY'].length-1].c;
+    const rOld = STATE.data['GLD'][STATE.data['GLD'].length-6].c / STATE.data['SPY'][STATE.data['SPY'].length-6].c;
+    const rPerf = ((rNow/rOld)-1)*100;
+    document.getElementById('macroRatio').innerText = rNow.toFixed(4);
+    const mStat = document.getElementById('macroStatus');
+    mStat.innerText = `${rPerf > 0 ? '+' : ''}${rPerf.toFixed(2)}% (${rPerf > 0 ? 'Physical Assets Dominant' : 'Paper Assets Dominant'})`;
+    mStat.className = `text-10 font-black ${rPerf > 0 ? 'text-green' : 'text-pink'}`;
+  }
+
+  // 3. SPY PERF & FACTORS
+  const spyBars = STATE.data['SPY'];
+  if (spyBars) {
+    const s1w = perf(spyBars, 5); const s1m = perf(spyBars, 21); const s1y = perf(spyBars, 252);
+    document.getElementById('spyPerfGrid').innerHTML = `
+      <div class="flex flex-col items-center"><span class="text-10 text-muted font-bold">1W</span><span class="text-sm font-black my-1 ${s1w>0?'text-green':'text-red'}">${s1w>0?'+':''}${s1w.toFixed(2)}%</span></div>
+      <div class="flex flex-col items-center"><span class="text-10 text-muted font-bold">1M</span><span class="text-sm font-black my-1 ${s1m>0?'text-green':'text-red'}">${s1m>0?'+':''}${s1m.toFixed(2)}%</span></div>
+      <div class="flex flex-col items-center"><span class="text-10 text-muted font-bold">1Y</span><span class="text-sm font-black my-1 ${s1y>0?'text-green':'text-red'}">${s1y>0?'+':''}${s1y.toFixed(2)}%</span></div>
+      <div class="flex flex-col items-center"><span class="text-10 text-muted font-bold">VIX</span><span class="text-sm font-black my-1">${STATE.data['^VIX'] ? STATE.data['^VIX'][STATE.data['^VIX'].length-1].c.toFixed(2) : '-'}</span></div>
+    `;
+    
+    let fHtml = '';
+    FACTORS.forEach(f => {
+      const fb = STATE.data[f.tk];
+      let p = 0;
+      if (fb) {
+        const rNow = fb[fb.length-1].c / spyBars[spyBars.length-1].c;
+        const rOld = fb[fb.length-6].c / spyBars[spyBars.length-6].c;
+        p = ((rNow/rOld)-1)*100;
+      }
+      fHtml += `<div>${f.name} (${f.tk})<br><span class="text-sm font-black ${p>0?'text-green':'text-red'}">${p>0?'+':''}${p.toFixed(2)}%</span></div>`;
+    });
+    document.getElementById('factorGrid').innerHTML = fHtml;
+  }
+
+  // 4. INDEX CARDS
+  const iCards = [
+    {tk: 'RSP', n: 'S&P 500 Eq Wt', c: 'blue'}, {tk: 'QQQE', n: 'NASDAQ 100 Eq', c: 'blue'}, {tk: 'IWM', n: 'Russell 2000', c: 'green'},
+    {tk: 'DIA', n: 'Dow Jones', c: 'amber'}, {tk: 'BTC-USD', n: 'Bitcoin', c: 'amber'}, {tk: '^VIX', n: 'Volatility', c: 'slate-500'}
+  ];
+  let iHtml = '';
+  iCards.forEach(ic => {
+    const b = STATE.data[ic.tk];
+    const px = b ? b[b.length-1].c.toFixed(2) : '-';
+    const chg = b ? perf(b, 1) : 0;
+    iHtml += `<div class="bg-white border border-l-4 border-l-${ic.c} rounded-lg p-3 flex flex-col justify-between shadow-sm">
+      <div><div class="text-10 font-bold text-muted uppercase tracking-wider">${ic.n}</div><div class="text-xs font-black mt-1">${ic.tk.replace('-USD','')}</div></div>
+      <div class="flex justify-between items-end mt-2"><div class="text-xl font-black">${ic.tk === '^VIX' ? '' : '$'}${px}</div><div class="text-xs font-bold ${chg>0?'text-green':'text-red'}">${chg>0?'+':''}${chg.toFixed(2)}%</div></div>
+    </div>`;
+  });
+  document.getElementById('indexCardsGrid').innerHTML = iHtml;
+
+  // 5. RANKED LISTS
+  const buildList = (listArr, targetId) => {
+    const ranked = listArr.map(tk => ({tk, p: STATE.data[tk] ? perf(STATE.data[tk], 5) : 0})).sort((a,b) => b.p - a.p);
+    const maxP = Math.max(...ranked.map(r => Math.abs(r.p)), 1);
+    let html = '';
+    ranked.forEach(r => {
+      const w = (Math.abs(r.p) / maxP) * 85;
+      html += `<div class="flex items-center text-10 font-bold"><span class="w-10 truncate">${r.tk}</span><div class="flex-1 bg-slate-50 h-4 rounded mx-2 overflow-hidden"><div class="${r.p>0?'bg-blue':'bg-pink'} h-full flex justify-end items-center px-1 text-white" style="width: ${w}%">${r.p>0?'+':''}${r.p.toFixed(2)}%</div></div></div>`;
+    });
+    document.getElementById(targetId).innerHTML = html;
+  };
+  buildList(INDEX_ETFS, 'listIndex'); buildList(SECTOR_ETFS, 'listSector'); buildList(INDUSTRY_ETFS, 'listIndustry'); buildList(LEV_ETFS, 'listLeveraged'); buildList(THEME_ETFS, 'listTheme');
+
+  // 6. MOVERS (Daily & Weekly)
+  const allInd = INDUSTRY_ETFS.map(tk => {
+    const b = STATE.data[tk];
+    return {tk, p1d: b ? perf(b,1) : 0, p1w: b ? perf(b,5) : 0, px: b ? b[b.length-1].c : 0};
+  });
+  const buildMovers = (arr, valKey, targetId, isLead) => {
+    const sorted = [...arr].sort((a,b) => isLead ? b[valKey] - a[valKey] : a[valKey] - b[valKey]).slice(0,4);
+    let html = '';
+    sorted.forEach(r => {
+      html += `<div class="border rounded p-2 flex justify-between items-center shadow-sm">
+        <div class="flex items-center gap-2"><div class="${isLead?'bg-green-light text-green':'bg-red-light text-red'} font-black text-10 w-9 h-7 flex items-center justify-center rounded">${r[valKey]>0?'+':''}${r[valKey].toFixed(1)}</div>
+        <div><div class="text-xs font-black text-main">${r.tk}</div></div></div>
+        <div class="text-right"><div class="text-xs font-black text-main">$${r.px.toFixed(2)}</div></div>
+      </div>`;
+    });
+    document.getElementById(targetId).innerHTML = html;
+  };
+  buildMovers(allInd, 'p1d', 'dayLead', true); buildMovers(allInd, 'p1d', 'dayLag', false);
+  buildMovers(allInd, 'p1w', 'wkLead', true); buildMovers(allInd, 'p1w', 'wkLag', false);
+}
+
+window.onload = buildDashboard;
+</script>
+</body>
+</html>
