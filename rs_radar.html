@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sector & Industry RS Radar</title>
+    <title>Sector & Industry RS Radar — Institutional Suite</title>
     
     <!-- Inter Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -106,10 +106,10 @@
         .app-tabs a:hover:not(.active) { color: var(--text-primary); background: var(--hover-bg); }
 
         /* ==========================================================================
-           LAYOUT SYSTEM (100% FULL WIDTH)
+           LAYOUT SYSTEM
            ========================================================================== */
         .dashboard-container {
-            width: 100%;
+            max-width: 1920px;
             margin: 0 auto;
             display: flex;
             flex-direction: column;
@@ -137,7 +137,7 @@
         }
 
         .grid-kpi { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr; gap: var(--spacing-grid); }
-        .grid-main { display: grid; grid-template-columns: 2fr 4.5fr 3.5fr 2fr; gap: var(--spacing-grid); min-height: 480px; }
+        .grid-main { display: grid; grid-template-columns: 2fr 4fr 4fr 2fr; gap: var(--spacing-grid); min-height: 400px; }
         .grid-bottom { display: grid; grid-template-columns: 6fr 6fr; gap: var(--spacing-grid); }
 
         /* ==========================================================================
@@ -165,12 +165,12 @@
         /* ==========================================================================
            KPI CARDS
            ========================================================================== */
-        .kpi-value { font-size: 38px; font-weight: 700; line-height: 1.1; margin: 8px 0; }
+        .kpi-value { font-size: 42px; font-weight: 700; line-height: 1.1; margin: 8px 0; }
         .kpi-subtext { font-size: 12px; color: var(--text-secondary); }
         .kpi-regime { display: flex; justify-content: space-between; align-items: center; }
         .kpi-regime-left { flex: 1; }
         .kpi-regime-right { width: 80px; height: 80px; position: relative; }
-        .regime-status { font-size: 18px; font-weight: 800; color: var(--color-down); display: flex; align-items: center; gap: 8px; margin: 4px 0 8px 0; }
+        .regime-status { font-size: 20px; font-weight: 700; color: var(--color-up); display: flex; align-items: center; gap: 8px; margin: 4px 0 8px 0; }
         .mini-chart-container { height: 40px; width: 100%; margin-top: auto; }
 
         /* ==========================================================================
@@ -183,29 +183,29 @@
         .data-table tbody tr:hover { background-color: var(--hover-bg); }
         .heatmap-cell { text-align: center; font-weight: 600; border-radius: 4px; padding: 4px 8px !important; margin: 2px; }
 
-        .rank-section { margin-bottom: 16px; }
+        .rank-section { margin-bottom: 20px; }
         .rank-section-title { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
-        .rank-item { display: flex; align-items: center; padding: 5px 0; font-size: 12.5px; }
-        .rank-num { width: 20px; height: 20px; background-color: var(--panel-border); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 11px; margin-right: 10px; font-weight: 600; }
+        .rank-item { display: flex; align-items: center; padding: 6px 0; font-size: 13px; }
+        .rank-num { width: 20px; height: 20px; background-color: var(--panel-border); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 11px; margin-right: 12px; font-weight: 600; }
         .rank-item.top .rank-num { background-color: var(--color-up-bg); color: var(--color-up); }
         .rank-item.bottom .rank-num { background-color: var(--color-down-bg); color: var(--color-down); }
         .rank-name { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .rank-ticker { width: 45px; color: var(--text-secondary); font-weight: 600; }
-        .rank-score { width: 35px; text-align: right; }
-        .rank-change { width: 45px; text-align: right; font-weight: 600; }
+        .rank-ticker { width: 50px; color: var(--text-secondary); font-weight: 600; }
+        .rank-score { width: 40px; text-align: right; }
+        .rank-change { width: 50px; text-align: right; font-weight: 600; }
 
-        .badge { padding: 4px 8px; border-radius: 4px; font-size: 10.5px; font-weight: 700; text-transform: uppercase; }
-        .badge.leaders { background-color: var(--color-up-bg); color: var(--color-up); }
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+        .badge.leader { background-color: var(--color-up-bg); color: var(--color-up); }
         .badge.improving { background-color: rgba(88, 166, 255, 0.1); color: var(--color-neutral); }
         .badge.weakening { background-color: rgba(210, 153, 34, 0.1); color: var(--color-warning); }
-        .badge.laggards { background-color: var(--color-down-bg); color: var(--color-down); }
+        .badge.laggard { background-color: var(--color-down-bg); color: var(--color-down); }
 
         /* ==========================================================================
            CHARTS CONTAINERS
            ========================================================================== */
-        .chart-container { position: relative; flex: 1; width: 100%; height: 100%; min-height: 380px; }
-        .how-to-read { margin-top: auto; border-top: 1px solid var(--panel-border); padding-top: 12px; font-size: 11px; color: var(--text-secondary); }
-        .how-to-read p { margin-bottom: 4px; }
+        .chart-container { position: relative; flex: 1; width: 100%; height: 100%; min-height: 250px; }
+        .how-to-read { margin-top: auto; border-top: 1px solid var(--panel-border); padding-top: 16px; font-size: 11px; color: var(--text-secondary); }
+        .how-to-read p { margin-bottom: 6px; }
 
         /* OVERLAY */
         #loadingOverlay { position: fixed; inset: 0; background: var(--bg-color); opacity: 0.98; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; }
@@ -215,12 +215,206 @@
         @media (max-width: 1600px) {
             .grid-kpi { grid-template-columns: repeat(4, 1fr); }
             .kpi-panel-1 { grid-column: span 2; }
-            .grid-main { grid-template-columns: 1fr 1fr; }
+            .grid-main { grid-template-columns: 3fr 5fr 4fr; }
+            .grid-main > .panel:last-child { display: none; }
         }
         @media (max-width: 1200px) {
             .grid-main { grid-template-columns: 1fr; }
             .grid-bottom { grid-template-columns: 1fr; }
         }
+    
+
+        /* ======================================================================
+           SHARED INSTITUTIONAL SUITE LAYOUT ENGINE
+           Mirrors Institutional_PM_Updated_Fullscreen.html
+           ====================================================================== */
+        :root {
+            --suite-gutter: 10px;
+            --suite-gap: 10px;
+            --suite-radius: 10px;
+            --suite-nav-h: 40px;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        html, body { width: 100%; max-width: none; overflow-x: hidden; }
+        body {
+            padding: 8px 10px 36px;
+            font-size: 12px;
+            background:
+              radial-gradient(ellipse 1200px 500px at 15% -5%, rgba(32,217,184,.05), transparent 60%),
+              radial-gradient(ellipse 900px 500px at 100% 0%, rgba(255,92,114,.04), transparent 55%),
+              var(--bg-color);
+        }
+
+        .app-tabs {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            display: flex;
+            flex-wrap: nowrap;
+            gap: 4px;
+            min-height: var(--suite-nav-h);
+            margin: 0 0 10px;
+            overflow-x: auto;
+            overflow-y: hidden;
+            border-bottom: 1px solid var(--panel-border);
+            background: color-mix(in srgb, var(--bg-color) 94%, transparent);
+            backdrop-filter: blur(14px);
+            scrollbar-width: thin;
+        }
+        .app-tabs a {
+            flex: 0 0 auto;
+            padding: 9px 14px;
+            font-family: var(--font-mono);
+            font-size: 10px;
+            letter-spacing: .04em;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .dashboard-container {
+            width: 100%;
+            max-width: none;
+            margin: 0;
+            gap: var(--suite-gap);
+        }
+
+        .header {
+            min-height: 66px;
+            padding: 0 0 10px;
+            gap: 12px;
+            align-items: flex-end;
+        }
+        .header-title h1 {
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: -.01em;
+        }
+        .header-title p,
+        .status-badge,
+        .btn-outline,
+        .theme-toggle button {
+            font-family: var(--font-mono);
+        }
+        .header-controls { flex-wrap: wrap; justify-content: flex-end; }
+
+        .panel {
+            min-width: 0;
+            padding: 14px;
+            border-radius: var(--suite-radius);
+            box-shadow: none;
+        }
+        .panel:hover { box-shadow: none; transform: none; }
+        .panel-header {
+            margin-bottom: 10px;
+            font-family: var(--font-mono);
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: .10em;
+        }
+
+        /* 12-column desktop framework */
+        .grid-kpi,
+        .grid-main,
+        .grid-bottom {
+            display: grid;
+            grid-template-columns: repeat(12, minmax(0, 1fr));
+            gap: var(--suite-gap);
+            width: 100%;
+        }
+
+        .grid-kpi > .panel:nth-child(1) { grid-column: span 3; }
+        .grid-kpi > .panel:nth-child(2) { grid-column: span 2; }
+        .grid-kpi > .panel:nth-child(3) { grid-column: span 2; }
+        .grid-kpi > .panel:nth-child(4) { grid-column: span 2; }
+        .grid-kpi > .panel:nth-child(5) { grid-column: span 1; }
+        .grid-kpi > .panel:nth-child(6) { grid-column: span 1; }
+        .grid-kpi > .panel:nth-child(7) { grid-column: span 1; }
+        .grid-kpi > .panel { min-height: 150px; }
+
+        .grid-main { min-height: 500px; }
+        .grid-main > .panel:nth-child(1) { grid-column: span 2; }
+        .grid-main > .panel:nth-child(2) { grid-column: span 5; }
+        .grid-main > .panel:nth-child(3) { grid-column: span 4; }
+        .grid-main > .panel:nth-child(4) { grid-column: span 1; }
+        .grid-main > .panel { min-height: 500px; }
+
+        .grid-bottom > .panel:nth-child(1) { grid-column: span 6; }
+        .grid-bottom > .panel:nth-child(2) { grid-column: span 6; }
+        .grid-bottom > .panel { min-height: 330px; }
+
+        .kpi-value { font-size: 34px; margin: 6px 0; }
+        .kpi-subtext { font-family: var(--font-mono); font-size: 10px; }
+        .regime-status { font-family: var(--font-mono); font-size: 16px; }
+        .mini-chart-container { height: 34px; }
+
+        .data-table { font-size: 11px; }
+        .data-table th {
+            padding: 7px 8px;
+            font-family: var(--font-mono);
+            font-size: 9px;
+        }
+        .data-table td { padding: 8px; }
+        .rank-section { margin-bottom: 14px; }
+        .rank-section-title,
+        .rank-item,
+        .how-to-read { font-family: var(--font-mono); }
+        .rank-item { font-size: 10.5px; padding: 5px 0; }
+        .rank-num { margin-right: 8px; }
+
+        .chart-container { min-height: 410px; }
+        .grid-main > .panel:nth-child(4) .data-table th,
+        .grid-main > .panel:nth-child(4) .data-table td { padding-left: 5px; padding-right: 5px; font-size: 9.5px; }
+
+        #loadingOverlay { background: var(--bg-color); }
+
+        @media (min-width: 2200px) {
+            body { padding-left: 12px; padding-right: 12px; }
+            .grid-kpi > .panel { min-height: 160px; }
+            .grid-main, .grid-main > .panel { min-height: 560px; }
+            .chart-container { min-height: 470px; }
+        }
+
+        @media (max-width: 1700px) {
+            .grid-kpi > .panel:nth-child(1) { grid-column: span 4; }
+            .grid-kpi > .panel:nth-child(2),
+            .grid-kpi > .panel:nth-child(3),
+            .grid-kpi > .panel:nth-child(4),
+            .grid-kpi > .panel:nth-child(5) { grid-column: span 2; }
+            .grid-kpi > .panel:nth-child(6),
+            .grid-kpi > .panel:nth-child(7) { grid-column: span 1; }
+            .grid-main > .panel:nth-child(1) { grid-column: span 2; }
+            .grid-main > .panel:nth-child(2) { grid-column: span 5; }
+            .grid-main > .panel:nth-child(3) { grid-column: span 4; }
+            .grid-main > .panel:nth-child(4) { grid-column: span 1; }
+        }
+
+        @media (max-width: 1350px) {
+            .grid-kpi > .panel { grid-column: span 3 !important; }
+            .grid-kpi > .panel:nth-child(1) { grid-column: span 6 !important; }
+            .grid-main > .panel:nth-child(1) { grid-column: span 3; }
+            .grid-main > .panel:nth-child(2) { grid-column: span 9; }
+            .grid-main > .panel:nth-child(3) { grid-column: span 8; }
+            .grid-main > .panel:nth-child(4) { grid-column: span 4; }
+        }
+
+        @media (max-width: 980px) {
+            body { padding: 8px; }
+            .header { align-items: flex-start; flex-direction: column; }
+            .header-controls { width: 100%; justify-content: flex-start; }
+            .grid-kpi > .panel,
+            .grid-main > .panel,
+            .grid-bottom > .panel { grid-column: 1 / -1 !important; }
+            .grid-main > .panel { min-height: auto; }
+            .chart-container { min-height: 360px; }
+        }
+
+        @media (max-width: 640px) {
+            .grid-kpi > .panel { min-height: 130px; }
+            .panel { padding: 11px; }
+            .header-title h1 { font-size: 20px; }
+            .chart-container { min-height: 300px; }
+        }
+
     </style>
 </head>
 <body>
@@ -229,15 +423,15 @@
     <div class="app-tabs">
       <a href="index.html">Market Dashboard</a>
       <a href="MarketCommandCenter.html">Market Command Center</a>
-        <a href="rs_radar.html" class="active">RS Radar</a>
+      <a href="Institutional_PM_Updated_Fullscreen.html">Institutional Update</a>
       <a href="market_breadth.html">Market Breadth</a>
-      <a href="MarketRegime.html">Market Regime</a> 
+      <a href="rs_radar.html" class="active">RS Radar</a>
+      <a href="MarketRegime.html">Market Regime</a>
       <a href="stockbee_market_monitor_live.html">Stockbee Monitor</a>
       <a href="sata_watchlist_dashboard.html">SATA Chart</a>
       <a href="PowerList.html">Power List</a>
       <a href="liquid_leaders.html">Liquid Leaders</a>
       <a href="group_momentum.html">Group Momentum</a>
-      <a href="rs_radar.html" class="active">RS Radar</a>
       <a href="PriceStructure.html">Price Structure</a>
       <a href="StageAnalysis.html">Stage Analysis</a>
       <a href="tv_watchlist.html">TradingView Watchlist</a>
@@ -247,7 +441,7 @@
 
 <div id="loadingOverlay">
     <div class="spinner"></div>
-    <div style="font-size: 11px; text-transform: uppercase; font-weight: 700; color: var(--color-neutral); letter-spacing: 1px;" id="loadStatus">Initializing Live Telemetry...</div>
+    <div style="font-size: 11px; text-transform: uppercase; font-weight: 700; color: var(--color-neutral); letter-spacing: 1px;" id="loadStatus">Initializing Live Feeds...</div>
 </div>
 
 <div class="dashboard-container" id="mainDashboard" style="visibility: hidden;">
@@ -260,8 +454,8 @@
         </div>
         <div class="header-controls">
             <div class="status-badge">
-                <div class="status-dot" id="statusDot"></div>
-                Status: <span class="text-up" id="streamStatus">Active (Live Feeds)</span>
+                <div class="status-dot"></div>
+                Status: <span class="text-up" id="streamStatus">Active (Live Streams)</span>
             </div>
             <button class="btn-outline" onclick="fetchLiveData()">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"></path><path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path><path d="M3 22v-6h6"></path><path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path></svg>
@@ -282,9 +476,10 @@
                 <div class="kpi-regime-left">
                     <div class="panel-header" style="margin-bottom: 4px;">Market RS Regime</div>
                     <div class="regime-status" id="regimeTitle">
-                        DEFENSIVE MARKET REGIME
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4z"></path><path d="M8 8V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        ANALYZING...
                     </div>
-                    <div class="kpi-subtext" style="margin-bottom: 8px;" id="regimeSubtext">Defensive leadership driving market internals. Capital hiding in Health Care & Energy.</div>
+                    <div class="kpi-subtext" style="margin-bottom: 8px;" id="regimeSubtext">Processing market internals</div>
                 </div>
                 <div class="kpi-regime-right">
                     <canvas id="gaugeConfidence"></canvas>
@@ -294,11 +489,11 @@
             <div style="display: flex; gap: 24px; margin-top: 12px; border-top: 1px solid var(--panel-border); padding-top: 12px;">
                 <div>
                     <div class="panel-header" style="font-size: 10px; margin-bottom: 2px;">RS Confidence</div>
-                    <div class="text-down" style="font-weight: 600; font-size: 13px;" id="kpiConfText">WEAK / DEFENSIVE</div>
+                    <div class="text-up" style="font-weight: 600; font-size: 13px;" id="kpiConfText">--</div>
                 </div>
                 <div>
                     <div class="panel-header" style="font-size: 10px; margin-bottom: 2px;">Market Breadth</div>
-                    <div class="text-down" style="font-weight: 600; font-size: 13px;" id="kpiBreadthText">DETERIORATING</div>
+                    <div class="text-up" style="font-weight: 600; font-size: 13px;" id="kpiBreadthText">--</div>
                 </div>
             </div>
         </div>
@@ -328,16 +523,16 @@
         <!-- KPI 5 -->
         <div class="panel">
             <div class="panel-header">Leadership Concentration</div>
-            <div class="kpi-value text-warning" id="kpiConc">HIGH</div>
-            <div class="kpi-subtext" id="kpiConcSub">Defensive Cluster</div>
+            <div class="kpi-value text-neutral" id="kpiConc">--</div>
+            <div class="kpi-subtext" id="kpiConcSub">--</div>
             <div class="mini-chart-container"><canvas id="miniChartConc"></canvas></div>
         </div>
 
         <!-- KPI 6 -->
         <div class="panel">
             <div class="panel-header">RS Momentum</div>
-            <div class="kpi-value text-down" style="font-size: 22px; line-height: 2;" id="kpiMom">WEAKENING</div>
-            <div class="kpi-subtext" id="kpiMomSub">Growth Lagging</div>
+            <div class="kpi-value" style="font-size: 24px; line-height: 1.8;" id="kpiMom">--</div>
+            <div class="kpi-subtext" id="kpiMomSub">--</div>
             <div class="mini-chart-container"><canvas id="miniChartMom"></canvas></div>
         </div>
 
@@ -384,18 +579,19 @@
                 <p>> 60 = Outperforming<br>< 40 = Underperforming</p>
                 <p><strong>Momentum:</strong> 1W acceleration</p>
                 <p><strong>Trend:</strong> 1M & 3M direction</p>
+                <p><strong>Breadth:</strong> Distance from 200DMA</p>
             </div>
         </div>
 
         <!-- Center: Scatter Plot -->
         <div class="panel">
-            <div class="panel-header">RS Momentum Map (Sectors RRG Quadrant)</div>
+            <div class="panel-header">RS Momentum Map (Sectors)</div>
             <div class="chart-container">
                 <canvas id="scatterChart"></canvas>
             </div>
             <div style="display: flex; gap: 16px; margin-top: 12px; font-size: 12px; color: var(--text-secondary);">
                 <span>Bubble Size = RS Score</span>
-                <span>Labels = Ticker (Sector Name)</span>
+                <span>Color = RS Momentum</span>
             </div>
         </div>
 
@@ -495,7 +691,7 @@
     </div>
     
     <div style="text-align: center; color: var(--text-muted); font-size: 11px; margin-top: 16px;">
-        RS Score = Percentage vs SPY (Normalized to 0-100) &nbsp;|&nbsp; Live Telemetry Engine &nbsp;|&nbsp; Source: Yahoo Finance Proxy
+        RS Score = Percentage vs SPY (Normalized to 0-100) &nbsp;|&nbsp; Data Fetched Live &nbsp;|&nbsp; Source: Yahoo Finance Proxy
     </div>
 
 </div>
@@ -506,17 +702,12 @@
 <script>
     // --- Configuration & State ---
     const SECTORS = [
-        {tk: 'XLK', n: 'Technology', col: '#3fb950', isDefensive: false}, 
-        {tk: 'XLI', n: 'Industrials', col: '#58a6ff', isDefensive: false}, 
-        {tk: 'XLF', n: 'Financials', col: '#388bfd', isDefensive: false}, 
-        {tk: 'XLC', n: 'Comm. Services', col: '#a371f7', isDefensive: false},
-        {tk: 'XLB', n: 'Materials', col: '#8b949e', isDefensive: false}, 
-        {tk: 'XLE', n: 'Energy', col: '#d29922', isDefensive: true},
-        {tk: 'XLY', n: 'Cons Disc', col: '#e36209', isDefensive: false}, 
-        {tk: 'XLV', n: 'Health Care', col: '#f85149', isDefensive: true},
-        {tk: 'XLRE', n: 'Real Estate', col: '#da3633', isDefensive: true}, 
-        {tk: 'XLP', n: 'Cons Staples', col: '#484f58', isDefensive: true}, 
-        {tk: 'XLU', n: 'Utilities', col: '#c9d1d9', isDefensive: true}
+        {tk: 'XLK', n: 'Technology', col: '#3fb950'}, {tk: 'XLI', n: 'Industrials', col: '#58a6ff'}, 
+        {tk: 'XLF', n: 'Financials', col: '#388bfd'}, {tk: 'XLC', n: 'Comm. Services', col: '#a371f7'},
+        {tk: 'XLB', n: 'Materials', col: '#8b949e'}, {tk: 'XLE', n: 'Energy', col: '#d29922'},
+        {tk: 'XLY', n: 'Cons Disc', col: '#e36209'}, {tk: 'XLV', n: 'Health Care', col: '#f85149'},
+        {tk: 'XLRE', n: 'Real Estate', col: '#da3633'}, {tk: 'XLP', n: 'Cons Staples', col: '#484f58'}, 
+        {tk: 'XLU', n: 'Utilities', col: '#c9d1d9'}
     ];
 
     const INDUSTRIES = [
@@ -542,33 +733,6 @@
 
     Chart.defaults.color = '#8b949e';
     Chart.defaults.font.family = "'Inter', sans-serif";
-
-    // Custom Plugin to Render Name & Ticker directly on Bubbles in the Scatter Chart
-    const bubbleLabelPlugin = {
-        id: 'bubbleLabels',
-        afterDatasetsDraw(chart) {
-            const { ctx } = chart;
-            chart.data.datasets.forEach((dataset, datasetIndex) => {
-                const meta = chart.getDatasetMeta(datasetIndex);
-                meta.data.forEach((element, index) => {
-                    const dataPoint = dataset.data[index];
-                    if (!dataPoint) return;
-                    const { x, y } = element.tooltipPosition();
-                    ctx.save();
-                    ctx.font = "900 11px 'Inter', sans-serif";
-                    ctx.fillStyle = document.documentElement.getAttribute('data-theme') === 'dark' ? '#ffffff' : '#000000';
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'bottom';
-                    // Text offset slightly above the bubble radius
-                    ctx.fillText(`${dataPoint.ticker}`, x, y - dataPoint.r - 3);
-                    ctx.font = "600 9.5px 'Inter', sans-serif";
-                    ctx.fillStyle = document.documentElement.getAttribute('data-theme') === 'dark' ? '#8b949e' : '#57606a';
-                    ctx.fillText(`${dataPoint.label}`, x, y + dataPoint.r + 12);
-                    ctx.restore();
-                });
-            });
-        }
-    };
 
     // --- Data Fetching ---
     async function fetchYahooSeries(symbol) {
@@ -602,7 +766,7 @@
             if (bars && bars.length > 20) STATE.data[tk] = bars;
             count++;
             status.innerHTML = `Fetching Live Stream... (${count}/${ALL_TICKERS.length})`;
-            await new Promise(r => setTimeout(r, 80)); // Rate limit protection
+            await new Promise(r => setTimeout(r, 100)); // Rate limit protection
         }
 
         document.getElementById('loadingOverlay').style.display = 'none';
@@ -637,13 +801,13 @@
                 const d3m = calcPerf(bars, 63) - spy3m;
                 
                 const c = bars[bars.length-1].c;
-                const sma200 = bars.length > 100 ? bars.slice(-100).reduce((sum, b) => sum + b.c, 0) / 100 : c; 
+                const sma200 = bars.length > 100 ? bars.slice(-100).reduce((sum, b) => sum + b.c, 0) / 100 : c; // Using 100d as proxy since we pull 6mo
                 let breadthProxy = Math.min(Math.max(Math.round(((c / sma200) - 1) * 200 + 50), 0), 100);
 
                 res.push({
-                    name: item.n, ticker: item.tk, color: item.col || '#8b949e', isDefensive: item.isDefensive,
+                    name: item.n, ticker: item.tk, color: item.col || '#8b949e',
                     d1d, d1w, d1m, d3m,
-                    rsRaw: (d1m + (d3m||d1m)) / 2, 
+                    rsRaw: (d1m + (d3m||d1m)) / 2, // Combined base
                     mom: d1w,
                     breadth: breadthProxy,
                     bars: bars
@@ -690,7 +854,7 @@
         populateSectorTable();
         populateIndustryTables();
         
-        updateKPIs(spy1m);
+        updateKPIs();
         renderCharts(spyBars);
     }
 
@@ -737,7 +901,7 @@
             tHtml += `
                 <tr>
                     <td style="font-weight: 600;">${s.name}</td>
-                    <td style="font-weight: 700;">${s.rs}</td>
+                    <td>${s.rs}</td>
                     <td class="${getColorClass(s.d1w)}">${formatSign(s.d1w.toFixed(1))}</td>
                     <td class="${getColorClass(s.d1m)}">${formatSign(s.d1m.toFixed(1))}</td>
                     <td>${trendIcon(s.trend1m)}</td>
@@ -777,7 +941,7 @@
         document.getElementById('indBotBody').innerHTML = renderRows(indBot);
     }
 
-    function updateKPIs(spy1m) {
+    function updateKPIs() {
         const avgRS = Math.round(STATE.sectors.reduce((acc, s) => acc + s.rs, 0) / STATE.sectors.length);
         const secsOut = STATE.sectors.filter(s => s.rs >= 50).length;
         const indsOut = STATE.industries.filter(i => i.rs >= 50).length;
@@ -791,45 +955,37 @@
         momEl.innerText = avgMom >= 0 ? 'IMPROVING' : 'WEAKENING';
         momEl.className = `kpi-value ${getColorClass(avgMom)}`;
 
-        // Evaluate top 3 sector leaders to check if they are defensive (XLV, XLE, XLU, XLP)
-        const top3 = STATE.sectors.slice(0, 3);
-        const defensiveCountInTop = top3.filter(s => s.isDefensive).length;
-        const isDefensiveRegime = defensiveCountInTop >= 2 || spy1m < 0 || avgMom < -0.5;
-
-        const regimeTitle = document.getElementById('regimeTitle');
-        const regimeSubtext = document.getElementById('regimeSubtext');
-        const gaugeLabel = document.getElementById('gaugeLabel');
-        const kpiConfText = document.getElementById('kpiConfText');
-        const kpiBreadthText = document.getElementById('kpiBreadthText');
+        const top2Conc = (STATE.sectors[0].rs + STATE.sectors[1].rs) / 2;
         const concEl = document.getElementById('kpiConc');
+        if(top2Conc > 80) { concEl.innerText = 'HIGH'; concEl.className = 'kpi-value text-down'; }
+        else { concEl.innerText = 'LOW'; concEl.className = 'kpi-value text-up'; }
 
-        if (isDefensiveRegime) {
-            regimeTitle.innerHTML = `DEFENSIVE MARKET REGIME`;
-            regimeTitle.style.color = 'var(--color-down)';
-            regimeSubtext.innerText = `Defensive leadership (${top3[0]?.name || 'Health Care'} & ${top3[1]?.name || 'Energy'}) dominating relative strength. Capital in safety rotation.`;
-            gaugeLabel.innerText = `30%`;
-            kpiConfText.innerText = `DEFENSIVE`;
-            kpiConfText.className = `text-down`;
-            kpiBreadthText.innerText = `WEAK / ROTATION`;
-            kpiBreadthText.className = `text-down`;
-            concEl.innerText = `HIGH`;
-            concEl.className = `kpi-value text-warning`;
-        } else {
+        // Regime
+        const regimeTitle = document.getElementById('regimeTitle');
+        const gaugeLabel = document.getElementById('gaugeLabel');
+        const conf = Math.round((secsOut / 11) * 100);
+        
+        gaugeLabel.innerText = `${conf}%`;
+        if (conf >= 60) {
             regimeTitle.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4z"></path><path d="M8 8V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg> RISK ON / EXPANSION`;
             regimeTitle.style.color = 'var(--color-up)';
-            regimeSubtext.innerText = `Broad leadership across cyclicals and technology sustaining market momentum.`;
-            gaugeLabel.innerText = `84%`;
-            kpiConfText.innerText = `STRONG`;
-            kpiConfText.className = `text-up`;
-            kpiBreadthText.innerText = `POSITIVE`;
-            kpiBreadthText.className = `text-up`;
-            concEl.innerText = `LOW`;
-            concEl.className = `kpi-value text-up`;
+            document.getElementById('kpiConfText').innerText = 'STRONG';
+            document.getElementById('kpiConfText').className = 'text-up';
+            document.getElementById('kpiBreadthText').innerText = 'POSITIVE';
+            document.getElementById('kpiBreadthText').className = 'text-up';
+        } else {
+            regimeTitle.innerHTML = `RISK OFF / CONTRACTION`;
+            regimeTitle.style.color = 'var(--color-down)';
+            document.getElementById('kpiConfText').innerText = 'WEAK';
+            document.getElementById('kpiConfText').className = 'text-down';
+            document.getElementById('kpiBreadthText').innerText = 'NEGATIVE';
+            document.getElementById('kpiBreadthText').className = 'text-down';
         }
     }
 
     // --- Charting ---
     function renderCharts(spyBars) {
+        // Destroy existing to prevent canvas reuse bugs
         if(scatterChart) scatterChart.destroy();
         if(lineChart) lineChart.destroy();
         Object.keys(miniCharts).forEach(k => { if(miniCharts[k]) miniCharts[k].destroy(); });
@@ -838,27 +994,24 @@
 
         miniCharts['sectors'] = new Chart(document.getElementById('miniChartSectors'), {
             type: 'bar',
-            data: { labels: STATE.sectors.map(s=>s.ticker), datasets: [{ data: STATE.sectors.map(s=>s.rs), backgroundColor: STATE.sectors.map(s => s.rs >= 50 ? '#3fb950' : '#f85149'), borderRadius: 2 }] },
+            data: { labels: STATE.sectors.map(s=>s.tk), datasets: [{ data: STATE.sectors.map(s=>s.rs), backgroundColor: STATE.sectors.map(s => s.rs >= 50 ? '#3fb950' : '#f85149'), borderRadius: 2 }] },
             options: miniOptions
         });
 
         miniCharts['inds'] = new Chart(document.getElementById('miniChartInd'), {
             type: 'bar',
-            data: { labels: STATE.industries.map(i=>i.ticker), datasets: [{ data: STATE.industries.map(i=>i.rs), backgroundColor: STATE.industries.map(i => i.rs >= 50 ? '#3fb950' : '#f85149'), borderRadius: 2 }] },
+            data: { labels: STATE.industries.map(i=>i.tk), datasets: [{ data: STATE.industries.map(i=>i.rs), backgroundColor: STATE.industries.map(i => i.rs >= 50 ? '#3fb950' : '#f85149'), borderRadius: 2 }] },
             options: miniOptions
         });
 
-        const top3 = STATE.sectors.slice(0, 3);
-        const defCount = top3.filter(s => s.isDefensive).length;
-        const confVal = defCount >= 2 ? 30 : 84;
-
+        const conf = Math.round((STATE.sectors.filter(s => s.rs >= 50).length / 11) * 100);
         miniCharts['gauge'] = new Chart(document.getElementById('gaugeConfidence'), {
             type: 'doughnut',
-            data: { datasets: [{ data: [confVal, 100-confVal], backgroundColor: [confVal >= 50 ? '#3fb950' : '#f85149', 'rgba(139, 148, 158, 0.1)'], borderWidth: 0, cutout: '80%' }] },
+            data: { datasets: [{ data: [conf, 100-conf], backgroundColor: [conf >= 50 ? '#3fb950' : '#f85149', 'rgba(139, 148, 158, 0.1)'], borderWidth: 0, cutout: '80%' }] },
             options: { ...miniOptions, animation: { duration: 1500, easing: 'easeOutQuart' } }
         });
 
-        // Scatter Plugin Quadrants
+        // Scatter
         const quadrantPlugin = {
             id: 'quadrants',
             beforeDraw: (chart) => {
@@ -882,30 +1035,20 @@
             type: 'bubble',
             data: {
                 datasets: [{
-                    data: STATE.sectors.map(s => ({ 
-                        x: s.rs, 
-                        y: s.mom * 10, 
-                        r: Math.max(s.rs / 6, 6), 
-                        label: s.name, 
-                        ticker: s.ticker,
-                        color: s.rs >= 50 && s.mom >= 0 ? '#3fb950' : (s.rs < 50 && s.mom >= 0 ? '#238636' : (s.rs >= 50 && s.mom < 0 ? '#d29922' : '#f85149')) 
-                    })),
+                    data: STATE.sectors.map(s => ({ x: s.rs, y: s.mom * 10, r: Math.max(s.rs / 5, 4), label: s.name, color: s.rs >= 50 && s.mom >= 0 ? '#3fb950' : (s.rs < 50 && s.mom >= 0 ? '#238636' : (s.rs >= 50 && s.mom < 0 ? '#d29922' : '#f85149')) })),
                     backgroundColor: (ctx) => ctx.raw ? ctx.raw.color : '#fff',
-                    borderColor: 'rgba(0,0,0,0.3)', borderWidth: 1
+                    borderColor: 'rgba(0,0,0,0.2)', borderWidth: 1
                 }]
             },
             options: {
                 responsive: true, maintainAspectRatio: false,
-                plugins: { 
-                    legend: { display: false }, 
-                    tooltip: { callbacks: { label: (ctx) => `${ctx.raw.ticker} - ${ctx.raw.label} (RS: ${ctx.raw.x}, Mom: ${(ctx.raw.y/10).toFixed(1)})` } } 
-                },
+                plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => `${ctx.raw.label} (RS: ${ctx.raw.x}, Mom: ${(ctx.raw.y/10).toFixed(1)})` } } },
                 scales: {
-                    x: { min: -5, max: 105, title: { display: true, text: 'RELATIVE STRENGTH (vs SPY)' }, grid: { display: false } },
-                    y: { min: -55, max: 55, title: { display: true, text: 'RS MOMENTUM [1W Acceleration]' }, grid: { display: false } }
+                    x: { min: 0, max: 100, title: { display: true, text: 'RELATIVE STRENGTH (vs SPY)' }, grid: { display: false } },
+                    y: { min: -50, max: 50, title: { display: true, text: 'RS MOMENTUM [1W Acceleration]' }, grid: { display: false } }
                 }
             },
-            plugins: [quadrantPlugin, bubbleLabelPlugin]
+            plugins: [quadrantPlugin]
         });
 
         // Line Chart (60D Historical RS vs SPY)
@@ -963,7 +1106,7 @@
         updateClock();
         setInterval(updateClock, 60000);
         
-        fetchLiveData(); // Start live trickle fetch
+        fetchLiveData(); // Start trickle fetch
     };
 </script>
 </body>
