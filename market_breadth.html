@@ -88,6 +88,7 @@
 
   /* GRID & CARDS */
   .grid { display: grid; gap: 14px; }
+  .grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
   .grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
   .grid-cols-5 { grid-template-columns: repeat(5, 1fr); }
   .grid-cols-6 { grid-template-columns: repeat(6, 1fr); }
@@ -105,6 +106,7 @@
   
   .badge-pos { background: rgba(32, 217, 184, 0.15); color: var(--teal); border: 1px solid rgba(32, 217, 184, 0.3); padding: 3px 8px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; font-weight: 700; }
   .badge-neg { background: rgba(255, 92, 114, 0.15); color: var(--red); border: 1px solid rgba(255, 92, 114, 0.3); padding: 3px 8px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; font-weight: 700; }
+  .badge-obs { background: rgba(245, 185, 66, 0.15); color: var(--amber); border: 1px solid rgba(245, 185, 66, 0.3); padding: 3px 8px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; font-weight: 700; }
 
   /* TABLES & LISTS */
   .section-head {
@@ -181,20 +183,20 @@
     <div class="grid grid-cols-4">
       <div class="card flex" style="flex-direction:column; justify-content:space-between;">
         <div>
-          <div class="flex" style="justify-between; align-items:center;">
+          <div class="flex" style="justify-content:space-between; align-items:center;">
             <span class="label">New Highs vs Lows</span><span id="hlPct" style="font-family:'JetBrains Mono'; font-weight:800; color:var(--teal);">0%</span>
           </div>
           <div class="ratio-bar-wrap"><div class="ratio-bar-fill" id="hlBar" style="width: 50%;"></div></div>
-          <div class="flex" style="justify-between; font-family:'JetBrains Mono'; font-size:10px; font-weight:700;">
+          <div class="flex" style="justify-content:space-between; font-family:'JetBrains Mono'; font-size:10px; font-weight:700;">
             <span style="color:var(--teal);" id="hlHigh">0 Highs</span><span style="color:var(--red);" id="hlLow">0 Lows</span>
           </div>
         </div>
         <div style="margin-top:12px;">
-          <div class="flex" style="justify-between; align-items:center;">
+          <div class="flex" style="justify-content:space-between; align-items:center;">
             <span class="label">Advance vs Decline</span><span id="adPct" style="font-family:'JetBrains Mono'; font-weight:800; color:var(--teal);">0%</span>
           </div>
           <div class="ratio-bar-wrap"><div class="ratio-bar-fill" id="adBar" style="width: 50%;"></div></div>
-          <div class="flex" style="justify-between; font-family:'JetBrains Mono'; font-size:10px; font-weight:700;">
+          <div class="flex" style="justify-content:space-between; font-family:'JetBrains Mono'; font-size:10px; font-weight:700;">
             <span style="color:var(--teal);" id="adAdv">0 Adv</span><span style="color:var(--red);" id="adDec">0 Dec</span>
           </div>
         </div>
@@ -203,7 +205,7 @@
       <div class="card flex" style="flex-direction:column; justify-content:space-between;">
         <span class="label">Short-Term Trend (% > 20 SMA)</span>
         <div class="big" id="sma20Val">0%</div>
-        <div class="flex" style="justify-between; align-items:center; margin-top:10px;">
+        <div class="flex" style="justify-content:space-between; align-items:center; margin-top:10px;">
           <span class="cap">Mega-Cap Proxy</span>
           <span id="sma20Badge" class="badge-pos">+Pos</span>
         </div>
@@ -212,7 +214,7 @@
       <div class="card flex" style="flex-direction:column; justify-content:space-between;">
         <span class="label">Medium-Term Trend (% > 50 SMA)</span>
         <div class="big" id="sma50Val">0%</div>
-        <div class="flex" style="justify-between; align-items:center; margin-top:10px;">
+        <div class="flex" style="justify-content:space-between; align-items:center; margin-top:10px;">
           <span class="cap">Mega-Cap Proxy</span>
           <span id="sma50Badge" class="badge-pos">+Pos</span>
         </div>
@@ -221,7 +223,7 @@
       <div class="card flex" style="flex-direction:column; justify-content:space-between;">
         <span class="label">Long-Term Trend (% > 200 SMA)</span>
         <div class="big" id="sma200Val">0%</div>
-        <div class="flex" style="justify-between; align-items:center; margin-top:10px;">
+        <div class="flex" style="justify-content:space-between; align-items:center; margin-top:10px;">
           <span class="cap">Mega-Cap Proxy</span>
           <span id="sma200Badge" class="badge-pos">+Pos</span>
         </div>
@@ -254,19 +256,57 @@
         </div>
       </div>
 
+      <!-- RIGHT COLUMN: DISTRIBUTION DAYS & FACTOR STACK -->
       <div class="col-span-4 flex" style="flex-direction:column; gap:14px;">
-        <div class="card">
-          <span class="label">Market Performance (SPY)</span>
-          <div class="grid grid-cols-4" id="spyPerfGrid" style="margin-top:10px; text-align:center;">
-            <!-- Dynamic Injection -->
+        
+        <!-- DISTRIBUTION DAYS PANEL -->
+        <div class="card flex" style="flex-direction:column; gap:10px;">
+          <span class="label">Distribution Days (25D Window)</span>
+          <div class="grid grid-cols-2" style="gap:16px;">
+            
+            <!-- SPY Dist -->
+            <div style="display:flex; flex-direction:column; justify-content:space-between; background:var(--input-bg); border:1px solid var(--line); border-radius:6px; padding:10px;">
+              <div style="font-size:10px; font-weight:700; color:var(--text-faint); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:8px;">S&P 500 (SPY)</div>
+              <div class="flex" style="justify-content:center; align-items:flex-end; gap:24px; margin-bottom:12px;">
+                <div class="flex" style="flex-direction:column; align-items:center;">
+                  <span style="font-size:9px; font-weight:700; color:var(--text-faint);">1D ago</span>
+                  <span style="font-size:14px; font-family:'JetBrains Mono'; font-weight:800; color:var(--text-dim);" id="distSpyPrev">0</span>
+                </div>
+                <div class="flex" style="flex-direction:column; align-items:center;">
+                  <span style="font-size:9px; font-weight:700; color:var(--text-faint);">Today</span>
+                  <span style="font-size:30px; font-family:'JetBrains Mono'; font-weight:800; color:var(--red); line-height:1;" id="distSpyNow">0</span>
+                </div>
+              </div>
+              <div id="distSpyStatus" style="font-size:9px; font-weight:700; text-align:center; padding:4px 0; border-radius:4px; text-transform:uppercase;">Calculating...</div>
+            </div>
+
+            <!-- QQQ Dist -->
+            <div style="display:flex; flex-direction:column; justify-content:space-between; background:var(--input-bg); border:1px solid var(--line); border-radius:6px; padding:10px;">
+              <div style="font-size:10px; font-weight:700; color:var(--text-faint); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:8px;">Nasdaq (QQQ)</div>
+              <div class="flex" style="justify-content:center; align-items:flex-end; gap:24px; margin-bottom:12px;">
+                <div class="flex" style="flex-direction:column; align-items:center;">
+                  <span style="font-size:9px; font-weight:700; color:var(--text-faint);">1D ago</span>
+                  <span style="font-size:14px; font-family:'JetBrains Mono'; font-weight:800; color:var(--text-dim);" id="distQqqPrev">0</span>
+                </div>
+                <div class="flex" style="flex-direction:column; align-items:center;">
+                  <span style="font-size:9px; font-weight:700; color:var(--text-faint);">Today</span>
+                  <span style="font-size:30px; font-family:'JetBrains Mono'; font-weight:800; color:var(--red); line-height:1;" id="distQqqNow">0</span>
+                </div>
+              </div>
+              <div id="distQqqStatus" style="font-size:9px; font-weight:700; text-align:center; padding:4px 0; border-radius:4px; text-transform:uppercase;">Calculating...</div>
+            </div>
+
           </div>
         </div>
+
+        <!-- RISK APPETITE PANEL -->
         <div class="card">
           <span class="label">Risk Appetite (Factor / SPY)</span>
           <div class="grid grid-cols-2" id="factorGrid" style="margin-top:10px; text-align:center; row-gap:10px;">
             <!-- Dynamic Injection -->
           </div>
         </div>
+
       </div>
     </div>
 
@@ -317,6 +357,7 @@ const PROXY_PROVIDERS = [
   url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`
 ];
 
+// UPDATED: Now fetches Volume (v) for Distribution Day calculations
 async function fetchYahooSeries(symbol) {
   const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1y`;
   for (const proxyBuilder of PROXY_PROVIDERS) {
@@ -331,7 +372,9 @@ async function fetchYahooSeries(symbol) {
       const q = result.indicators?.quote?.[0] || {};
       const bars = [];
       for(let i=0; i<t.length; i++) {
-        if(q.close?.[i] != null) bars.push({ c: q.close[i], h: q.high[i], l: q.low[i] });
+        if(q.close?.[i] != null) {
+          bars.push({ c: q.close[i], h: q.high[i], l: q.low[i], v: q.volume[i] || 0 });
+        }
       }
       return bars;
     } catch(e) {}
@@ -347,6 +390,22 @@ function sma(bars, len) {
 function perf(bars, days) {
   if (bars.length < days + 1) return 0;
   return ((bars[bars.length - 1].c / bars[bars.length - 1 - days].c) - 1) * 100;
+}
+
+// NEW: Calculate Distribution Days (Down >= 0.2% on higher volume than prior day over last 25 days)
+function calcDistDays(bars, offset = 0) {
+  if (!bars || bars.length < 26 + offset) return 0;
+  let count = 0;
+  const endIdx = bars.length - 1 - offset;
+  const startIdx = endIdx - 24; // 25 day window
+  for (let i = startIdx; i <= endIdx; i++) {
+    const t = bars[i], y = bars[i-1];
+    if (t && y) {
+      const pxChg = ((t.c / y.c) - 1) * 100;
+      if (pxChg <= -0.2 && t.v > y.v) count++;
+    }
+  }
+  return count;
 }
 
 async function buildDashboard() {
@@ -368,7 +427,7 @@ async function buildDashboard() {
 }
 
 function renderAll() {
-  // Breadth
+  // 1. Breadth
   let a20 = 0, a50 = 0, a200 = 0, adv = 0, dec = 0, high = 0, low = 0, valid = 0;
   BREADTH_PROXY.forEach(tk => {
     const bars = STATE.data[tk];
@@ -408,7 +467,7 @@ function renderAll() {
   document.getElementById('hlPct').innerText = `${hlP}%`; document.getElementById('hlBar').style.width = `${hlP}%`;
   document.getElementById('hlHigh').innerText = `${high} Highs`; document.getElementById('hlLow').innerText = `${low} Lows`;
 
-  // Macro
+  // 2. Macro
   if (STATE.data['GLD'] && STATE.data['SPY']) {
     const rNow = STATE.data['GLD'][STATE.data['GLD'].length-1].c / STATE.data['SPY'][STATE.data['SPY'].length-1].c;
     const rOld = STATE.data['GLD'][STATE.data['GLD'].length-6].c / STATE.data['SPY'][STATE.data['SPY'].length-6].c;
@@ -419,17 +478,40 @@ function renderAll() {
     mStat.style.color = rPerf > 0 ? 'var(--teal)' : 'var(--red)';
   }
 
-  // SPY & Factors
+  // 3. Distribution Days (SPY & QQQ)
   const spyBars = STATE.data['SPY'];
-  if (spyBars) {
-    const s1w = perf(spyBars, 5); const s1m = perf(spyBars, 21); const s1y = perf(spyBars, 252);
-    document.getElementById('spyPerfGrid').innerHTML = `
-      <div><div class="label">1W</div><div style="font-family:'JetBrains Mono'; font-weight:800; color:${s1w>=0?'var(--teal)':'var(--red)'}; margin-top:4px;">${s1w>=0?'+':''}${s1w.toFixed(2)}%</div></div>
-      <div><div class="label">1M</div><div style="font-family:'JetBrains Mono'; font-weight:800; color:${s1m>=0?'var(--teal)':'var(--red)'}; margin-top:4px;">${s1m>=0?'+':''}${s1m.toFixed(2)}%</div></div>
-      <div><div class="label">1Y</div><div style="font-family:'JetBrains Mono'; font-weight:800; color:${s1y>=0?'var(--teal)':'var(--red)'}; margin-top:4px;">${s1y>=0?'+':''}${s1y.toFixed(2)}%</div></div>
-      <div><div class="label">VIX</div><div style="font-family:'JetBrains Mono'; font-weight:800; color:var(--text); margin-top:4px;">${STATE.data['^VIX'] ? STATE.data['^VIX'][STATE.data['^VIX'].length-1].c.toFixed(2) : '-'}</div></div>
-    `;
+  const qqqBars = STATE.data['QQQ'];
 
+  const getDistStatus = (count) => {
+    if (count >= 6) return { txt: 'Correction', cls: 'badge-neg' };
+    if (count >= 3) return { txt: 'Under Observation', cls: 'badge-obs' };
+    return { txt: 'Healthy', cls: 'badge-pos' };
+  };
+
+  if (spyBars) {
+    const nowSpy = calcDistDays(spyBars, 0);
+    const prevSpy = calcDistDays(spyBars, 1);
+    const statSpy = getDistStatus(nowSpy);
+    document.getElementById('distSpyNow').innerText = nowSpy;
+    document.getElementById('distSpyPrev').innerText = prevSpy;
+    document.getElementById('distSpyStatus').innerText = statSpy.txt;
+    document.getElementById('distSpyStatus').className = statSpy.cls;
+    document.getElementById('distSpyNow').style.color = nowSpy >= 6 ? 'var(--red)' : nowSpy >= 3 ? 'var(--amber)' : 'var(--teal)';
+  }
+
+  if (qqqBars) {
+    const nowQqq = calcDistDays(qqqBars, 0);
+    const prevQqq = calcDistDays(qqqBars, 1);
+    const statQqq = getDistStatus(nowQqq);
+    document.getElementById('distQqqNow').innerText = nowQqq;
+    document.getElementById('distQqqPrev').innerText = prevQqq;
+    document.getElementById('distQqqStatus').innerText = statQqq.txt;
+    document.getElementById('distQqqStatus').className = statQqq.cls;
+    document.getElementById('distQqqNow').style.color = nowQqq >= 6 ? 'var(--red)' : nowQqq >= 3 ? 'var(--amber)' : 'var(--teal)';
+  }
+
+  // 4. Factors
+  if (spyBars) {
     let fHtml = '';
     FACTORS.forEach(f => {
       const fb = STATE.data[f.tk];
@@ -439,12 +521,12 @@ function renderAll() {
         const rOld = fb[fb.length-6].c / spyBars[spyBars.length-6].c;
         p = ((rNow/rOld)-1)*100;
       }
-      fHtml += `<div><div class="label">${f.name}</div><div style="font-family:'JetBrains Mono'; font-weight:800; color:${p>=0?'var(--teal)':'var(--red)'}; margin-top:4px;">${p>=0?'+':''}${p.toFixed(2)}%</div></div>`;
+      fHtml += `<div><div class="label" style="font-size:9.5px;">${f.name}</div><div style="font-family:'JetBrains Mono'; font-weight:800; font-size:13px; color:${p>=0?'var(--teal)':'var(--red)'}; margin-top:4px;">${p>=0?'+':''}${p.toFixed(2)}%</div></div>`;
     });
     document.getElementById('factorGrid').innerHTML = fHtml;
   }
 
-  // Index Cards
+  // 5. Index Cards
   const iCards = [
     {tk: 'RSP', n: 'S&P 500 Eq Wt'}, {tk: 'QQQE', n: 'NASDAQ 100 Eq'}, {tk: 'IWM', n: 'Russell 2000'},
     {tk: 'DIA', n: 'Dow Jones'}, {tk: 'BTC-USD', n: 'Bitcoin'}, {tk: '^VIX', n: 'Volatility'}
@@ -454,9 +536,9 @@ function renderAll() {
     const b = STATE.data[ic.tk];
     const px = b ? b[b.length-1].c.toFixed(2) : '-';
     const chg = b ? perf(b, 1) : 0;
-    iHtml += `<div class="card flex" style="flex-direction:column; justify-content:space-between;">
-      <div><span class="label">${ic.n}</span><div style="font-family:'JetBrains Mono'; font-weight:800; font-size:14px; margin-top:2px;">${ic.tk.replace('-USD','')}</div></div>
-      <div class="flex" style="justify-between; align-items:flex-end; margin-top:12px;">
+    iHtml += `<div class="card flex" style="flex-direction:column; justify-content:space-between; border-left: 3px solid ${chg>=0?'var(--teal)':'var(--red)'};">
+      <div><span class="label" style="border:none; padding:0; margin:0;">${ic.n}</span><div style="font-family:'JetBrains Mono'; font-weight:800; font-size:14px; margin-top:2px;">${ic.tk.replace('-USD','')}</div></div>
+      <div class="flex" style="justify-content:space-between; align-items:flex-end; margin-top:12px;">
         <span style="font-family:'JetBrains Mono'; font-weight:800; font-size:18px;">${ic.tk === '^VIX' ? '' : '$'}${px}</span>
         <span style="font-family:'JetBrains Mono'; font-weight:700; font-size:11px; color:${chg>=0?'var(--teal)':'var(--red)'};">${chg>=0?'+':''}${chg.toFixed(2)}%</span>
       </div>
@@ -464,7 +546,7 @@ function renderAll() {
   });
   document.getElementById('indexCardsGrid').innerHTML = iHtml;
 
-  // Ranked Lists
+  // 6. Ranked Lists
   const buildList = (listArr, targetId) => {
     const ranked = listArr.map(tk => ({tk, p: STATE.data[tk] ? perf(STATE.data[tk], 5) : 0})).sort((a,b) => b.p - a.p);
     const maxP = Math.max(...ranked.map(r => Math.abs(r.p)), 1);
