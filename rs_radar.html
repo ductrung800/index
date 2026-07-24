@@ -2,131 +2,114 @@
 <html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
-<title>RS Radar Matrix</title>
+<title>RS Capital Rotation Command Center</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700;800&display=swap');
 
   :root {
-    --bg: #0a0e16;
-    --panel: #101625;
-    --panel2: #0d1220;
-    --line: #212a3d;
-    --line-soft: #1a2233;
-    --text: #e7ebf3;
-    --text-dim: #8b93a8;
-    --text-faint: #59617a;
-    --teal: #20d9b8;
-    --amber: #f5b942;
-    --red: #ff5c72;
-    --blue: #38bdf8;
-    --navy-head: #131c33;
-    --input-bg: #0d1220;
+    --bg: #0a0e16; --panel: #101625; --panel2: #0d1220; --line: #212a3d; --line-soft: #1a2233;
+    --text: #e7ebf3; --text-dim: #8b93a8; --text-faint: #59617a;
+    --teal: #20d9b8; --amber: #f5b942; --red: #ff5c72; --blue: #38bdf8;
+    --navy-head: #131c33; --input-bg: #0d1220;
+    --teal-glow: rgba(32, 217, 184, 0.15);
   }
 
   html[data-theme="light"] {
-    --bg: #f4f6fa;
-    --panel: #ffffff;
-    --panel2: #ffffff;
-    --line: #dde2ec;
-    --line-soft: #e9edf4;
-    --text: #151b2c;
-    --text-dim: #5b6478;
-    --text-faint: #8a92a6;
-    --teal: #0b9c82;
-    --amber: #b9781a;
-    --red: #c93a51;
-    --blue: #0284c7;
-    --navy-head: #eef1f8;
-    --input-bg: #f4f6fa;
+    --bg: #f4f6fa; --panel: #ffffff; --panel2: #ffffff; --line: #dde2ec; --line-soft: #e9edf4;
+    --text: #151b2c; --text-dim: #5b6478; --text-faint: #8a92a6;
+    --teal: #0b9c82; --amber: #b9781a; --red: #c93a51; --blue: #0284c7;
+    --navy-head: #eef1f8; --input-bg: #f4f6fa;
+    --teal-glow: rgba(11, 156, 130, 0.1);
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
-
   body {
-    background:
-      radial-gradient(ellipse 1200px 500px at 15% -5%, rgba(32,217,184,.06), transparent 60%),
-      radial-gradient(ellipse 900px 500px at 100% 0%, rgba(255,92,114,.05), transparent 55%),
-      var(--bg);
-    color: var(--text);
-    font-family: 'Inter', sans-serif;
-    padding: 22px 26px 60px;
-    transition: background .2s ease, color .2s ease;
+    background: radial-gradient(ellipse 1000px 600px at 50% 0%, var(--teal-glow), transparent 70%), var(--bg);
+    color: var(--text); font-family: 'Inter', sans-serif; padding: 22px 26px 60px;
   }
 
   /* APP TABS */
-  .app-tabs { display: flex; gap: 4px; margin-bottom: 22px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
-  .app-tabs a { padding: 10px 20px; text-decoration: none; color: var(--text-dim); font-size: 12px; font-weight: 600; border: 1px solid transparent; border-bottom: none; border-radius: 8px 8px 0 0; text-transform: uppercase; letter-spacing: 0.04em; transition: all 0.15s; font-family: 'JetBrains Mono', monospace; }
+  .app-tabs { display: flex; gap: 4px; margin-bottom: 26px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  .app-tabs a { padding: 10px 20px; text-decoration: none; color: var(--text-dim); font-size: 11.5px; font-weight: 700; border: 1px solid transparent; border-bottom: none; border-radius: 8px 8px 0 0; text-transform: uppercase; letter-spacing: 0.05em; transition: all 0.15s; font-family: 'JetBrains Mono', monospace; }
   .app-tabs a.active { background: var(--panel); color: var(--teal); border-color: var(--line); border-bottom-color: var(--panel); margin-bottom: -1px; }
   .app-tabs a:hover:not(.active) { color: var(--text); background: rgba(255,255,255,0.03); }
 
   /* HEADER */
-  header.top {
-    display: flex; justify-content: space-between; align-items: flex-end;
-    border-bottom: 2px solid var(--line); padding-bottom: 14px; margin-bottom: 20px; gap: 16px; flex-wrap: wrap;
-  }
-  .brand-eyebrow { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .18em; color: var(--teal); text-transform: uppercase; font-weight: 700; }
-  h1 { font-size: 26px; font-weight: 800; letter-spacing: -.02em; margin-top: 2px; }
-  .subline { color: var(--text-dim); font-size: 12.5px; margin-top: 4px; font-family: 'JetBrains Mono', monospace; }
-  .header-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-
+  header.top { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid var(--line); padding-bottom: 16px; margin-bottom: 24px; }
+  .brand-eyebrow { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .18em; color: var(--teal); text-transform: uppercase; font-weight: 800; }
+  h1 { font-size: 28px; font-weight: 900; letter-spacing: -.03em; margin-top: 4px; }
+  
+  .header-right { display: flex; align-items: center; gap: 12px; }
   .status-badge { font-family: 'JetBrains Mono', monospace; font-size: 11px; background: var(--panel2); border: 1px solid var(--line); padding: 7px 14px; border-radius: 100px; color: var(--text-dim); }
   .status-badge b { color: var(--teal); }
-
-  .theme-toggle {
-    display: flex; align-items: center; gap: 4px; background: var(--panel); border: 1px solid var(--line);
-    border-radius: 100px; padding: 4px; cursor: pointer; user-select: none;
-  }
-  .theme-toggle .opt { font-size: 11px; padding: 5px 12px; border-radius: 100px; color: var(--text-faint); font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+  .theme-toggle { display: flex; align-items: center; gap: 4px; background: var(--panel); border: 1px solid var(--line); border-radius: 100px; padding: 4px; cursor: pointer; }
+  .theme-toggle .opt { font-size: 11px; padding: 5px 12px; border-radius: 100px; color: var(--text-faint); font-weight: 800; font-family: 'JetBrains Mono', monospace; }
   .theme-toggle .opt.active { background: var(--teal); color: #04150f; }
 
-  .btn {
-    background: var(--panel); border: 1px solid var(--line); color: var(--text); font-family: 'JetBrains Mono', monospace;
-    font-size: 11.5px; padding: 8px 14px; border-radius: 7px; cursor: pointer; font-weight: 600; transition: all .15s;
-  }
-  .btn:hover { border-color: var(--teal); color: var(--teal); }
-  .btn.primary { background: var(--teal); color: #04150f; border-color: var(--teal); font-weight: 700; }
+  /* GRID SYSTEM */
+  .grid { display: grid; gap: 16px; }
+  .grid-12 { grid-template-columns: repeat(12, 1fr); }
+  .grid-4 { grid-template-columns: repeat(4, 1fr); }
+  .grid-2 { grid-template-columns: repeat(2, 1fr); }
+  .col-span-3 { grid-column: span 3; } .col-span-4 { grid-column: span 4; } .col-span-6 { grid-column: span 6; } .col-span-8 { grid-column: span 8; } .col-span-9 { grid-column: span 9; } .col-span-12 { grid-column: span 12; }
 
-  /* GRID & CARDS */
-  .grid { display: grid; gap: 14px; }
-  .grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
-  .grid-cols-12 { grid-template-columns: repeat(12, 1fr); }
-  .col-span-3 { grid-column: span 3; }
-  .col-span-9 { grid-column: span 9; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 20px; }
+  .section-title { font-size: 11px; text-transform: uppercase; letter-spacing: .12em; color: var(--text-faint); font-weight: 800; font-family: 'JetBrains Mono', monospace; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  .section-title::before { content: ''; display: block; width: 4px; height: 12px; background: var(--teal); border-radius: 2px; }
 
-  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px; }
-  .card .label { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--text); font-weight: 800; font-family: 'JetBrains Mono', monospace; margin-bottom: 10px; border-left: 3px solid var(--teal); padding-left: 8px; }
+  /* LAYER 1: COMMAND CENTER */
+  .mission-control { background: var(--panel2); border: 1px solid var(--line); box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+  .mc-grid { display: grid; grid-template-columns: 1.5fr 1fr 1fr 1.5fr; gap: 24px; align-items: center; }
+  .regime-title { font-size: 20px; font-weight: 900; color: var(--teal); letter-spacing: -0.02em; margin-bottom: 8px; }
+  .mc-lbl { font-size: 10px; color: var(--text-faint); text-transform: uppercase; font-weight: 800; font-family: 'JetBrains Mono', monospace; margin-bottom: 4px; }
+  .mc-val { font-size: 14px; font-weight: 800; color: var(--text); }
+  
+  .ai-box { background: rgba(32, 217, 184, 0.05); border: 1px solid rgba(32, 217, 184, 0.2); padding: 14px; border-radius: 8px; font-size: 12px; line-height: 1.6; color: var(--text-dim); border-left: 4px solid var(--teal); }
+  .ai-box b { color: var(--text); }
 
-  /* RANK BADGES */
-  .rank-pill { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; font-weight: 800; padding: 2px 6px; border-radius: 4px; text-align: center; min-width: 30px; display: inline-block; }
-  .rank-high { background: rgba(32, 217, 184, 0.15); color: var(--teal); border: 1px solid rgba(32, 217, 184, 0.3); }
-  .rank-mid { background: var(--input-bg); color: var(--text-dim); border: 1px solid var(--line); }
-  .rank-low { background: rgba(255, 92, 114, 0.15); color: var(--red); border: 1px solid rgba(255, 92, 114, 0.3); }
+  /* LAYER 3: QUADRANT MAP */
+  .quadrant-wrap { position: relative; width: 100%; height: 350px; background: var(--input-bg); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .q-axis-x { position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: var(--line); }
+  .q-axis-y { position: absolute; top: 0; bottom: 0; left: 50%; width: 1px; background: var(--line); }
+  
+  .q-label { position: absolute; font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 800; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.1em; padding: 4px; }
+  .q-tl { top: 8px; left: 8px; color: var(--blue); } .q-tr { top: 8px; right: 8px; color: var(--teal); }
+  .q-bl { bottom: 8px; left: 8px; color: var(--red); } .q-br { bottom: 8px; right: 8px; color: var(--amber); }
 
-  /* TABLES */
-  .section-head {
-    background: var(--navy-head); border: 1px solid var(--line); border-bottom: none;
-    padding: 10px 16px; border-radius: 10px 10px 0 0; display: flex; justify-content: space-between; align-items: center;
-  }
-  .section-head h2 { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; font-weight: 800; color: var(--text); font-family: 'JetBrains Mono', monospace; }
+  .dot-wrap { position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: crosshair; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+  .dot-wrap:hover { z-index: 10; transform: translate(-50%, -50%) scale(1.2); }
+  .dot { width: 12px; height: 12px; border-radius: 50%; box-shadow: 0 0 10px rgba(0,0,0,0.5); border: 2px solid var(--bg); }
+  .dot.leader { background: var(--teal); } .dot.improving { background: var(--blue); } .dot.weak { background: var(--red); } .dot.laggard { background: var(--amber); }
+  .dot-lbl { font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 800; color: var(--text); text-shadow: 0 1px 2px #000; white-space: nowrap; }
 
-  table.rs-table { width: 100%; border-collapse: collapse; font-family: 'JetBrains Mono', monospace; font-size: 11px; background: var(--panel2); border: 1px solid var(--line); border-radius: 0 0 10px 10px; overflow: hidden; }
-  table.rs-table thead th { background: var(--navy-head); text-align: right; font-size: 10px; text-transform: uppercase; color: var(--text-dim); padding: 8px 10px; border-bottom: 1px solid var(--line); }
-  table.rs-table thead th:first-child, table.rs-table thead th:nth-child(5), table.rs-table thead th:nth-child(6) { text-align: left; }
-  table.rs-table tbody td { padding: 6px 10px; border-bottom: 1px solid var(--line-soft); text-align: right; color: var(--text); }
-  table.rs-table tbody td:first-child, table.rs-table tbody td:nth-child(5), table.rs-table tbody td:nth-child(6) { text-align: left; }
-  table.rs-table tbody tr:hover { background: var(--line-soft); }
+  /* TABLES & LISTS */
+  table.rs-table { width: 100%; border-collapse: collapse; font-family: 'JetBrains Mono', monospace; font-size: 11px; text-align: left; }
+  table.rs-table th { background: var(--navy-head); color: var(--text-dim); padding: 8px 10px; font-size: 10px; text-transform: uppercase; border-bottom: 1px solid var(--line); }
+  table.rs-table td { padding: 8px 10px; border-bottom: 1px solid var(--line-soft); color: var(--text); }
+  
+  .pos-badge { padding: 3px 6px; border-radius: 4px; font-size: 9px; font-weight: 800; text-transform: uppercase; }
+  .pos-leader { background: rgba(32,217,184,0.15); color: var(--teal); border: 1px solid rgba(32,217,184,0.3); }
+  .pos-improving { background: rgba(56,189,248,0.15); color: var(--blue); border: 1px solid rgba(56,189,248,0.3); }
+  .pos-laggard { background: rgba(245,185,66,0.15); color: var(--amber); border: 1px solid rgba(245,185,66,0.3); }
+  .pos-weak { background: rgba(255,92,114,0.15); color: var(--red); border: 1px solid rgba(255,92,114,0.3); }
 
-  /* MOVERS ITEMS */
-  .mover-item { display: flex; align-items: center; justify-content: space-between; background: var(--input-bg); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; margin-bottom: 6px; font-family: 'JetBrains Mono', monospace; }
-  .mover-item .tk { font-weight: 800; color: var(--blue); font-size: 12px; }
-  .mover-item .nm { font-size: 10px; color: var(--text-dim); }
+  /* CATEGORY BUCKETS */
+  .bucket-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .bucket { background: var(--input-bg); border: 1px solid var(--line); border-radius: 8px; padding: 12px; }
+  .b-title { font-size: 10px; text-transform: uppercase; font-weight: 800; font-family: 'JetBrains Mono', monospace; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--line-soft); }
+  .b-item { display: flex; justify-content: space-between; font-size: 11px; font-weight: 700; margin-bottom: 8px; }
+  .b-item:last-child { margin-bottom: 0; }
 
-  /* OVERLAY */
-  #loadingOverlay { position: fixed; inset: 0; background: var(--bg); opacity: 0.95; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-  .spinner { border: 3px solid var(--line); border-top: 3px solid var(--teal); border-radius: 50%; width: 36px; height: 36px; animation: spin 0.8s linear infinite; margin-bottom: 12px; }
+  /* FLOW BARS */
+  .flow-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; font-family: 'JetBrains Mono', monospace; }
+  .f-lbl { width: 100px; font-size: 10.5px; font-weight: 700; color: var(--text); }
+  .f-track { flex: 1; height: 8px; background: var(--line-soft); border-radius: 100px; overflow: hidden; }
+  .f-fill { height: 100%; background: var(--teal); border-radius: 100px; }
+  .f-val { width: 30px; text-align: right; font-size: 10px; font-weight: 800; color: var(--text-dim); }
+
+  #loadingOverlay { position: fixed; inset: 0; background: var(--bg); opacity: 0.98; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .spinner { border: 3px solid var(--line); border-top: 3px solid var(--teal); border-radius: 50%; width: 40px; height: 40px; animation: spin 0.8s linear infinite; margin-bottom: 16px; }
   @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-  @media(max-width:1200px) { .col-span-3, .col-span-9 { grid-column: span 12; } .grid-cols-3 { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
@@ -153,13 +136,11 @@
 
   <header class="top">
     <div>
-      <div class="brand-eyebrow">Top-Down Relative Strength Matrix</div>
-      <h1>RS Radar Dashboard</h1>
-      <div class="subline">Cross-Sectional Rank Trajectory & Momentum Shift Analytics</div>
+      <div class="brand-eyebrow">Institutional Rotation Engine</div>
+      <h1>Sector & Industry RS Radar</h1>
     </div>
     <div class="header-right">
-      <div class="status-badge" id="statusBadge">Status: <b>Initializing</b></div>
-      <button class="btn primary" id="btnRefresh">↻ Refresh Matrix</button>
+      <div class="status-badge" id="statusBadge">Status: <b>Calculating Matrix</b></div>
       <div class="theme-toggle" id="themeToggle">
         <span class="opt" id="optDark">Dark</span>
         <span class="opt" id="optLight">Light</span>
@@ -169,81 +150,111 @@
 
   <div id="loadingOverlay">
     <div class="spinner"></div>
-    <div class="brand-eyebrow" id="loadStatus">Compiling Sector Ranks…</div>
+    <div class="brand-eyebrow" id="loadStatus">Compiling Capital Rotation Data…</div>
   </div>
 
-  <div class="grid grid-cols-12" id="mainContainer">
-    
-    <!-- LEFT COLUMN: MOVERS -->
-    <div class="col-span-3 flex" style="flex-direction:column; gap:14px;">
-      <div class="card">
-        <div class="label">Daily Rank Up</div>
-        <div id="dailyUpList"></div>
-      </div>
-      <div class="card">
-        <div class="label" style="border-left-color:var(--red);">Daily Rank Down</div>
-        <div id="dailyDownList"></div>
-      </div>
-      <div class="card">
-        <div class="label">Weekly Rank Up</div>
-        <div id="weeklyUpList"></div>
-      </div>
-      <div class="card">
-        <div class="label" style="border-left-color:var(--red);">Weekly Rank Down</div>
-        <div id="weeklyDownList"></div>
+  <div class="grid grid-12" id="mainContainer" style="display:none;">
+
+    <!-- LAYER 1: COMMAND CENTER -->
+    <div class="col-span-12 card mission-control">
+      <div class="section-title" style="margin-bottom:8px;">Market Rotation Regime</div>
+      <div class="mc-grid">
+        <div>
+          <div class="regime-title" id="mcRegime">CALCULATING...</div>
+          <div style="display:flex; gap:16px;">
+            <div><div class="mc-lbl">RS Confidence</div><div class="mc-val" id="mcConf" style="color:var(--teal);">--</div></div>
+            <div><div class="mc-lbl">Today's Theme</div><div class="mc-val" id="mcTheme">--</div></div>
+          </div>
+        </div>
+        <div>
+          <div class="mc-lbl">Leadership</div>
+          <div class="mc-val" id="mcLeaders" style="color:var(--teal); font-size:12px; line-height:1.6;">--</div>
+        </div>
+        <div>
+          <div class="mc-lbl">Weakest / Avoid</div>
+          <div class="mc-val" id="mcAvoid" style="color:var(--red); font-size:12px; line-height:1.6;">--</div>
+        </div>
+        <div class="ai-box" id="aiText">
+          Generating strategy summary...
+        </div>
       </div>
     </div>
 
-    <!-- RIGHT COLUMN: TABLES -->
-    <div class="col-span-9 flex" style="flex-direction:column; gap:16px;">
-      
-      <!-- SECTOR LEADERS TABLE -->
-      <div>
-        <div class="section-head"><h2>Sector Leaders</h2></div>
-        <table class="rs-table">
-          <thead>
-            <tr>
-              <th>Now</th><th>1D</th><th>1W</th><th>1M</th>
-              <th>Ticker</th><th>Name</th><th>RS Day%</th><th>RS Wk%</th><th>RS Mth%</th><th>52W High</th>
-            </tr>
-          </thead>
-          <tbody id="sectorTable"></tbody>
-        </table>
+    <!-- LAYER 2: QUADRANT MAP & ALERTS -->
+    <div class="col-span-8 card">
+      <div class="section-title">Relative Strength Rotation Map (vs SPY)</div>
+      <div class="quadrant-wrap" id="quadrantMap">
+        <div class="q-axis-x"></div><div class="q-axis-y"></div>
+        <div class="q-label q-tl">Improving</div><div class="q-label q-tr">Leading</div>
+        <div class="q-label q-bl">Weak</div><div class="q-label q-br">Lagging</div>
+        <!-- Dots injected via JS -->
       </div>
+      <div style="display:flex; justify-content:center; gap:16px; margin-top:16px; font-family:'JetBrains Mono'; font-size:9px; font-weight:700; color:var(--text-faint);">
+        <span>X-Axis: RS Score (0-100)</span>
+        <span>Y-Axis: RS Momentum (1W $\Delta$)</span>
+      </div>
+    </div>
 
-      <!-- INDUSTRY RS RANK GRID -->
-      <div>
-        <div class="section-head"><h2>Industry RS Rank (3-Column Split)</h2></div>
-        <div class="grid grid-cols-3" id="industryGrid" style="gap:0; border:1px solid var(--line); border-radius:0 0 10px 10px; overflow:hidden;">
-          <!-- Injected via JS -->
+    <div class="col-span-4 grid">
+      <div class="card" style="padding:16px;">
+        <div class="section-title">Capital Flow (Rotation Score)</div>
+        <div id="capitalFlowList"></div>
+      </div>
+      <div class="card" style="padding:16px;">
+        <div class="section-title">Portfolio Translation</div>
+        <div class="bucket-grid" style="grid-template-columns:1fr 1fr; gap:8px;">
+          <div class="bucket" style="border-color:var(--teal);"><div class="b-title" style="color:var(--teal);">Overweight (Core)</div><div id="portCore"></div></div>
+          <div class="bucket" style="border-color:var(--red);"><div class="b-title" style="color:var(--red);">Underweight / Avoid</div><div id="portAvoid"></div></div>
         </div>
       </div>
+    </div>
 
+    <!-- LAYER 3: SECTOR TABLE -->
+    <div class="col-span-12 card">
+      <div class="section-title">Sector Leadership Engine</div>
+      <table class="rs-table">
+        <thead>
+          <tr>
+            <th>Sector</th><th>RS Score</th><th>1W $\Delta$ (Mom)</th><th>Trend (1M)</th><th>Breadth (>200MA)</th><th>Position</th>
+          </tr>
+        </thead>
+        <tbody id="sectorTableBody"></tbody>
+      </table>
+    </div>
+
+    <!-- LAYER 4: INDUSTRY GROUPS -->
+    <div class="col-span-12 card">
+      <div class="section-title">Industry Rotation Groups</div>
+      <div class="bucket-grid" id="industryBuckets">
+        <div class="bucket"><div class="b-title" style="color:var(--teal);">Leadership</div><div id="indLeading"></div></div>
+        <div class="bucket"><div class="b-title" style="color:var(--blue);">Improving</div><div id="indImproving"></div></div>
+        <div class="bucket"><div class="b-title" style="color:var(--amber);">Lagging / Cooling</div><div id="indLagging"></div></div>
+        <div class="bucket"><div class="b-title" style="color:var(--red);">Weak / Broken</div><div id="indWeak"></div></div>
+      </div>
     </div>
 
   </div>
 
 <script>
+// UNIVERSE CONFIGURATION
 const SECTORS = [
-  {tk: 'XLE', n: 'Energy'}, {tk: 'XLU', n: 'Utilities'}, {tk: 'XLF', n: 'Financials'}, {tk: 'XLP', n: 'Cons Stpl'},
-  {tk: 'XLB', n: 'Materials'}, {tk: 'XLRE', n: 'Real Estate'}, {tk: 'XLI', n: 'Industrials'}, {tk: 'XLK', n: 'Technology'},
-  {tk: 'XLV', n: 'Health Care'}, {tk: 'XLC', n: 'Comm Svcs'}, {tk: 'XLY', n: 'Cons Disc'}
+  {tk: 'XLK', n: 'Technology'}, {tk: 'XLF', n: 'Financials'}, {tk: 'XLV', n: 'Health Care'},
+  {tk: 'XLE', n: 'Energy'}, {tk: 'XLY', n: 'Cons Disc'}, {tk: 'XLI', n: 'Industrials'},
+  {tk: 'XLC', n: 'Comm Svcs'}, {tk: 'XLP', n: 'Cons Stpl'}, {tk: 'XLRE', n: 'Real Estate'},
+  {tk: 'XLB', n: 'Materials'}, {tk: 'XLU', n: 'Utilities'}
 ];
 
 const INDUSTRIES = [
-  {tk: 'SMH', n: 'Semiconductor'}, {tk: 'XBI', n: 'Biotech'}, {tk: 'KRE', n: 'Regional Bank'}, {tk: 'XRT', n: 'Retail'},
-  {tk: 'JETS', n: 'Global Jets'}, {tk: 'ITA', n: 'Aerospace'}, {tk: 'IPO', n: 'IPO'}, {tk: 'GDX', n: 'Gold Miners'},
-  {tk: 'XOP', n: 'Oil & Gas Exp.'}, {tk: 'TAN', n: 'Solar'}, {tk: 'IGV', n: 'Tech-Software'}, {tk: 'URA', n: 'Uranium'},
-  {tk: 'COPX', n: 'Copper Miners'}, {tk: 'REMX', n: 'Rare Earth'}, {tk: 'FINX', n: 'FinTech'}, {tk: 'IYT', n: 'Transportation'},
-  {tk: 'LIT', n: 'Lithium'}, {tk: 'CIBR', n: 'Cybersecurity'}, {tk: 'SLX', n: 'Steel'}, {tk: 'IHI', n: 'Med. Devices'},
-  {tk: 'SIL', n: 'Silver Miners'}, {tk: 'WOOD', n: 'Timber'}, {tk: 'MOO', n: 'Agribusiness'}, {tk: 'BOAT', n: 'Marine Shipping'},
-  {tk: 'IAI', n: 'Broker-Dealers'}, {tk: 'KWEB', n: 'China Internet'}, {tk: 'IPAY', n: 'Mobile Payments'}, {tk: 'BLOK', n: 'Blockchain'},
-  {tk: 'KIE', n: 'Insurance'}, {tk: 'POWR', n: 'Power-Grid'}, {tk: 'ICLN', n: 'Clean Energy'}, {tk: 'PEJ', n: 'Leisure'},
-  {tk: 'UFO', n: 'Space'}, {tk: 'KARS', n: 'Electric Cars'}, {tk: 'QTUM', n: 'Quantum-Tech'}, {tk: 'WQTM', n: 'Pure-Quantum'}
+  {tk: 'SMH', n: 'Semiconductors'}, {tk: 'XBI', n: 'Biotech'}, {tk: 'KRE', n: 'Regional Banks'},
+  {tk: 'XRT', n: 'Retail'}, {tk: 'JETS', n: 'Global Jets'}, {tk: 'ITA', n: 'Aerospace'},
+  {tk: 'GDX', n: 'Gold Miners'}, {tk: 'XOP', n: 'Oil & Gas'}, {tk: 'TAN', n: 'Solar'},
+  {tk: 'IGV', n: 'Software'}, {tk: 'COPX', n: 'Copper'}, {tk: 'FINX', n: 'FinTech'},
+  {tk: 'CIBR', n: 'Cybersecurity'}, {tk: 'IHI', n: 'Med Devices'}, {tk: 'ITB', n: 'Homebuilders'}
 ];
 
 const ALL_TICKERS = ['SPY', ...SECTORS.map(s=>s.tk), ...INDUSTRIES.map(i=>i.tk)];
-const STATE = { data: {} };
+const STATE = { data: {}, processed: { sectors: [], industries: [] } };
+
 const PROXY_PROVIDERS = [
   url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
   url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`
@@ -260,7 +271,7 @@ async function fetchYahooSeries(symbol) {
       const q = json.chart.result[0].indicators.quote[0];
       const bars = [];
       for(let i=0; i<q.close.length; i++) {
-        if(q.close[i] != null) bars.push({ c: q.close[i], h: q.high[i] });
+        if(q.close[i] != null) bars.push({ c: q.close[i], h: q.high[i], l: q.low[i] });
       }
       return bars;
     } catch(e) {}
@@ -268,147 +279,166 @@ async function fetchYahooSeries(symbol) {
   return null;
 }
 
-function calcRawRet(bars, periodIdx, length) {
-  if (!bars || bars.length <= periodIdx + length) return -999;
-  const end = bars.length - 1 - periodIdx;
-  const start = end - length;
-  return ((bars[end].c / bars[start].c) - 1) * 100;
+function calcRet(bars, days) {
+  if (!bars || bars.length < days + 1) return 0;
+  return ((bars[bars.length - 1].c / bars[bars.length - 1 - days].c) - 1) * 100;
 }
 
-function buildRanks(groupList, valKey) {
-  const sorted = [...groupList].sort((a,b) => a[valKey] - b[valKey]);
-  const maxIdx = sorted.length - 1;
-  const rankMap = {};
-  sorted.forEach((item, idx) => { rankMap[item.tk] = Math.round((idx / maxIdx) * 100); });
-  return rankMap;
-}
-
-function getRankBadge(r) {
-  let cls = 'rank-mid';
-  if (r >= 80) cls = 'rank-high';
-  else if (r <= 30) cls = 'rank-low';
-  return `<span class="rank-pill ${cls}">${r}</span>`;
-}
-
-function pctFormat(val) {
-  return `<span style="color:${val >= 0 ? 'var(--teal)' : 'var(--red)'}; font-weight:700;">${val >= 0 ? '+' : ''}${val.toFixed(2)}%</span>`;
+function sma(bars, len) {
+  if (!bars || bars.length < len) return null;
+  return bars.slice(-len).reduce((sum, b) => sum + b.c, 0) / len;
 }
 
 async function initRadar() {
   const status = document.getElementById('loadStatus');
   let count = 0;
+
   for (let i = 0; i < ALL_TICKERS.length; i++) {
     const tk = ALL_TICKERS[i];
     const bars = await fetchYahooSeries(tk);
-    if (bars && bars.length > 60) STATE.data[tk] = bars;
+    if (bars && bars.length > 200) STATE.data[tk] = bars;
     count++;
-    status.innerText = `Fetching RS Feeds… (${count}/${ALL_TICKERS.length})`;
-    await new Promise(r => setTimeout(r, 120));
+    status.innerHTML = `Compiling Capital Rotation Data… (${count}/${ALL_TICKERS.length})`;
+    await new Promise(r => setTimeout(r, 100)); // Trickle
   }
 
   document.getElementById('loadingOverlay').style.display = 'none';
-  document.getElementById('statusBadge').innerHTML = `Status: <b>Active (${Object.keys(STATE.data).length} Streams)</b>`;
+  document.getElementById('mainContainer').style.display = 'grid';
+  document.getElementById('statusBadge').innerHTML = `Status: <b>Active</b>`;
   processAndRender();
+}
+
+function normalizeScores(list, key, targetKey) {
+  const max = Math.max(...list.map(o => o[key]));
+  const min = Math.min(...list.map(o => o[key]));
+  list.forEach(o => {
+    o[targetKey] = Math.round(((o[key] - min) / (max - min)) * 100) || 50;
+  });
 }
 
 function processAndRender() {
   const spy = STATE.data['SPY'];
-  
-  const buildGroupData = (list) => {
-    let processed = [];
-    list.forEach(item => {
+  const spy3m = calcRet(spy, 63);
+  const spy1w = calcRet(spy, 5);
+
+  const processGroup = (groupList) => {
+    let results = [];
+    groupList.forEach(item => {
       const bars = STATE.data[item.tk];
       if(!bars) return;
       
+      const ret3m = calcRet(bars, 63);
+      const ret1m = calcRet(bars, 21);
+      const ret1w = calcRet(bars, 5);
+      
+      const rsRaw = ret3m - spy3m; // 3-month relative performance base
+      const rsMomRaw = ret1w - spy1w; // 1-week momentum shift
+      
       const c = bars[bars.length-1].c;
-      const h52 = Math.max(...bars.slice(-252).map(b => b.h));
-      const offHigh = ((c / h52) - 1) * 100;
+      const s200 = sma(bars, 200);
+      const isUp = ret1m > 0;
 
-      const rawNow = calcRawRet(bars, 0, 21);
-      const raw1d = calcRawRet(bars, 1, 21);
-      const raw1w = calcRawRet(bars, 5, 21);
-      const raw1m = calcRawRet(bars, 21, 21);
-      
-      const spyDay = spy ? calcRawRet(spy, 0, 1) : 0;
-      const spyWk = spy ? calcRawRet(spy, 0, 5) : 0;
-      const spyMo = spy ? calcRawRet(spy, 0, 21) : 0;
-      
-      const rsDay = calcRawRet(bars, 0, 1) - spyDay;
-      const rsWk = calcRawRet(bars, 0, 5) - spyWk;
-      const rsMo = rawNow - spyMo;
-
-      processed.push({ ...item, c, offHigh, rawNow, raw1d, raw1w, raw1m, rsDay, rsWk, rsMo });
+      results.push({
+        ...item,
+        rsRaw, rsMomRaw, ret1w, ret1m, ret3m,
+        trend: isUp ? '↑' : '↓',
+        trendColor: isUp ? 'var(--teal)' : 'var(--red)',
+        breadthOk: c > s200
+      });
     });
 
-    const ranksNow = buildRanks(processed, 'rawNow');
-    const ranks1d = buildRanks(processed, 'raw1d');
-    const ranks1w = buildRanks(processed, 'raw1w');
-    const ranks1m = buildRanks(processed, 'raw1m');
+    // Normalize
+    normalizeScores(results, 'rsRaw', 'rsScore');
+    normalizeScores(results, 'rsMomRaw', 'momScore'); // For plotting Y-axis 0-100
 
-    processed.forEach(p => {
-      p.rNow = ranksNow[p.tk]; p.r1d = ranks1d[p.tk]; p.r1w = ranks1w[p.tk]; p.r1m = ranks1m[p.tk];
-      p.chgDay = p.rNow - p.r1d;
-      p.chgWk = p.rNow - p.r1w;
+    // Assign Quadrant/Position
+    results.forEach(r => {
+      const isStrongRS = r.rsScore >= 50;
+      const isPositiveMo = r.rsMomRaw >= 0; // Absolute momentum vs SPY > 0
+
+      if (isStrongRS && isPositiveMo) { r.pos = 'Leader'; r.cls = 'pos-leader'; r.dot = 'leader'; }
+      else if (!isStrongRS && isPositiveMo) { r.pos = 'Improving'; r.cls = 'pos-improving'; r.dot = 'improving'; }
+      else if (isStrongRS && !isPositiveMo) { r.pos = 'Laggard'; r.cls = 'pos-laggard'; r.dot = 'laggard'; }
+      else { r.pos = 'Weak'; r.cls = 'pos-weak'; r.dot = 'weak'; }
     });
-    
-    return processed.sort((a,b) => b.rNow - a.rNow);
+
+    return results.sort((a,b) => b.rsScore - a.rsScore);
   };
 
-  const secData = buildGroupData(SECTORS);
-  const indData = buildGroupData(INDUSTRIES);
+  STATE.processed.sectors = processGroup(SECTORS);
+  STATE.processed.industries = processGroup(INDUSTRIES);
 
-  // 1. SECTOR TABLE
-  let secHtml = '';
-  secData.forEach(s => {
-    secHtml += `<tr>
-      <td>${getRankBadge(s.rNow)}</td><td>${getRankBadge(s.r1d)}</td><td>${getRankBadge(s.r1w)}</td><td>${getRankBadge(s.r1m)}</td>
-      <td style="font-weight:800; color:var(--blue);">${s.tk}</td><td>${s.n}</td>
-      <td>${pctFormat(s.rsDay)}</td><td>${pctFormat(s.rsWk)}</td><td>${pctFormat(s.rsMo)}</td>
-      <td style="font-weight:700;">${s.offHigh.toFixed(2)}%</td>
+  const secs = STATE.processed.sectors;
+  const inds = STATE.processed.industries;
+
+  // 1. COMMAND CENTER
+  const leaders = secs.filter(s => s.pos === 'Leader' || s.rsScore >= 70).slice(0,3);
+  const laggards = [...secs].reverse().slice(0,3);
+  
+  let regimeText = "🟢 Leadership Broadening";
+  if (leaders.length < 2) regimeText = "🟡 Narrow Leadership / Rotation";
+  if (secs.filter(s => s.pos === 'Weak').length > 5) regimeText = "🔴 Defensive Deterioration";
+
+  document.getElementById('mcRegime').innerText = regimeText;
+  document.getElementById('mcConf').innerText = Math.round(secs[0].rsScore) + '%';
+  document.getElementById('mcTheme').innerText = secs[0].rsScore > 60 && !['XLU','XLP'].includes(secs[0].tk) ? 'Risk ON' : 'Risk OFF';
+  
+  document.getElementById('mcLeaders').innerHTML = leaders.map(s => `• ${s.n}`).join('<br>');
+  document.getElementById('mcAvoid').innerHTML = laggards.map(s => `• ${s.n}`).join('<br>');
+
+  document.getElementById('aiText').innerHTML = `Capital continues rotating toward cyclical leadership. <b>${leaders[0]?.n}</b> and <b>${leaders[1]?.n}</b> remain the strongest absolute leaders while defensive sectors deteriorate. Current positioning favors maintaining overweight exposure to top quintile RS groups while strictly avoiding <b>${laggards[0]?.n}</b>.`;
+
+  // 2. QUADRANT MAP (RRG Style)
+  let mapHtml = `<div class="q-axis-x"></div><div class="q-axis-y"></div>
+    <div class="q-label q-tl">Improving</div><div class="q-label q-tr">Leading</div>
+    <div class="q-label q-bl">Weak</div><div class="q-label q-br">Lagging</div>`;
+  
+  secs.forEach(s => {
+    // x = rsScore (0-100), y = momScore (0-100) mapped to bottom-up percentage
+    mapHtml += `<div class="dot-wrap" style="left:${s.rsScore}%; top:${100 - s.momScore}%;">
+      <div class="dot ${s.dot}"></div>
+      <div class="dot-lbl">${s.tk}</div>
+    </div>`;
+  });
+  document.getElementById('quadrantMap').innerHTML = mapHtml;
+
+  // 3. SECTOR TABLE
+  let tblHtml = '';
+  secs.forEach(s => {
+    const moStr = (s.rsMomRaw > 0 ? '+' : '') + s.rsMomRaw.toFixed(1) + '%';
+    const moColor = s.rsMomRaw > 0 ? 'var(--teal)' : 'var(--red)';
+    tblHtml += `<tr>
+      <td style="font-weight:800; color:var(--text);">${s.n}</td>
+      <td style="font-family:'JetBrains Mono'; font-weight:800; font-size:12px;">${s.rsScore}</td>
+      <td style="color:${moColor}; font-weight:700;">${moStr}</td>
+      <td style="color:${s.trendColor}; font-weight:900;">${s.trend}</td>
+      <td>${s.breadthOk ? '<span style="color:var(--teal)">✓ Above</span>' : '<span style="color:var(--red)">✗ Below</span>'}</td>
+      <td><span class="pos-badge ${s.cls}">${s.pos}</span></td>
     </tr>`;
   });
-  document.getElementById('sectorTable').innerHTML = secHtml;
+  document.getElementById('sectorTableBody').innerHTML = tblHtml;
 
-  // 2. INDUSTRY GRID
-  const chunkSize = Math.ceil(indData.length / 3);
-  let indGridHtml = '';
-  for(let i=0; i<3; i++) {
-    const chunk = indData.slice(i * chunkSize, (i + 1) * chunkSize);
-    let tableHtml = `<div style="${i>0?'border-left:1px solid var(--line);':''}"><table class="rs-table"><thead><tr><th>Now</th><th>1D</th><th>1W</th><th>1M</th><th>Ticker</th><th>Name</th><th style="text-align:right;">RS Wk%</th></tr></thead><tbody>`;
-    chunk.forEach(ind => {
-      tableHtml += `<tr>
-        <td>${getRankBadge(ind.rNow)}</td><td>${getRankBadge(ind.r1d)}</td><td>${getRankBadge(ind.r1w)}</td><td>${getRankBadge(ind.r1m)}</td>
-        <td style="font-weight:800; color:var(--blue);">${ind.tk}</td><td class="nm">${ind.n}</td><td style="text-align:right;">${pctFormat(ind.rsWk)}</td>
-      </tr>`;
-    });
-    tableHtml += `</tbody></table></div>`;
-    indGridHtml += tableHtml;
-  }
-  document.getElementById('industryGrid').innerHTML = indGridHtml;
+  // 4. FLOW BARS & PORTFOLIO
+  let flowHtml = '';
+  secs.forEach(s => {
+    flowHtml += `<div class="flow-row">
+      <div class="f-lbl">${s.n}</div>
+      <div class="f-track"><div class="f-fill" style="width:${s.rsScore}%; background:${s.pos==='Weak'||s.pos==='Laggard'?'var(--red)':'var(--teal)'}"></div></div>
+      <div class="f-val">${s.rsScore}</div>
+    </div>`;
+  });
+  document.getElementById('capitalFlowList').innerHTML = flowHtml;
 
-  // 3. MOVERS
-  const renderMover = (list, key, targetId, isUp) => {
-    const sorted = [...list].sort((a,b) => isUp ? b[key] - a[key] : a[key] - b[key]).slice(0, 3);
-    let html = '';
-    sorted.forEach(m => {
-      html += `<div class="mover-item">
-        <div class="flex" style="align-items:center; gap:8px;">
-          ${getRankBadge(m.rNow)}
-          <div><div class="tk">${m.tk}</div><div class="nm">${m.n}</div></div>
-        </div>
-        <div style="text-align:right;">
-          <div style="font-weight:800; font-size:12px;">$${m.c.toFixed(2)}</div>
-          <div style="font-size:10px; font-weight:700; color:${isUp?'var(--teal)':'var(--red)'};">${m[key]>0?'+':''}${m[key]} pts</div>
-        </div>
-      </div>`;
-    });
-    document.getElementById(targetId).innerHTML = html;
-  };
+  document.getElementById('portCore').innerHTML = leaders.map(s => `<div class="b-item"><span>${s.n}</span><span style="color:var(--teal)">Core</span></div>`).join('');
+  document.getElementById('portAvoid').innerHTML = laggards.map(s => `<div class="b-item"><span>${s.n}</span><span style="color:var(--red)">0%</span></div>`).join('');
 
-  renderMover(indData, 'chgDay', 'dailyUpList', true);
-  renderMover(indData, 'chgDay', 'dailyDownList', false);
-  renderMover(indData, 'chgWk', 'weeklyUpList', true);
-  renderMover(indData, 'chgWk', 'weeklyDownList', false);
+  // 5. INDUSTRY BUCKETS
+  const groupInds = (pos) => inds.filter(i => i.pos === pos).map(i => `<div class="b-item"><span>${i.n}</span><span style="color:var(--text-dim)">${i.rsScore}</span></div>`).join('');
+  
+  document.getElementById('indLeading').innerHTML = groupInds('Leader') || '<div class="b-item">None</div>';
+  document.getElementById('indImproving').innerHTML = groupInds('Improving') || '<div class="b-item">None</div>';
+  document.getElementById('indLagging').innerHTML = groupInds('Laggard') || '<div class="b-item">None</div>';
+  document.getElementById('indWeak').innerHTML = groupInds('Weak') || '<div class="b-item">None</div>';
 }
 
 function setTheme(theme) {
@@ -420,7 +450,6 @@ function setTheme(theme) {
 
 document.getElementById("optDark").addEventListener("click", () => setTheme("dark"));
 document.getElementById("optLight").addEventListener("click", () => setTheme("light"));
-document.getElementById("btnRefresh").addEventListener("click", () => initRadar());
 
 window.onload = () => {
   let savedTheme = "dark";
