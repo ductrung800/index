@@ -2,535 +2,994 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Industry RS Matrix · Stage Analysis Dashboard</title>
-<link rel="icon" href="data:,">
+<title>Market Breadth & RS Radar Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&family=JetBrains+Mono:wght@700;800&display=swap" rel="stylesheet">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap');
-  
   :root {
-    --bg: #0a0e16; --panel: #101625; --panel2: #0d1220; --line: #212a3d; --line-soft: #1a2233;
-    --text: #e7ebf3; --text-dim: #8b93a8; --text-faint: #59617a;
-    --teal: #20d9b8; --amber: #f5b942; --red: #ff5c72; --blue: #38bdf8;
-    --navy-head: #131c33; --input-bg: #0d1220;
-    
-    /* Quadrant Colors - Dark Mode */
-    --quad-strong: rgba(16, 185, 129, 0.08);
-    --quad-improve: rgba(20, 184, 166, 0.08);
-    --quad-weaken: rgba(245, 158, 11, 0.08);
-    --quad-weak: rgba(225, 29, 72, 0.08);
-    --dot-fill: #38bdf8;
-    --dot-hover: #bae6fd;
-    --quad-text: rgba(255,255,255,0.1);
-  }
-  html[data-theme="light"] {
-    --bg: #f4f6fa; --panel: #ffffff; --panel2: #ffffff; --line: #dde2ec; --line-soft: #e9edf4;
-    --text: #151b2c; --text-dim: #5b6478; --text-faint: #8a92a6;
-    --teal: #0b9c82; --amber: #b9781a; --red: #c93a51; --blue: #0284c7;
-    --navy-head: #eef1f8; --input-bg: #f4f6fa;
-    
-    /* Quadrant Colors - Light Mode */
-    --quad-strong: #ecfdf5;
-    --quad-improve: #f0fdf4;
-    --quad-weaken: #fff1f2;
-    --quad-weak: #ffe4e6;
-    --dot-fill: #2563eb;
-    --dot-hover: #1d4ed8;
-    --quad-text: rgba(0,0,0,0.05);
+    --bg: #f4f6fa;
+    --card: #ffffff;
+    --line: #e2e8f0;
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    --text-faint: #94a3b8;
+    --blue: #2563eb;
+    --blue-light: #eff6ff;
+    --green: #059669;
+    --green-light: #ecfdf5;
+    --red: #e11d48;
+    --red-light: #ffe4e6;
+    --pink: #db2777;
+    --amber: #f59e0b;
+    --slate-800: #1e293b;
+    --slate-50: #f8fafc;
   }
   
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body {
-    height: 100%; width: 100%; overflow: hidden;
-    background:
-      radial-gradient(ellipse 1200px 500px at 15% -5%, rgba(32,217,184,.06), transparent 60%),
-      radial-gradient(ellipse 900px 500px at 100% 0%, rgba(255,92,114,.05), transparent 55%),
-      var(--bg);
-    color: var(--text); font-family: 'Inter', sans-serif; padding: 14px 18px;
-    transition: background .2s ease, color .2s ease;
-  }
-
-  /* .wrap { width: 100%; height: 100%; display: flex; flex-direction: column; }
-
-  /* NAVIGATION TABS */
-  .app-tabs { display: flex; gap: 4px; margin-bottom: 12px; border-bottom: 1px solid var(--line); flex-shrink: 0; overflow-x: auto; }
-  .app-tabs::-webkit-scrollbar { display: none; }
-  .app-tabs a { padding: 8px 16px; text-decoration: none; color: var(--text-dim); font-size: 11px; font-weight: 600; border: 1px solid transparent; border-bottom: none; border-radius: 6px 6px 0 0; text-transform: uppercase; letter-spacing: 0.04em; transition: all 0.15s; font-family: 'JetBrains Mono', monospace; white-space: nowrap; }
-  .app-tabs a.active { background: var(--panel); color: var(--teal); border-color: var(--line); border-bottom-color: var(--panel); margin-bottom: -1px; }
-  .app-tabs a:hover:not(.active) { color: var(--text); background: rgba(255,255,255,0.03); }
-
-  /* HEADER */
-  header.top { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid var(--line); padding-bottom: 10px; margin-bottom: 12px; gap: 16px; flex-shrink: 0; }
-  .eyebrow { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: .16em; color: var(--teal); text-transform: uppercase; font-weight: 700; }
-  h1 { font-size: 22px; font-weight: 800; letter-spacing: -.02em; margin-top: 2px; }
-  .sub { color: var(--text-dim); font-size: 11.5px; margin-top: 2px; font-family: 'JetBrains Mono', monospace; }
-  .hdr-right { display: flex; align-items: center; gap: 10px; }
-  .status-badge { font-family: 'JetBrains Mono', monospace; font-size: 11px; background: var(--panel2); border: 1px solid var(--line); padding: 5px 10px; border-radius: 6px; color: var(--text-dim); }
-  .status-badge b { color: var(--teal); }
-
-  .theme-toggle { display: flex; align-items: center; gap: 4px; background: var(--panel); border: 1px solid var(--line); border-radius: 100px; padding: 3px; cursor: pointer; }
-  .theme-toggle .opt { font-size: 10.5px; padding: 4px 10px; border-radius: 100px; color: var(--text-faint); font-weight: 700; font-family: 'JetBrains Mono', monospace; }
-  .theme-toggle .opt.active { background: var(--teal); color: #04150f; }
-
-  .btn { background: var(--panel); border: 1px solid var(--line); color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; padding: 6px 12px; border-radius: 6px; cursor: pointer; transition: all .15s; }
-  .btn:hover { border-color: var(--teal); color: var(--teal); }
-
-  /* MAIN MATRIX LAYOUT */
-  .layout { display: flex; flex-direction: column; gap: 14px; flex: 1; min-height: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; position: relative; }
+  body { background: var(--bg); color: var(--text-main); font-family: 'Inter', sans-serif; padding: 16px; overflow-y: scroll; }
   
-  .controls-bar { display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; border-bottom: 1px solid var(--line); background: var(--panel2); flex-shrink: 0; flex-wrap: wrap; gap: 12px; }
-  .controls-left h2 { font-size: 13px; font-weight: 800; color: var(--text); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 2px; }
-  .controls-left p { font-size: 11px; font-weight: 500; color: var(--text-dim); }
+  /* Utilities */
+  .flex { display: flex; } .flex-col { flex-direction: column; } .flex-wrap { flex-wrap: wrap; }
+  .items-center { align-items: center; } .items-end { align-items: flex-end; } .items-start { align-items: flex-start; }
+  .justify-between { justify-content: space-between; } .justify-center { justify-content: center; } .justify-end { justify-content: flex-end; }
+  .gap-1 { gap: 0.25rem; } .gap-2 { gap: 0.5rem; } .gap-3 { gap: 0.75rem; } .gap-4 { gap: 1rem; } .gap-6 { gap: 1.5rem; }
+  .grid { display: grid; }
+  .grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+  .grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+  .grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
+  .grid-cols-5 { grid-template-columns: repeat(5, 1fr); }
+  .grid-cols-6 { grid-template-columns: repeat(6, 1fr); }
+  .grid-cols-12 { grid-template-columns: repeat(12, 1fr); }
+  .col-span-3 { grid-column: span 3; } .col-span-4 { grid-column: span 4; } .col-span-9 { grid-column: span 9; }
+  .w-full { width: 100%; } .h-full { height: 100%; } .flex-1 { flex: 1; }
   
-  .controls-right { display: flex; align-items: center; gap: 12px; }
-  input.search { background: var(--input-bg); border: 1px solid var(--line); border-radius: 6px; color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 11.5px; padding: 6px 10px; width: 220px; }
-  input.search:focus { outline: none; border-color: var(--teal); }
+  .p-2 { padding: 0.5rem; } .p-3 { padding: 0.75rem; } .p-4 { padding: 1rem; }
+  .px-1 { padding-left: 0.25rem; padding-right: 0.25rem; } .px-2 { padding-left: 0.5rem; padding-right: 0.5rem; }
+  .py-05 { padding-top: 0.125rem; padding-bottom: 0.125rem; } .py-1 { padding-top: 0.25rem; padding-bottom: 0.25rem; }
+  .pt-2 { padding-top: 0.5rem; } .pb-2 { padding-bottom: 0.5rem; }
   
-  .filter-pills { display: flex; background: var(--input-bg); border: 1px solid var(--line); border-radius: 6px; padding: 2px; }
-  .filter-pills button { background: transparent; border: none; color: var(--text-dim); font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 800; padding: 6px 12px; border-radius: 4px; cursor: pointer; transition: all .15s; text-transform: uppercase; }
-  .filter-pills button.active { background: var(--panel2); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+  .border { border: 1px solid var(--line); } .border-t { border-top: 1px solid var(--line); } .border-b { border-bottom: 1px solid var(--line); }
+  .border-l-4 { border-left: 4px solid; }
+  .rounded { border-radius: 0.25rem; } .rounded-md { border-radius: 0.375rem; } .rounded-lg { border-radius: 0.5rem; } .rounded-full { border-radius: 9999px; }
+  .shadow-sm { box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05); }
   
-  /* SVG MATRIX CONTAINER */
-  .matrix-container { flex: 1; position: relative; padding: 20px; display: flex; flex-direction: column; min-height: 0; }
-  .matrix-svg-wrapper { flex: 1; position: relative; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--panel2); box-shadow: inset 0 2px 10px rgba(0,0,0,0.1); }
-  svg.quadrant-svg { width: 100%; height: 100%; display: block; }
+  .bg-white { background: var(--card); } .bg-slate-50 { background: var(--slate-50); }
+  .bg-blue { background: var(--blue); color: white; } .bg-blue-light { background: var(--blue-light); color: var(--blue); }
+  .bg-green-light { background: var(--green-light); color: var(--green); }
+  .bg-red-light { background: var(--red-light); color: var(--red); }
+  .bg-pink { background: var(--pink); color: white; }
+  
+  .text-xs { font-size: 0.75rem; line-height: 1rem; } .text-sm { font-size: 0.875rem; line-height: 1.25rem; }
+  .text-lg { font-size: 1.125rem; line-height: 1.75rem; } .text-2xl { font-size: 1.5rem; line-height: 2rem; } .text-3xl { font-size: 1.875rem; line-height: 2.25rem; }
+  .text-10 { font-size: 10px; } .text-9 { font-size: 9px; }
+  
+  .font-medium { font-weight: 500; } .font-bold { font-weight: 700; } .font-black { font-weight: 900; }
+  .uppercase { text-transform: uppercase; } .tracking-wider { letter-spacing: 0.05em; }
+  .truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .text-center { text-align: center; } .text-right { text-align: right; }
+  
+  .text-blue { color: var(--blue); } .text-green { color: var(--green); } .text-red { color: var(--red); } .text-muted { color: var(--text-muted); }
+  
+  /* Tabs */
+  .app-tabs { display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 2px solid var(--line); }
+  .app-tabs a { padding: 10px 20px; font-size: 12px; font-weight: 800; color: var(--text-muted); text-decoration: none; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 2px solid transparent; cursor: pointer; transition: all 0.2s; }
+  .app-tabs a.active { color: var(--blue); border-bottom-color: var(--blue); }
+  .app-tabs a:hover:not(.active) { color: var(--text-main); }
+  
+  .tab-content { display: none; }
+  .tab-content.active { display: block; animation: fadeIn 0.2s ease-in-out; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-  .axis-label { position: absolute; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 800; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; background: var(--panel); border: 1px solid var(--line); padding: 4px 8px; border-radius: 4px; z-index: 10; }
-  .axis-label.x-axis { bottom: 30px; right: 40px; }
-  .axis-label.y-axis { top: 40px; left: 10px; writing-mode: vertical-rl; transform: rotate(180deg); }
-
-  /* HOVER DATA CARD */
-  .hover-card { position: absolute; bottom: 40px; left: 60px; background: var(--panel2); border: 1px solid var(--line); box-shadow: 0 10px 25px rgba(0,0,0,0.5); border-radius: 10px; padding: 16px; width: 280px; z-index: 50; display: none; font-family: 'Inter', sans-serif; }
-  .hover-card.visible { display: block; animation: popIn 0.15s ease-out forwards; }
-  @keyframes popIn { 0% { opacity: 0; transform: scale(0.95); } 100% { opacity: 1; transform: scale(1); } }
-  
-  .hc-head { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid var(--line); padding-bottom: 10px; margin-bottom: 12px; }
-  .hc-ticker { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 800; color: var(--blue); letter-spacing: 0.05em; margin-bottom: 2px; }
-  .hc-name { font-size: 14px; font-weight: 800; color: var(--text); line-height: 1.2; }
-  .hc-close { cursor: pointer; color: var(--text-dim); font-size: 14px; font-weight: 800; background: none; border: none; padding: 0; line-height: 1; }
-  .hc-close:hover { color: var(--text); }
-  
-  .hc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
-  .hc-box { background: var(--input-bg); border: 1px solid var(--line); border-radius: 6px; padding: 10px; text-align: center; }
-  .hc-box-lbl { font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; margin-bottom: 4px; }
-  .hc-box-val { font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 800; color: var(--teal); }
-  .hc-box-sub { font-size: 10px; font-weight: 600; color: var(--text-faint); margin-top: 4px; }
-  
-  .hc-foot { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--line); padding-top: 10px; }
-  .hc-price { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--text-dim); }
-  .hc-price b { color: var(--text); font-size: 13px; }
-  .hc-badge { font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 800; padding: 3px 6px; border-radius: 4px; text-transform: uppercase; }
-  .badge-strong { background: rgba(32,217,184,.15); color: var(--teal); border: 1px solid rgba(32,217,184,.3); }
-  .badge-improving { background: rgba(56,189,248,.15); color: var(--blue); border: 1px solid rgba(56,189,248,.3); }
-  .badge-weakening { background: rgba(245,185,66,.15); color: var(--amber); border: 1px solid rgba(245,185,66,.3); }
-  .badge-weak { background: rgba(255,92,114,.15); color: var(--red); border: 1px solid rgba(255,92,114,.3); }
-
-  /* SVG Inner elements */
-  .plot-point { cursor: pointer; transition: transform 0.1s ease; }
-  .plot-point circle { transition: all 0.15s ease; }
-  .plot-point:hover circle.core { fill: var(--dot-hover); r: 6; }
-  .plot-point:hover circle.glow { fill: var(--dot-hover); opacity: 0.2; r: 14; }
-  .plot-point text { pointer-events: none; }
-  .plot-point:hover text { font-size: 11px; font-weight: 800; fill: var(--text); }
+  /* Custom components */
+  .ratio-bar-wrap { width: 100%; height: 8px; background: var(--slate-50); border-radius: 99px; overflow: hidden; margin: 6px 0; }
+  .scroll-y { overflow-y: auto; }
+  .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+  .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--line); border-radius: 4px; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { padding: 8px; text-align: left; }
+  thead { background: var(--slate-50); border-bottom: 1px solid var(--line); }
 </style>
 </head>
 <body>
-<div class="wrap">
 
-  <!-- ================= APP TABS ================= -->
+  <!-- App Navigation -->
   <div class="app-tabs">
-    <a href="index.html">Market Dashboard</a>
-    <a href="MarketCommandCenter.html">Market Command Center</a>
-    <a href="MarketRegime.html">Market Regime</a> 
-    <a href="stockbee_market_monitor_live.html">Stockbee Monitor</a>
-    <a href="sata_watchlist_dashboard.html">SATA Chart</a>
-    <a href="PowerList.html">Power List</a>
-    <a href="liquid_leaders.html">Liquid Leaders</a>
-    <a href="group_momentum.html">Group Momentum</a>
-    <a href="industry_rs_quadrant.html" class="active">Industry RS</a>
-    <a href="PriceStructure.html">Price Structure</a>
-    <a href="StageAnalysis.html">Stage Analysis</a>
-    <a href="tv_watchlist.html">TradingView Watchlist</a>
-    <a href="PortfolioManagement.html">Portfolio Management</a>
-    <a href="Playbook.html">Playbook</a>
+    <a data-target="tab-breadth" class="active">Market Breadth</a>
+    <a data-target="tab-radar">RS Radar Matrix</a>
+    <a data-target="tab-scanner">Scanner</a>
+    <a data-target="tab-watchlist">Watchlist Dashboard</a>
   </div>
 
-  <header class="top">
-    <div>
-      <div class="eyebrow">Oliver Kell &middot; Market Internals</div>
-      <h1>Industry Quadrant Matrix</h1>
-      <div class="sub">Stock Industry Performance – Weekly × Monthly Absolute Strength &middot; Client-Side Native Fetch</div>
-    </div>
-    <div class="hdr-right">
-      <div class="status-badge" id="statusBox">Initializing feed…</div>
-      <button class="btn" id="btnRefresh">↻ Refresh Matrix</button>
-      <div class="theme-toggle" id="themeToggle">
-        <span class="opt" id="optDark">Dark</span>
-        <span class="opt" id="optLight">Light</span>
-      </div>
-    </div>
-  </header>
-
-  <div class="layout">
+  <!-- ========================================== -->
+  <!-- TAB 1: MARKET BREADTH (Image 2)            -->
+  <!-- ========================================== -->
+  <div id="tab-breadth" class="tab-content active">
     
-    <div class="controls-bar">
-      <div class="controls-left">
-        <h2>Top-Down Absolute Strength</h2>
-        <p>Top-right quadrant indicates institutional momentum leaders (Strongest ↗️).</p>
-      </div>
-      <div class="controls-right">
-        <input type="text" id="searchInput" class="search" placeholder="Search Industry or Ticker..." />
-        <div class="filter-pills" id="quadrantFilters">
-          <button class="active" data-quad="ALL">ALL</button>
-          <button data-quad="STRONG">STRONG</button>
-          <button data-quad="IMPROVING">IMPROVING</button>
-          <button data-quad="WEAKENING">WEAKENING</button>
-          <button data-quad="WEAK">WEAK</button>
+    <!-- Top SMAs -->
+    <div class="grid grid-cols-4 gap-4">
+      <!-- Highs/Lows & Adv/Dec -->
+      <div class="bg-white border rounded-lg p-4 flex flex-col justify-center gap-4 shadow-sm">
+        <div>
+          <div class="flex justify-between text-xs font-bold text-muted"><span>New Highs vs New Lows</span><span class="text-blue">31%</span></div>
+          <div class="ratio-bar-wrap"><div class="bg-blue h-full" style="width: 31%"></div></div>
+          <div class="flex justify-between text-10 font-bold"><span class="text-blue">5 Highs</span><span class="text-red">11 Lows</span></div>
+        </div>
+        <div>
+          <div class="flex justify-between text-xs font-bold text-muted"><span>Advance vs Decline</span><span class="text-blue">53%</span></div>
+          <div class="ratio-bar-wrap"><div class="bg-blue h-full" style="width: 53%"></div></div>
+          <div class="flex justify-between text-10 font-bold"><span class="text-blue">219 Advance</span><span class="text-red">194 Decline</span></div>
         </div>
       </div>
-    </div>
-
-    <div class="matrix-container">
-      <div class="axis-label y-axis">Monthly RS Percentile ➔</div>
-      <div class="axis-label x-axis">Weekly RS Percentile ➔</div>
       
-      <div class="matrix-svg-wrapper" id="svgWrapper">
-        <svg id="scatterPlotSvg" class="quadrant-svg" viewBox="0 0 1000 600" preserveAspectRatio="none">
-          <!-- Dynamic Content Injected Here -->
-        </svg>
+      <!-- Short-Term Trend -->
+      <div class="bg-white border rounded-lg p-4 flex flex-col justify-between shadow-sm">
+        <div><div class="text-10 font-bold text-muted uppercase tracking-wider">Short-Term Trend</div><div class="text-sm font-black mt-1">% > SMA 20</div></div>
+        <div class="flex justify-between items-end mt-2"><div class="text-3xl font-black">52.5%</div><div class="text-10 font-bold bg-green-light px-2 py-1 rounded">+Pos</div></div>
+        <div class="flex justify-between items-center mt-3 pt-2 border-t text-10 font-bold"><div class="bg-green-light px-2 py-05 rounded uppercase">Mixed</div><div class="text-muted">S&P 500 Index</div></div>
       </div>
 
-      <!-- Hover Data Card -->
-      <div id="hoverCard" class="hover-card">
-        <div class="hc-head">
-          <div>
-            <div class="hc-ticker" id="hcTicker">TICKER</div>
-            <div class="hc-name" id="hcName">Industry Name</div>
-          </div>
-          <button class="hc-close" onclick="closeHoverCard()">✕</button>
+      <!-- Medium-Term Trend -->
+      <div class="bg-white border rounded-lg p-4 flex flex-col justify-between shadow-sm">
+        <div><div class="text-10 font-bold text-muted uppercase tracking-wider">Medium-Term Trend</div><div class="text-sm font-black mt-1">% > SMA 50</div></div>
+        <div class="flex justify-between items-end mt-2"><div class="text-3xl font-black">57.9%</div><div class="text-10 font-bold bg-green-light px-2 py-1 rounded">+Pos</div></div>
+        <div class="flex justify-between items-center mt-3 pt-2 border-t text-10 font-bold"><div class="bg-green-light px-2 py-05 rounded uppercase">Mixed</div><div class="text-muted">S&P 500 Index</div></div>
+      </div>
+
+      <!-- Long-Term Trend -->
+      <div class="bg-white border rounded-lg p-4 flex flex-col justify-between shadow-sm">
+        <div><div class="text-10 font-bold text-muted uppercase tracking-wider">Long-Term Trend</div><div class="text-sm font-black mt-1">% > SMA 200</div></div>
+        <div class="flex justify-between items-end mt-2"><div class="text-3xl font-black">63.2%</div><div class="text-10 font-bold bg-green-light px-2 py-1 rounded">+Pos</div></div>
+        <div class="flex justify-between items-center mt-3 pt-2 border-t text-10 font-bold"><div class="bg-green-light px-2 py-05 rounded uppercase">Broad Strength</div><div class="text-muted">S&P 500 Index</div></div>
+      </div>
+    </div>
+
+    <!-- Macro Lens -->
+    <div class="flex justify-between items-center bg-slate-800 text-white p-3 rounded-lg mt-4 shadow-sm">
+      <div class="flex items-center gap-4">
+        <div class="text-10 font-black uppercase bg-white text-slate-800 px-2 py-1 rounded">Macro Lens</div>
+        <div class="text-10 font-bold text-faint uppercase tracking-wider">Gold/SPY Ratio</div>
+        <div class="text-sm font-black">0.5184</div>
+      </div>
+      <div class="text-10 font-black text-pink">-0.77% (Paper Assets Dominant)</div>
+    </div>
+
+    <!-- Middle Grid: Conditions & Analytics -->
+    <div class="grid grid-cols-12 gap-4 mt-4">
+      
+      <!-- SPY Conditions -->
+      <div class="col-span-4 bg-white border rounded-lg p-3 flex flex-col shadow-sm">
+        <div class="flex justify-between items-center border-l-4 border-blue px-2 mb-2">
+          <div class="text-sm font-black">Market Conditions</div>
+          <div class="bg-red-light text-10 font-bold px-2 py-1 rounded">Negative</div>
         </div>
-        <div class="hc-grid">
-          <div class="hc-box">
-            <div class="hc-box-lbl">Weekly RS Rank</div>
-            <div class="hc-box-val" id="hcWkRank">0 / 100</div>
-            <div class="hc-box-sub">1W: <span id="hcWkPct">0.00%</span></div>
-          </div>
-          <div class="hc-box">
-            <div class="hc-box-lbl">Monthly RS Rank</div>
-            <div class="hc-box-val" style="color: var(--blue);" id="hcMoRank">0 / 100</div>
-            <div class="hc-box-sub">1M: <span id="hcMoPct">0.00%</span></div>
+        <div class="border rounded bg-slate-50 h-48 flex items-center justify-center overflow-hidden">
+          <img src="https://charts2.finviz.com/chart.ashx?t=SPY&ty=c&ta=1&p=d" class="w-full h-full object-contain" alt="SPY" />
+        </div>
+        <div class="mt-3 flex flex-col text-10 font-bold text-main border-t pt-2 gap-2">
+          <div class="flex justify-between items-center pb-2 border-b"><span>Price Closes Below Moving Average (20 SMA)</span><div class="w-3 h-3 rounded-full bg-red shadow-sm"></div></div>
+          <div class="flex justify-between items-center pb-2 border-b"><span>Fast Stochastic Below Slow Stochastic</span><div class="w-3 h-3 rounded-full bg-red shadow-sm"></div></div>
+          <div class="flex justify-between items-center pb-2 border-b"><span>Fast & Slow Stochastic Curved Down</span><div class="w-3 h-3 rounded-full bg-red shadow-sm"></div></div>
+          <div class="flex justify-between items-center"><span>Outside Reversal Bar</span><div class="w-3 h-3 rounded-full bg-red shadow-sm"></div></div>
+        </div>
+      </div>
+
+      <!-- QQQ Conditions -->
+      <div class="col-span-4 bg-white border rounded-lg p-3 flex flex-col shadow-sm">
+        <div class="flex justify-between items-center border-l-4 border-blue px-2 mb-2">
+          <div class="text-sm font-black">Market Conditions</div>
+          <div class="bg-red-light text-10 font-bold px-2 py-1 rounded">Negative</div>
+        </div>
+        <div class="border rounded bg-slate-50 h-48 flex items-center justify-center overflow-hidden">
+          <img src="https://charts2.finviz.com/chart.ashx?t=QQQ&ty=c&ta=1&p=d" class="w-full h-full object-contain" alt="QQQ" />
+        </div>
+        <div class="mt-3 flex items-center justify-center text-10 font-bold text-muted border-t pt-4 italic">
+          No active danger signals for QQQ
+        </div>
+      </div>
+
+      <!-- Analytics Stack -->
+      <div class="col-span-4 flex flex-col gap-4">
+        <!-- Breadth & Trend -->
+        <div class="bg-white border rounded-lg p-3 shadow-sm">
+          <div class="text-10 font-bold text-muted uppercase tracking-wider mb-2">Breadth & Trend (Mega-Cap Proxy)</div>
+          <div class="grid grid-cols-6 gap-1 text-center">
+            <div class="flex flex-col items-center"><span class="text-9 text-muted font-bold">SMA 10</span><span class="text-sm font-black my-1">38%</span><span class="text-9 font-bold bg-red-light px-1 py-05 rounded">Negative</span></div>
+            <div class="flex flex-col items-center"><span class="text-9 text-muted font-bold">SMA 20</span><span class="text-sm font-black my-1">34%</span><span class="text-9 font-bold bg-red-light px-1 py-05 rounded">Negative</span></div>
+            <div class="flex flex-col items-center"><span class="text-9 text-muted font-bold">SMA 50</span><span class="text-sm font-black my-1">42%</span><span class="text-9 font-bold bg-red-light px-1 py-05 rounded">Negative</span></div>
+            <div class="flex flex-col items-center"><span class="text-9 text-muted font-bold">SMA 200</span><span class="text-sm font-black my-1">54%</span><span class="text-9 font-bold bg-green-light px-1 py-05 rounded">Positive</span></div>
+            <div class="flex flex-col items-center"><span class="text-9 text-muted font-bold">20 > 50</span><span class="text-sm font-black my-1">58%</span><span class="text-9 font-bold bg-green-light px-1 py-05 rounded">Positive</span></div>
+            <div class="flex flex-col items-center"><span class="text-9 text-muted font-bold">50 > 200</span><span class="text-sm font-black my-1">56%</span><span class="text-9 font-bold bg-green-light px-1 py-05 rounded">Positive</span></div>
           </div>
         </div>
-        <div class="hc-foot">
-          <div class="hc-price">Price: <b id="hcPrice">$0.00</b></div>
-          <div class="hc-badge" id="hcBadge">QUADRANT</div>
+
+        <!-- Market Performance -->
+        <div class="bg-white border rounded-lg p-3 shadow-sm">
+          <div class="text-10 font-bold text-muted uppercase tracking-wider mb-2">Market Performance (SPY)</div>
+          <div class="grid grid-cols-5 gap-2 text-center">
+            <div class="flex flex-col items-center"><span class="text-10 text-muted font-bold">YTD</span><span class="text-sm text-green font-black my-1">+9.89%</span><span class="text-9 font-bold bg-green-light px-2 py-05 rounded">Positive</span></div>
+            <div class="flex flex-col items-center"><span class="text-10 text-muted font-bold">1W</span><span class="text-sm text-green font-black my-1">+1.48%</span><span class="text-9 font-bold bg-green-light px-2 py-05 rounded">Positive</span></div>
+            <div class="flex flex-col items-center"><span class="text-10 text-muted font-bold">1M</span><span class="text-sm text-green font-black my-1">+2.04%</span><span class="text-9 font-bold bg-green-light px-2 py-05 rounded">Positive</span></div>
+            <div class="flex flex-col items-center"><span class="text-10 text-muted font-bold">1Y</span><span class="text-sm text-red font-black my-1">0%</span><span class="text-9 font-bold bg-red-light px-2 py-05 rounded">Negative</span></div>
+            <div class="flex flex-col items-center"><span class="text-10 text-muted font-bold">VIX</span><span class="text-sm font-black my-1">16.4</span><span class="text-9 font-bold bg-slate-50 px-2 py-05 rounded">Tracking</span></div>
+          </div>
+        </div>
+
+        <!-- Dist Days & Risk -->
+        <div class="grid grid-cols-2 gap-4">
+          <div class="bg-white border rounded-lg p-3 shadow-sm flex flex-col justify-between">
+            <div class="flex justify-between items-center border-b pb-2 mb-2">
+              <span class="text-9 font-bold text-muted uppercase">Dist. Days (25D)</span><span class="text-lg font-black text-red">7</span>
+            </div>
+            <div class="flex justify-center mt-2 text-9 font-bold text-red bg-red-light py-1 rounded">Correction</div>
+          </div>
+          
+          <div class="bg-white border rounded-lg p-3 shadow-sm">
+            <div class="text-9 font-bold text-muted uppercase tracking-wider mb-2">Risk Appetite (Factor/SPY)</div>
+            <div class="grid grid-cols-2 gap-2 text-center text-9 font-bold text-muted">
+              <div>Momentum (SPMO)<br><span class="text-green text-sm">0%</span></div>
+              <div>Growth (QQQ)<br><span class="text-green text-sm">0%</span></div>
+              <div>Value (VLUE)<br><span class="text-green text-sm">0%</span></div>
+              <div>Low Vol (VYM)<br><span class="text-green text-sm">0%</span></div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
+    <!-- Index Cards -->
+    <div class="grid grid-cols-6 gap-4 mt-4">
+      <!-- RSP -->
+      <div class="bg-white border border-l-4 border-l-blue rounded-lg p-3 flex flex-col justify-between shadow-sm">
+        <div><div class="text-10 font-bold text-muted uppercase tracking-wider">S&P 500 Eq Wt</div><div class="text-xs font-black mt-1">RSP</div></div>
+        <div class="flex justify-between items-end mt-2"><div class="text-xl font-black">$209.96</div><div class="text-xs font-bold text-green">+0.46%</div></div>
+        <div class="flex justify-between items-center mt-2 pt-2 border-t text-10 font-bold"><div class="bg-green-light text-green px-1 py-05 rounded">/ 21EMA High</div><div class="text-green">vol +11.7%</div></div>
+      </div>
+      <!-- QQQE -->
+      <div class="bg-white border border-l-4 border-l-blue rounded-lg p-3 flex flex-col justify-between shadow-sm">
+        <div><div class="text-10 font-bold text-muted uppercase tracking-wider">NASDAQ 100 Eq Wt</div><div class="text-xs font-black mt-1">QQQE</div></div>
+        <div class="flex justify-between items-end mt-2"><div class="text-xl font-black">$121.68</div><div class="text-xs font-bold text-green">+1.86%</div></div>
+        <div class="flex justify-between items-center mt-2 pt-2 border-t text-10 font-bold"><div class="bg-green-light text-green px-1 py-05 rounded">/ 21EMA High</div><div class="text-muted">vol -7.4%</div></div>
+      </div>
+      <!-- IWM -->
+      <div class="bg-white border border-l-4 border-l-green rounded-lg p-3 flex flex-col justify-between shadow-sm">
+        <div><div class="text-10 font-bold text-muted uppercase tracking-wider">Russell 2000</div><div class="text-xs font-black mt-1">IWM</div></div>
+        <div class="flex justify-between items-end mt-2"><div class="text-xl font-black">$295.59</div><div class="text-xs font-bold text-green">+1.97%</div></div>
+        <div class="flex justify-between items-center mt-2 pt-2 border-t text-10 font-bold"><div class="bg-green-light text-green px-1 py-05 rounded">/ 21EMA High</div><div class="text-green">vol +10.8%</div></div>
+      </div>
+      <!-- DIA -->
+      <div class="bg-white border border-l-4 border-l-amber rounded-lg p-3 flex flex-col justify-between shadow-sm">
+        <div><div class="text-10 font-bold text-muted uppercase tracking-wider">Dow Jones</div><div class="text-xs font-black mt-1">DIA</div></div>
+        <div class="flex justify-between items-end mt-2"><div class="text-xl font-black">$515.52</div><div class="text-xs font-bold text-green">+0.12%</div></div>
+        <div class="flex justify-between items-center mt-2 pt-2 border-t text-10 font-bold"><div class="bg-green-light text-green px-1 py-05 rounded">/ 21EMA High</div><div class="text-green">vol +47.1%</div></div>
+      </div>
+      <!-- BTC -->
+      <div class="bg-white border border-l-4 border-l-amber rounded-lg p-3 flex flex-col justify-between shadow-sm">
+        <div><div class="text-10 font-bold text-muted uppercase tracking-wider">Bitcoin</div><div class="text-xs font-black mt-1">BTC</div></div>
+        <div class="flex justify-between items-end mt-2"><div class="text-xl font-black">$64216.94</div><div class="text-xs font-bold text-red">-0.04%</div></div>
+        <div class="flex justify-between items-center mt-2 pt-2 border-t text-10 font-bold"><div class="bg-red-light text-red px-1 py-05 rounded">/ 21EMA Low</div><div class="text-muted">vol -43.9%</div></div>
+      </div>
+      <!-- VIX -->
+      <div class="bg-white border border-l-4 border-l-[gray] rounded-lg p-3 flex flex-col justify-between shadow-sm">
+        <div><div class="text-10 font-bold text-muted uppercase tracking-wider">Volatility</div><div class="text-xs font-black mt-1">VIX</div></div>
+        <div class="flex justify-between items-end mt-2"><div class="text-xl font-black">$16.4</div><div class="text-xs font-bold text-red">-11.06%</div></div>
+        <div class="flex justify-between items-center mt-2 pt-2 border-t text-10 font-bold"><div class="bg-green-light text-green px-1 py-05 rounded">/ 21EMA High</div><div class="text-muted">vol 0%</div></div>
+      </div>
+    </div>
+
+    <!-- Ranked Lists -->
+    <div class="grid grid-cols-5 gap-4 mt-4 h-[350px]">
+      
+      <!-- Index ETFs -->
+      <div class="bg-white border rounded-lg shadow-sm flex flex-col overflow-hidden">
+        <div class="p-2 bg-slate-50 border-b text-10 font-black uppercase text-main">Index ETFs (1W)</div>
+        <div class="flex-1 scroll-y custom-scrollbar p-2 flex flex-col gap-1">
+          <div class="flex items-center text-10 font-bold"><span class="w-8">QQQ</span><div class="flex-1 bg-slate-50 h-4 rounded mx-2 overflow-hidden"><div class="bg-blue h-full flex justify-end items-center px-1 text-white" style="width: 80%">+2.87%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-8">IWO</span><div class="flex-1 bg-slate-50 h-4 rounded mx-2 overflow-hidden"><div class="bg-blue h-full flex justify-end items-center px-1 text-white" style="width: 70%">+2.42%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-8">QQQE</span><div class="flex-1 bg-slate-50 h-4 rounded mx-2 overflow-hidden"><div class="bg-blue h-full flex justify-end items-center px-1 text-white" style="width: 60%">+1.70%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-8">UUP</span><div class="flex-1 bg-slate-50 h-4 rounded mx-2 overflow-hidden"><div class="bg-blue h-full flex justify-end items-center px-1 text-white" style="width: 50%">+1.14%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-8">TLT</span><div class="flex-1 bg-slate-50 h-4 rounded mx-2 overflow-hidden"><div class="bg-blue h-full flex justify-end items-center px-1 text-white" style="width: 45%">+1.04%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-8">IWM</span><div class="flex-1 bg-slate-50 h-4 rounded mx-2 overflow-hidden"><div class="bg-blue h-full flex justify-end items-center px-1 text-white" style="width: 40%">+0.92%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-8">SPY</span><div class="flex-1 bg-slate-50 h-4 rounded mx-2 overflow-hidden"><div class="bg-blue h-full flex justify-end items-center px-1 text-white" style="width: 35%">+0.92%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-8">RSP</span><div class="flex-1 bg-slate-50 h-4 rounded mx-2 overflow-hidden"><div class="bg-pink h-full flex justify-end items-center px-1 text-white" style="width: 30%">-0.50%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-8">IBIT</span><div class="flex-1 bg-slate-50 h-4 rounded mx-2 overflow-hidden"><div class="bg-pink h-full flex justify-end items-center px-1 text-white" style="width: 40%">-1.17%</div></div></div>
+        </div>
+      </div>
+
+      <!-- Sector Performance -->
+      <div class="bg-white border rounded-lg shadow-sm flex flex-col overflow-hidden">
+        <div class="p-2 bg-slate-50 border-b text-10 font-black uppercase text-main">Sector Performance (1W)</div>
+        <div class="flex-1 scroll-y custom-scrollbar p-2 flex flex-col gap-1">
+          <div class="flex items-center text-10 font-bold"><span class="w-16 truncate">Technology</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-blue h-full flex justify-end items-center px-1 text-white" style="width: 60%">+3.05%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-16 truncate">Industrials</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-blue h-full flex justify-end items-center px-1 text-white" style="width: 40%">+1.85%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-16 truncate">Financials</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-blue h-full flex justify-end items-center px-1 text-white" style="width: 20%">+0.37%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-16 truncate">Materials</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-blue h-full flex justify-end items-center px-1 text-white" style="width: 10%">+0.17%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-16 truncate">Cons Disc</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-pink h-full flex justify-end items-center px-1 text-white" style="width: 20%">-2.75%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-16 truncate">Cons Stpl</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-pink h-full flex justify-end items-center px-1 text-white" style="width: 30%">-3.75%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-16 truncate">Real Estate</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-pink h-full flex justify-end items-center px-1 text-white" style="width: 32%">-3.80%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-16 truncate">Comm Serv</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-pink h-full flex justify-end items-center px-1 text-white" style="width: 35%">-3.82%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-16 truncate">Health Care</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-pink h-full flex justify-end items-center px-1 text-white" style="width: 45%">-4.48%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-16 truncate">Energy</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-pink h-full flex justify-end items-center px-1 text-white" style="width: 70%">-7.30%</div></div></div>
+        </div>
+      </div>
+
+      <!-- Industry Performance -->
+      <div class="bg-white border rounded-lg shadow-sm flex flex-col overflow-hidden">
+        <div class="p-2 bg-slate-50 border-b text-10 font-black uppercase text-main">Industry Performance (1W)</div>
+        <div class="flex-1 scroll-y custom-scrollbar p-2 flex flex-col gap-1">
+          <div class="flex items-center text-10 font-bold"><span class="w-16 truncate">Semicon...</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-blue h-full flex justify-end items-center px-1 text-white" style="width: 90%">+6.44%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-16 truncate">Technolo...</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-blue h-full flex justify-end items-center px-1 text-white" style="width: 70%">+3.59%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-16 truncate">Gold Min...</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-blue h-full flex justify-end items-center px-1 text-white" style="width: 65%">+3.10%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-16 truncate">Industria...</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-blue h-full flex justify-end items-center px-1 text-white" style="width: 60%">+2.68%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-16 truncate">Aerospa...</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-blue h-full flex justify-end items-center px-1 text-white" style="width: 50%">+2.30%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-16 truncate">Biotech</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-blue h-full flex justify-end items-center px-1 text-white" style="width: 40%">+1.76%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-16 truncate">Utilities</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-blue h-full flex justify-end items-center px-1 text-white" style="width: 15%">+0.52%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-16 truncate">Financials</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-blue h-full flex justify-end items-center px-1 text-white" style="width: 10%">+0.43%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-16 truncate">Lithium</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-pink h-full flex justify-end items-center px-1 text-white" style="width: 10%">-0.27%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-16 truncate">Materials</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-pink h-full flex justify-end items-center px-1 text-white" style="width: 15%">-0.71%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-16 truncate">Retail</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-pink h-full flex justify-end items-center px-1 text-white" style="width: 25%">-1.53%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-16 truncate">Health Ca...</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-pink h-full flex justify-end items-center px-1 text-white" style="width: 35%">-2.87%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-16 truncate">Cons Stpl</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-pink h-full flex justify-end items-center px-1 text-white" style="width: 40%">-2.94%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-16 truncate">Real Est...</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-pink h-full flex justify-end items-center px-1 text-white" style="width: 45%">-3.31%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-16 truncate">Solar</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-pink h-full flex justify-end items-center px-1 text-white" style="width: 50%">-3.89%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-16 truncate">Steel</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-pink h-full flex justify-end items-center px-1 text-white" style="width: 60%">-4.96%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-16 truncate">Energy</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-pink h-full flex justify-end items-center px-1 text-white" style="width: 80%">-6.57%</div></div></div>
+        </div>
+      </div>
+
+      <!-- Sector & Leveraged ETFs -->
+      <div class="bg-white border rounded-lg shadow-sm flex flex-col overflow-hidden">
+        <div class="p-2 bg-slate-50 border-b text-10 font-black uppercase text-main">Sector & Leveraged ETFs (1W)</div>
+        <div class="flex-1 scroll-y custom-scrollbar p-2 flex flex-col gap-1">
+          <div class="flex items-center text-10 font-bold"><span class="w-8">SOXL</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-blue h-full flex justify-end items-center px-1 text-white" style="width: 95%">+19.01%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-8">SMH</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-blue h-full flex justify-end items-center px-1 text-white" style="width: 50%">+6.44%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-8">ARKK</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-blue h-full flex justify-end items-center px-1 text-white" style="width: 48%">+6.00%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-8">URNM</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-blue h-full flex justify-end items-center px-1 text-white" style="width: 45%">+5.29%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-8">EEM</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-blue h-full flex justify-end items-center px-1 text-white" style="width: 40%">+4.63%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-8">NLR</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-blue h-full flex justify-end items-center px-1 text-white" style="width: 35%">+4.09%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-8">XLK</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-blue h-full flex justify-end items-center px-1 text-white" style="width: 30%">+3.59%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-8">GDX</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-blue h-full flex justify-end items-center px-1 text-white" style="width: 25%">+3.10%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-8">XLI</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-blue h-full flex justify-end items-center px-1 text-white" style="width: 22%">+2.68%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-8">SIL</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-blue h-full flex justify-end items-center px-1 text-white" style="width: 20%">+2.51%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-8">ITA</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-blue h-full flex justify-end items-center px-1 text-white" style="width: 18%">+2.30%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-8">PPA</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-blue h-full flex justify-end items-center px-1 text-white" style="width: 10%">+0.68%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-8">XLU</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-blue h-full flex justify-end items-center px-1 text-white" style="width: 8%">+0.52%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-8">XLY</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-blue h-full flex justify-end items-center px-1 text-white" style="width: 6%">+0.48%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-8">XLF</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-blue h-full flex justify-end items-center px-1 text-white" style="width: 5%">+0.43%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-8">GLD</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-blue h-full flex justify-end items-center px-1 text-white" style="width: 2%">+0.15%</div></div></div>
+          
+          <div class="flex items-center text-10 font-bold mt-1"><span class="w-8">COPX</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-pink h-full flex justify-end items-center px-1 text-white" style="width: 5%">-0.57%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-8">XLB</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-pink h-full flex justify-end items-center px-1 text-white" style="width: 7%">-0.71%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-8">IBIT</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-pink h-full flex justify-end items-center px-1 text-white" style="width: 10%">-1.17%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-8">CPER</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-pink h-full flex justify-end items-center px-1 text-white" style="width: 15%">-1.74%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-8">IGV</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-pink h-full flex justify-end items-center px-1 text-white" style="width: 16%">-1.76%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-8">XLC</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-pink h-full flex justify-end items-center px-1 text-white" style="width: 18%">-1.97%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-8">IYT</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-pink h-full flex justify-end items-center px-1 text-white" style="width: 20%">-2.80%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-8">XLV</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-pink h-full flex justify-end items-center px-1 text-white" style="width: 21%">-2.87%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-8">XLP</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-pink h-full flex justify-end items-center px-1 text-white" style="width: 22%">-2.94%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-8">XLRE</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-pink h-full flex justify-end items-center px-1 text-white" style="width: 24%">-3.31%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-8">TAN</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-pink h-full flex justify-end items-center px-1 text-white" style="width: 28%">-3.89%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-8">XLE</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-pink h-full flex justify-end items-center px-1 text-white" style="width: 45%">-6.57%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-8">SQQQ</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-pink h-full flex justify-end items-center px-1 text-white" style="width: 55%">-8.22%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-8">OIH</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-pink h-full flex justify-end items-center px-1 text-white" style="width: 60%">-9.07%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-8">YINN</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-pink h-full flex justify-end items-center px-1 text-white" style="width: 80%">-14.17%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-8">SOXS</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-pink h-full flex justify-end items-center px-1 text-white" style="width: 95%">-23.04%</div></div></div>
+        </div>
+      </div>
+
+      <!-- Theme Tracker -->
+      <div class="bg-white border rounded-lg shadow-sm flex flex-col overflow-hidden">
+        <div class="p-2 bg-slate-50 border-b text-10 font-black uppercase text-main">Theme Tracker (1W)</div>
+        <div class="flex-1 scroll-y custom-scrollbar p-2 flex flex-col gap-1">
+          <div class="flex items-center text-10 font-bold"><span class="w-16 truncate">Genomics</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-blue h-full flex justify-end items-center px-1 text-white" style="width: 90%">+10.13%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-16 truncate">Bitcoin...</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-blue h-full flex justify-end items-center px-1 text-white" style="width: 85%">+9.29%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-16 truncate">Semicon...</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-blue h-full flex justify-end items-center px-1 text-white" style="width: 65%">+6.44%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-16 truncate">Airlines</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-blue h-full flex justify-end items-center px-1 text-white" style="width: 50%">+4.98%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-16 truncate">AI</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-blue h-full flex justify-end items-center px-1 text-white" style="width: 45%">+4.38%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-16 truncate">Quantum</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-blue h-full flex justify-end items-center px-1 text-white" style="width: 42%">+4.14%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-16 truncate">Robotics</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-blue h-full flex justify-end items-center px-1 text-white" style="width: 38%">+3.81%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-16 truncate">Gold Min...</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-blue h-full flex justify-end items-center px-1 text-white" style="width: 31%">+3.10%</div></div></div>
+          
+          <div class="flex items-center text-10 font-bold mt-1"><span class="w-16 truncate">Retail</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-pink h-full flex justify-end items-center px-1 text-white" style="width: 15%">-1.53%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-16 truncate">Social M...</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-pink h-full flex justify-end items-center px-1 text-white" style="width: 18%">-1.78%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-16 truncate">Software</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-pink h-full flex justify-end items-center px-1 text-white" style="width: 18%">-1.78%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-16 truncate">Banks</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-pink h-full flex justify-end items-center px-1 text-white" style="width: 19%">-1.84%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-16 truncate">Transpor...</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-pink h-full flex justify-end items-center px-1 text-white" style="width: 28%">-2.80%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-16 truncate">Health C...</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-pink h-full flex justify-end items-center px-1 text-white" style="width: 29%">-2.87%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-16 truncate">Real Est...</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-pink h-full flex justify-end items-center px-1 text-white" style="width: 33%">-3.31%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-16 truncate">Solar</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-pink h-full flex justify-end items-center px-1 text-white" style="width: 39%">-3.89%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-16 truncate">China Int...</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-pink h-full flex justify-end items-center px-1 text-white" style="width: 47%">-4.72%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-16 truncate">Steel</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-pink h-full flex justify-end items-center px-1 text-white" style="width: 50%">-4.96%</div></div></div>
+          <div class="flex items-center text-10 font-bold"><span class="w-16 truncate">Oil & Gas</span><div class="flex-1 bg-slate-50 h-4 rounded mx-1 overflow-hidden"><div class="bg-pink h-full flex justify-end items-center px-1 text-white" style="width: 66%">-6.57%</div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Daily/Weekly Movers -->
+    <div class="grid grid-cols-4 gap-4 mt-4">
+      
+      <!-- Daily Leaders -->
+      <div class="bg-white border rounded-lg p-3 shadow-sm">
+        <div class="text-10 font-black text-main uppercase border-l-4 border-green pl-2 mb-3">Daily Leaders</div>
+        <div class="flex flex-col gap-2">
+           <div class="border rounded p-2 flex justify-between items-center shadow-sm">
+              <div class="flex items-center gap-2">
+                 <div class="bg-green-light text-green font-black text-10 w-7 h-7 flex items-center justify-center rounded">99</div>
+                 <div><div class="text-xs font-black text-main">SMH</div><div class="text-9 text-muted">Semiconduct...</div></div>
+              </div>
+              <div class="text-right">
+                 <div class="text-xs font-black text-main">$659.88</div><div class="text-10 font-bold text-green">+4.87%</div>
+              </div>
+           </div>
+           <div class="border rounded p-2 flex justify-between items-center shadow-sm">
+              <div class="flex items-center gap-2">
+                 <div class="bg-green-light text-green font-black text-10 w-7 h-7 flex items-center justify-center rounded">45</div>
+                 <div><div class="text-xs font-black text-main">TAN</div><div class="text-9 text-muted">Solar</div></div>
+              </div>
+              <div class="text-right">
+                 <div class="text-xs font-black text-main">$60.58</div><div class="text-10 font-bold text-green">+2.56%</div>
+              </div>
+           </div>
+           <div class="border rounded p-2 flex justify-between items-center shadow-sm">
+              <div class="flex items-center gap-2">
+                 <div class="bg-green-light text-green font-black text-10 w-7 h-7 flex items-center justify-center rounded">94</div>
+                 <div><div class="text-xs font-black text-main">IPO</div><div class="text-9 text-muted">IPO</div></div>
+              </div>
+              <div class="text-right">
+                 <div class="text-xs font-black text-main">$59.54</div><div class="text-10 font-bold text-green">+2.48%</div>
+              </div>
+           </div>
+           <div class="border rounded p-2 flex justify-between items-center shadow-sm">
+              <div class="flex items-center gap-2">
+                 <div class="bg-green-light text-green font-black text-10 w-7 h-7 flex items-center justify-center rounded">86</div>
+                 <div><div class="text-xs font-black text-main">JETS</div><div class="text-9 text-muted">Global Jets</div></div>
+              </div>
+              <div class="text-right">
+                 <div class="text-xs font-black text-main">$31.00</div><div class="text-10 font-bold text-green">+1.39%</div>
+              </div>
+           </div>
+        </div>
+      </div>
+
+      <!-- Daily Laggards -->
+      <div class="bg-white border rounded-lg p-3 shadow-sm">
+        <div class="text-10 font-black text-main uppercase border-l-4 border-red pl-2 mb-3">Daily Laggards</div>
+        <div class="flex flex-col gap-2">
+           <div class="border rounded p-2 flex justify-between items-center shadow-sm">
+              <div class="flex items-center gap-2">
+                 <div class="bg-red-light text-red font-black text-10 w-7 h-7 flex items-center justify-center rounded">22</div>
+                 <div><div class="text-xs font-black text-main">SIL</div><div class="text-9 text-muted">Silver Miners</div></div>
+              </div>
+              <div class="text-right">
+                 <div class="text-xs font-black text-main">$83.73</div><div class="text-10 font-bold text-red">-3.67%</div>
+              </div>
+           </div>
+           <div class="border rounded p-2 flex justify-between items-center shadow-sm">
+              <div class="flex items-center gap-2">
+                 <div class="bg-red-light text-red font-black text-10 w-7 h-7 flex items-center justify-center rounded">29</div>
+                 <div><div class="text-xs font-black text-main">GDX</div><div class="text-9 text-muted">Gold Miners</div></div>
+              </div>
+              <div class="text-right">
+                 <div class="text-xs font-black text-main">$82.51</div><div class="text-10 font-bold text-red">-3.28%</div>
+              </div>
+           </div>
+           <div class="border rounded p-2 flex justify-between items-center shadow-sm">
+              <div class="flex items-center gap-2">
+                 <div class="bg-red-light text-red font-black text-10 w-7 h-7 flex items-center justify-center rounded">45</div>
+                 <div><div class="text-xs font-black text-main">SLX</div><div class="text-9 text-muted">Steel</div></div>
+              </div>
+              <div class="text-right">
+                 <div class="text-xs font-black text-main">$105.35</div><div class="text-10 font-bold text-red">-3.2%</div>
+              </div>
+           </div>
+           <div class="border rounded p-2 flex justify-between items-center shadow-sm">
+              <div class="flex items-center gap-2">
+                 <div class="bg-red-light text-red font-black text-10 w-7 h-7 flex items-center justify-center rounded">22</div>
+                 <div><div class="text-xs font-black text-main">ITA</div><div class="text-9 text-muted">Aerospace</div></div>
+              </div>
+              <div class="text-right">
+                 <div class="text-xs font-black text-main">$238.99</div><div class="text-10 font-bold text-red">-2.65%</div>
+              </div>
+           </div>
+        </div>
+      </div>
+
+      <!-- Weekly Leaders -->
+      <div class="bg-white border rounded-lg p-3 shadow-sm">
+        <div class="text-10 font-black text-main uppercase border-l-4 border-green pl-2 mb-3">Weekly Leaders</div>
+        <div class="flex flex-col gap-2">
+           <div class="border rounded p-2 flex justify-between items-center shadow-sm">
+              <div class="flex items-center gap-2">
+                 <div class="bg-green-light text-green font-black text-10 w-7 h-7 flex items-center justify-center rounded">99</div>
+                 <div><div class="text-xs font-black text-main">SMH</div><div class="text-9 text-muted">Semiconduct...</div></div>
+              </div>
+              <div class="text-right">
+                 <div class="text-xs font-black text-main">$659.88</div><div class="text-10 font-bold text-green">+6.44%</div>
+              </div>
+           </div>
+           <div class="border rounded p-2 flex justify-between items-center shadow-sm">
+              <div class="flex items-center gap-2">
+                 <div class="bg-green-light text-green font-black text-10 w-7 h-7 flex items-center justify-center rounded">94</div>
+                 <div><div class="text-xs font-black text-main">IPO</div><div class="text-9 text-muted">IPO</div></div>
+              </div>
+              <div class="text-right">
+                 <div class="text-xs font-black text-main">$59.54</div><div class="text-10 font-bold text-green">+6.74%</div>
+              </div>
+           </div>
+           <div class="border rounded p-2 flex justify-between items-center shadow-sm">
+              <div class="flex items-center gap-2">
+                 <div class="bg-green-light text-green font-black text-10 w-7 h-7 flex items-center justify-center rounded">86</div>
+                 <div><div class="text-xs font-black text-main">JETS</div><div class="text-9 text-muted">Global Jets</div></div>
+              </div>
+              <div class="text-right">
+                 <div class="text-xs font-black text-main">$31.00</div><div class="text-10 font-bold text-green">+5.57%</div>
+              </div>
+           </div>
+           <div class="border rounded p-2 flex justify-between items-center shadow-sm">
+              <div class="flex items-center gap-2">
+                 <div class="bg-green-light text-green font-black text-10 w-7 h-7 flex items-center justify-center rounded">13</div>
+                 <div><div class="text-xs font-black text-main">URA</div><div class="text-9 text-muted">Uranium</div></div>
+              </div>
+              <div class="text-right">
+                 <div class="text-xs font-black text-main">$47.78</div><div class="text-10 font-bold text-green">+5.14%</div>
+              </div>
+           </div>
+        </div>
+      </div>
+
+      <!-- Weekly Laggards -->
+      <div class="bg-white border rounded-lg p-3 shadow-sm">
+        <div class="text-10 font-black text-main uppercase border-l-4 border-red pl-2 mb-3">Weekly Laggards</div>
+        <div class="flex flex-col gap-2">
+           <div class="border rounded p-2 flex justify-between items-center shadow-sm">
+              <div class="flex items-center gap-2">
+                 <div class="bg-red-light text-red font-black text-10 w-7 h-7 flex items-center justify-center rounded">4</div>
+                 <div><div class="text-xs font-black text-main">XOP</div><div class="text-9 text-muted">Oil & Gas</div></div>
+              </div>
+              <div class="text-right">
+                 <div class="text-xs font-black text-main">$153.36</div><div class="text-10 font-bold text-red">-7.59%</div>
+              </div>
+           </div>
+           <div class="border rounded p-2 flex justify-between items-center shadow-sm">
+              <div class="flex items-center gap-2">
+                 <div class="bg-red-light text-red font-black text-10 w-7 h-7 flex items-center justify-center rounded">81</div>
+                 <div><div class="text-xs font-black text-main">SLX</div><div class="text-9 text-muted">Steel</div></div>
+              </div>
+              <div class="text-right">
+                 <div class="text-xs font-black text-main">$105.35</div><div class="text-10 font-bold text-red">-4.82%</div>
+              </div>
+           </div>
+           <div class="border rounded p-2 flex justify-between items-center shadow-sm">
+              <div class="flex items-center gap-2">
+                 <div class="bg-red-light text-red font-black text-10 w-7 h-7 flex items-center justify-center rounded">45</div>
+                 <div><div class="text-xs font-black text-main">TAN</div><div class="text-9 text-muted">Solar</div></div>
+              </div>
+              <div class="text-right">
+                 <div class="text-xs font-black text-main">$60.58</div><div class="text-10 font-bold text-red">-4.2%</div>
+              </div>
+           </div>
+           <div class="border rounded p-2 flex justify-between items-center shadow-sm">
+              <div class="flex items-center gap-2">
+                 <div class="bg-red-light text-red font-black text-10 w-7 h-7 flex items-center justify-center rounded">54</div>
+                 <div><div class="text-xs font-black text-main">IYT</div><div class="text-9 text-muted">Transport</div></div>
+              </div>
+              <div class="text-right">
+                 <div class="text-xs font-black text-main">$83.94</div><div class="text-10 font-bold text-red">-4.2%</div>
+              </div>
+           </div>
+        </div>
+      </div>
+
+    </div>
   </div>
 
-</div>
+  <!-- ========================================== -->
+  <!-- TAB 2: RS RADAR MATRIX (Image 3)           -->
+  <!-- ========================================== -->
+  <div id="tab-radar" class="tab-content">
+    <div class="grid grid-cols-12 gap-4">
+      
+      <!-- Left Column: Rank Movers -->
+      <div class="col-span-3 flex flex-col gap-4">
+        
+        <!-- Daily Rank Up -->
+        <div class="bg-white border rounded-lg p-3 shadow-sm">
+          <div class="text-10 font-black text-main uppercase border-l-4 border-blue pl-2 mb-3">Daily Rank Up</div>
+          <div class="flex flex-col gap-2">
+             <div class="border rounded p-2 flex justify-between items-center hover:border-blue transition-colors cursor-pointer">
+                <div class="flex items-center gap-3">
+                   <div class="bg-green-light text-green border border-green px-2 py-1 rounded text-10 font-black">71</div>
+                   <div><div class="text-xs font-black text-blue">GDX</div><div class="text-9 text-muted">Gold Miners</div></div>
+                </div>
+                <div class="text-right"><div class="text-xs font-black text-main">$76.68</div><div class="text-10 font-bold text-green">+42 pts</div></div>
+             </div>
+             <div class="border rounded p-2 flex justify-between items-center hover:border-blue transition-colors cursor-pointer">
+                <div class="flex items-center gap-3">
+                   <div class="bg-red-light text-red border border-red px-2 py-1 rounded text-10 font-black">38</div>
+                   <div><div class="text-xs font-black text-blue">POWR</div><div class="text-9 text-muted">Power-Grid</div></div>
+                </div>
+                <div class="text-right"><div class="text-xs font-black text-main">$26.90</div><div class="text-10 font-bold text-green">+33 pts</div></div>
+             </div>
+             <div class="border rounded p-2 flex justify-between items-center hover:border-blue transition-colors cursor-pointer">
+                <div class="flex items-center gap-3">
+                   <div class="bg-green-light text-green border border-green px-2 py-1 rounded text-10 font-black">62</div>
+                   <div><div class="text-xs font-black text-blue">SIL</div><div class="text-9 text-muted">Silver Miners</div></div>
+                </div>
+                <div class="text-right"><div class="text-xs font-black text-main">$77.40</div><div class="text-10 font-bold text-green">+29 pts</div></div>
+             </div>
+          </div>
+        </div>
+
+        <!-- Daily Rank Down -->
+        <div class="bg-white border rounded-lg p-3 shadow-sm">
+          <div class="text-10 font-black text-main uppercase border-l-4 border-red pl-2 mb-3">Daily Rank Down</div>
+          <div class="flex flex-col gap-2">
+             <div class="border rounded p-2 flex justify-between items-center hover:border-red transition-colors cursor-pointer">
+                <div class="flex items-center gap-3">
+                   <div class="bg-green-light text-green border border-green px-2 py-1 rounded text-10 font-black">62</div>
+                   <div><div class="text-xs font-black text-blue">FINX</div><div class="text-9 text-muted">FinTech</div></div>
+                </div>
+                <div class="text-right"><div class="text-xs font-black text-main">$25.52</div><div class="text-10 font-bold text-red">-38 pts</div></div>
+             </div>
+             <div class="border rounded p-2 flex justify-between items-center hover:border-red transition-colors cursor-pointer">
+                <div class="flex items-center gap-3">
+                   <div class="bg-red-light text-red border border-red px-2 py-1 rounded text-10 font-black">43</div>
+                   <div><div class="text-xs font-black text-blue">KIE</div><div class="text-9 text-muted">Insurance</div></div>
+                </div>
+                <div class="text-right"><div class="text-xs font-black text-main">$62.73</div><div class="text-10 font-bold text-red">-28 pts</div></div>
+             </div>
+             <div class="border rounded p-2 flex justify-between items-center hover:border-red transition-colors cursor-pointer">
+                <div class="flex items-center gap-3">
+                   <div class="bg-red-light text-red border border-red px-2 py-1 rounded text-10 font-black">19</div>
+                   <div><div class="text-xs font-black text-blue">IGV</div><div class="text-9 text-muted">Tech-Software</div></div>
+                </div>
+                <div class="text-right"><div class="text-xs font-black text-main">$89.02</div><div class="text-10 font-bold text-red">-24 pts</div></div>
+             </div>
+          </div>
+        </div>
+        
+        <!-- Weekly Rank Up -->
+        <div class="bg-white border rounded-lg p-3 shadow-sm">
+          <div class="text-10 font-black text-main uppercase border-l-4 border-blue pl-2 mb-3">Weekly Rank Up</div>
+          <div class="flex flex-col gap-2">
+             <div class="border rounded p-2 flex justify-between items-center hover:border-blue transition-colors cursor-pointer">
+                <div class="flex items-center gap-3">
+                   <div class="bg-green-light text-green border border-green px-2 py-1 rounded text-10 font-black">71</div>
+                   <div><div class="text-xs font-black text-blue">GDX</div><div class="text-9 text-muted">Gold Miners</div></div>
+                </div>
+                <div class="text-right"><div class="text-xs font-black text-main">$76.68</div><div class="text-10 font-bold text-green">+66 pts</div></div>
+             </div>
+             <div class="border rounded p-2 flex justify-between items-center hover:border-blue transition-colors cursor-pointer">
+                <div class="flex items-center gap-3">
+                   <div class="bg-green-light text-green border border-green px-2 py-1 rounded text-10 font-black">90</div>
+                   <div><div class="text-xs font-black text-blue">COPX</div><div class="text-9 text-muted">Copper Miners</div></div>
+                </div>
+                <div class="text-right"><div class="text-xs font-black text-main">$79.99</div><div class="text-10 font-bold text-green">+57 pts</div></div>
+             </div>
+             <div class="border rounded p-2 flex justify-between items-center hover:border-blue transition-colors cursor-pointer">
+                <div class="flex items-center gap-3">
+                   <div class="bg-green-light text-green border border-green px-2 py-1 rounded text-10 font-black">62</div>
+                   <div><div class="text-xs font-black text-blue">WGMI</div><div class="text-9 text-muted">Bitcoin Miners</div></div>
+                </div>
+                <div class="text-right"><div class="text-xs font-black text-main">$57.16</div><div class="text-10 font-bold text-green">+52 pts</div></div>
+             </div>
+          </div>
+        </div>
+
+        <!-- Weekly Rank Down -->
+        <div class="bg-white border rounded-lg p-3 shadow-sm">
+          <div class="text-10 font-black text-main uppercase border-l-4 border-red pl-2 mb-3">Weekly Rank Down</div>
+          <div class="flex flex-col gap-2">
+             <div class="border rounded p-2 flex justify-between items-center hover:border-red transition-colors cursor-pointer">
+                <div class="flex items-center gap-3">
+                   <div class="bg-red-light text-red border border-red px-2 py-1 rounded text-10 font-black">29</div>
+                   <div><div class="text-xs font-black text-blue">CIBR</div><div class="text-9 text-muted">Cybersecurity</div></div>
+                </div>
+                <div class="text-right"><div class="text-xs font-black text-main">$89.33</div><div class="text-10 font-bold text-red">-57 pts</div></div>
+             </div>
+             <div class="border rounded p-2 flex justify-between items-center hover:border-red transition-colors cursor-pointer">
+                <div class="flex items-center gap-3">
+                   <div class="bg-red-light text-red border border-red px-2 py-1 rounded text-10 font-black">19</div>
+                   <div><div class="text-xs font-black text-blue">IGV</div><div class="text-9 text-muted">Tech-Software</div></div>
+                </div>
+                <div class="text-right"><div class="text-xs font-black text-main">$89.02</div><div class="text-10 font-bold text-red">-52 pts</div></div>
+             </div>
+             <div class="border rounded p-2 flex justify-between items-center hover:border-red transition-colors cursor-pointer">
+                <div class="flex items-center gap-3">
+                   <div class="bg-green-light text-green border border-green px-2 py-1 rounded text-10 font-black">62</div>
+                   <div><div class="text-xs font-black text-blue">IPAY</div><div class="text-9 text-muted">Mobile Payments</div></div>
+                </div>
+                <div class="text-right"><div class="text-xs font-black text-main">$48.45</div><div class="text-10 font-bold text-red">-38 pts</div></div>
+             </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right Column: Sector & Industry Tables -->
+      <div class="col-span-9 flex flex-col gap-4">
+        
+        <!-- Sector Leaders Table -->
+        <div class="bg-white border rounded-lg shadow-sm">
+          <div class="p-3 bg-slate-50 border-b border-l-4 border-l-blue flex justify-between items-center">
+            <div class="text-xs font-black text-main uppercase">Sector Leaders</div>
+          </div>
+          <table class="w-full text-left text-xs font-bold text-muted">
+            <thead class="bg-slate-50 border-b text-10">
+              <tr>
+                <th class="p-2 w-10">Now</th><th class="p-2 w-10">1D</th><th class="p-2 w-10">1W</th><th class="p-2 w-10">1M</th>
+                <th class="p-2">Ticker</th><th class="p-2">Name</th><th class="p-2">RS Day%</th><th class="p-2">RS Wk%</th><th class="p-2">RS Mth%</th><th class="p-2">52W High</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                <td class="p-2"><div class="bg-green-light text-green border border-green px-2 py-1 rounded text-center">100</div></td>
+                <td class="p-2"><div class="bg-green-light text-green border border-green px-2 py-1 rounded text-center">100</div></td>
+                <td class="p-2"><div class="bg-green-light text-green border border-green px-2 py-1 rounded text-center">81</div></td>
+                <td class="p-2"><div class="bg-red-light text-red border border-red px-2 py-1 rounded text-center">5</div></td>
+                <td class="p-2 text-blue font-black">RSPG</td><td class="p-2 text-main">Energy</td>
+                <td class="p-2 text-green">+1.51%</td><td class="p-2 text-green">+5.26%</td><td class="p-2 text-green">+8.32%</td><td class="p-2 text-main">-6.09%</td>
+              </tr>
+              <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                <td class="p-2"><div class="bg-green-light text-green border border-green px-2 py-1 rounded text-center">71</div></td>
+                <td class="p-2"><div class="bg-slate-50 border px-2 py-1 rounded text-center">14</div></td>
+                <td class="p-2"><div class="bg-slate-50 border px-2 py-1 rounded text-center">10</div></td>
+                <td class="p-2"><div class="bg-green-light text-green border border-green px-2 py-1 rounded text-center">67</div></td>
+                <td class="p-2 text-blue font-black">RSPU</td><td class="p-2 text-main">Utilities</td>
+                <td class="p-2 text-green">+2.39%</td><td class="p-2 text-green">+2.52%</td><td class="p-2 text-green">+2.42%</td><td class="p-2 text-main">-3.16%</td>
+              </tr>
+              <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                <td class="p-2"><div class="bg-green-light text-green border border-green px-2 py-1 rounded text-center">71</div></td>
+                <td class="p-2"><div class="bg-green-light text-green border border-green px-2 py-1 rounded text-center">81</div></td>
+                <td class="p-2"><div class="bg-green-light text-green border border-green px-2 py-1 rounded text-center">90</div></td>
+                <td class="p-2"><div class="bg-green-light text-green border border-green px-2 py-1 rounded text-center">76</div></td>
+                <td class="p-2 text-blue font-black">RSPF</td><td class="p-2 text-main">Financials</td>
+                <td class="p-2 text-red">-0.35%</td><td class="p-2 text-green">+0.24%</td><td class="p-2 text-green">+5.33%</td><td class="p-2 text-main">-1.82%</td>
+              </tr>
+              <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                <td class="p-2"><div class="bg-green-light text-green border border-green px-2 py-1 rounded text-center">62</div></td>
+                <td class="p-2"><div class="bg-green-light text-green border border-green px-2 py-1 rounded text-center">57</div></td>
+                <td class="p-2"><div class="bg-slate-50 border px-2 py-1 rounded text-center">14</div></td>
+                <td class="p-2"><div class="bg-red-light text-red border border-red px-2 py-1 rounded text-center">24</div></td>
+                <td class="p-2 text-blue font-black">RSPS</td><td class="p-2 text-main">Cons Stpl</td>
+                <td class="p-2 text-green">+0.44%</td><td class="p-2 text-green">+2.56%</td><td class="p-2 text-green">+4.28%</td><td class="p-2 text-main">-7.97%</td>
+              </tr>
+              <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                <td class="p-2"><div class="bg-green-light text-green border border-green px-2 py-1 rounded text-center">57</div></td>
+                <td class="p-2"><div class="bg-red-light text-red border border-red px-2 py-1 rounded text-center">19</div></td>
+                <td class="p-2"><div class="bg-red-light text-red border border-red px-2 py-1 rounded text-center">5</div></td>
+                <td class="p-2"><div class="bg-green-light text-green border border-green px-2 py-1 rounded text-center">71</div></td>
+                <td class="p-2 text-blue font-black">RSPM</td><td class="p-2 text-main">Materials</td>
+                <td class="p-2 text-green">+1.66%</td><td class="p-2 text-green">+2.12%</td><td class="p-2 text-red">-1.12%</td><td class="p-2 text-main">-6.23%</td>
+              </tr>
+              <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                <td class="p-2"><div class="bg-slate-50 border px-2 py-1 rounded text-center">48</div></td>
+                <td class="p-2"><div class="bg-green-light text-green border border-green px-2 py-1 rounded text-center">57</div></td>
+                <td class="p-2"><div class="bg-slate-50 border px-2 py-1 rounded text-center">14</div></td>
+                <td class="p-2"><div class="bg-slate-50 border px-2 py-1 rounded text-center">33</div></td>
+                <td class="p-2 text-blue font-black">RSPR</td><td class="p-2 text-main">Real Estate</td>
+                <td class="p-2 text-red">-0.32%</td><td class="p-2 text-green">+1.62%</td><td class="p-2 text-green">+1.72%</td><td class="p-2 text-main">-2.38%</td>
+              </tr>
+              <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                <td class="p-2"><div class="bg-red-light text-red border border-red px-2 py-1 rounded text-center">24</div></td>
+                <td class="p-2"><div class="bg-red-light text-red border border-red px-2 py-1 rounded text-center">5</div></td>
+                <td class="p-2"><div class="bg-red-light text-red border border-red px-2 py-1 rounded text-center">5</div></td>
+                <td class="p-2"><div class="bg-green-light text-green border border-green px-2 py-1 rounded text-center">95</div></td>
+                <td class="p-2 text-blue font-black">RSPN</td><td class="p-2 text-main">Industrials</td>
+                <td class="p-2 text-green">+0.52%</td><td class="p-2 text-green">+1.07%</td><td class="p-2 text-red">-0.37%</td><td class="p-2 text-main">-2.91%</td>
+              </tr>
+              <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                <td class="p-2"><div class="bg-red-light text-red border border-red px-2 py-1 rounded text-center">19</div></td>
+                <td class="p-2"><div class="bg-red-light text-red border border-red px-2 py-1 rounded text-center">19</div></td>
+                <td class="p-2"><div class="bg-red-light text-red border border-red px-2 py-1 rounded text-center">0</div></td>
+                <td class="p-2"><div class="bg-green-light text-green border border-green px-2 py-1 rounded text-center">81</div></td>
+                <td class="p-2 text-blue font-black">RSPT</td><td class="p-2 text-main">Technology</td>
+                <td class="p-2 text-red">-0.61%</td><td class="p-2 text-green">+0.08%</td><td class="p-2 text-red">-7.05%</td><td class="p-2 text-main">-10.73%</td>
+              </tr>
+              <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                <td class="p-2"><div class="bg-red-light text-red border border-red px-2 py-1 rounded text-center">19</div></td>
+                <td class="p-2"><div class="bg-slate-50 border px-2 py-1 rounded text-center">43</div></td>
+                <td class="p-2"><div class="bg-slate-50 border px-2 py-1 rounded text-center">43</div></td>
+                <td class="p-2"><div class="bg-green-light text-green border border-green px-2 py-1 rounded text-center">52</div></td>
+                <td class="p-2 text-blue font-black">RSPH</td><td class="p-2 text-main">Health Care</td>
+                <td class="p-2 text-red">-1.07%</td><td class="p-2 text-red">-0.03%</td><td class="p-2 text-green">+5.73%</td><td class="p-2 text-main">-4.64%</td>
+              </tr>
+              <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                <td class="p-2"><div class="bg-slate-50 border px-2 py-1 rounded text-center">14</div></td>
+                <td class="p-2"><div class="bg-slate-50 border px-2 py-1 rounded text-center">14</div></td>
+                <td class="p-2"><div class="bg-slate-50 border px-2 py-1 rounded text-center">48</div></td>
+                <td class="p-2"><div class="bg-red-light text-red border border-red px-2 py-1 rounded text-center">0</div></td>
+                <td class="p-2 text-blue font-black">RSPC</td><td class="p-2 text-main">Comm Svcs</td>
+                <td class="p-2 text-red">-0.32%</td><td class="p-2 text-red">-1.19%</td><td class="p-2 text-green">+0.69%</td><td class="p-2 text-main">-14.31%</td>
+              </tr>
+              <tr class="hover:bg-slate-50 cursor-pointer">
+                <td class="p-2"><div class="bg-red-light text-red border border-red px-2 py-1 rounded text-center">0</div></td>
+                <td class="p-2"><div class="bg-slate-50 border px-2 py-1 rounded text-center">14</div></td>
+                <td class="p-2"><div class="bg-red-light text-red border border-red px-2 py-1 rounded text-center">5</div></td>
+                <td class="p-2"><div class="bg-green-light text-green border border-green px-2 py-1 rounded text-center">62</div></td>
+                <td class="p-2 text-blue font-black">RSPD</td><td class="p-2 text-main">Cons Disc</td>
+                <td class="p-2 text-red">-0.43%</td><td class="p-2 text-red">-0.23%</td><td class="p-2 text-red">-0.98%</td><td class="p-2 text-main">-9.15%</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <!-- Industry RS Rank Tables -->
+        <div class="grid grid-cols-3 gap-4">
+          
+          <!-- Table 1 -->
+          <div class="bg-white border rounded-lg shadow-sm">
+            <div class="p-3 bg-slate-50 border-b border-l-4 border-l-blue flex justify-between items-center">
+              <div class="text-xs font-black text-main uppercase">Industry RS Rank</div>
+              <div class="text-10 font-bold text-muted">RS Rank ↓</div>
+            </div>
+            <table class="w-full text-left text-[10px] font-bold text-muted">
+              <thead class="bg-slate-50 border-b">
+                <tr><th class="p-2 w-8">Now</th><th class="p-2 w-8">1D</th><th class="p-2 w-8">1W</th><th class="p-2 w-8">1M</th><th class="p-2">Ticker</th><th class="p-2">Name</th><th class="p-2">RS Wk%</th></tr>
+              </thead>
+              <tbody>
+                <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                  <td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">100</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">81</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">67</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">57</div></td>
+                  <td class="p-2 text-blue font-black">WOOD</td><td class="p-2 text-main">Timber</td><td class="p-2 text-green">+3.50%</td>
+                </tr>
+                <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                  <td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">100</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">100</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">86</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">5</div></td>
+                  <td class="p-2 text-blue font-black">XOP</td><td class="p-2 text-main">Oil & Gas Exp.</td><td class="p-2 text-green">+8.18%</td>
+                </tr>
+                <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                  <td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">100</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">90</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">67</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">5</div></td>
+                  <td class="p-2 text-blue font-black">MOO</td><td class="p-2 text-main">Agribusiness</td><td class="p-2 text-green">+2.96%</td>
+                </tr>
+                <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                  <td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">95</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">100</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">62</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">62</div></td>
+                  <td class="p-2 text-blue font-black">BOAT</td><td class="p-2 text-main">Marine Shipping</td><td class="p-2 text-green">+2.56%</td>
+                </tr>
+                <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                  <td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">90</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">81</div></td><td class="p-2"><div class="bg-slate-50 border px-1 py-05 rounded text-center">33</div></td><td class="p-2"><div class="bg-slate-50 border px-1 py-05 rounded text-center">38</div></td>
+                  <td class="p-2 text-blue font-black">COPX</td><td class="p-2 text-main">Copper Miners</td><td class="p-2 text-green">+4.56%</td>
+                </tr>
+                <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                  <td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">86</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">67</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">100</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">95</div></td>
+                  <td class="p-2 text-blue font-black">IAI</td><td class="p-2 text-main">Broker-Dealers</td><td class="p-2 text-red">-2.36%</td>
+                </tr>
+                <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                  <td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">81</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">57</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">52</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">0</div></td>
+                  <td class="p-2 text-blue font-black">SLX</td><td class="p-2 text-main">Steel</td><td class="p-2 text-green">+0.81%</td>
+                </tr>
+                <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                  <td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">71</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">29</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">5</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">29</div></td>
+                  <td class="p-2 text-blue font-black">GDX</td><td class="p-2 text-main">Gold Miners</td><td class="p-2 text-green">+4.65%</td>
+                </tr>
+                <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                  <td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">71</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">62</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">71</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">67</div></td>
+                  <td class="p-2 text-blue font-black">XRT</td><td class="p-2 text-main">Retail</td><td class="p-2 text-green">+0.58%</td>
+                </tr>
+                <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                  <td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">71</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">90</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">100</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">0</div></td>
+                  <td class="p-2 text-blue font-black">KWEB</td><td class="p-2 text-main">China Internet</td><td class="p-2 text-red">-1.10%</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          
+          <!-- Table 2 -->
+          <div class="bg-white border rounded-lg shadow-sm">
+            <div class="p-3 bg-slate-50 border-b flex justify-between items-center"></div>
+            <table class="w-full text-left text-[10px] font-bold text-muted mt-[-1px]">
+              <thead class="bg-slate-50 border-b border-t">
+                <tr><th class="p-2 w-8">Now</th><th class="p-2 w-8">1D</th><th class="p-2 w-8">1W</th><th class="p-2 w-8">1M</th><th class="p-2">Ticker</th><th class="p-2">Name</th><th class="p-2">RS Wk%</th></tr>
+              </thead>
+              <tbody>
+                <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                  <td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">62</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">81</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">29</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">62</div></td>
+                  <td class="p-2 text-blue font-black">IYT</td><td class="p-2 text-main">Transportation</td><td class="p-2 text-green">+1.45%</td>
+                </tr>
+                <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                  <td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">62</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">81</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">100</div></td><td class="p-2"><div class="bg-slate-50 border px-1 py-05 rounded text-center">38</div></td>
+                  <td class="p-2 text-blue font-black">IPAY</td><td class="p-2 text-main">Mobile Payme...</td><td class="p-2 text-red">-1.69%</td>
+                </tr>
+                <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                  <td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">62</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">100</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">95</div></td><td class="p-2"><div class="bg-slate-50 border px-1 py-05 rounded text-center">38</div></td>
+                  <td class="p-2 text-blue font-black">FINX</td><td class="p-2 text-main">FinTech</td><td class="p-2 text-red">-1.27%</td>
+                </tr>
+                <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                  <td class="p-2"><div class="bg-slate-50 border px-1 py-05 rounded text-center">48</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">57</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">10</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">81</div></td>
+                  <td class="p-2 text-blue font-black">BLOK</td><td class="p-2 text-main">Blockchain</td><td class="p-2 text-green">+1.94%</td>
+                </tr>
+                <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                  <td class="p-2"><div class="bg-slate-50 border px-1 py-05 rounded text-center">43</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">71</div></td><td class="p-2"><div class="bg-slate-50 border px-1 py-05 rounded text-center">48</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">76</div></td>
+                  <td class="p-2 text-blue font-black">KIE</td><td class="p-2 text-main">Insurance</td><td class="p-2 text-green">+1.97%</td>
+                </tr>
+                <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                  <td class="p-2"><div class="bg-slate-50 border px-1 py-05 rounded text-center">38</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">5</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">0</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">100</div></td>
+                  <td class="p-2 text-blue font-black">POWR</td><td class="p-2 text-main">Power-Grid</td><td class="p-2 text-green">+1.10%</td>
+                </tr>
+                <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                  <td class="p-2"><div class="bg-slate-50 border px-1 py-05 rounded text-center">33</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">19</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">10</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">100</div></td>
+                  <td class="p-2 text-blue font-black">SMH</td><td class="p-2 text-main">Semiconductor</td><td class="p-2 text-green">+0.33%</td>
+                </tr>
+                <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                  <td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">29</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">14</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">0</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">29</div></td>
+                  <td class="p-2 text-blue font-black">URA</td><td class="p-2 text-main">Uranium</td><td class="p-2 text-green">+1.16%</td>
+                </tr>
+                <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                  <td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">29</div></td><td class="p-2"><div class="bg-slate-50 border px-1 py-05 rounded text-center">38</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">86</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">19</div></td>
+                  <td class="p-2 text-blue font-black">CIBR</td><td class="p-2 text-main">Cybersecurity</td><td class="p-2 text-red">-3.09%</td>
+                </tr>
+                <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                  <td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">19</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">14</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">5</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">52</div></td>
+                  <td class="p-2 text-blue font-black">ICLN</td><td class="p-2 text-main">Clean Energy</td><td class="p-2 text-red">-1.87%</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          
+          <!-- Table 3 -->
+          <div class="bg-white border rounded-lg shadow-sm">
+            <div class="p-3 bg-slate-50 border-b flex justify-between items-center"></div>
+            <table class="w-full text-left text-[10px] font-bold text-muted mt-[-1px]">
+              <thead class="bg-slate-50 border-b border-t">
+                <tr><th class="p-2 w-8">Now</th><th class="p-2 w-8">1D</th><th class="p-2 w-8">1W</th><th class="p-2 w-8">1M</th><th class="p-2">Ticker</th><th class="p-2">Name</th><th class="p-2">RS Wk%</th></tr>
+              </thead>
+              <tbody>
+                <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                  <td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">19</div></td><td class="p-2"><div class="bg-slate-50 border px-1 py-05 rounded text-center">43</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">71</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">0</div></td>
+                  <td class="p-2 text-blue font-black">IGV</td><td class="p-2 text-main">Tech-Software</td><td class="p-2 text-red">-4.30%</td>
+                </tr>
+                <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                  <td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">14</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">0</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">5</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">81</div></td>
+                  <td class="p-2 text-blue font-black">ITA</td><td class="p-2 text-main">Aerospace</td><td class="p-2 text-red">-1.28%</td>
+                </tr>
+                <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                  <td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">14</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">10</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">29</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">19</div></td>
+                  <td class="p-2 text-blue font-black">TAN</td><td class="p-2 text-main">Solar</td><td class="p-2 text-red">-2.77%</td>
+                </tr>
+                <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                  <td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">14</div></td><td class="p-2"><div class="bg-slate-50 border px-1 py-05 rounded text-center">14</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">0</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">100</div></td>
+                  <td class="p-2 text-blue font-black">QTUM</td><td class="p-2 text-main">Quantum-Tech</td><td class="p-2 text-red">-1.12%</td>
+                </tr>
+                <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                  <td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">14</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">0</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">57</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">0</div></td>
+                  <td class="p-2 text-blue font-black">WQTM</td><td class="p-2 text-main">Pure-Quantum</td><td class="p-2 text-red">-0.88%</td>
+                </tr>
+                <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                  <td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">14</div></td><td class="p-2"><div class="bg-slate-50 border px-1 py-05 rounded text-center">14</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">71</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">0</div></td>
+                  <td class="p-2 text-blue font-black">PEJ</td><td class="p-2 text-main">Leisure</td><td class="p-2 text-green">+0.18%</td>
+                </tr>
+                <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                  <td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">14</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">24</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">24</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">19</div></td>
+                  <td class="p-2 text-blue font-black">IHI</td><td class="p-2 text-main">Med. Devices</td><td class="p-2 text-green">+0.08%</td>
+                </tr>
+                <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                  <td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">14</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">19</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">0</div></td><td class="p-2"><div class="bg-green-light text-green border border-green px-1 py-05 rounded text-center">95</div></td>
+                  <td class="p-2 text-blue font-black">IPO</td><td class="p-2 text-main">IPO</td><td class="p-2 text-red">-1.08%</td>
+                </tr>
+                <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                  <td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">10</div></td><td class="p-2"><div class="bg-slate-50 border px-1 py-05 rounded text-center">14</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">0</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">0</div></td>
+                  <td class="p-2 text-blue font-black">UFO</td><td class="p-2 text-main">Space</td><td class="p-2 text-red">-2.62%</td>
+                </tr>
+                <tr class="border-b hover:bg-slate-50 cursor-pointer">
+                  <td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">10</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">19</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">5</div></td><td class="p-2"><div class="bg-red-light text-red border border-red px-1 py-05 rounded text-center">19</div></td>
+                  <td class="p-2 text-blue font-black">KARS</td><td class="p-2 text-main">Electric Cars</td><td class="p-2 text-red">-1.10%</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          
+        </div>
+      </div>
+    </div>
+  </div>
 
 <script>
-/* ============================================================
-   1. UNIVERSE CONFIGURATION
-   ============================================================ */
-const ETF_UNIVERSE = [
-  // Sectors
-  { ticker: "XLK", name: "Technology" }, { ticker: "XLF", name: "Financials" }, { ticker: "XLV", name: "Health Care" },
-  { ticker: "XLE", name: "Energy" }, { ticker: "XLY", name: "Cons Disc" }, { ticker: "XLI", name: "Industrials" },
-  { ticker: "XLC", name: "Comm Svcs" }, { ticker: "XLP", name: "Cons Stpl" }, { ticker: "XLRE", name: "Real Estate" },
-  { ticker: "XLB", name: "Materials" }, { ticker: "XLU", name: "Utilities" },
-  // Industries & Themes
-  { ticker: "SMH", name: "Semiconductors" }, { ticker: "XBI", name: "Biotech" }, { ticker: "KRE", name: "Regional Banks" },
-  { ticker: "XRT", name: "Retail" }, { ticker: "JETS", name: "Global Jets" }, { ticker: "ITA", name: "Aerospace" },
-  { ticker: "IPO", name: "IPO" }, { ticker: "GDX", name: "Gold Miners" }, { ticker: "XOP", name: "Oil & Gas" },
-  { ticker: "TAN", name: "Solar" }, { ticker: "IGV", name: "Software" }, { ticker: "URA", name: "Uranium" },
-  { ticker: "COPX", name: "Copper Miners" }, { ticker: "REMX", name: "Rare Earth" }, { ticker: "FINX", name: "FinTech" },
-  { ticker: "IYT", name: "Transport" }, { ticker: "LIT", name: "Lithium" }, { ticker: "CIBR", name: "Cybersecurity" },
-  { ticker: "SLX", name: "Steel" }, { ticker: "IHI", name: "Med Devices" }, { ticker: "SIL", name: "Silver Miners" },
-  { ticker: "ARKG", name: "Genomics" }, { ticker: "QTUM", name: "Quantum" }, { ticker: "AIQ", name: "AI" },
-  { ticker: "ITB", name: "Home Construction" }, { ticker: "ROBO", name: "Robotics" }, { ticker: "IBIT", name: "Bitcoin" },
-  { ticker: "SOCL", name: "Social Media" }, { ticker: "KWEB", name: "China Internet" }
-];
-
-const STATE = {
-  data: [],
-  query: "",
-  activeQuad: "ALL",
-  hoveredIndex: null
-};
-
-/* ============================================================
-   2. CORS-FREE JSONP ENGINE
-   ============================================================ */
-function fetchYahooJSONP(symbol, interval = '1d', range = '3mo') {
-  return new Promise((resolve) => {
-    const cbName = 'yahoo_cb_' + Math.random().toString(36).substring(2, 10);
-    const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=${interval}&range=${range}&corsDomain=finance.yahoo.com&callback=${cbName}`;
-    
-    const script = document.createElement('script');
-    let completed = false;
-
-    const cleanup = () => {
-      if (script.parentNode) script.parentNode.removeChild(script);
-      delete window[cbName];
-    };
-
-    const timer = setTimeout(() => {
-      if (!completed) {
-        completed = true;
-        cleanup();
-        resolve(null);
-      }
-    }, 4000);
-
-    window[cbName] = function(json) {
-      if (completed) return;
-      completed = true;
-      clearTimeout(timer);
-      cleanup();
-      
-      if (!json || !json.chart || !json.chart.result || !json.chart.result[0]) {
-        resolve(null);
-        return;
-      }
-
-      const result = json.chart.result[0];
-      const timestamps = result.timestamp || [];
-      const quote = result.indicators?.quote?.[0] || {};
-      const bars = [];
-
-      for(let i = 0; i < timestamps.length; i++) {
-        if(quote.open?.[i] != null && quote.high?.[i] != null && quote.low?.[i] != null && quote.close?.[i] != null) {
-          bars.push({
-            t: timestamps[i] * 1000,
-            c: quote.close[i]
-          });
-        }
-      }
-      resolve({ bars: bars.sort((a,b) => a.t - b.t) });
-    };
-
-    script.onerror = () => {
-      if (!completed) {
-        completed = true;
-        clearTimeout(timer);
-        cleanup();
-        resolve(null);
-      }
-    };
-
-    script.src = targetUrl;
-    document.head.appendChild(script);
-  });
-}
-
-/* ============================================================
-   3. DATA PROCESSING & RANKING
-   ============================================================ */
-async function loadMatrixData() {
-  const statusBox = document.getElementById("statusBox");
-  STATE.data = [];
-  
-  let processed = [];
-  let count = 0;
-
-  for (let i = 0; i < ETF_UNIVERSE.length; i++) {
-    const meta = ETF_UNIVERSE[i];
-    const res = await fetchYahooJSONP(meta.ticker, "1d", "3mo");
-    
-    if (res && res.bars && res.bars.length >= 22) {
-      const bars = res.bars;
-      const c_now = bars[bars.length - 1].c;
-      const c_1w = bars[bars.length - 6].c; // 5 days ago
-      const c_1m = bars[bars.length - 22].c; // 21 days ago
-      
-      processed.push({
-        ticker: meta.ticker,
-        name: meta.name,
-        price: c_now,
-        raw_1w: ((c_now / c_1w) - 1) * 100,
-        raw_1m: ((c_now / c_1m) - 1) * 100
-      });
-    }
-    
-    count++;
-    statusBox.innerHTML = `Calculating ETF performance... (<b>${count}</b>/${ETF_UNIVERSE.length})`;
-    await new Promise(r => setTimeout(r, 60)); // Trickle-load to protect IP
-  }
-
-  // Calculate Percentile Rankings
-  if (processed.length > 0) {
-    // 1W Rank
-    processed.sort((a, b) => a.raw_1w - b.raw_1w);
-    processed.forEach((item, idx) => {
-      item.weekly_rs = Math.round((idx / (processed.length - 1)) * 100);
-    });
-
-    // 1M Rank
-    processed.sort((a, b) => a.raw_1m - b.raw_1m);
-    processed.forEach((item, idx) => {
-      item.monthly_rs = Math.round((idx / (processed.length - 1)) * 100);
-      
-      // Assign Quadrant
-      if (item.weekly_rs >= 50 && item.monthly_rs >= 50) item.quadrant = "STRONG";
-      else if (item.weekly_rs >= 50 && item.monthly_rs < 50) item.quadrant = "IMPROVING";
-      else if (item.weekly_rs < 50 && item.monthly_rs >= 50) item.quadrant = "WEAKENING";
-      else item.quadrant = "WEAK";
-    });
-  }
-
-  STATE.data = processed;
-  statusBox.innerHTML = `<b>Matrix Active</b> · ${processed.length} Industries Scored`;
-  drawMatrix();
-}
-
-/* ============================================================
-   4. SVG RENDERING ENGINE
-   ============================================================ */
-function drawMatrix() {
-  const svg = document.getElementById("scatterPlotSvg");
-  
-  // Filter Data
-  const filtered = STATE.data.filter(d => {
-    const matchSearch = d.name.toLowerCase().includes(STATE.query) || d.ticker.toLowerCase().includes(STATE.query);
-    const matchQuad = STATE.activeQuad === "ALL" || d.quadrant === STATE.activeQuad;
-    return matchSearch && matchQuad;
-  });
-
-  // Base SVG Content (Quadrants & Lines)
-  let html = `
-    <!-- Top-Left: Weakening -->
-    <rect x="0" y="0" width="500" height="300" fill="var(--quad-weaken)" />
-    <!-- Top-Right: Strong -->
-    <rect x="500" y="0" width="500" height="300" fill="var(--quad-strong)" />
-    <!-- Bottom-Left: Weak -->
-    <rect x="0" y="300" width="500" height="300" fill="var(--quad-weak)" />
-    <!-- Bottom-Right: Improving -->
-    <rect x="500" y="300" width="500" height="300" fill="var(--quad-improve)" />
-
-    <!-- Crosshairs -->
-    <line x1="500" y1="0" x2="500" y2="600" stroke="var(--line)" stroke-width="1.5" stroke-dasharray="6,6" />
-    <line x1="0" y1="300" x2="1000" y2="300" stroke="var(--line)" stroke-width="1.5" stroke-dasharray="6,6" />
-
-    <!-- Watermarks -->
-    <text x="250" y="40" text-anchor="middle" fill="var(--quad-text)" font-size="20" font-weight="900" font-family="'JetBrains Mono', monospace" letter-spacing="0.1em">WEAKENING</text>
-    <text x="750" y="40" text-anchor="middle" fill="var(--quad-text)" font-size="20" font-weight="900" font-family="'JetBrains Mono', monospace" letter-spacing="0.1em">STRONG ↗</text>
-    <text x="250" y="580" text-anchor="middle" fill="var(--quad-text)" font-size="20" font-weight="900" font-family="'JetBrains Mono', monospace" letter-spacing="0.1em">WEAK</text>
-    <text x="750" y="580" text-anchor="middle" fill="var(--quad-text)" font-size="20" font-weight="900" font-family="'JetBrains Mono', monospace" letter-spacing="0.1em">IMPROVING</text>
-  `;
-
-  // Plot Points
-  filtered.forEach((d, idx) => {
-    // Map 0-100 Percentile to SVG coordinates (padding 30px)
-    const cx = 30 + (d.weekly_rs / 100) * 940;
-    const cy = 570 - (d.monthly_rs / 100) * 540;
-    
-    // We bind the data index directly into the group for efficient event delegation
-    html += `
-      <g class="plot-point" data-ticker="${d.ticker}">
-        <circle class="glow" cx="${cx}" cy="${cy}" r="0" fill="transparent" />
-        <circle class="core" cx="${cx}" cy="${cy}" r="4.5" fill="var(--dot-fill)" stroke="var(--bg)" stroke-width="1.5" />
-        <text x="${cx + 8}" y="${cy + 3}" fill="var(--text-dim)" font-size="9.5" font-weight="700" font-family="'Inter', sans-serif">
-          ${d.name}
-        </text>
-      </g>
-    `;
-  });
-
-  svg.innerHTML = html;
-  attachHoverEvents();
-}
-
-/* ============================================================
-   5. INTERACTIVITY & TOOLTIPS
-   ============================================================ */
-function attachHoverEvents() {
-  const points = document.querySelectorAll('.plot-point');
-  points.forEach(pt => {
-    pt.addEventListener('mouseenter', (e) => {
-      const ticker = pt.getAttribute('data-ticker');
-      const data = STATE.data.find(d => d.ticker === ticker);
-      if (data) openHoverCard(data);
+  // Simple Tab Navigator
+  document.querySelectorAll('.app-tabs a').forEach(tab => {
+    tab.addEventListener('click', (e) => {
+      e.preventDefault();
+      document.querySelectorAll('.app-tabs a').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      document.querySelectorAll('.tab-content').forEach(view => view.classList.remove('active'));
+      document.getElementById(tab.getAttribute('data-target')).classList.add('active');
     });
   });
-}
-
-function openHoverCard(d) {
-  const card = document.getElementById('hoverCard');
-  
-  document.getElementById('hcTicker').innerText = d.ticker;
-  document.getElementById('hcName').innerText = d.name;
-  
-  document.getElementById('hcWkRank').innerText = `${d.weekly_rs} / 100`;
-  const wPct = d.raw_1w >= 0 ? `+${d.raw_1w.toFixed(2)}%` : `${d.raw_1w.toFixed(2)}%`;
-  document.getElementById('hcWkPct').innerText = wPct;
-  document.getElementById('hcWkPct').style.color = d.raw_1w >= 0 ? "var(--teal)" : "var(--red)";
-
-  document.getElementById('hcMoRank').innerText = `${d.monthly_rs} / 100`;
-  const mPct = d.raw_1m >= 0 ? `+${d.raw_1m.toFixed(2)}%` : `${d.raw_1m.toFixed(2)}%`;
-  document.getElementById('hcMoPct').innerText = mPct;
-  document.getElementById('hcMoPct').style.color = d.raw_1m >= 0 ? "var(--teal)" : "var(--red)";
-
-  document.getElementById('hcPrice').innerText = `$${d.price.toFixed(2)}`;
-  
-  const badge = document.getElementById('hcBadge');
-  badge.innerText = d.quadrant;
-  badge.className = `hc-badge badge-${d.quadrant.toLowerCase()}`;
-
-  card.classList.add('visible');
-}
-
-function closeHoverCard() {
-  document.getElementById('hoverCard').classList.remove('visible');
-}
-
-// UI Controls Binding
-document.getElementById('searchInput').addEventListener('input', (e) => {
-  STATE.query = e.target.value.toLowerCase().trim();
-  drawMatrix();
-});
-
-document.querySelectorAll('#quadrantFilters button').forEach(btn => {
-  btn.addEventListener('click', (e) => {
-    document.querySelectorAll('#quadrantFilters button').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    STATE.activeQuad = btn.getAttribute('data-quad');
-    drawMatrix();
-  });
-});
-
-document.getElementById('btnRefresh').addEventListener('click', () => {
-  closeHoverCard();
-  loadMatrixData();
-});
-
-/* ============================================================
-   6. THEME INITIALIZATION
-   ============================================================ */
-function setTheme(theme) {
-  document.documentElement.setAttribute("data-theme", theme);
-  document.getElementById("optDark").classList.toggle("active", theme === "dark");
-  document.getElementById("optLight").classList.toggle("active", theme === "light");
-  try { localStorage.setItem('sata-theme', theme); } catch(e) {}
-}
-
-document.getElementById("optDark").addEventListener("click", () => setTheme("dark"));
-document.getElementById("optLight").addEventListener("click", () => setTheme("light"));
-
-(function init() {
-  let savedTheme = "dark";
-  try { savedTheme = localStorage.getItem('sata-theme') || "dark"; } catch(e) {}
-  setTheme(savedTheme);
-  
-  // Hide tooltip when clicking anywhere in the matrix wrapper
-  document.getElementById('svgWrapper').addEventListener('click', (e) => {
-    if(!e.target.closest('.plot-point')) closeHoverCard();
-  });
-
-  loadMatrixData();
-})();
 </script>
 </body>
 </html>
