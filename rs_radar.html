@@ -1,69 +1,141 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <title>RS Radar Matrix</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&family=JetBrains+Mono:wght@700;800&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #f4f6fa; --card: #ffffff; --line: #e2e8f0; --text-main: #0f172a; --text-muted: #64748b; --text-faint: #94a3b8;
-    --blue: #2563eb; --blue-light: #eff6ff; --green: #059669; --green-light: #ecfdf5; --red: #e11d48; --red-light: #ffe4e6;
-    --slate-800: #1e293b; --slate-50: #f8fafc;
-  }
-  
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--bg); color: var(--text-main); font-family: 'Inter', sans-serif; padding: 16px; overflow-y: scroll; }
-  
-  .flex { display: flex; } .flex-col { flex-direction: column; } .items-center { align-items: center; } .justify-between { justify-content: space-between; }
-  .gap-1 { gap: 0.25rem; } .gap-2 { gap: 0.5rem; } .gap-3 { gap: 0.75rem; } .gap-4 { gap: 1rem; }
-  .grid { display: grid; } .grid-cols-3 { grid-template-columns: repeat(3, 1fr); } .grid-cols-12 { grid-template-columns: repeat(12, 1fr); }
-  .col-span-3 { grid-column: span 3; } .col-span-9 { grid-column: span 9; }
-  .w-full { width: 100%; } .h-full { height: 100%; } .flex-1 { flex: 1; }
-  
-  .p-2 { padding: 0.5rem; } .p-3 { padding: 0.75rem; } .p-4 { padding: 1rem; }
-  .px-1 { padding-left: 0.25rem; padding-right: 0.25rem; } .px-2 { padding-left: 0.5rem; padding-right: 0.5rem; }
-  .py-05 { padding-top: 0.125rem; padding-bottom: 0.125rem; } .py-1 { padding-top: 0.25rem; padding-bottom: 0.25rem; }
-  
-  .border { border: 1px solid var(--line); } .border-t { border-top: 1px solid var(--line); } .border-b { border-bottom: 1px solid var(--line); }
-  .border-l-4 { border-left: 4px solid; } .rounded { border-radius: 0.25rem; } .rounded-lg { border-radius: 0.5rem; }
-  .shadow-sm { box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05); }
-  
-  .bg-white { background: var(--card); } .bg-slate-50 { background: var(--slate-50); }
-  .bg-blue-light { background: var(--blue-light); color: var(--blue); }
-  .bg-green-light { background: var(--green-light); color: var(--green); } .bg-red-light { background: var(--red-light); color: var(--red); }
-  
-  .text-xs { font-size: 0.75rem; } .text-sm { font-size: 0.875rem; } .text-10 { font-size: 10px; } .text-9 { font-size: 9px; }
-  .font-medium { font-weight: 500; } .font-bold { font-weight: 700; } .font-black { font-weight: 900; }
-  .uppercase { text-transform: uppercase; } .tracking-wider { letter-spacing: 0.05em; } .truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .text-center { text-align: center; } .text-right { text-align: right; }
-  .text-blue { color: var(--blue); } .text-green { color: var(--green); } .text-red { color: var(--red); } .text-muted { color: var(--text-muted); } .text-main { color: var(--text-main); }
-  
-  /* Tabs */
-  .app-tabs { display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 2px solid var(--line); overflow-x: auto; }
-  .app-tabs::-webkit-scrollbar { display: none; }
-  .app-tabs a { padding: 10px 20px; font-size: 12px; font-weight: 800; color: var(--text-muted); text-decoration: none; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 2px solid transparent; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
-  .app-tabs a.active { color: var(--blue); border-bottom-color: var(--blue); }
-  .app-tabs a:hover:not(.active) { color: var(--text-main); }
-  
-  /* Custom components */
-  table { width: 100%; border-collapse: collapse; } th, td { padding: 8px; text-align: left; } thead { background: var(--slate-50); border-bottom: 1px solid var(--line); }
-  .rank-box { padding: 4px 6px; border-radius: 4px; text-align: center; font-weight: 900; font-size: 10px; display: inline-block; min-width: 32px; border: 1px solid transparent; }
-  .rb-high { background: var(--green-light); color: var(--green); border-color: rgba(5, 150, 105, 0.2); }
-  .rb-low { background: var(--red-light); color: var(--red); border-color: rgba(225, 29, 72, 0.2); }
-  .rb-mid { background: var(--slate-50); color: var(--text-muted); border-color: var(--line); }
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap');
 
-  #loadingOverlay { position: fixed; inset: 0; background: rgba(255,255,255,0.9); z-index: 50; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-  .spinner { border: 4px solid var(--line); border-top: 4px solid var(--blue); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 16px; }
+  :root {
+    --bg: #0a0e16;
+    --panel: #101625;
+    --panel2: #0d1220;
+    --line: #212a3d;
+    --line-soft: #1a2233;
+    --text: #e7ebf3;
+    --text-dim: #8b93a8;
+    --text-faint: #59617a;
+    --teal: #20d9b8;
+    --amber: #f5b942;
+    --red: #ff5c72;
+    --blue: #38bdf8;
+    --navy-head: #131c33;
+    --input-bg: #0d1220;
+  }
+
+  html[data-theme="light"] {
+    --bg: #f4f6fa;
+    --panel: #ffffff;
+    --panel2: #ffffff;
+    --line: #dde2ec;
+    --line-soft: #e9edf4;
+    --text: #151b2c;
+    --text-dim: #5b6478;
+    --text-faint: #8a92a6;
+    --teal: #0b9c82;
+    --amber: #b9781a;
+    --red: #c93a51;
+    --blue: #0284c7;
+    --navy-head: #eef1f8;
+    --input-bg: #f4f6fa;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background:
+      radial-gradient(ellipse 1200px 500px at 15% -5%, rgba(32,217,184,.06), transparent 60%),
+      radial-gradient(ellipse 900px 500px at 100% 0%, rgba(255,92,114,.05), transparent 55%),
+      var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    padding: 22px 26px 60px;
+    transition: background .2s ease, color .2s ease;
+  }
+
+  /* APP TABS */
+  .app-tabs { display: flex; gap: 4px; margin-bottom: 22px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  .app-tabs a { padding: 10px 20px; text-decoration: none; color: var(--text-dim); font-size: 12px; font-weight: 600; border: 1px solid transparent; border-bottom: none; border-radius: 8px 8px 0 0; text-transform: uppercase; letter-spacing: 0.04em; transition: all 0.15s; font-family: 'JetBrains Mono', monospace; }
+  .app-tabs a.active { background: var(--panel); color: var(--teal); border-color: var(--line); border-bottom-color: var(--panel); margin-bottom: -1px; }
+  .app-tabs a:hover:not(.active) { color: var(--text); background: rgba(255,255,255,0.03); }
+
+  /* HEADER */
+  header.top {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    border-bottom: 2px solid var(--line); padding-bottom: 14px; margin-bottom: 20px; gap: 16px; flex-wrap: wrap;
+  }
+  .brand-eyebrow { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .18em; color: var(--teal); text-transform: uppercase; font-weight: 700; }
+  h1 { font-size: 26px; font-weight: 800; letter-spacing: -.02em; margin-top: 2px; }
+  .subline { color: var(--text-dim); font-size: 12.5px; margin-top: 4px; font-family: 'JetBrains Mono', monospace; }
+  .header-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+
+  .status-badge { font-family: 'JetBrains Mono', monospace; font-size: 11px; background: var(--panel2); border: 1px solid var(--line); padding: 7px 14px; border-radius: 100px; color: var(--text-dim); }
+  .status-badge b { color: var(--teal); }
+
+  .theme-toggle {
+    display: flex; align-items: center; gap: 4px; background: var(--panel); border: 1px solid var(--line);
+    border-radius: 100px; padding: 4px; cursor: pointer; user-select: none;
+  }
+  .theme-toggle .opt { font-size: 11px; padding: 5px 12px; border-radius: 100px; color: var(--text-faint); font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+  .theme-toggle .opt.active { background: var(--teal); color: #04150f; }
+
+  .btn {
+    background: var(--panel); border: 1px solid var(--line); color: var(--text); font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px; padding: 8px 14px; border-radius: 7px; cursor: pointer; font-weight: 600; transition: all .15s;
+  }
+  .btn:hover { border-color: var(--teal); color: var(--teal); }
+  .btn.primary { background: var(--teal); color: #04150f; border-color: var(--teal); font-weight: 700; }
+
+  /* GRID & CARDS */
+  .grid { display: grid; gap: 14px; }
+  .grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+  .grid-cols-12 { grid-template-columns: repeat(12, 1fr); }
+  .col-span-3 { grid-column: span 3; }
+  .col-span-9 { grid-column: span 9; }
+
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px; }
+  .card .label { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--text); font-weight: 800; font-family: 'JetBrains Mono', monospace; margin-bottom: 10px; border-left: 3px solid var(--teal); padding-left: 8px; }
+
+  /* RANK BADGES */
+  .rank-pill { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; font-weight: 800; padding: 2px 6px; border-radius: 4px; text-align: center; min-width: 30px; display: inline-block; }
+  .rank-high { background: rgba(32, 217, 184, 0.15); color: var(--teal); border: 1px solid rgba(32, 217, 184, 0.3); }
+  .rank-mid { background: var(--input-bg); color: var(--text-dim); border: 1px solid var(--line); }
+  .rank-low { background: rgba(255, 92, 114, 0.15); color: var(--red); border: 1px solid rgba(255, 92, 114, 0.3); }
+
+  /* TABLES */
+  .section-head {
+    background: var(--navy-head); border: 1px solid var(--line); border-bottom: none;
+    padding: 10px 16px; border-radius: 10px 10px 0 0; display: flex; justify-content: space-between; align-items: center;
+  }
+  .section-head h2 { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; font-weight: 800; color: var(--text); font-family: 'JetBrains Mono', monospace; }
+
+  table.rs-table { width: 100%; border-collapse: collapse; font-family: 'JetBrains Mono', monospace; font-size: 11px; background: var(--panel2); border: 1px solid var(--line); border-radius: 0 0 10px 10px; overflow: hidden; }
+  table.rs-table thead th { background: var(--navy-head); text-align: right; font-size: 10px; text-transform: uppercase; color: var(--text-dim); padding: 8px 10px; border-bottom: 1px solid var(--line); }
+  table.rs-table thead th:first-child, table.rs-table thead th:nth-child(5), table.rs-table thead th:nth-child(6) { text-align: left; }
+  table.rs-table tbody td { padding: 6px 10px; border-bottom: 1px solid var(--line-soft); text-align: right; color: var(--text); }
+  table.rs-table tbody td:first-child, table.rs-table tbody td:nth-child(5), table.rs-table tbody td:nth-child(6) { text-align: left; }
+  table.rs-table tbody tr:hover { background: var(--line-soft); }
+
+  /* MOVERS ITEMS */
+  .mover-item { display: flex; align-items: center; justify-content: space-between; background: var(--input-bg); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; margin-bottom: 6px; font-family: 'JetBrains Mono', monospace; }
+  .mover-item .tk { font-weight: 800; color: var(--blue); font-size: 12px; }
+  .mover-item .nm { font-size: 10px; color: var(--text-dim); }
+
+  /* OVERLAY */
+  #loadingOverlay { position: fixed; inset: 0; background: var(--bg); opacity: 0.95; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .spinner { border: 3px solid var(--line); border-top: 3px solid var(--teal); border-radius: 50%; width: 36px; height: 36px; animation: spin 0.8s linear infinite; margin-bottom: 12px; }
   @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+  @media(max-width:1200px) { .col-span-3, .col-span-9 { grid-column: span 12; } .grid-cols-3 { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
 
-  <!-- App Navigation -->
+  <!-- APP TABS -->
   <div class="app-tabs">
     <a href="index.html">Market Dashboard</a>
     <a href="MarketCommandCenter.html">Market Command Center</a>
-    <a href="market_breadth.html" >Market Breadth</a>
+    <a href="market_breadth.html">Market Breadth</a>
     <a href="MarketRegime.html">Market Regime</a> 
     <a href="stockbee_market_monitor_live.html">Stockbee Monitor</a>
     <a href="sata_watchlist_dashboard.html">SATA Chart</a>
@@ -79,66 +151,76 @@
     <a href="Playbook.html">Playbook</a>
   </div>
 
-  <div id="loadingOverlay">
-    <div class="spinner"></div>
-    <div class="text-sm font-black text-blue uppercase tracking-wider" id="loadStatus">Compiling RS Rankings...</div>
-  </div>
-
-  <div class="w-full h-full" id="dashboardContent" style="display:none;">
-    <div class="grid grid-cols-12 gap-4">
-      
-      <!-- Left Column: Rank Movers -->
-      <div class="col-span-3 flex flex-col gap-4">
-        <div class="bg-white border rounded-lg p-3 shadow-sm">
-          <div class="text-10 font-black text-main uppercase border-l-4 border-blue pl-2 mb-3">Daily Rank Up</div>
-          <div class="flex flex-col gap-2" id="dailyUpList"></div>
-        </div>
-        <div class="bg-white border rounded-lg p-3 shadow-sm">
-          <div class="text-10 font-black text-main uppercase border-l-4 border-red pl-2 mb-3">Daily Rank Down</div>
-          <div class="flex flex-col gap-2" id="dailyDownList"></div>
-        </div>
-        <div class="bg-white border rounded-lg p-3 shadow-sm">
-          <div class="text-10 font-black text-main uppercase border-l-4 border-blue pl-2 mb-3">Weekly Rank Up</div>
-          <div class="flex flex-col gap-2" id="weeklyUpList"></div>
-        </div>
-        <div class="bg-white border rounded-lg p-3 shadow-sm">
-          <div class="text-10 font-black text-main uppercase border-l-4 border-red pl-2 mb-3">Weekly Rank Down</div>
-          <div class="flex flex-col gap-2" id="weeklyDownList"></div>
-        </div>
-      </div>
-
-      <!-- Right Column: Tables -->
-      <div class="col-span-9 flex flex-col gap-4">
-        
-        <!-- Sector Leaders Table -->
-        <div class="bg-white border rounded-lg shadow-sm">
-          <div class="p-3 bg-slate-50 border-b border-l-4 border-l-blue flex justify-between items-center">
-            <div class="text-xs font-black text-main uppercase">Sector Leaders</div>
-          </div>
-          <table class="w-full text-left text-xs font-bold text-muted">
-            <thead class="bg-slate-50 border-b text-10">
-              <tr>
-                <th class="p-2 w-10">Now</th><th class="p-2 w-10">1D</th><th class="p-2 w-10">1W</th><th class="p-2 w-10">1M</th>
-                <th class="p-2">Ticker</th><th class="p-2">Name</th><th class="p-2">RS Day%</th><th class="p-2">RS Wk%</th><th class="p-2">RS Mth%</th><th class="p-2">52W High</th>
-              </tr>
-            </thead>
-            <tbody id="sectorTable"></tbody>
-          </table>
-        </div>
-        
-        <!-- Industry RS Rank Tables -->
-        <div class="bg-white border rounded-lg shadow-sm">
-          <div class="p-3 bg-slate-50 border-b border-l-4 border-l-blue flex justify-between items-center">
-            <div class="text-xs font-black text-main uppercase">Industry RS Rank</div>
-            <div class="text-10 font-bold text-muted">RS Rank ↓</div>
-          </div>
-          <div class="grid grid-cols-3 gap-0" id="industryGrid">
-             <!-- Injected via JS -->
-          </div>
-        </div>
-
+  <header class="top">
+    <div>
+      <div class="brand-eyebrow">Top-Down Relative Strength Matrix</div>
+      <h1>RS Radar Dashboard</h1>
+      <div class="subline">Cross-Sectional Rank Trajectory & Momentum Shift Analytics</div>
+    </div>
+    <div class="header-right">
+      <div class="status-badge" id="statusBadge">Status: <b>Initializing</b></div>
+      <button class="btn primary" id="btnRefresh">↻ Refresh Matrix</button>
+      <div class="theme-toggle" id="themeToggle">
+        <span class="opt" id="optDark">Dark</span>
+        <span class="opt" id="optLight">Light</span>
       </div>
     </div>
+  </header>
+
+  <div id="loadingOverlay">
+    <div class="spinner"></div>
+    <div class="brand-eyebrow" id="loadStatus">Compiling Sector Ranks…</div>
+  </div>
+
+  <div class="grid grid-cols-12" id="mainContainer">
+    
+    <!-- LEFT COLUMN: MOVERS -->
+    <div class="col-span-3 flex" style="flex-direction:column; gap:14px;">
+      <div class="card">
+        <div class="label">Daily Rank Up</div>
+        <div id="dailyUpList"></div>
+      </div>
+      <div class="card">
+        <div class="label" style="border-left-color:var(--red);">Daily Rank Down</div>
+        <div id="dailyDownList"></div>
+      </div>
+      <div class="card">
+        <div class="label">Weekly Rank Up</div>
+        <div id="weeklyUpList"></div>
+      </div>
+      <div class="card">
+        <div class="label" style="border-left-color:var(--red);">Weekly Rank Down</div>
+        <div id="weeklyDownList"></div>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN: TABLES -->
+    <div class="col-span-9 flex" style="flex-direction:column; gap:16px;">
+      
+      <!-- SECTOR LEADERS TABLE -->
+      <div>
+        <div class="section-head"><h2>Sector Leaders</h2></div>
+        <table class="rs-table">
+          <thead>
+            <tr>
+              <th>Now</th><th>1D</th><th>1W</th><th>1M</th>
+              <th>Ticker</th><th>Name</th><th>RS Day%</th><th>RS Wk%</th><th>RS Mth%</th><th>52W High</th>
+            </tr>
+          </thead>
+          <tbody id="sectorTable"></tbody>
+        </table>
+      </div>
+
+      <!-- INDUSTRY RS RANK GRID -->
+      <div>
+        <div class="section-head"><h2>Industry RS Rank (3-Column Split)</h2></div>
+        <div class="grid grid-cols-3" id="industryGrid" style="gap:0; border:1px solid var(--line); border-radius:0 0 10px 10px; overflow:hidden;">
+          <!-- Injected via JS -->
+        </div>
+      </div>
+
+    </div>
+
   </div>
 
 <script>
@@ -202,14 +284,14 @@ function buildRanks(groupList, valKey) {
 }
 
 function getRankBadge(r) {
-  let cls = 'rb-mid';
-  if (r >= 80) cls = 'rb-high';
-  else if (r <= 30) cls = 'rb-low';
-  return `<div class="rank-box ${cls}">${r}</div>`;
+  let cls = 'rank-mid';
+  if (r >= 80) cls = 'rank-high';
+  else if (r <= 30) cls = 'rank-low';
+  return `<span class="rank-pill ${cls}">${r}</span>`;
 }
 
 function pctFormat(val) {
-  return `<span class="${val > 0 ? 'text-green' : 'text-red'}">${val > 0 ? '+' : ''}${val.toFixed(2)}%</span>`;
+  return `<span style="color:${val >= 0 ? 'var(--teal)' : 'var(--red)'}; font-weight:700;">${val >= 0 ? '+' : ''}${val.toFixed(2)}%</span>`;
 }
 
 async function initRadar() {
@@ -220,12 +302,12 @@ async function initRadar() {
     const bars = await fetchYahooSeries(tk);
     if (bars && bars.length > 60) STATE.data[tk] = bars;
     count++;
-    status.innerText = `Compiling RS Rankings... (${count}/${ALL_TICKERS.length})`;
-    await new Promise(r => setTimeout(r, 150)); // Stagger
+    status.innerText = `Fetching RS Feeds… (${count}/${ALL_TICKERS.length})`;
+    await new Promise(r => setTimeout(r, 120));
   }
 
   document.getElementById('loadingOverlay').style.display = 'none';
-  document.getElementById('dashboardContent').style.display = 'block';
+  document.getElementById('statusBadge').innerHTML = `Status: <b>Active (${Object.keys(STATE.data).length} Streams)</b>`;
   processAndRender();
 }
 
@@ -242,13 +324,11 @@ function processAndRender() {
       const h52 = Math.max(...bars.slice(-252).map(b => b.h));
       const offHigh = ((c / h52) - 1) * 100;
 
-      // Calculate the "1M Return" anchored at different historical points to build ranks
       const rawNow = calcRawRet(bars, 0, 21);
       const raw1d = calcRawRet(bars, 1, 21);
       const raw1w = calcRawRet(bars, 5, 21);
       const raw1m = calcRawRet(bars, 21, 21);
       
-      // Calculate true relative performance vs SPY
       const spyDay = spy ? calcRawRet(spy, 0, 1) : 0;
       const spyWk = spy ? calcRawRet(spy, 0, 5) : 0;
       const spyMo = spy ? calcRawRet(spy, 0, 21) : 0;
@@ -277,28 +357,28 @@ function processAndRender() {
   const secData = buildGroupData(SECTORS);
   const indData = buildGroupData(INDUSTRIES);
 
-  // 1. RENDER SECTOR TABLE
+  // 1. SECTOR TABLE
   let secHtml = '';
   secData.forEach(s => {
-    secHtml += `<tr class="border-b hover:bg-slate-50 cursor-pointer">
-      <td class="p-2">${getRankBadge(s.rNow)}</td><td class="p-2">${getRankBadge(s.r1d)}</td><td class="p-2">${getRankBadge(s.r1w)}</td><td class="p-2">${getRankBadge(s.r1m)}</td>
-      <td class="p-2 text-blue font-black">${s.tk}</td><td class="p-2 text-main">${s.n}</td>
-      <td class="p-2 font-bold">${pctFormat(s.rsDay)}</td><td class="p-2 font-bold">${pctFormat(s.rsWk)}</td><td class="p-2 font-bold">${pctFormat(s.rsMo)}</td>
-      <td class="p-2 text-main font-bold">${s.offHigh.toFixed(2)}%</td>
+    secHtml += `<tr>
+      <td>${getRankBadge(s.rNow)}</td><td>${getRankBadge(s.r1d)}</td><td>${getRankBadge(s.r1w)}</td><td>${getRankBadge(s.r1m)}</td>
+      <td style="font-weight:800; color:var(--blue);">${s.tk}</td><td>${s.n}</td>
+      <td>${pctFormat(s.rsDay)}</td><td>${pctFormat(s.rsWk)}</td><td>${pctFormat(s.rsMo)}</td>
+      <td style="font-weight:700;">${s.offHigh.toFixed(2)}%</td>
     </tr>`;
   });
   document.getElementById('sectorTable').innerHTML = secHtml;
 
-  // 2. RENDER INDUSTRY GRID (Split into 3 columns)
+  // 2. INDUSTRY GRID
   const chunkSize = Math.ceil(indData.length / 3);
   let indGridHtml = '';
   for(let i=0; i<3; i++) {
     const chunk = indData.slice(i * chunkSize, (i + 1) * chunkSize);
-    let tableHtml = `<div class="${i>0?'border-l border-slate-200':''}"><table class="w-full text-left text-[10px] font-bold text-muted"><thead class="bg-slate-50 border-b"><tr><th class="p-2 w-8">Now</th><th class="p-2 w-8">1D</th><th class="p-2 w-8">1W</th><th class="p-2 w-8">1M</th><th class="p-2">Ticker</th><th class="p-2">Name</th><th class="p-2 text-right">RS Wk%</th></tr></thead><tbody>`;
+    let tableHtml = `<div style="${i>0?'border-left:1px solid var(--line);':''}"><table class="rs-table"><thead><tr><th>Now</th><th>1D</th><th>1W</th><th>1M</th><th>Ticker</th><th>Name</th><th style="text-align:right;">RS Wk%</th></tr></thead><tbody>`;
     chunk.forEach(ind => {
-      tableHtml += `<tr class="border-b hover:bg-slate-50 cursor-pointer">
-        <td class="p-2">${getRankBadge(ind.rNow)}</td><td class="p-2">${getRankBadge(ind.r1d)}</td><td class="p-2">${getRankBadge(ind.r1w)}</td><td class="p-2">${getRankBadge(ind.r1m)}</td>
-        <td class="p-2 text-blue font-black">${ind.tk}</td><td class="p-2 text-main truncate max-w-[80px]" title="${ind.n}">${ind.n}</td><td class="p-2 text-right">${pctFormat(ind.rsWk)}</td>
+      tableHtml += `<tr>
+        <td>${getRankBadge(ind.rNow)}</td><td>${getRankBadge(ind.r1d)}</td><td>${getRankBadge(ind.r1w)}</td><td>${getRankBadge(ind.r1m)}</td>
+        <td style="font-weight:800; color:var(--blue);">${ind.tk}</td><td class="nm">${ind.n}</td><td style="text-align:right;">${pctFormat(ind.rsWk)}</td>
       </tr>`;
     });
     tableHtml += `</tbody></table></div>`;
@@ -306,21 +386,19 @@ function processAndRender() {
   }
   document.getElementById('industryGrid').innerHTML = indGridHtml;
 
-  // 3. RENDER MOVERS
+  // 3. MOVERS
   const renderMover = (list, key, targetId, isUp) => {
     const sorted = [...list].sort((a,b) => isUp ? b[key] - a[key] : a[key] - b[key]).slice(0, 3);
     let html = '';
     sorted.forEach(m => {
-      const cls = isUp ? 'text-green border-green bg-green-light' : 'text-red border-red bg-red-light';
-      const borderHover = isUp ? 'hover:border-blue' : 'hover:border-red';
-      html += `<div class="border rounded p-2 flex justify-between items-center ${borderHover} transition-colors cursor-pointer shadow-sm">
-        <div class="flex items-center gap-3">
-          <div class="${cls} border px-2 py-1 rounded text-10 font-black">${m.rNow}</div>
-          <div><div class="text-xs font-black text-blue">${m.tk}</div><div class="text-9 text-muted">${m.n}</div></div>
+      html += `<div class="mover-item">
+        <div class="flex" style="align-items:center; gap:8px;">
+          ${getRankBadge(m.rNow)}
+          <div><div class="tk">${m.tk}</div><div class="nm">${m.n}</div></div>
         </div>
-        <div class="text-right">
-          <div class="text-xs font-black text-main">$${m.c.toFixed(2)}</div>
-          <div class="text-10 font-bold ${isUp?'text-green':'text-red'}">${m[key]>0?'+':''}${m[key]} pts</div>
+        <div style="text-align:right;">
+          <div style="font-weight:800; font-size:12px;">$${m.c.toFixed(2)}</div>
+          <div style="font-size:10px; font-weight:700; color:${isUp?'var(--teal)':'var(--red)'};">${m[key]>0?'+':''}${m[key]} pts</div>
         </div>
       </div>`;
     });
@@ -333,7 +411,23 @@ function processAndRender() {
   renderMover(indData, 'chgWk', 'weeklyDownList', false);
 }
 
-window.onload = initRadar;
+function setTheme(theme) {
+  document.documentElement.setAttribute("data-theme", theme);
+  document.getElementById("optDark").classList.toggle("active", theme === "dark");
+  document.getElementById("optLight").classList.toggle("active", theme === "light");
+  try { localStorage.setItem('sata-theme', theme); } catch(e) {}
+}
+
+document.getElementById("optDark").addEventListener("click", () => setTheme("dark"));
+document.getElementById("optLight").addEventListener("click", () => setTheme("light"));
+document.getElementById("btnRefresh").addEventListener("click", () => initRadar());
+
+window.onload = () => {
+  let savedTheme = "dark";
+  try { savedTheme = localStorage.getItem('sata-theme') || "dark"; } catch(e) {}
+  setTheme(savedTheme);
+  initRadar();
+};
 </script>
 </body>
 </html>
