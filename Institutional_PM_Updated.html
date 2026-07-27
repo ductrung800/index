@@ -1048,7 +1048,7 @@ function buildStreakHistoryHTML(rows, stateKey) {
   }).join("");
 }
 
-function renderMasterBriefingAndDiagnostics() {
+async function renderMasterBriefingAndDiagnostics() {
   const merged = STATE.merged;
   if (!merged || merged.length === 0) return;
 
@@ -1473,7 +1473,7 @@ async function refreshAllData() {
     STATE.vix = vix; STATE.vvix = vvix; STATE.qqq = qqq; STATE.spy = spy;
     STATE.merged = buildMergedSeries();
 
-    renderMasterBriefingAndDiagnostics();
+    await renderMasterBriefingAndDiagnostics();
     renderLeaderThemeCharts();
     setStatusMsg(`✓ Unified sync complete · ${STATE.merged.length} days aligned.`);
   } catch (e) {
