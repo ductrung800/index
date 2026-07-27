@@ -1492,7 +1492,7 @@ function setTheme(theme) {
   document.documentElement.setAttribute("data-theme", theme);
   updateThemeToggleUI(theme);
   try { localStorage.setItem('market-monitor-theme', theme); } catch(e) {}
-  if (STATE.merged && STATE.merged.length) renderMasterBriefingAndDiagnostics();
+  if (STATE.merged && STATE.merged.length) await renderMasterBriefingAndDiagnostics();
   renderLeaderThemeCharts();
 }
 
