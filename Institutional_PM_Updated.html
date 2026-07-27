@@ -1059,14 +1059,15 @@ function renderMasterBriefingAndDiagnostics() {
   document.getElementById("subline").textContent =
     `${last.date} · ${merged.length} days aligned · VIX ${fmtNum(last.vix)} · VVIX ${fmtNum(last.vvix)} · QQQ ${fmtNum(last.qClose)} · SPY ${fmtNum(last.sClose)}`;
 
-  let pcVal = 0.93;
+let pcVal = 0.93;
   let nasiVal = -11.99;
   let nasiSma = 143.98;
 
   try {
-    const raw = localStorage.getItem('market-monitor-data');
-    if (raw) {
-      const parsed = JSON.parse(raw);
+    // Switch to window.storage.get to match index.html
+    const savedData = await window.storage.get('market-monitor-data');
+    if (savedData && savedData.value) {
+      const parsed = JSON.parse(savedData.value);
       if (parsed.putcall?.value) pcVal = parsed.putcall.value;
       if (parsed.nasi?.current) nasiVal = parsed.nasi.current;
       if (parsed.nasi?.sma50) nasiSma = parsed.nasi.sma50;
