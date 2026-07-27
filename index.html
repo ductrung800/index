@@ -337,7 +337,10 @@
     </div>
     <div class="header-right">
       <button class="btn primary" id="btnAutoRefresh" style="margin-right: 8px;">↻ Refresh Live Data</button>
-      <div class="signal-pill"><span class="dot" id="masterDot"></span><span id="masterText">HOLD POSITIONS — Normal / Stable</span></div>
+      <div class="signal-pill">
+        <span class="dot red" id="masterDot"></span>
+        <span id="masterText">RISK-OFF / DEFENSIVE — 20-40% Exposure</span>
+      </div>
       <div class="theme-toggle" id="themeToggle">
         <span class="opt" id="optDark">Dark</span>
         <span class="opt" id="optLight">Light</span>
@@ -808,12 +811,17 @@ if (spread > 1.05) {
   capEl.textContent = "Tightening (Risk-on)";
   capEl.style.color = "var(--teal)";
 }
-  // VIX card + zones
+  
+// Dynamic Market Regime & Header Signal Pill Assessment
   (function(){
     const v = DATA.vix;
+    const b = DATA.breadth;
+    const nasi = DATA.nasi;
+
     document.getElementById("vixBig").textContent = v.level.toFixed(2);
     document.getElementById("vixCap").textContent = `20 SMA ${v.sma20.toFixed(2)} · ${v.trendLabel}`;
 
+    // VIX Zone Gauge Positioning
     let pct;
     const vix = v.level;
     if(vix < 15){ pct = (vix/15)*15; }
@@ -822,43 +830,44 @@ if (spread > 1.05) {
     else { pct = 65 + Math.min(35, ((vix-35)/15)*35); }
     document.getElementById("vixMarker").style.left = pct+"%";
 
-    let currentZoneIdx = vix>35?0 : vix>=25?1 : vix>=15?2 : 3;
-    let h = `<thead><tr><th>VIX Level</th><th>Zone</th><th>Action</th><th>Priority Allocation</th></tr></thead><tbody>`;
-    vixZonesTemplate.forEach(([lvl,zone,action,alloc],i)=>{
-      const isCurrent = i===currentZoneIdx;
-      h += `<tr class="${isCurrent?'zone-current':''}"><td style="font-weight:700;">${lvl}</td><td>${zone}</td><td style="font-weight:700;">${action}</td><td>${alloc}</td></tr>`;
-    });
-    h += "</tbody>";
-// Replace the existing vixTooltipEl.innerHTML block in your script:
-const vixTooltipEl = document.getElementById("vixTooltip");
-if(vixTooltipEl) {
-  let h = `<thead><tr><th>VIX</th><th>Zone</th><th>Action</th></tr></thead><tbody>`;
-  vixZonesTemplate.forEach(([lvl, zone, action], i) => {
-    const isCurrent = i === currentZoneIdx;
-    h += `<tr class="${isCurrent ? 'zone-current' : ''}">
-            <td style="font-weight:700;">${lvl}</td>
-            <td>${zone}</td>
-            <td style="font-weight:700;">${action}</td>
-          </tr>`;
-  });
-  h += "</tbody>";
-  vixTooltipEl.innerHTML = `<table>${h}</table>`;
-}
+    // Render VIX Tooltip Table
+    let currentZoneIdx = vix > 35 ? 0 : vix >= 25 ? 1 : vix >= 15 ? 2 : 3;
+    const vixTooltipEl = document.getElementById("vixTooltip");
+    if(vixTooltipEl) {
+      let h = `<thead><tr><th>VIX</th><th>Zone</th><th>Action</th></tr></thead><tbody>`;
+      vixZonesTemplate.forEach(([lvl, zone, action], i) => {
+        const isCurrent = i === currentZoneIdx;
+        h += `<tr class="${isCurrent ? 'zone-current' : ''}">
+                <td style="font-weight:700;">${lvl}</td>
+                <td>${zone}</td>
+                <td style="font-weight:700;">${action}</td>
+              </tr>`;
+      });
+      h += "</tbody>";
+      vixTooltipEl.innerHTML = `<table>${h}</table>`;
+    }
 
- 
+    // REGIME ENGINE (Matches Institutional Update & Command Center)
+    const isNasiBear = nasi.current < 0 || nasi.current < nasi.sma50;
+    const isBreadthWeak = (b.spx200 < 50) || (b.spx20 < 40);
+    const isVixElevated = vix >= 20;
 
-    const zoneLabels = ["Extreme Panic","Fear & Volatility","Normal / Stable","High Complacency"];
-    const actionLabels = ["Buy aggressively","Scale in (DCA)","Hold positions","Reduce exposure"];
-    
-    document.getElementById("masterText").textContent = `${actionLabels[currentZoneIdx].toUpperCase()} — ${zoneLabels[currentZoneIdx]}`;
-    
-    // Fix: Red for index 0/1 (Panic/Fear), Teal for index 2 (Stable), Amber for index 3 (Complacency)
-    let dotClass = "dot";
-    if (currentZoneIdx <= 1) dotClass = "dot red";      // Panic/Fear -> Red dot
-    else if (currentZoneIdx === 2) dotClass = "dot";    // Normal/Stable -> Teal dot
-    else dotClass = "dot amber";                        // Complacency -> Amber dot
-    
-    document.getElementById("masterDot").className = dotClass;
+    const masterTextEl = document.getElementById("masterText");
+    const masterDotEl = document.getElementById("masterDot");
+
+    if (isNasiBear && (isBreadthWeak || isVixElevated || vix >= 18)) {
+      // Defensive / Risk-Off Regime
+      masterTextEl.textContent = "RISK-OFF / DEFENSIVE — 20-40% Exposure";
+      masterDotEl.className = "dot red";
+    } else if (isNasiBear || isVixElevated || b.spx20 < 50) {
+      // Caution / Selective Rotation
+      masterTextEl.textContent = "CAUTION / SELECTIVE — 40-60% Exposure";
+      masterDotEl.className = "dot amber";
+    } else {
+      // Risk-On / Expansion Regime
+      masterTextEl.textContent = "RISK-ON / EXPANSION — 80-100% Exposure";
+      masterDotEl.className = "dot";
+    }
   })();
 
 
