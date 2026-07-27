@@ -1059,20 +1059,30 @@ async function renderMasterBriefingAndDiagnostics() {
   document.getElementById("subline").textContent =
     `${last.date} · ${merged.length} days aligned · VIX ${fmtNum(last.vix)} · VVIX ${fmtNum(last.vvix)} · QQQ ${fmtNum(last.qClose)} · SPY ${fmtNum(last.sClose)}`;
 
-let pcVal = 0.93;
+  let pcVal = 0.93;
   let nasiVal = -11.99;
   let nasiSma = 143.98;
 
   try {
-    // Switch to window.storage.get to match index.html
-    const savedData = await window.storage.get('market-monitor-data');
-    if (savedData && savedData.value) {
-      const parsed = JSON.parse(savedData.value);
+    let raw = null;
+    // Safely check if custom window.storage exists
+    if (typeof window !== "undefined" && window.storage && window.storage.get) {
+      const savedData = await window.storage.get('market-monitor-data');
+      raw = savedData ? savedData.value : null;
+    } else {
+      // Fallback to standard browser localStorage
+      raw = localStorage.getItem('market-monitor-data');
+    }
+    
+    if (raw) {
+      const parsed = JSON.parse(raw);
       if (parsed.putcall?.value) pcVal = parsed.putcall.value;
       if (parsed.nasi?.current) nasiVal = parsed.nasi.current;
       if (parsed.nasi?.sma50) nasiSma = parsed.nasi.sma50;
     }
-  } catch(e) {}
+  } catch (e) {
+    console.warn("Could not read local storage for Put/Call and $NASI. Using defaults.", e);
+  }
 
   let moodScoreNorm = last.moodState === "bull" ? 100 : (last.moodState === "bear" ? 0 : 50);
   let qqqScoreNorm = last.qqqState === "bull" ? 100 : (last.qqqState === "bear" ? 0 : 40);
@@ -1488,7 +1498,7 @@ function updateThemeToggleUI(theme) {
   document.getElementById("optLight").classList.toggle("active", theme === "light");
 }
 
-function setTheme(theme) {
+async function setTheme(theme) {
   document.documentElement.setAttribute("data-theme", theme);
   updateThemeToggleUI(theme);
   try { localStorage.setItem('market-monitor-theme', theme); } catch(e) {}
