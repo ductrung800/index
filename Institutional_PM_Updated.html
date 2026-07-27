@@ -424,7 +424,7 @@ iframe, canvas, svg{
     <a href="tv_watchlist.html">TradingView Watchlist</a>
     <a href="PortfolioManagement.html">Portfolio Management</a>
     <a href="Playbook.html">Playbook</a>
-  </div
+  </div>
   
   <!-- ================= APP TABS ================= -->
 
@@ -805,20 +805,27 @@ const CORS_PROXIES = [
 
 const LEADING_THEMES_DATA = [
   { name: "Consumer Defensive", category: "STAPLES & RETAIL LEADERS", tickers: ["CLX", "KHC", "GIS", "PG", "HSY", "WMT", "COST", "PEP", "KO", "CL"] },
-  { name: "Crude Oil / Energy", category: "PIPELINES, LNG & REFINING", tickers: ["PAA", "PBF", "MMP", "VLO", "OXY", "XOM", "CVX", "HAL", "SLB", "PSX"] },
-  { name: "Financials & Fintech", category: "BANKING & PAYMENT RAILS", tickers: ["PYPL", "DFS", "COF", "AXP", "JPM", "BAC", "MS", "GS", "V", "MA"] },
+  { name: "Crude Oil / Energy", category: "PIPELINES, LNG & REFINING", tickers: ["PAA", "PBF", "EPD", "VLO", "OXY", "XOM", "CVX", "HAL", "SLB", "PSX"] },
+  { name: "Financials & Fintech", category: "BANKING & PAYMENT RAILS", tickers: ["PYPL", "SOFI", "COF", "AXP", "JPM", "BAC", "MS", "GS", "V", "MA"] },
   { name: "Semiconductors & AI", category: "HARDWARE & INFRASTRUCTURE", tickers: ["SWKS", "NVDA", "AAPL", "MSFT", "PLTR", "AMD", "AVGO", "QCOM", "MU", "AMAT"] }
 ];
 
 let STATE = { vix: null, vvix: null, qqq: null, spy: null, merged: [] };
 let activeThemeCharts = [];
 
+const IS_LOCAL_HOST = ["localhost", "127.0.0.1", "::1"].includes(window.location.hostname);
+const fetchWithTimeout = (url, options = {}, timeoutMs = 5000) => {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(timer));
+};
+
 async function fetchYahooDaily(symbol, range = "1y") {
   const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=${range}`;
   let json = null;
   for (const build of CORS_PROXIES) {
     try {
-      const res = await fetch(build(targetUrl), { cache: "no-store" });
+      const res = await fetchWithTimeout(build(targetUrl), { cache: "no-store" }, 6000);
       if (res.ok) {
         const j = await res.json();
         if (j && j.chart && j.chart.result && j.chart.result[0]) { json = j; break; }
@@ -1299,7 +1306,12 @@ function renderTradingViewWidgets() {
 
 function generateFallbackOHLC(symbol, count = 120) {
   const data = [];
-  let price = 40 + (symbol.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % 150);
+  let seed = symbol.split('').reduce((acc, char) => ((acc * 31) + char.charCodeAt(0)) >>> 0, 2166136261);
+  const random = () => {
+    seed = (1664525 * seed + 1013904223) >>> 0;
+    return seed / 4294967296;
+  };
+  let price = 40 + (seed % 150);
   let d = new Date();
   const dates = [];
   while (dates.length < count) {
@@ -1307,11 +1319,11 @@ function generateFallbackOHLC(symbol, count = 120) {
     d.setDate(d.getDate() - 1);
   }
   for (let i = 0; i < dates.length; i++) {
-    const change = (Math.random() - 0.47) * (price * 0.03);
+    const change = (random() - 0.47) * (price * 0.03);
     const open = price;
-    const close = price + change;
-    const high = Math.max(open, close) + (Math.random() * price * 0.012);
-    const low = Math.min(open, close) - (Math.random() * price * 0.012);
+    const close = Math.max(1, price + change);
+    const high = Math.max(open, close) + (random() * price * 0.012);
+    const low = Math.max(0.01, Math.min(open, close) - (random() * price * 0.012));
     price = close;
     data.push({ time: dates[i], open: Number(open.toFixed(2)), high: Number(high.toFixed(2)), low: Number(low.toFixed(2)), close: Number(close.toFixed(2)) });
   }
@@ -1319,23 +1331,25 @@ function generateFallbackOHLC(symbol, count = 120) {
 }
 
 async function fetchThemeTickerOHLC(symbol) {
-  // 1. Try local Python backend first
-  try {
-    const localRes = await fetch(`http://localhost:8000/api/ohlc/${symbol}`, { signal: AbortSignal.timeout(2000) });
-    if (localRes.ok) {
-      const json = await localRes.json();
-      // Ensure the Python backend actually gave us an array with data before returning it
-      if (Array.isArray(json) && json.length > 0) return json;
+  // Use the optional Python API only when this page itself is running locally.
+  // Public GitHub Pages must never attempt loopback/private-network requests.
+  if (IS_LOCAL_HOST) {
+    try {
+      const localRes = await fetchWithTimeout(`http://localhost:8000/api/ohlc/${encodeURIComponent(symbol)}`, {}, 2000);
+      if (localRes.ok) {
+        const json = await localRes.json();
+        if (Array.isArray(json) && json.length > 0) return json;
+      }
+    } catch (e) {
+      // Local API is optional; continue to public fallbacks.
     }
-  } catch (e) {
-    // Local API not running, fall back to proxies
   }
 
-  // 2. Fallback to proxies if local server is down or returned empty data
+  // Public proxy fallbacks for static hosting
   const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=6m`;
   for (const proxy of CORS_PROXIES) {
     try {
-      const res = await fetch(proxy(targetUrl), { signal: AbortSignal.timeout(3000) });
+      const res = await fetchWithTimeout(proxy(targetUrl), { cache: "no-store" }, 6000);
       if (!res.ok) continue;
       const json = await res.json();
       const result = json.chart?.result?.[0];
@@ -1410,7 +1424,7 @@ async function renderLeaderThemeCharts() {
       // SAFETY CHECK ADDED HERE
       if (!data || data.length === 0) {
         const statEl = document.getElementById(`stat-${tIdx}-${idx}`);
-        if (statEl) statEl.innerHTML = `<span style="color:var(--text-faint)">Data Unvailable</span>`;
+        if (statEl) statEl.innerHTML = `<span style="color:var(--text-faint)">Data Unavailable</span>`;
         return; 
       }
 
