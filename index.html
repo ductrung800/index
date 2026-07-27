@@ -1209,14 +1209,31 @@ function smartImport(rawText){
     } else report.push(["VIX", false, "kept previous"]);
   } else report.push(["VIX", false, "kept previous"]);
 
-  // 10Y Yield
-  const yieldAnchor = findLabel(grid, "10Y Yield");
-  if(yieldAnchor){
-    const yv = scanRightValue(grid, yieldAnchor.r, yieldAnchor.c+1, 2);
-    const y = gnum(yv[0]);
-    if(y!==null){ newData.macro = {yield10y:y, yieldTrend:yv[1]||newData.macro.yieldTrend}; report.push(["10Y Yield", true, `${y}%`]); }
-    else report.push(["10Y Yield", false, "kept previous"]);
-  } else report.push(["10Y Yield", false, "kept previous"]);
+// 10Y Yield (Enhanced Parser)
+const yieldAnchor = findLabel(grid, "10Y Yield");
+if(yieldAnchor){
+  const rawCells = scanRightValue(grid, yieldAnchor.r, yieldAnchor.c+1, 3);
+  let y = null;
+  let trend = newData.macro.yieldTrend;
+
+  for (const cellVal of rawCells) {
+    // Extract decimal number from string (e.g., "4.64% Rising" -> 4.64)
+    const match = String(cellVal).match(/[\d.]+/);
+    if (match && y === null) {
+      y = parseFloat(match[0]);
+    }
+    if (cellVal.toLowerCase().includes("rising") || cellVal.toLowerCase().includes("falling")) {
+      trend = cellVal.includes("Rising") ? "Rising" : "Falling";
+    }
+  }
+
+  if(y !== null){ 
+    newData.macro = { yield10y: y, yieldTrend: trend }; 
+    report.push(["10Y Yield", true, `${y}%`]); 
+  } else {
+    report.push(["10Y Yield", false, "kept previous"]);
+  }
+}
 
 // Breadth
 
