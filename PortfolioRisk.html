@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="icon" href="data:,">
+<meta charset="UTF-8">
+<title>Portfolio-Level Risk Management</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+  :root{
+    --bg:#0a0e16; --panel:#101625; --panel2:#0d1220; --line:#212a3d; --line-soft:#1a2233;
+    --text:#e7ebf3; --text-dim:#8b93a8; --text-faint:#59617a;
+    --teal:#20d9b8; --amber:#f5b942; --red:#ff5c72; --purple:#a855f7; --blue:#38bdf8;
+    --navy-head:#131c33; --heat-text:#12161f; --input-bg:#0d1220;
+  }
+  html[data-theme="light"]{
+    --bg:#f4f6fa; --panel:#ffffff; --panel2:#ffffff; --line:#dde2ec; --line-soft:#e9edf4;
+    --text:#151b2c; --text-dim:#5b6478; --text-faint:#8a92a6;
+    --teal:#0b9c82; --amber:#b9781a; --red:#c93a51; --purple:#8b5cf6; --blue:#0284c7;
+    --navy-head:#eef1f8; --heat-text:#12161f; --input-bg:#f4f6fa;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:
+      radial-gradient(ellipse 1200px 500px at 15% -5%, rgba(32,217,184,.06), transparent 60%),
+      radial-gradient(ellipse 900px 500px at 100% 0%, rgba(168,85,247,.05), transparent 55%),
+      var(--bg);
+    color:var(--text); font-family:'Inter',sans-serif; padding:22px 26px 60px; transition:background .2s ease, color .2s ease;
+  }
+  .wrap{width:100%; margin:0 auto;}
+
+  /* ---------- UNIFORM APP TABS ---------- */
+  .app-tabs { display:flex; gap:4px; margin-bottom:24px; border-bottom:1px solid var(--line); padding-bottom:0; flex-wrap:nowrap; overflow-x:auto; }
+  .app-tabs a { padding:10px 18px; text-decoration:none; color:var(--text-dim); font-size:11.5px; font-weight:600; border:1px solid transparent; border-bottom:none; border-radius:8px 8px 0 0; text-transform:uppercase; letter-spacing:.04em; white-space:nowrap; transition:all .15s; font-family:'JetBrains Mono',monospace; }
+  .app-tabs a.active { background:var(--panel); color:var(--teal); border-color:var(--line); border-bottom-color:var(--panel); margin-bottom:-1px; }
+  .app-tabs a:hover:not(.active) { color:var(--text); background:rgba(255,255,255,.03); }
+
+  header.top{display:flex; justify-content:space-between; align-items:flex-end; border-bottom:2px solid var(--line); padding-bottom:14px; margin-bottom:22px; gap:16px; flex-wrap:wrap;}
+  .brand-eyebrow{font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.18em; color:var(--purple); text-transform:uppercase;}
+  h1{font-size:26px; font-weight:800; letter-spacing:-.02em; margin-top:2px;}
+  .subline{color:var(--text-dim); font-size:12.5px; margin-top:4px; font-family:'JetBrains Mono',monospace;}
+  .header-right{display:flex; align-items:center; gap:12px; flex-wrap:wrap;}
+  .theme-toggle{display:flex; align-items:center; gap:8px; background:var(--panel); border:1px solid var(--line); border-radius:100px; padding:6px 6px; cursor:pointer;}
+  .theme-toggle .opt{font-size:14px; padding:5px 11px; border-radius:100px; color:var(--text-faint); font-weight:600;}
+  .theme-toggle .opt.active{background:var(--teal); color:#04150f;}
+
+  .btn{background:var(--panel); border:1px solid var(--line); color:var(--text); font-family:'JetBrains Mono',monospace; font-size:11.5px; padding:8px 14px; border-radius:7px; cursor:pointer; font-weight:600; transition:all .15s;}
+  .btn:hover{border-color:var(--teal); color:var(--teal);}
+  .btn.primary{background:var(--purple); color:#fff; border-color:var(--purple);}
+  .btn.primary:hover{filter:brightness(1.08); color:#fff;}
+  .btn.danger:hover{border-color:var(--red); color:var(--red);}
+
+  .data-panel{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:16px 18px; margin-bottom:20px;}
+  .data-panel-head{display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; cursor:pointer;}
+  .data-panel-head h2{font-size:13px; text-transform:uppercase; letter-spacing:.05em; font-weight:700;}
+  .data-panel-head .sub{font-size:11.5px; color:var(--text-dim); margin-top:2px; font-weight:400; text-transform:none; letter-spacing:0;}
+  .data-panel-body{margin-top:14px; display:none;}
+  .data-panel-body.open{display:block;}
+  .status-msg{font-size:11.5px; color:var(--teal); font-family:'JetBrains Mono',monospace;}
+  .status-msg.err{color:var(--red);}
+  textarea#csvInput{width:100%; min-height:110px; background:var(--input-bg); border:1px solid var(--line); border-radius:8px; color:var(--text); font-family:'JetBrains Mono',monospace; font-size:11.5px; padding:12px; resize:vertical; line-height:1.5;}
+  .dropzone{border:2px dashed var(--line); border-radius:10px; padding:16px; text-align:center; cursor:pointer; transition:all .15s; background:var(--input-bg); margin-top:10px;}
+  .dropzone:hover, .dropzone.drag{border-color:var(--purple); background:rgba(168,85,247,.06);}
+  .dz-sub{font-size:10.5px; color:var(--text-faint); margin-top:4px;}
+  .field-row{display:flex; gap:16px; flex-wrap:wrap; align-items:flex-end; margin-bottom:12px;}
+  .field{display:flex; flex-direction:column; gap:4px;}
+  .field label{font-size:10px; text-transform:uppercase; letter-spacing:.06em; color:var(--text-faint); font-weight:700;}
+  .field input{background:var(--input-bg); border:1px solid var(--line); color:var(--text); padding:8px 10px; border-radius:7px; font-family:'JetBrains Mono',monospace; font-size:12.5px; width:130px;}
+  .field input:focus{outline:none; border-color:var(--purple);}
+  .field.wide input{width:190px;}
+  hr.sep{border:none; border-top:1px solid var(--line-soft); margin:14px 0;}
+  .subhead{font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.06em; color:var(--text-faint); margin-bottom:8px;}
+
+  /* ---------- CYCLE BANNER ---------- */
+  .cycle-banner{display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap; border-radius:12px; padding:18px 22px; margin-bottom:20px; border:1px solid var(--line); background:var(--panel);}
+  .cycle-banner.early{ background:linear-gradient(120deg, rgba(56,189,248,.12), var(--panel) 60%); border-color:rgba(56,189,248,.35); }
+  .cycle-banner.middle{ background:linear-gradient(120deg, rgba(32,217,184,.12), var(--panel) 60%); border-color:rgba(32,217,184,.4); }
+  .cycle-banner.late{ background:linear-gradient(120deg, rgba(245,185,66,.12), var(--panel) 60%); border-color:rgba(245,185,66,.35); }
+  .cycle-banner.breakdown{ background:linear-gradient(120deg, rgba(255,92,114,.12), var(--panel) 60%); border-color:rgba(255,92,114,.4); }
+  .cycle-left{display:flex; align-items:center; gap:14px;}
+  .cycle-icon{font-size:30px; line-height:1;}
+  .cycle-title{font-size:17px; font-weight:800; font-family:'JetBrains Mono',monospace;}
+  .cycle-sub{font-size:12px; color:var(--text-dim); margin-top:4px; max-width:640px; line-height:1.5;}
+  .cycle-pill{font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:800; text-transform:uppercase; padding:8px 14px; border-radius:100px; letter-spacing:.03em; background:var(--panel2); border:1px solid var(--line); color:var(--text-dim); white-space:nowrap;}
+
+  /* ---------- GAUGE STRIP ---------- */
+  .gauge-strip{display:grid; grid-template-columns:repeat(6,1fr); gap:12px; margin-bottom:16px;}
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:13px 15px;}
+  .card .label{font-size:10px; text-transform:uppercase; letter-spacing:.08em; color:var(--text-faint); font-weight:600;}
+  .card .big{font-family:'JetBrains Mono',monospace; font-weight:800; font-size:22px; margin-top:6px;}
+  .card .cap{font-size:10.5px; color:var(--text-dim); margin-top:3px;}
+  @media(max-width:1400px){ .gauge-strip{grid-template-columns:repeat(3,1fr);} }
+  @media(max-width:700px){ .gauge-strip{grid-template-columns:repeat(2,1fr);} }
+
+  /* ---------- EXPOSURE RIBBON ---------- */
+  .ribbon-card{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:16px 18px; margin-bottom:20px;}
+  .ribbon-title{font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.05em; font-family:'JetBrains Mono',monospace; margin-bottom:10px; display:flex; justify-content:space-between;}
+  .ribbon-bar{display:flex; height:26px; border-radius:6px; overflow:hidden; border:1px solid var(--line); font-family:'JetBrains Mono',monospace; font-size:10.5px; font-weight:800;}
+  .ribbon-seg{display:flex; align-items:center; justify-content:center; color:#04150f; white-space:nowrap; overflow:hidden; transition:filter .15s;}
+  .ribbon-seg:hover{filter:brightness(1.12);}
+  .ribbon-legend{display:flex; gap:16px; margin-top:10px; font-size:11px; color:var(--text-dim); flex-wrap:wrap;}
+  .ribbon-legend .key{display:flex; align-items:center; gap:6px;}
+  .ribbon-legend .sw{width:10px; height:10px; border-radius:3px;}
+
+  /* ---------- SECTIONS / TABLE ---------- */
+  .section{margin-bottom:24px;}
+  .section-head{background:var(--navy-head); border:1px solid var(--line); border-bottom:none; padding:9px 16px; border-radius:10px 10px 0 0; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;}
+  .section-head h2{font-size:13px; letter-spacing:.05em; text-transform:uppercase; font-weight:700;}
+  .section-head .note{font-size:10.5px; color:var(--text-faint); font-family:'JetBrains Mono',monospace;}
+  table{width:100%; border-collapse:collapse; background:var(--panel2); border:1px solid var(--line); border-radius:0 0 10px 10px; overflow:hidden;}
+  thead th{font-size:10px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-dim); text-align:right; padding:8px 9px; border-bottom:1px solid var(--line); font-weight:600; white-space:nowrap; background:var(--navy-head);}
+  thead th:first-child, thead th:nth-child(2){text-align:left;}
+  tbody td{padding:6px 9px; text-align:right; font-family:'JetBrains Mono',monospace; font-size:12px; border-bottom:1px solid var(--line-soft); color:var(--text); white-space:nowrap;}
+  tbody td:first-child{font-weight:700; text-align:left; border-left:3px solid transparent;}
+  tbody tr.row-new td:first-child{border-left-color:var(--amber);}
+  tbody tr.row-core td:first-child{border-left-color:var(--teal);}
+  tbody tr.row-closed td:first-child{border-left-color:var(--text-faint);}
+  tbody tr.row-closed{opacity:.6;}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr:hover td{filter:brightness(1.08);}
+  td input.cell{width:100%; background:transparent; border:none; color:inherit; font-family:inherit; font-size:inherit; text-align:right; padding:2px;}
+  td input.cell:focus{outline:1px solid var(--purple); border-radius:4px; background:var(--input-bg);}
+  td.cell-ticker input{text-align:left; font-weight:700;}
+  select.cell-status{background:var(--input-bg); border:1px solid var(--line); color:var(--text); font-family:'JetBrains Mono',monospace; font-size:11px; border-radius:5px; padding:2px 4px;}
+  .badge{font-size:9.5px; font-weight:800; padding:2px 7px; border-radius:100px; text-transform:uppercase; letter-spacing:.03em; display:inline-block;}
+  .badge.new{background:rgba(245,185,66,.15); color:var(--amber);}
+  .badge.core{background:rgba(32,217,184,.15); color:var(--teal);}
+  .badge.closed{background:var(--input-bg); color:var(--text-faint); border:1px solid var(--line);}
+  .badge.flag{background:rgba(255,92,114,.15); color:var(--red); margin-left:4px;}
+  .row-actions button{background:transparent; border:1px solid var(--line); color:var(--text-faint); border-radius:5px; width:22px; height:22px; cursor:pointer; font-size:11px;}
+  .row-actions button:hover{border-color:var(--red); color:var(--red);}
+  .table-tools{display:flex; gap:8px; padding:10px; background:var(--panel2); border:1px solid var(--line); border-top:none;}
+
+  /* ---------- THRESHOLD SETTINGS ---------- */
+  .thresh-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:14px;}
+  @media(max-width:1100px){ .thresh-grid{grid-template-columns:repeat(2,1fr);} }
+  .thresh-item{background:var(--panel2); border:1px solid var(--line); border-radius:8px; padding:10px 12px;}
+  .thresh-item label{font-size:10px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-faint); font-weight:700; display:block; margin-bottom:6px;}
+  .thresh-item input{width:100%; background:var(--input-bg); border:1px solid var(--line); color:var(--text); padding:6px 8px; border-radius:6px; font-family:'JetBrains Mono',monospace; font-size:12px;}
+
+  .method-note{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:16px 18px; font-size:12px; color:var(--text-dim); line-height:1.6;}
+  .method-note b{color:var(--text);}
+  .method-note a{color:var(--purple); text-decoration:none;}
+  .method-note a:hover{text-decoration:underline;}
+
+  footer{margin-top:30px; text-align:center; color:var(--text-faint); font-size:10.5px; font-family:'JetBrains Mono',monospace;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ================= APP TABS ================= -->
+
+  <div class="app-tabs">
+    <a href="index.html">Market Dashboard</a>
+    <a href="MarketCommandCenter.html">Market Command Center</a>
+    <a href="Institutional_PM_Updated.html">Institutional Update</a>
+    <a href="Market_Breadth_Institutional_Command.html">Breadth Institutional</a>
+    <a href="market_breadth.html">Market Breadth</a>
+    <a href="rs_radar.html" >RS Radar</a>
+    <a href="MarketRegime.html">Market Regime</a> 
+    <a href="stockbee_market_monitor_live.html">Stockbee Monitor</a>
+    <a href="sata_watchlist_dashboard.html">SATA Chart</a>
+    <a href="PowerList.html">Power List</a>
+    <a href="liquid_leaders.html">Liquid Leaders</a>
+    <a href="group_momentum.html">Group Momentum</a>
+    <a href="PriceStructure.html">Price Structure</a>
+    <a href="StageAnalysis.html">Stage Analysis</a>
+    <a href="tv_watchlist.html">TradingView Watchlist</a>
+    <a href="PortfolioManagement.html">Portfolio Management</a>
+    <a href="PortfolioRisk.html" class="active">Portfolio Risk</a>
+    <a href="Playbook.html">Playbook</a>
+  </div>
+  
+  <!-- ================= APP TABS ================= -->
+
+  
+
+  <header class="top">
+    <div>
+      <div class="brand-eyebrow">R-Multiple Framework · NER · NE÷CE · Open Heat · UER / FER</div>
+      <h1>Portfolio-Level Risk Management</h1>
+      <div class="subline" id="subline">Loading…</div>
+    </div>
+    <div class="header-right">
+      <button class="btn" id="btnSnapshot">📌 Save Snapshot</button>
+      <button class="btn danger" id="btnClearSnapshot">Clear Snapshot</button>
+      <div class="theme-toggle" id="themeToggle">
+        <span class="opt" id="optDark">Dark</span>
+        <span class="opt" id="optLight">Light</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= DATA INPUT PANEL ================= -->
+  <div class="data-panel">
+    <div class="data-panel-head" id="dataPanelHead">
+      <div>
+        <h2>Account &amp; Positions</h2>
+        <div class="sub">Set your equity, then paste/upload a CSV of open &amp; closed positions, or edit the table directly below.</div>
+      </div>
+      <button class="btn" id="toggleDataPanel">Open ▾</button>
+    </div>
+    <div class="data-panel-body" id="dataPanelBody">
+
+      <div class="field-row">
+        <div class="field">
+          <label>Account Equity ($)</label>
+          <input type="number" id="equityInput" value="100000" step="1000">
+        </div>
+        <div class="field">
+          <label>YTD Return (%)</label>
+          <input type="number" id="ytdInput" value="12" step="1">
+        </div>
+        <div style="flex:1"></div>
+        <button class="btn primary" id="btnAddRow">+ Add Position</button>
+        <button class="btn" id="btnLoadSample">Load Sample Data</button>
+      </div>
+
+      <hr class="sep">
+      <div class="subhead">Bulk CSV Import — ticker,entry,stop,price,shares,closed(Y/N),realizedPct</div>
+      <textarea id="csvInput" placeholder="AMKR,87.40,79.00,96.20,150,N,&#10;PENG,70.00,65.00,68.10,120,N,&#10;NVDA,110.00,118.00,142.00,80,N,&#10;OLD1,50.00,48.00,0,60,Y,0.35"></textarea>
+      <div style="display:flex; gap:10px; margin-top:8px; flex-wrap:wrap; align-items:center;">
+        <button class="btn primary" id="btnImportCsv">Import Pasted CSV</button>
+        <div class="dropzone" id="dropzone" style="flex:1; margin-top:0; padding:10px;">
+          <input type="file" id="fileInput" accept=".csv,text/csv" style="display:none;">
+          <span style="font-size:11.5px; font-weight:700;">Click to choose a CSV file, or drag it here</span>
+        </div>
+      </div>
+      <div style="margin-top:10px;"><span class="status-msg" id="statusMsg"></span></div>
+
+      <hr class="sep">
+      <div class="subhead">Calibration — Levers &amp; Thresholds (yours, not universal — see article §1)</div>
+      <div class="thresh-grid">
+        <div class="thresh-item"><label>NER Ceiling (open layer at, %EC)</label><input type="number" id="thNerCeiling" value="-2" step="0.1"></div>
+        <div class="thresh-item"><label>NE Δ Push Threshold (%EC)</label><input type="number" id="thNeDeltaPush" value="-1" step="0.1"></div>
+        <div class="thresh-item"><label>NE Δ Act Threshold (%EC)</label><input type="number" id="thNeDeltaAct" value="-3" step="0.1"></div>
+        <div class="thresh-item"><label>Per-Trade Risk (%EC)</label><input type="number" id="thPerTrade" value="0.5" step="0.05"></div>
+        <div class="thresh-item"><label>NE÷CE Typical Late-Cycle</label><input type="number" id="thNeCeTypical" value="0.25" step="0.05"></div>
+        <div class="thresh-item"><label>NE÷CE Stress-Test Ceiling</label><input type="number" id="thNeCeStress" value="0.5" step="0.05"></div>
+        <div class="thresh-item"><label>UER Clean Ceiling (%)</label><input type="number" id="thUerClean" value="25" step="1"></div>
+        <div class="thresh-item"><label>UER Critical Floor (%)</label><input type="number" id="thUerCritical" value="50" step="1"></div>
+        <div class="thresh-item"><label>FER Fragile Threshold (%)</label><input type="number" id="thFer" value="5" step="0.5"></div>
+        <div class="thresh-item"><label>Unproven Return Floor (%)</label><input type="number" id="thUnprovenReturn" value="5" step="0.5"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= CYCLE PHASE BANNER ================= -->
+  <div class="cycle-banner" id="cycleBanner">
+    <div class="cycle-left">
+      <div class="cycle-icon" id="cycleIcon">⏳</div>
+      <div>
+        <div class="cycle-title" id="cycleTitle">Reading portfolio…</div>
+        <div class="cycle-sub" id="cycleSub">Enter positions to compute the cycle-phase read.</div>
+      </div>
+    </div>
+    <div class="cycle-pill" id="cyclePill">—</div>
+  </div>
+
+  <!-- ================= GAUGE STRIP — CONTROL LOOP ================= -->
+  <div class="ribbon-card" style="margin-bottom:12px; padding:8px 18px 0;">
+    <div class="ribbon-title" style="margin-bottom:4px;">§3 · New Exposure Control Loop</div>
+  </div>
+  <div class="gauge-strip">
+    <div class="card"><div class="label">NE %</div><div class="big" id="mNEpct">—</div><div class="cap">share of exposure that's fresh</div></div>
+    <div class="card"><div class="label">NER</div><div class="big" id="mNER">—</div><div class="cap" id="mNERcap">risk on the new bucket</div></div>
+    <div class="card"><div class="label">NEP</div><div class="big" id="mNEP">—</div><div class="cap">unrealized P/L on new bucket</div></div>
+    <div class="card"><div class="label">NE Δ</div><div class="big" id="mNEdelta">—</div><div class="cap" id="mNEdeltaCap">push / act signal</div></div>
+    <div class="card"><div class="label">CE %</div><div class="big" id="mCEpct">—</div><div class="cap">share of exposure that's financed</div></div>
+    <div class="card"><div class="label">NE ÷ CE Ratio</div><div class="big" id="mNECE">—</div><div class="cap" id="mNECEcap">late-cycle risk budget</div></div>
+  </div>
+
+  <!-- ================= GAUGE STRIP — HEAT / PROFIT ================= -->
+  <div class="ribbon-card" style="margin-bottom:12px; padding:8px 18px 0;">
+    <div class="ribbon-title" style="margin-bottom:4px;">§5 · Open Heat — Worst-Case Read</div>
+  </div>
+  <div class="gauge-strip">
+    <div class="card"><div class="label">Open Heat</div><div class="big" id="mHeat">—</div><div class="cap">if every stop hit right now</div></div>
+    <div class="card"><div class="label">Open Profit</div><div class="big" id="mOpenProfit">—</div><div class="cap">unrealized cushion, all open</div></div>
+    <div class="card"><div class="label">Portfolio Δ</div><div class="big" id="mPortDelta">—</div><div class="cap">heat netted against cushion</div></div>
+    <div class="card"><div class="label">Total Exposure</div><div class="big" id="mTotalExp">—</div><div class="cap" id="mTotalExpCap">%EC deployed (&gt;100% = margin)</div></div>
+    <div class="card"><div class="label">Closed EC</div><div class="big" id="mClosedEC">—</div><div class="cap">realized return, closed trades</div></div>
+    <div class="card"><div class="label">Cycle Δ (vs snapshot)</div><div class="big" id="mCycleDelta">—</div><div class="cap" id="mCycleDeltaCap">save a snapshot to enable</div></div>
+  </div>
+
+  <!-- ================= GAUGE STRIP — BLIND SPOTS ================= -->
+  <div class="ribbon-card" style="margin-bottom:12px; padding:8px 18px 0;">
+    <div class="ribbon-title" style="margin-bottom:4px;">§6 · UER &amp; FER — Two Different Blind Spots</div>
+  </div>
+  <div class="gauge-strip">
+    <div class="card"><div class="label">UER — Unproven Exposure</div><div class="big" id="mUER">—</div><div class="cap" id="mUERcap">how green is the portfolio</div></div>
+    <div class="card"><div class="label">FER — Fragile Exposure</div><div class="big" id="mFER">—</div><div class="cap" id="mFERcap">how close to stops right now</div></div>
+    <div class="card"><div class="label">Suggested Max Layer Size</div><div class="big" id="mMaxLayer">—</div><div class="cap">positions at your per-trade risk to hit NER ceiling</div></div>
+  </div>
+
+  <!-- ================= EXPOSURE RIBBON ================= -->
+  <div class="ribbon-card">
+    <div class="ribbon-title"><span>Exposure Composition</span><span style="font-size:11px; color:var(--text-dim); font-weight:400;" id="ribbonCap">—</span></div>
+    <div class="ribbon-bar" id="exposureRibbon"></div>
+    <div class="ribbon-legend">
+      <div class="key"><span class="sw" style="background:var(--amber)"></span>New / Unfinanced</div>
+      <div class="key"><span class="sw" style="background:var(--teal)"></span>Core / Financed</div>
+      <div class="key"><span class="sw" style="background:var(--line)"></span>Cash / Undeployed</div>
+    </div>
+  </div>
+
+  <!-- ================= POSITIONS TABLE ================= -->
+  <div class="section">
+    <div class="section-head">
+      <h2>Positions</h2>
+      <div class="note">New = stop below entry · Core = stop ≥ entry (financed) · rows recompute live</div>
+    </div>
+    <table id="tblPositions"></table>
+    <div class="table-tools">
+      <button class="btn" id="btnAddRow2">+ Add Row</button>
+      <button class="btn danger" id="btnClearAll">Clear All</button>
+      <span style="flex:1"></span>
+      <span class="status-msg" id="rowCountMsg"></span>
+    </div>
+  </div>
+
+  <!-- ================= METHODOLOGY ================= -->
+  <div class="method-note">
+    <b>Methodology</b> — adapted from <a href="https://traderslab.gitbook.io/primetrading/education-articles/portfolio-level-risk-management" target="_blank">Trader's Lab: "Portfolio-Level Risk Management"</a>.
+    <ul style="margin:8px 0 0 18px;">
+      <li style="margin-bottom:4px;"><b>Position Risk %EC</b> = (Stop − Entry) × Shares ÷ Equity × 100. Negative while the stop sits below entry (unfinanced risk); zero or positive once the stop reaches or clears entry (financed — no downside remains against the original entry).</li>
+      <li style="margin-bottom:4px;"><b>New (NE)</b> vs <b>Core (CE)</b> is decided purely by that sign: Stop &lt; Entry → New. Stop ≥ Entry → Core.</li>
+      <li style="margin-bottom:4px;"><b>NER</b> = Σ Position Risk %EC over New positions. <b>NEP</b> = Σ unrealized P/L %EC over New positions. <b>NE Δ = NER + NEP</b> is the control variable from §3: open a layer near your NER ceiling, keep pushing while NE Δ holds near half that ceiling, act (cut the weakest names) once it slides toward 1.5× the ceiling.</li>
+      <li style="margin-bottom:4px;"><b>Open Heat</b> = Σ Position Risk %EC over all open positions (worst case if every stop fires right now). <b>Open Profit</b> = Σ unrealized P/L %EC over all open positions. <b>Portfolio Δ</b> nets the two.</li>
+      <li style="margin-bottom:4px;"><b>UER</b> = %EC in open positions whose per-position return is below your unproven-return floor. <b>FER</b> = %EC in open positions where price sits within your fragile-distance threshold of the current stop. Both high at once is the configuration to fear (§6).</li>
+      <li><b>NE ÷ CE</b> is the late-cycle risk budget (§4): keep it near your "typical" band when the tape is extended, allow it up toward the "stress-test ceiling" only when the market has actually earned it with a real reset, and treat the ceiling as a hard stop regardless of how clean new setups look.</li>
+    </ul>
+    <div style="margin-top:10px; color:var(--text-faint);">All thresholds above are editable in the data panel — the framework is portable, the numbers are personal (§1). Nothing here is trading advice.</div>
+  </div>
+
+  <footer>Portfolio-Level Risk Management · Client-side only, nothing leaves this page · For informational purposes only, not trading advice.</footer>
+</div>
+
+<script>
+/* ============================================================
+   STATE
+   ============================================================ */
+let POSITIONS = []; // {id, ticker, entry, stop, price, shares, closed, realizedPct}
+let SNAPSHOT = null;
+let rowIdSeq = 1;
+
+const SAMPLE_ROWS = [
+  ["AMKR", 87.40, 79.00, 96.20, 150, false, 0],
+  ["PENG", 70.00, 65.00, 68.10, 120, false, 0],
+  ["NVDA", 110.00, 118.00, 142.00, 80, false, 0],
+  ["CRWD", 220.00, 235.00, 268.00, 40, false, 0],
+  ["DAVE", 145.00, 138.00, 151.00, 60, false, 0],
+  ["FROG", 32.00, 30.50, 31.10, 200, false, 0],
+  ["OLDW1", 50.00, 48.00, 0, 60, true, 0.35],
+  ["OLDW2", 22.00, 21.00, 0, 300, true, -0.28],
+];
+
+function num(v){ const n = parseFloat(String(v).replace(/[$,%]/g,'').trim()); return isNaN(n) ? 0 : n; }
+function boolish(v){ const s = String(v).trim().toLowerCase(); return s==="y"||s==="yes"||s==="true"||s==="1"||s==="closed"; }
+function pctStr(v, dp=2){ return (isFinite(v) ? ((v>0?"+":"") + v.toFixed(dp)) : "0.00") + "%"; }
+function fmtMoney(v){ return "$" + Math.round(v).toLocaleString(); }
+
+function rowsToObjects(rows){
+  return rows.map(r => ({
+    id: rowIdSeq++,
+    ticker: String(r[0]||"").trim().toUpperCase(),
+    entry: num(r[1]), stop: num(r[2]), price: num(r[3]), shares: num(r[4]),
+    closed: (typeof r[5] === "boolean") ? r[5] : boolish(r[5]),
+    realizedPct: num(r[6])
+  }));
+}
+
+function loadSample(){
+  POSITIONS = rowsToObjects(SAMPLE_ROWS);
+  renderTable();
+  recompute();
+  setStatus(`✓ Loaded ${POSITIONS.length} sample positions.`);
+}
+
+/* ============================================================
+   CSV PARSE
+   ============================================================ */
+function parseCSVGrid(text){
+  const rows = []; let row=[], field='', inQuotes=false;
+  for(let i=0;i<text.length;i++){
+    const ch=text[i], next=text[i+1];
+    if(inQuotes){
+      if(ch==='"'&&next==='"'){field+='"';i++;}
+      else if(ch==='"'){inQuotes=false;}
+      else field+=ch;
+    } else {
+      if(ch==='"'){inQuotes=true;}
+      else if(ch===','){row.push(field);field='';}
+      else if(ch==='\n'){row.push(field);field='';rows.push(row);row=[];}
+      else if(ch==='\r'){}
+      else field+=ch;
+    }
+  }
+  if(field.length||row.length){row.push(field);rows.push(row);}
+  return rows.filter(r=>r.some(c=>c.trim()!==""));
+}
+
+function importCsvText(text){
+  const grid = parseCSVGrid(text);
+  if(!grid.length) throw new Error("No rows found.");
+  // Skip an optional header row if first cell isn't a plausible ticker-looking value alongside a numeric 2nd cell
+  let startIdx = 0;
+  const h0 = (grid[0][0]||"").trim().toLowerCase();
+  if(h0 === "ticker" || h0 === "symbol") startIdx = 1;
+  const rows = grid.slice(startIdx).filter(r => (r[0]||"").trim());
+  const objs = rowsToObjects(rows);
+  if(!objs.length) throw new Error("No valid position rows parsed.");
+  POSITIONS = POSITIONS.concat(objs);
+  renderTable();
+  recompute();
+  setStatus(`✓ Imported ${objs.length} rows.`);
+}
+
+/* ============================================================
+   TABLE RENDER (editable)
+   ============================================================ */
+const COLS = [
+  {key:"ticker", label:"Ticker"},
+  {key:"entry", label:"Entry"},
+  {key:"stop", label:"Stop"},
+  {key:"price", label:"Price"},
+  {key:"shares", label:"Shares"},
+  {key:"weight", label:"Weight %EC"},
+  {key:"returnPct", label:"Return %"},
+  {key:"riskPct", label:"Risk %EC"},
+  {key:"distStop", label:"Dist→Stop %"},
+  {key:"status", label:"Status"},
+  {key:"actions", label:""},
+];
+
+function computeRow(p){
+  const equity = num(document.getElementById("equityInput").value) || 1;
+  const weightPct = (p.entry * p.shares) / equity * 100;
+  const returnPct = p.entry ? ((p.price - p.entry) / p.entry * 100) : 0;
+  const riskPct = (p.stop - p.entry) * p.shares / equity * 100; // negative = unfinanced risk, positive = financed cushion
+  const distStop = p.price ? ((p.price - p.stop) / p.price * 100) : 0;
+  const isNew = (!p.closed) && (p.stop < p.entry);
+  const isCore = (!p.closed) && (p.stop >= p.entry);
+  const unrealizedPct = (p.price - p.entry) * p.shares / equity * 100;
+  const unrealizedFlag = returnPct < num(document.getElementById("thUnprovenReturn").value);
+  const fragileFlag = distStop < num(document.getElementById("thFer").value);
+  return { weightPct, returnPct, riskPct, distStop, isNew, isCore, unrealizedPct, unrealizedFlag, fragileFlag };
+}
+
+function renderTable(){
+  let head = "<thead><tr>" + COLS.map(c=>`<th>${c.label}</th>`).join("") + "</tr></thead>";
+  let body = "<tbody>";
+  POSITIONS.forEach(p=>{
+    const c = computeRow(p);
+    let rowClass = p.closed ? "row-closed" : (c.isNew ? "row-new" : "row-core");
+    let statusBadge;
+    if(p.closed){
+      statusBadge = `<span class="badge closed">Closed</span>`;
+    } else {
+      statusBadge = c.isNew ? `<span class="badge new">New</span>` : `<span class="badge core">Core</span>`;
+      if(!p.closed && c.unrealizedFlag) statusBadge += `<span class="badge flag" title="Unproven — return below floor">Unproven</span>`;
+      if(!p.closed && c.fragileFlag) statusBadge += `<span class="badge flag" title="Fragile — close to stop">Fragile</span>`;
+    }
+    body += `<tr class="${rowClass}" data-id="${p.id}">
+      <td class="cell-ticker"><input class="cell" data-field="ticker" value="${p.ticker}"></td>
+      <td><input class="cell" data-field="entry" type="number" step="0.01" value="${p.entry}"></td>
+      <td><input class="cell" data-field="stop" type="number" step="0.01" value="${p.stop}"></td>
+      <td><input class="cell" data-field="price" type="number" step="0.01" value="${p.price}"></td>
+      <td><input class="cell" data-field="shares" type="number" step="1" value="${p.shares}"></td>
+      <td>${p.closed ? "—" : c.weightPct.toFixed(2)+"%"}</td>
+      <td style="color:${c.returnPct>=0?'var(--teal)':'var(--red)'}">${p.closed ? "—" : pctStr(c.returnPct)}</td>
+      <td style="color:${c.riskPct>=0?'var(--teal)':'var(--red)'}">${p.closed ? "—" : pctStr(c.riskPct)}</td>
+      <td>${p.closed ? "—" : c.distStop.toFixed(1)+"%"}</td>
+      <td style="text-align:left; white-space:normal;">
+        ${statusBadge}
+        <label style="margin-left:8px; font-size:9.5px; color:var(--text-faint); cursor:pointer;">
+          <input type="checkbox" data-field="closed" ${p.closed?"checked":""} style="vertical-align:middle;"> closed
+        </label>
+        ${p.closed ? `<input class="cell" data-field="realizedPct" type="number" step="0.01" style="width:70px; text-align:left; display:inline-block; margin-left:6px;" value="${p.realizedPct}" title="Realized %EC"> realized%` : ""}
+      </td>
+      <td class="row-actions"><button data-action="del" title="Remove row">✕</button></td>
+    </tr>`;
+  });
+  body += "</tbody>";
+  document.getElementById("tblPositions").innerHTML = head + body;
+  document.getElementById("rowCountMsg").textContent = `${POSITIONS.length} position${POSITIONS.length===1?"":"s"}`;
+
+  // Wire inline editing
+  document.querySelectorAll("#tblPositions input.cell, #tblPositions input[type=checkbox]").forEach(el=>{
+    el.addEventListener("input", onCellEdit);
+    el.addEventListener("change", onCellEdit);
+  });
+  document.querySelectorAll("#tblPositions button[data-action='del']").forEach(btn=>{
+    btn.addEventListener("click", (e)=>{
+      const tr = e.target.closest("tr");
+      const id = Number(tr.getAttribute("data-id"));
+      POSITIONS = POSITIONS.filter(p=>p.id!==id);
+      renderTable(); recompute();
+    });
+  });
+}
+
+function onCellEdit(e){
+  const tr = e.target.closest("tr");
+  const id = Number(tr.getAttribute("data-id"));
+  const p = POSITIONS.find(x=>x.id===id);
+  if(!p) return;
+  const field = e.target.getAttribute("data-field");
+  if(field === "ticker") p.ticker = e.target.value.toUpperCase();
+  else if(field === "closed") { p.closed = e.target.checked; renderTable(); recompute(); return; }
+  else p[field] = num(e.target.value);
+  recompute();
+  // live-update just this row's computed cells without a full re-render (keeps focus)
+  const c = computeRow(p);
+  const cells = tr.querySelectorAll("td");
+  if(!p.closed){
+    cells[5].textContent = c.weightPct.toFixed(2)+"%";
+    cells[6].textContent = pctStr(c.returnPct); cells[6].style.color = c.returnPct>=0?'var(--teal)':'var(--red)';
+    cells[7].textContent = pctStr(c.riskPct); cells[7].style.color = c.riskPct>=0?'var(--teal)':'var(--red)';
+    cells[8].textContent = c.distStop.toFixed(1)+"%";
+  }
+}
+
+/* ============================================================
+   AGGREGATE COMPUTATION
+   ============================================================ */
+function recompute(){
+  const equity = num(document.getElementById("equityInput").value) || 1;
+  const open = POSITIONS.filter(p=>!p.closed);
+  const closed = POSITIONS.filter(p=>p.closed);
+
+  let NER=0, NEP=0, CER=0, CP=0, weightNew=0, weightCore=0, totalWeight=0;
+  let openHeat=0, openProfit=0, uerWeight=0, ferWeight=0;
+
+  open.forEach(p=>{
+    const c = computeRow(p);
+    totalWeight += c.weightPct;
+    openHeat += c.riskPct;
+    openProfit += c.unrealizedPct;
+    if(c.isNew){ NER += c.riskPct; NEP += c.unrealizedPct; weightNew += c.weightPct; }
+    else { CER += c.riskPct; CP += c.unrealizedPct; weightCore += c.weightPct; }
+    if(c.unrealizedFlag) uerWeight += c.weightPct;
+    if(c.fragileFlag) ferWeight += c.weightPct;
+  });
+
+  const NEdelta = NER + NEP;
+  const CEdelta = CER + CP;
+  const portfolioDelta = openHeat + openProfit;
+  const NEpct = totalWeight ? (weightNew/totalWeight*100) : 0;
+  const CEpct = totalWeight ? (weightCore/totalWeight*100) : 0;
+  const NECEratio = weightCore>0 ? (weightNew/weightCore) : (weightNew>0 ? Infinity : 0);
+  const UER = totalWeight ? (uerWeight/totalWeight*100) : 0;
+  const FER = totalWeight ? (ferWeight/totalWeight*100) : 0;
+  const closedEC = closed.reduce((s,p)=>s+p.realizedPct,0);
+  const totalExposure = totalWeight;
+
+  const thNerCeiling = num(document.getElementById("thNerCeiling").value);
+  const perTrade = num(document.getElementById("thPerTrade").value) || 0.5;
+  const maxLayer = Math.max(0, Math.round(Math.abs(thNerCeiling)/perTrade));
+
+  // ---- render gauge cards ----
+  setCard("mNEpct", NEpct.toFixed(1)+"%");
+  setCard("mNER", pctStr(NER), NER, id=>document.getElementById("mNERcap").textContent = NER<=thNerCeiling ? "at/through ceiling — stop opening more" : "room to open the layer");
+  setCard("mNEP", pctStr(NEP), NEP);
+  setCard("mNEdelta", pctStr(NEdelta), NEdelta);
+  setCard("mCEpct", CEpct.toFixed(1)+"%");
+  setCard("mNECE", isFinite(NECEratio) ? NECEratio.toFixed(2)+"x" : "∞");
+
+  setCard("mHeat", pctStr(openHeat), openHeat);
+  setCard("mOpenProfit", pctStr(openProfit), openProfit);
+  setCard("mPortDelta", pctStr(portfolioDelta), portfolioDelta);
+  setCard("mTotalExp", totalExposure.toFixed(1)+"%");
+  document.getElementById("mTotalExpCap").textContent = totalExposure>100 ? "on margin" : "%EC deployed";
+  document.getElementById("mTotalExp").style.color = totalExposure>100 ? "var(--red)" : "var(--text)";
+  setCard("mClosedEC", pctStr(closedEC), closedEC);
+
+  setCard("mUER", UER.toFixed(1)+"%");
+  setCard("mFER", FER.toFixed(1)+"%");
+  document.getElementById("mMaxLayer").textContent = maxLayer + " positions";
+
+  // NE Δ coloring vs push/act thresholds
+  const thPush = num(document.getElementById("thNeDeltaPush").value);
+  const thAct = num(document.getElementById("thNeDeltaAct").value);
+  const neDeltaCap = document.getElementById("mNEdeltaCap");
+  if(NEdelta <= thAct){ neDeltaCap.textContent = "act — trim the weakest new names"; neDeltaCap.style.color = "var(--red)"; }
+  else if(NEdelta >= thPush){ neDeltaCap.textContent = "push — tape is paying the layer"; neDeltaCap.style.color = "var(--teal)"; }
+  else { neDeltaCap.textContent = "hold — neither push nor cut"; neDeltaCap.style.color = "var(--amber)"; }
+
+  // NE/CE coloring
+  const thTyp = num(document.getElementById("thNeCeTypical").value);
+  const thStress = num(document.getElementById("thNeCeStress").value);
+  const neceCap = document.getElementById("mNECEcap");
+  if(NECEratio > thStress){ neceCap.textContent = "over your hard ceiling"; neceCap.style.color="var(--red)"; }
+  else if(NECEratio > thTyp){ neceCap.textContent = "stress-test window"; neceCap.style.color="var(--amber)"; }
+  else { neceCap.textContent = "typical late-cycle budget"; neceCap.style.color="var(--teal)"; }
+
+  // UER coloring
+  const thUerClean = num(document.getElementById("thUerClean").value);
+  const thUerCrit = num(document.getElementById("thUerCritical").value);
+  const uerCap = document.getElementById("mUERcap");
+  if(UER > thUerCrit){ uerCap.textContent = "critical — stop adding, let it prove"; uerCap.style.color="var(--red)"; }
+  else if(UER > thUerClean){ uerCap.textContent = "judgment zone — context decides"; uerCap.style.color="var(--amber)"; }
+  else { uerCap.textContent = "clean — mostly proven"; uerCap.style.color="var(--teal)"; }
+
+  // FER coloring
+  const thFerVal = num(document.getElementById("thFer").value);
+  const ferCap = document.getElementById("mFERcap");
+  if(FER > 40){ ferCap.textContent = "danger zone if UER is high too"; ferCap.style.color="var(--red)"; }
+  else if(FER > 15){ ferCap.textContent = "watch — cushion compressing"; ferCap.style.color="var(--amber)"; }
+  else { ferCap.textContent = "clean — room to normal chop"; ferCap.style.color="var(--teal)"; }
+
+  // Cycle Δ vs snapshot
+  const cycleDeltaEl = document.getElementById("mCycleDelta");
+  const cycleDeltaCap = document.getElementById("mCycleDeltaCap");
+  if(SNAPSHOT){
+    const cd = (closedEC - SNAPSHOT.closedEC) + (portfolioDelta - SNAPSHOT.portfolioDelta);
+    cycleDeltaEl.textContent = pctStr(cd);
+    cycleDeltaEl.style.color = cd>=0 ? "var(--teal)" : "var(--red)";
+    cycleDeltaCap.textContent = "vs snapshot on " + SNAPSHOT.date;
+  } else {
+    cycleDeltaEl.textContent = "—";
+    cycleDeltaEl.style.color = "var(--text)";
+    cycleDeltaCap.textContent = "save a snapshot to enable";
+  }
+
+  // Exposure ribbon
+  renderRibbon(weightNew, weightCore, totalWeight);
+
+  // Cycle phase banner
+  renderCycleBanner({NEpct, CEpct, NECEratio, UER, FER, totalExposure, closedEC, openProfit, openHeat, thTyp, thUerClean, thUerCrit});
+
+  document.getElementById("subline").textContent =
+    `Equity ${fmtMoney(equity)} · ${open.length} open · ${closed.length} closed · updated ${new Date().toLocaleTimeString()}`;
+}
+
+function setCard(id, text, val, extra){
+  const el = document.getElementById(id);
+  el.textContent = text;
+  if(typeof val === "number"){
+    el.style.color = val > 0 ? "var(--teal)" : (val < 0 ? "var(--red)" : "var(--text)");
+  }
+  if(typeof extra === "function") extra(val);
+}
+
+function renderRibbon(weightNew, weightCore, totalWeight){
+  const cash = Math.max(0, 100 - totalWeight);
+  const total = weightNew + weightCore + cash || 1;
+  const segs = [
+    {w: weightNew, color: "var(--amber)", label: "New"},
+    {w: weightCore, color: "var(--teal)", label: "Core"},
+    {w: cash, color: "var(--line)", label: "Cash"},
+  ];
+  document.getElementById("exposureRibbon").innerHTML = segs.map(s=>{
+    const pct = s.w/total*100;
+    if(pct<=0) return "";
+    return `<div class="ribbon-seg" style="width:${pct}%; background:${s.color};" title="${s.label}: ${s.w.toFixed(1)}%EC">${pct>8?s.label+" "+s.w.toFixed(0)+"%":""}</div>`;
+  }).join("");
+  document.getElementById("ribbonCap").textContent = `${weightNew.toFixed(1)}% new · ${weightCore.toFixed(1)}% core · ${cash.toFixed(1)}% cash`;
+}
+
+function renderCycleBanner(m){
+  const banner = document.getElementById("cycleBanner");
+  const icon = document.getElementById("cycleIcon");
+  const title = document.getElementById("cycleTitle");
+  const sub = document.getElementById("cycleSub");
+  const pill = document.getElementById("cyclePill");
+  banner.className = "cycle-banner";
+
+  if(m.totalExposure < 1){
+    banner.classList.add("breakdown");
+    icon.textContent = "💤";
+    title.textContent = "No Exposure — Cash / Reset";
+    sub.textContent = "Portfolio is empty. This is the appropriate posture after a breakdown, or before the next early-cycle probe.";
+    pill.textContent = "WAIT FOR SETUP";
+  } else if(m.NECEratio > 0.7 && m.totalExposure < 40){
+    banner.classList.add("early");
+    icon.textContent = "🌱";
+    title.textContent = "Early Cycle — Probing";
+    sub.textContent = "Little deployed, almost everything fresh, nothing has had time to build cushion. Size pilot positions to keep NER near your ceiling and let the first trims fund what comes next.";
+    pill.textContent = "PROBE, DON'T PRESS";
+  } else if(m.NECEratio <= m.thTyp && m.UER <= m.thUerClean && m.totalExposure >= 40){
+    banner.classList.add("late");
+    icon.textContent = "🌇";
+    title.textContent = "Late Cycle — Mature, Extension Building";
+    sub.textContent = "Most of the book is proven and financed, new exposure is a thin layer. Refuse setups your NE÷CE budget can't support. Watch FER — cushion can erode quietly even while the headline numbers still look healthy.";
+    pill.textContent = "CUSTODIAN, NOT HERO";
+  } else if(m.closedEC > 0 || m.openProfit > 5){
+    banner.classList.add("middle");
+    icon.textContent = "📈";
+    title.textContent = "Productive Middle — Trend Confirming";
+    sub.textContent = "UER is falling as positions graduate to core, trims are accumulating in Closed EC, and Open Profit is compounding. Add through new trades sequenced to what NE Δ permits.";
+    pill.textContent = "SEQUENCE, DON'T PYRAMID";
+  } else {
+    banner.classList.add("middle");
+    icon.textContent = "🔄";
+    title.textContent = "Mixed Read — No Dominant Phase";
+    sub.textContent = "The signals don't line up cleanly into one phase. Lean on NE Δ and Open Heat specifically (§10) and cross-check the external tape (§1, Lever 3) before adding.";
+    pill.textContent = "READ NE Δ + HEAT";
+  }
+}
+
+/* ============================================================
+   SNAPSHOTS (localStorage)
+   ============================================================ */
+function saveSnapshot(){
+  const equity = num(document.getElementById("equityInput").value) || 1;
+  const open = POSITIONS.filter(p=>!p.closed);
+  const closed = POSITIONS.filter(p=>p.closed);
+  let openHeat=0, openProfit=0;
+  open.forEach(p=>{ const c=computeRow(p); openHeat+=c.riskPct; openProfit+=c.unrealizedPct; });
+  const portfolioDelta = openHeat+openProfit;
+  const closedEC = closed.reduce((s,p)=>s+p.realizedPct,0);
+  SNAPSHOT = { date: new Date().toLocaleDateString(), portfolioDelta, closedEC };
+  try{ localStorage.setItem('portfolio-risk-snapshot', JSON.stringify(SNAPSHOT)); }catch(e){}
+  recompute();
+  setStatus(`✓ Snapshot saved (${SNAPSHOT.date}).`);
+}
+function clearSnapshot(){
+  SNAPSHOT = null;
+  try{ localStorage.removeItem('portfolio-risk-snapshot'); }catch(e){}
+  recompute();
+  setStatus("Snapshot cleared.");
+}
+
+/* ============================================================
+   PERSISTENCE — positions, equity, thresholds
+   ============================================================ */
+const PERSIST_KEYS = ["equityInput","ytdInput","thNerCeiling","thNeDeltaPush","thNeDeltaAct","thPerTrade","thNeCeTypical","thNeCeStress","thUerClean","thUerCritical","thFer","thUnprovenReturn"];
+function saveState(){
+  try{
+    const settings = {};
+    PERSIST_KEYS.forEach(k=> settings[k] = document.getElementById(k).value);
+    localStorage.setItem('portfolio-risk-settings', JSON.stringify(settings));
+    localStorage.setItem('portfolio-risk-positions', JSON.stringify(POSITIONS));
+  }catch(e){}
+}
+function loadState(){
+  try{
+    const settings = JSON.parse(localStorage.getItem('portfolio-risk-settings') || "null");
+    if(settings) PERSIST_KEYS.forEach(k=>{ if(settings[k]!==undefined) document.getElementById(k).value = settings[k]; });
+    const positions = JSON.parse(localStorage.getItem('portfolio-risk-positions') || "null");
+    if(positions && positions.length){
+      POSITIONS = positions.map(p=>({...p, id: rowIdSeq++}));
+    }
+    const snap = JSON.parse(localStorage.getItem('portfolio-risk-snapshot') || "null");
+    if(snap) SNAPSHOT = snap;
+  }catch(e){}
+}
+
+/* ============================================================
+   STATUS / THEME / WIRE-UP
+   ============================================================ */
+const statusMsg = document.getElementById("statusMsg");
+function setStatus(msg, isErr){
+  statusMsg.textContent = msg;
+  statusMsg.className = "status-msg" + (isErr ? " err" : "");
+  if(msg) setTimeout(()=>{ statusMsg.textContent=""; }, 4000);
+}
+
+document.getElementById("toggleDataPanel").addEventListener("click", ()=>{
+  const body = document.getElementById("dataPanelBody");
+  const btn = document.getElementById("toggleDataPanel");
+  body.classList.toggle("open");
+  btn.textContent = body.classList.contains("open") ? "Close ▴" : "Open ▾";
+});
+
+document.getElementById("btnLoadSample").addEventListener("click", loadSample);
+document.getElementById("btnImportCsv").addEventListener("click", ()=>{
+  const text = document.getElementById("csvInput").value.trim();
+  if(!text){ setStatus("Paste some CSV first.", true); return; }
+  try{ importCsvText(text); }catch(e){ setStatus(`Import error: ${e.message}`, true); }
+});
+document.getElementById("btnAddRow").addEventListener("click", addBlankRow);
+document.getElementById("btnAddRow2").addEventListener("click", addBlankRow);
+document.getElementById("btnClearAll").addEventListener("click", ()=>{
+  if(!confirm("Remove all positions?")) return;
+  POSITIONS = []; renderTable(); recompute();
+});
+document.getElementById("btnSnapshot").addEventListener("click", saveSnapshot);
+document.getElementById("btnClearSnapshot").addEventListener("click", clearSnapshot);
+
+function addBlankRow(){
+  POSITIONS.push({ id: rowIdSeq++, ticker:"NEW", entry:100, stop:95, price:100, shares:10, closed:false, realizedPct:0 });
+  renderTable(); recompute();
+}
+
+const dropzone = document.getElementById("dropzone");
+const fileInput = document.getElementById("fileInput");
+function readFile(file){
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e=>{
+    try{ importCsvText(e.target.result); }
+    catch(err){ setStatus(`Parse error: ${err.message}`, true); }
+  };
+  reader.readAsText(file);
+}
+dropzone.addEventListener("click", ()=> fileInput.click());
+fileInput.addEventListener("change", e=> readFile(e.target.files[0]));
+["dragenter","dragover"].forEach(evt=> dropzone.addEventListener(evt, e=>{ e.preventDefault(); dropzone.classList.add("drag"); }));
+["dragleave","drop"].forEach(evt=> dropzone.addEventListener(evt, e=>{ e.preventDefault(); dropzone.classList.remove("drag"); }));
+dropzone.addEventListener("drop", e=>{ const f = e.dataTransfer.files[0]; if(f) readFile(f); });
+
+// recompute on any settings input change
+["equityInput","ytdInput",...PERSIST_KEYS.filter(k=>k!=="equityInput"&&k!=="ytdInput")].forEach(id=>{
+  const el = document.getElementById(id);
+  if(el) el.addEventListener("input", ()=>{ recompute(); renderTable(); saveState(); });
+});
+
+function updateThemeToggleUI(){
+  const theme = document.documentElement.getAttribute("data-theme") || "dark";
+  document.getElementById("optDark").classList.toggle("active", theme==="dark");
+  document.getElementById("optLight").classList.toggle("active", theme==="light");
+}
+function setTheme(theme){
+  document.documentElement.setAttribute("data-theme", theme);
+  updateThemeToggleUI();
+  try{ localStorage.setItem('market-monitor-theme', theme); }catch(e){}
+}
+document.getElementById("optDark").addEventListener("click", ()=>setTheme("dark"));
+document.getElementById("optLight").addEventListener("click", ()=>setTheme("light"));
+
+(function init(){
+  try{
+    const savedTheme = localStorage.getItem('market-monitor-theme');
+    if(savedTheme) document.documentElement.setAttribute("data-theme", savedTheme);
+  }catch(e){}
+  updateThemeToggleUI();
+
+  loadState();
+  if(!POSITIONS.length) loadSample();
+  else { renderTable(); recompute(); }
+
+  // persist on any table/settings change going forward
+  document.getElementById("tblPositions").addEventListener("input", saveState);
+  document.getElementById("equityInput").addEventListener("input", saveState);
+})();
+</script>
+</body>
+</html>
