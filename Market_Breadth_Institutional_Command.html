@@ -826,17 +826,15 @@ iframe, canvas, svg{
   <div class="bi-card" id="breadthEvidenceWorkbench" style="margin-bottom:12px">
     <div class="bi-title"><span>Breadth Evidence Workbench</span><span>Supporting evidence · secondary to portfolio directive</span></div>
     <div class="bi-tabs">
-      <button class="active" data-bi-pane="biPaneScore">Breadth Score</button>
+      <button class="active" data-bi-pane="biPane50">50DMA Breadth</button>
+      <button data-bi-pane="biPane200">200DMA Breadth</button>
+      <button data-bi-pane="biPaneHL">New Highs / Lows</button>
       <button data-bi-pane="biPaneAD">Advance / Decline</button>
-      <button data-bi-pane="biPaneHL">Near Highs / Lows</button>
-      <button data-bi-pane="biPane50">TradingView 50DMA</button>
-      <button data-bi-pane="biPane200">TradingView 200DMA</button>
     </div>
-    <div class="bi-pane active" id="biPaneScore"><div class="bi-chart" id="biScoreChart"></div></div>
-    <div class="bi-pane" id="biPaneAD"><div class="bi-chart" id="biADChart"></div></div>
-    <div class="bi-pane" id="biPaneHL"><div class="bi-chart" id="biHLChart"></div></div>
-    <div class="bi-pane" id="biPane50"><div class="bi-tv" id="biTv50"></div></div>
+    <div class="bi-pane active" id="biPane50"><div class="bi-tv" id="biTv50"></div></div>
     <div class="bi-pane" id="biPane200"><div class="bi-tv" id="biTv200"></div></div>
+    <div class="bi-pane" id="biPaneHL"><div class="bi-chart" id="biHLChart"></div></div>
+    <div class="bi-pane" id="biPaneAD"><div class="bi-chart" id="biADChart"></div></div>
   </div>
 
 
@@ -2154,16 +2152,38 @@ function biRenderCombined(){
   [['biP20',now.p20],['biP50',now.p50],['biP200',now.p200]].forEach(([id,v])=>biSetText(id,`${v}%`,biScoreState(v).color));biSetProgress('biP20Bar',now.p20);biSetProgress('biP50Bar',now.p50);biSetProgress('biP200Bar',now.p200);biSetText('biAD',`${now.adv} adv / ${now.dec} dec · net ${biSigned(now.ad)}`,now.ad>=0?'var(--teal)':'var(--red)');biSetText('biHLShare',`${now.hlPct}% near highs`,now.hlPct>=55?'var(--teal)':now.hlPct<45?'var(--red)':'var(--amber)');const nasiText=im.nasiVal<0?'Below zero':im.nasiVal<im.nasiSma?'Below 50-DMA':'Above 50-DMA';biSetText('biNasiState',`${im.nasiVal.toFixed(2)} · ${nasiText}`,im.nasiVal<0?'var(--red)':im.nasiVal<im.nasiSma?'var(--amber)':'var(--teal)');biSetText('bi5dChange',biSigned(change5),change5>=0?'var(--teal)':'var(--red)');
   biRenderDistribution('SPY','biDistSpy');biRenderDistribution('QQQ','biDistQqq');const dc=document.getElementById('biDistributionConclusion');if(dc)dc.innerHTML=distMax>=6?`<b>Distribution pressure is elevated.</b> New risk should remain restricted until counts decay and breadth stops deteriorating.`:distMax>=3?`<b>Distribution is under observation.</b> Price may remain resilient, but repeated higher-volume declines reduce the margin for error.`:`<b>Distribution pressure is contained.</b> This supports risk-taking only when trend and participation also confirm.`;
   biRenderQuadrant(sec);biRenderLeadership(sec);
-  const scoreVals=history.map(x=>x.score),adVals=history.map(x=>x.ad),hlVals=history.map(x=>x.high-x.low);document.getElementById('biScoreChart').innerHTML=biSvgLine(scoreVals,'var(--teal)',50);document.getElementById('biADChart').innerHTML=biSvgLine(adVals,'var(--blue)',0);document.getElementById('biHLChart').innerHTML=biSvgLine(hlVals,'var(--amber)',0);document.getElementById('biHistoryChart').innerHTML=biSvgLine(scoreVals,'var(--teal)',50);document.getElementById('biDiagChart').innerHTML=biSvgLine(scoreVals,'var(--teal)',50);biSetText('biHistNow',now.score,biScoreState(now.score).color);biSetText('biHist5d',biSigned(change5),change5>=0?'var(--teal)':'var(--red)');biSetText('biHistMax',Math.max(...scoreVals));biSetText('biHistMin',Math.min(...scoreVals));biSetText('biHistRegime',reg.label,reg.color);
+  const scoreVals=history.map(x=>x.score),adVals=history.map(x=>x.ad),hlVals=history.map(x=>x.high-x.low);const biScoreChart=document.getElementById('biScoreChart');if(biScoreChart)biScoreChart.innerHTML=biSvgLine(scoreVals,'var(--teal)',50);document.getElementById('biADChart').innerHTML=biSvgLine(adVals,'var(--blue)',0);document.getElementById('biHLChart').innerHTML=biSvgLine(hlVals,'var(--amber)',0);document.getElementById('biHistoryChart').innerHTML=biSvgLine(scoreVals,'var(--teal)',50);document.getElementById('biDiagChart').innerHTML=biSvgLine(scoreVals,'var(--teal)',50);biSetText('biHistNow',now.score,biScoreState(now.score).color);biSetText('biHist5d',biSigned(change5),change5>=0?'var(--teal)':'var(--red)');biSetText('biHistMax',Math.max(...scoreVals));biSetText('biHistMin',Math.min(...scoreVals));biSetText('biHistRegime',reg.label,reg.color);
   const breadthState=now.score>=60?'bull':now.score<40?'bear':'flat';const pill=document.getElementById('biBreadthPill');if(pill){pill.textContent=now.score>=60?'BULLISH':now.score<40?'BEARISH':'FLAT / MIXED';pill.className=`regime-status-pill ${breadthState==='bull'?'pill-bull':breadthState==='bear'?'pill-bear':'pill-flat'}`;}biSetText('biDiagScore',now.score,biScoreState(now.score).color);biSetText('biDiag50',`${now.p50}%`,biScoreState(now.p50).color);biSetText('biDiagNasi',nasiText,im.nasiVal<0?'var(--red)':im.nasiVal<im.nasiSma?'var(--amber)':'var(--teal)');biSetText('biDiag5d',biSigned(change5),change5>=0?'var(--teal)':'var(--red)');biSetText('biDiagCondition',pbState,pbState==='CONFIRMATION'?'var(--teal)':pbState==='DISTRIBUTION'||pbState==='NEGATIVE DIVERGENCE'?'var(--red)':'var(--amber)');document.getElementById('biBreadthHistoryStrip').innerHTML=history.map(x=>`<div class="streak-day" style="background:${x.score>=60?'var(--teal)':x.score<40?'var(--red)':'var(--amber)'}" title="${x.date}: ${x.score}"></div>`).join('');
   const engines=document.getElementById('enginesGridContainer');if(engines){engines.querySelector('[data-bi-engine]')?.remove();const card=document.createElement('div');card.className='engine-box';card.dataset.biEngine='true';card.innerHTML=`<div><div class="engine-box-head"><span class="engine-name">Breadth Confirmation</span><span class="engine-status-dot" style="background:${biScoreState(now.score).color}"></span></div><div class="engine-status" style="color:${biScoreState(now.score).color}">${pbState}</div><ul class="engine-bullets"><li>Score: <b>${now.score}/100</b></li><li>50-DMA: <b>${now.p50}%</b></li><li>5D Δ: <b>${biSigned(change5)}</b></li></ul></div><div class="engine-conclusion">${broad?'Participation confirms the price structure.':weak?'Participation does not confirm the price structure.':'Breadth remains mixed and requires confirmation.'}</div>`;engines.appendChild(card);}
   const label=document.getElementById('biSyncLabel');if(label)label.textContent=`● ${now.valid}/50 live proxy series · ${sec.length}/11 sector ETFs`;
   try{localStorage.setItem('market-breadth-state',JSON.stringify({updated:now.date,score:now.score,unified,regime:reg.label,exposure:reg.exposure,participation:now.participation,above20:now.p20,above50:now.p50,above200:now.p200,distSpy,distQqq,leaders:[top?.n,second?.n],laggard:bottom?.n}));}catch(e){}
 }
 
-async function biRenderTradingView(){try{await ensureTradingViewLibrary();const theme=(document.documentElement.getAttribute('data-theme')||'dark');const make=(outerId,widgetId,symbol)=>{const outer=document.getElementById(outerId);if(!outer)return;outer.innerHTML=`<div id="${widgetId}" style="height:100%;width:100%"></div>`;new TradingView.widget({autosize:true,symbol,interval:'D',timezone:'Etc/UTC',theme,style:'2',locale:'en',enable_publishing:false,allow_symbol_change:true,hide_top_toolbar:false,hide_legend:false,save_image:false,container_id:widgetId});};make('biTv50','biTv50Widget','INDEX:S5FI');make('biTv200','biTv200Widget','INDEX:S5TH');}catch(e){['biTv50','biTv200'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='<div style="padding:18px;color:var(--red);font:11px JetBrains Mono,monospace">TradingView breadth evidence could not be loaded.</div>';});}}
+async function biRenderTradingView(targetPane=null){
+  try{
+    await ensureTradingViewLibrary();
+    const theme=document.documentElement.getAttribute('data-theme')||'dark';
+    const activePane=targetPane||document.querySelector('.bi-pane.active')?.id||'biPane50';
+    const make=(outerId,widgetId,symbol)=>{
+      const outer=document.getElementById(outerId);
+      if(!outer)return;
+      outer.innerHTML=`<div id="${widgetId}" style="height:100%;width:100%"></div>`;
+      new TradingView.widget({
+        autosize:true,symbol,interval:'D',timezone:'Etc/UTC',theme,style:'2',locale:'en',
+        enable_publishing:false,allow_symbol_change:true,hide_top_toolbar:false,
+        hide_legend:false,save_image:false,container_id:widgetId
+      });
+    };
+    if(activePane==='biPane200') make('biTv200','biTv200Widget','INDEX:S5TH');
+    else make('biTv50','biTv50Widget','INDEX:S5FI');
+  }catch(e){
+    const id=(targetPane==='biPane200')?'biTv200':'biTv50';
+    const el=document.getElementById(id);
+    if(el)el.innerHTML='<div style="padding:18px;color:var(--red);font:11px JetBrains Mono,monospace">TradingView breadth evidence could not be loaded.</div>';
+  }
+}
 
-document.querySelectorAll('.bi-tabs button').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('.bi-tabs button').forEach(b=>b.classList.remove('active'));document.querySelectorAll('.bi-pane').forEach(p=>p.classList.remove('active'));btn.classList.add('active');document.getElementById(btn.dataset.biPane)?.classList.add('active');if(btn.dataset.biPane==='biPane50'||btn.dataset.biPane==='biPane200')biRenderTradingView();}));
+document.querySelectorAll('.bi-tabs button').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('.bi-tabs button').forEach(b=>b.classList.remove('active'));document.querySelectorAll('.bi-pane').forEach(p=>p.classList.remove('active'));btn.classList.add('active');document.getElementById(btn.dataset.biPane)?.classList.add('active');if(btn.dataset.biPane==='biPane50'||btn.dataset.biPane==='biPane200')setTimeout(()=>biRenderTradingView(btn.dataset.biPane),40);}));
 
 
 function setStatusMsg(txt, isErr = false) {
