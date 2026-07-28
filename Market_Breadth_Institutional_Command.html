@@ -1036,80 +1036,98 @@ function inferField(row, words) {
 }
 function rowText(row){ return normalizeThemeText((row.cells||[]).join(' ')); }
 
-function collectThemeCandidates(rsRows, groupRows, powerRows=[]) {
+function collectThemeCandidates(rsRows, groupRows) {
   const out=[];
-  const add=(name,score,source,ticker='')=>{
+  const add=(name,score,source,row)=>{
     name=String(name||'').replace(/^\d+[.)-]?\s*/,'').trim();
     if(!name || name.length<3 || tickerToken(name)) return;
     const norm=normalizeThemeText(name);
-    if(/ticker|score|rank|company|symbol|change|momentum|loading|connecting/.test(norm)) return;
+    if(/ticker|score|rank|company|symbol|change|momentum|loading|connecting|sector rs table|industry rs matrix/.test(norm)) return;
+    const text=rowText(row||{});
+    // Prefer themes explicitly identified as Leading/Improving or carrying strong scores.
+    const state=/\bleading\b/.test(text)?'Leading':/\bimproving\b/.test(text)?'Improving':/\bweakening\b/.test(text)?'Weakening':/\blagging\b/.test(text)?'Lagging':'';
+    const quality=(state==='Leading'?30:state==='Improving'?18:state==='Weakening'?-12:state==='Lagging'?-25:0);
+    const adjusted=(Number.isFinite(score)?score:0)+quality;
+    if(state==='Weakening'||state==='Lagging') return;
     const existing=out.find(x=>x.norm===norm);
-    if(existing){ if(score>existing.score) Object.assign(existing,{score,source,ticker}); }
-    else out.push({name,norm,score:Number.isFinite(score)?score:0,source,ticker});
+    const item={name,norm,score:Number.isFinite(score)?score:0,adjusted,source,state:state||'Ranked'};
+    if(existing){ if(adjusted>existing.adjusted) Object.assign(existing,item); }
+    else out.push(item);
   };
   groupRows.forEach(r=>{
     const name=inferField(r,['group','theme','industry','sector','name']) || (r.cells||[]).find(c=>!tickerToken(c) && /[a-z]/i.test(c));
-    add(name,inferScore(r),'Group Momentum',inferTicker(r)||'');
+    add(name,inferScore(r),'Group Momentum',r);
   });
   rsRows.forEach(r=>{
     const name=inferField(r,['industry','sector','name']) || (r.cells||[]).find(c=>!tickerToken(c) && /[a-z]/i.test(c));
-    add(name,inferScore(r),'RS Radar',inferTicker(r)||'');
+    add(name,inferScore(r),'RS Radar',r);
   });
-  powerRows.forEach(r=>{
-    const name=inferField(r,['industry','sector','group','theme']);
-    if(name) add(name,inferScore(r),'Power List',inferTicker(r)||'');
+  return out.sort((a,b)=>b.adjusted-a.adjusted);
+}
+
+function tokenizeTheme(name=''){
+  const stop=new Set(['and','the','services','service','products','product','companies','company','industry','sector','group','etf','index','select','fund']);
+  return normalizeThemeText(name).split(' ').filter(x=>x.length>2&&!stop.has(x));
+}
+function powerListThemeMatch(stock, candidate){
+  const themeTerms=tokenizeTheme(candidate.name);
+  if(!themeTerms.length) return 0;
+  const sector=normalizeThemeText(stock.sector||'');
+  const industry=normalizeThemeText(stock.industry||'');
+  const company=normalizeThemeText(stock.company||'');
+  const all=`${sector} ${industry} ${company} ${stock.text||''}`;
+  let score=0;
+  // Exact sector/industry matches deserve strongest confidence.
+  if(industry===candidate.norm) score+=100;
+  if(sector===candidate.norm) score+=90;
+  themeTerms.forEach(term=>{
+    if(industry.includes(term)) score+=28;
+    if(sector.includes(term)) score+=20;
+    if(company.includes(term)) score+=6;
+    else if(all.includes(term)) score+=3;
   });
-  return out.sort((a,b)=>b.score-a.score);
+  // Require at least one meaningful taxonomy hit, not ticker/company coincidence alone.
+  const taxonomyHits=themeTerms.filter(t=>industry.includes(t)||sector.includes(t)).length;
+  if(!taxonomyHits) return 0;
+  return score;
 }
 
 function buildDynamicThemes(rsRows, groupRows, powerRows) {
-  const candidates=collectThemeCandidates(rsRows,groupRows,powerRows);
-  const power=powerRows.map(r=>({
-    row:r,ticker:inferTicker(r),score:inferScore(r),
+  // Theme discovery is EXCLUSIVELY RS Radar + Group Momentum.
+  const candidates=collectThemeCandidates(rsRows,groupRows);
+  // Stock membership is EXCLUSIVELY Power List.
+  const power=powerRows.map((r,index)=>({
+    row:r,ticker:inferTicker(r),score:inferScore(r),rank:index+1,
+    company:inferField(r,['company','name','stock']),
     sector:inferField(r,['sector']),industry:inferField(r,['industry','group','theme']),
     text:rowText(r)
   })).filter(x=>x.ticker);
-  const groupTickerRows=groupRows.map(r=>({row:r,ticker:inferTicker(r),score:inferScore(r),text:rowText(r)})).filter(x=>x.ticker);
+
   const selected=[];
   const usedTickers=new Set();
   for(const c of candidates){
     if(selected.length>=4) break;
-    const terms=c.norm.split(' ').filter(x=>x.length>2 && !['index','select','fund','etf'].includes(x));
-    const match=x=>{
-      const text=normalizeThemeText(`${x.sector||''} ${x.industry||''} ${x.text||''}`);
-      if(!terms.length) return false;
-      const hits=terms.filter(t=>text.includes(t)).length;
-      return hits>=Math.min(2,terms.length) || (terms.length===1&&hits===1);
-    };
-    let stocks=power.filter(match).sort((a,b)=>b.score-a.score);
-    const direct=groupTickerRows.filter(x=>terms.some(t=>x.text.includes(t))).sort((a,b)=>b.score-a.score);
-    const merged=[...direct,...stocks];
-    if(c.ticker) merged.unshift({ticker:c.ticker,score:c.score});
-    const tickers=[];
-    for(const x of merged){
-      if(!x.ticker || usedTickers.has(x.ticker) || tickers.includes(x.ticker)) continue;
-      tickers.push(x.ticker);
-      if(tickers.length===10) break;
+    const matched=power.map(stock=>({...stock,matchScore:powerListThemeMatch(stock,c)}))
+      .filter(x=>x.matchScore>0)
+      .sort((a,b)=>b.matchScore-a.matchScore || b.score-a.score || a.rank-b.rank);
+    const leaders=[];
+    for(const stock of matched){
+      if(usedTickers.has(stock.ticker)||leaders.some(x=>x.ticker===stock.ticker)) continue;
+      leaders.push(stock);
+      if(leaders.length===10) break;
     }
-    if(tickers.length>=3){
-      tickers.forEach(t=>usedTickers.add(t));
-      selected.push({name:c.name,category:`${c.source.toUpperCase()} · SCORE ${Math.round(c.score)}`,tickers,source:c.source,score:c.score});
+    if(leaders.length>=2){
+      leaders.forEach(x=>usedTickers.add(x.ticker));
+      selected.push({
+        name:c.name,
+        category:`${c.source.toUpperCase()} ${c.state.toUpperCase()} · POWER LIST STOCKS`,
+        tickers:leaders.map(x=>x.ticker),
+        leaders,
+        source:c.source,
+        score:c.score,
+        state:c.state
+      });
     }
-  }
-  // If strict name matching produces fewer than four groups, use Power List's own strongest industries/sectors.
-  if(selected.length<4){
-    const buckets=new Map();
-    power.forEach(x=>{
-      const name=(x.industry||x.sector||'').trim(); if(!name)return;
-      const key=normalizeThemeText(name); if(!buckets.has(key))buckets.set(key,{name,items:[],sum:0});
-      const b=buckets.get(key); b.items.push(x); b.sum+=x.score;
-    });
-    [...buckets.values()].sort((a,b)=>(b.sum/b.items.length)-(a.sum/a.items.length)).forEach(b=>{
-      if(selected.length>=4)return;
-      if(selected.some(x=>normalizeThemeText(x.name)===normalizeThemeText(b.name)))return;
-      const tickers=b.items.sort((a,b)=>b.score-a.score).map(x=>x.ticker).filter(t=>!usedTickers.has(t)).slice(0,10);
-      if(tickers.length>=3){tickers.forEach(t=>usedTickers.add(t));selected.push({name:b.name,category:'POWER LIST · AVG RS RANK',tickers,source:'Power List'});}
-    });
   }
   return selected;
 }
@@ -1129,7 +1147,7 @@ async function syncDynamicLeadershipSources(){
   results.forEach(r=>{ try{r.frame?.remove();}catch(e){} });
   if(insight){
     if(LEADING_THEMES_DATA.length){
-      insight.innerHTML=`Built <b>${LEADING_THEMES_DATA.length}</b> live themes from <b>${crossTabSyncMeta.loaded.join(' + ')}</b>. Theme ranks come from RS/Group Momentum; ticker selection comes from matching Power List leadership.`;
+      insight.innerHTML=`Built <b>${LEADING_THEMES_DATA.length}</b> live themes from <b>${crossTabSyncMeta.loaded.join(' + ')}</b>. Themes are identified by RS Radar and Group Momentum; every displayed ticker is sourced and ranked from Power List, then matched by sector/industry taxonomy.`;
     }else{
       insight.innerHTML=`Cross-tab extraction returned no complete theme/ticker set. Loaded: <b>${crossTabSyncMeta.loaded.join(' + ')||'none'}</b>; unavailable: <b>${crossTabSyncMeta.failed.join(' + ')||'none'}</b>. The reader now waits for rendered rows and supports both table and card layouts.`;
     }
@@ -1982,7 +2000,7 @@ async function renderLeaderThemeCharts() {
   activeThemeCharts = [];
 
   if (!LEADING_THEMES_DATA.length) {
-    container.innerHTML = `<div style="padding:22px;border:1px dashed var(--line);border-radius:9px;color:var(--text-dim);font-size:12px;">Dynamic leadership sources loaded, but no theme produced at least three verified matching Power List tickers. Check that RS Radar, Group Momentum, and Power List have finished loading, then press Refresh Live Data.</div>`;
+    container.innerHTML = `<div style="padding:22px;border:1px dashed var(--line);border-radius:9px;color:var(--text-dim);font-size:12px;">RS Radar and Group Momentum loaded, but no identified leading theme matched at least two Power List stocks by sector/industry taxonomy. Check that RS Radar, Group Momentum, and Power List have finished loading, then press Refresh Live Data.</div>`;
     return;
   }
 
@@ -1995,7 +2013,7 @@ async function renderLeaderThemeCharts() {
             <span style="font-size:13px; font-weight:800; font-family:'JetBrains Mono',monospace; color:var(--text);">${theme.name}</span>
             <span style="font-size:10px; text-transform:uppercase; color:var(--text-faint); font-family:'JetBrains Mono',monospace; margin-left:8px;">${theme.category}</span>
           </div>
-          <span style="font-size:10.5px; font-family:'JetBrains Mono',monospace; color:var(--teal);">${theme.tickers.length} Verified Leaders</span>
+          <span style="font-size:10.5px; font-family:'JetBrains Mono',monospace; color:var(--teal);">${theme.tickers.length} Power List Leaders</span>
         </div>
         <div style="display:grid; grid-template-columns: repeat(5, 1fr); gap:10px;">
           ${theme.tickers.map((tk, idx) => `
