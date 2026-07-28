@@ -759,13 +759,19 @@ function renderMarketMood(payload={}){
   const vvix = Number(payload.vvix);
   const ratio = Number(payload.ratio);
   let score = Number(payload.score);
-  // Fallback only: normalize VIX deviation by an 8% daily-regime band.
-  if(!Number.isFinite(score)) score = (Number.isFinite(vix) && Number.isFinite(baseline) && baseline>0) ? (vix/baseline-1)/0.08 : 0;
+  const hasExactScore = Number.isFinite(score);
+  // Never combine VIX (about 18) with a VVIX/VIX-ratio baseline (about 5.5).
+  // The Institutional Command page exposes the ratio, its 21-day MA and the mood label,
+  // but it does not expose the standard deviation required to reproduce an exact sigma score.
+  if(!hasExactScore) score = 0;
   score = clamp(score,-2.5,2.5);
   const mood = payload.state ? {state:payload.state, desc:payload.description||"Volatility regime", cls:/greed/i.test(payload.state)?"greedy":/neutral/i.test(payload.state)?"neutral":""} : moodClassification(score);
   const scoreEl=document.getElementById("moodScore"), needle=document.getElementById("moodNeedle"), stateEl=document.getElementById("moodState");
-  if(scoreEl){ scoreEl.textContent=(payload.isProxy?"≈":"")+(score>=0?"+":"")+score.toFixed(2); scoreEl.title=payload.isProxy?"Approximate fallback using VIX versus its baseline; exact Market Mood requires the VVIX/VIX ratio engine.":"Exact score supplied by the volatility engine."; }
-  if(needle) needle.style.transform=`translateX(-50%) rotate(${clamp(score/2.5,-1,1)*78}deg)`;
+  if(scoreEl){
+    scoreEl.textContent = hasExactScore ? ((score>=0?"+":"")+score.toFixed(2)) : "—";
+    scoreEl.title = hasExactScore ? "Exact sigma score supplied by the volatility engine." : "The source page supplies VVIX/VIX, its 21-day MA and the mood classification, but not the standard deviation needed for an exact sigma score.";
+  }
+  if(needle) needle.style.transform=`translateX(-50%) rotate(${hasExactScore ? clamp(score/2.5,-1,1)*78 : 0}deg)`;
   if(stateEl){ stateEl.textContent=mood.state; stateEl.className="mood-state "+mood.cls; }
   const desc=document.getElementById("moodDescription"); if(desc) desc.textContent=mood.desc;
   const vixEl=document.getElementById("vixBig"); if(vixEl && Number.isFinite(vix)) vixEl.textContent=vix.toFixed(2);
