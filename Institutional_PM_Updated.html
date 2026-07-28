@@ -547,7 +547,7 @@ iframe, canvas, svg{
             <li>Participation: <b>Narrow</b></li>
           </ul>
         </div>
-        <div class="engine-conclusion">Breadth contracting below 50-DMA.</div>
+        <div class="engine-conclusion">${sheetFeedLoaded ? 'Live Google Sheet feed' : 'Fallback data'} · ${nasiState.label}.</div>
       </div>
     </div>
 
@@ -1055,6 +1055,79 @@ function buildStreakHistoryHTML(rows, stateKey) {
   }).join("");
 }
 
+
+/* ============================================================
+   SHARED GOOGLE SHEET FEED — same source/parsing as index.html
+   ============================================================ */
+const MARKET_MONITOR_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vStHHISoCKgIkrMzx45EZPPL8kJEOucskS2mcfRJ5pdhmLIhDFxyq8czbcZ2bzEPBBDCJf21ccYJc2K/pub?gid=0&single=true&output=csv';
+const MARKET_MONITOR_CORS_PROXIES = [
+  url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+  url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`
+];
+
+function parseMarketMonitorCSV(text){
+  const rows=[]; let row=[], field='', inQuotes=false;
+  for(let i=0;i<text.length;i++){
+    const ch=text[i], next=text[i+1];
+    if(inQuotes){
+      if(ch==='"' && next==='"'){ field+='"'; i++; }
+      else if(ch==='"') inQuotes=false;
+      else field+=ch;
+    } else {
+      if(ch==='"') inQuotes=true;
+      else if(ch===','){ row.push(field); field=''; }
+      else if(ch==='\n'){ row.push(field); rows.push(row); row=[]; field=''; }
+      else if(ch!=='\r') field+=ch;
+    }
+  }
+  if(field.length || row.length){ row.push(field); rows.push(row); }
+  return rows;
+}
+function mmNorm(v){ return v==null ? '' : String(v).trim(); }
+function mmFuzzy(v){ return mmNorm(v).toLowerCase().replace(/[^a-z0-9$]/g,''); }
+function mmNum(v){ const n=parseFloat(mmNorm(v).replace('%','').replace(/,/g,'')); return Number.isFinite(n)?n:null; }
+function mmFindLabel(grid,label){
+  const target=mmFuzzy(label);
+  for(let r=0;r<grid.length;r++) for(let c=0;c<(grid[r]||[]).length;c++) if(mmFuzzy(grid[r][c])===target) return {r,c};
+  return null;
+}
+async function mmFetchText(url,label){
+  const controller=new AbortController();
+  const timer=setTimeout(()=>controller.abort(),10000);
+  try{
+    const res=await fetch(url,{cache:'no-store',signal:controller.signal});
+    if(!res.ok) throw new Error(`${label}: HTTP ${res.status}`);
+    const text=await res.text();
+    if(!text || text.trim().startsWith('<')) throw new Error(`${label}: response was not CSV`);
+    return text;
+  } finally { clearTimeout(timer); }
+}
+async function fetchSheetSentimentBreadth(){
+  const fresh=MARKET_MONITOR_CSV_URL + '&cachebust=' + Date.now();
+  let text=null, lastErr=null;
+  for(const [label,url] of [['direct',fresh], ...MARKET_MONITOR_CORS_PROXIES.map((fn,i)=>[`proxy ${i+1}`,fn(fresh)])]){
+    try{ text=await mmFetchText(url,label); break; }
+    catch(err){ lastErr=err; console.warn(`Google Sheet ${label} fetch failed:`,err.message); }
+  }
+  if(!text) throw lastErr || new Error('Google Sheet feed unavailable');
+  const grid=parseMarketMonitorCSV(text);
+  const pcAnchor=mmFindLabel(grid,'Put/Call');
+  const nasiAnchor=mmFindLabel(grid,'$NASI');
+  const result={};
+  if(pcAnchor){
+    const value=mmNum(grid[pcAnchor.r]?.[pcAnchor.c+1]);
+    if(value!==null) result.pcVal=value;
+  }
+  if(nasiAnchor){
+    const current=mmNum(grid[nasiAnchor.r]?.[nasiAnchor.c+2]);
+    const sma50=mmNum(grid[nasiAnchor.r]?.[nasiAnchor.c+4]);
+    if(current!==null) result.nasiVal=current;
+    if(sma50!==null) result.nasiSma=sma50;
+  }
+  if(result.pcVal==null && result.nasiVal==null) throw new Error('Put/Call and $NASI labels were not found in the published sheet');
+  return result;
+}
+
 async function renderMasterBriefingAndDiagnostics() {
   const merged = STATE.merged;
   if (!merged || merged.length === 0) return;
@@ -1069,26 +1142,34 @@ async function renderMasterBriefingAndDiagnostics() {
   let pcVal = 0.93;
   let nasiVal = -11.99;
   let nasiSma = 143.98;
+  let sheetFeedLoaded = false;
 
+  // Primary source: fetch the exact same published Google Sheet used by index.html.
   try {
-    let raw = null;
-    // Safely check if custom window.storage exists
-    if (typeof window !== "undefined" && window.storage && window.storage.get) {
-      const savedData = await window.storage.get('market-monitor-data');
-      raw = savedData ? savedData.value : null;
-    } else {
-      // Fallback to standard browser localStorage
-      raw = localStorage.getItem('market-monitor-data');
+    const liveSheet = await fetchSheetSentimentBreadth();
+    if (liveSheet.pcVal != null) pcVal = liveSheet.pcVal;
+    if (liveSheet.nasiVal != null) nasiVal = liveSheet.nasiVal;
+    if (liveSheet.nasiSma != null) nasiSma = liveSheet.nasiSma;
+    sheetFeedLoaded = true;
+  } catch (sheetErr) {
+    console.warn("Direct Google Sheet sentiment/breadth feed failed; trying saved Market Monitor data.", sheetErr);
+    try {
+      let raw = null;
+      if (typeof window !== "undefined" && window.storage && window.storage.get) {
+        const savedData = await window.storage.get('market-monitor-data');
+        raw = savedData ? savedData.value : null;
+      } else {
+        raw = localStorage.getItem('market-monitor-data');
+      }
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed.putcall?.value != null) pcVal = parsed.putcall.value;
+        if (parsed.nasi?.current != null) nasiVal = parsed.nasi.current;
+        if (parsed.nasi?.sma50 != null) nasiSma = parsed.nasi.sma50;
+      }
+    } catch (storageErr) {
+      console.warn("Saved Market Monitor data was also unavailable; using built-in fallback values.", storageErr);
     }
-    
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (parsed.putcall?.value) pcVal = parsed.putcall.value;
-      if (parsed.nasi?.current) nasiVal = parsed.nasi.current;
-      if (parsed.nasi?.sma50) nasiSma = parsed.nasi.sma50;
-    }
-  } catch (e) {
-    console.warn("Could not read local storage for Put/Call and $NASI. Using defaults.", e);
   }
 
   let moodScoreNorm = last.moodState === "bull" ? 100 : (last.moodState === "bear" ? 0 : 50);
@@ -1115,7 +1196,7 @@ async function renderMasterBriefingAndDiagnostics() {
   const aligned = last.alignedState ? stateLabel(last.alignedState) : "Mixed";
   const pmSet = (id, value) => { const el=document.getElementById(id); if(el) el.textContent=value; };
   pmSet("pmRegime", regimeLabel);
-  pmSet("pmRegimeSub", `Current 3-way alignment: ${aligned}; breadth ${nasiVal > nasiSma ? 'expanding' : 'contracting'}`);
+  pmSet("pmRegimeSub", `Current 3-way alignment: ${aligned}; breadth ${nasiVal < 0 ? 'bearish below zero' : (nasiVal > nasiSma ? 'expanding' : 'below 50-DMA')}`);
   pmSet("pmExposure", exposure);
   pmSet("pmConfidence", `${compositeScore}%`);
   pmSet("pmOutlook", outlook);
@@ -1161,8 +1242,18 @@ async function renderMasterBriefingAndDiagnostics() {
   const moodCol = last.moodState === "bull" ? "var(--teal)" : (last.moodState === "bear" ? "var(--red)" : "var(--amber)");
   const qqqCol = last.qqqState === "bull" ? "var(--teal)" : (last.qqqState === "bear" ? "var(--red)" : "var(--amber)");
   const spyCol = last.spyState === "bull" ? "var(--teal)" : (last.spyState === "bear" ? "var(--red)" : "var(--amber)");
-  const pcCol = "var(--teal)";
-  const nasiCol = nasiVal > nasiSma ? "var(--teal)" : "var(--red)";
+  const pcState = pcVal < 0.60
+    ? {label:"Complacent / Greed", pressure:"Low hedging", detail:"Complacency extreme", color:"var(--red)"}
+    : pcVal > 0.95
+      ? {label:"Fearful / Hedged", pressure:"Elevated hedging", detail:"Contrarian fear signal", color:"var(--teal)"}
+      : {label:"Neutral", pressure:"Normal", detail:"No panic / greed extreme", color:"var(--text-dim)"};
+  const pcCol = pcState.color;
+  const nasiState = nasiVal < 0
+    ? {label:"Bearish — Below Zero", participation:"Contracting", color:"var(--red)"}
+    : nasiVal < nasiSma
+      ? {label:"Warning — Below 50-DMA", participation:"Narrow", color:"var(--amber)"}
+      : {label:"Constructive — Above 50-DMA", participation:"Broad", color:"var(--teal)"};
+  const nasiCol = nasiState.color;
 
   document.getElementById("enginesGridContainer").innerHTML = `
     <div class="engine-box">
@@ -1207,11 +1298,11 @@ async function renderMasterBriefingAndDiagnostics() {
     <div class="engine-box">
       <div>
         <div class="engine-box-head"><span class="engine-name">Put / Call Ratio</span><span class="engine-status-dot" style="background:${pcCol}"></span></div>
-        <div class="engine-status" style="color:${pcCol}">Neutral to Bullish</div>
+        <div class="engine-status" style="color:${pcCol}">${pcState.label}</div>
         <ul class="engine-bullets">
           <li>Current PCR: <b>${pcVal.toFixed(2)}</b></li>
-          <li>Hedging pressure: <b>Normal</b></li>
-          <li>No panic / greed extremes</li>
+          <li>Hedging pressure: <b>${pcState.pressure}</b></li>
+          <li>${pcState.detail}</li>
         </ul>
       </div>
       <div class="engine-conclusion">Sentiment supports trend continuation.</div>
@@ -1220,11 +1311,11 @@ async function renderMasterBriefingAndDiagnostics() {
     <div class="engine-box">
       <div>
         <div class="engine-box-head"><span class="engine-name">$NASI Breadth</span><span class="engine-status-dot" style="background:${nasiCol}"></span></div>
-        <div class="engine-status" style="color:${nasiCol}">${nasiVal > nasiSma ? 'Breadth Expanding' : 'Breadth Contracting'}</div>
+        <div class="engine-status" style="color:${nasiCol}">${nasiState.label}</div>
         <ul class="engine-bullets">
           <li>$NASI: <b>${nasiVal.toFixed(2)}</b></li>
           <li>50-DMA: <b>${nasiSma.toFixed(2)}</b></li>
-          <li>Participation: <b>${nasiVal > nasiSma ? 'Broad' : 'Narrow'}</b></li>
+          <li>Participation: <b>${nasiState.participation}</b></li>
         </ul>
       </div>
       <div class="engine-conclusion">Breadth contracting below 50-DMA.</div>
