@@ -162,21 +162,23 @@
     margin-bottom:20px;
   }
   .top-gauge-strip{
-    grid-template-columns:repeat(8,minmax(0,1fr));
+    grid-template-columns:repeat(6,minmax(0,1fr));
     align-items:stretch;
   }
   .top-gauge-strip > .card{
     min-width:0;
     height:100%;
   }
-  .top-gauge-strip > .card:nth-child(n+6){padding:12px 12px;}
-  .top-gauge-strip > .card:nth-child(n+6) .breadth-row{gap:8px; justify-content:space-between;}
-  .top-gauge-strip > .card:nth-child(n+6) .ring{width:44px; height:44px;}
-  .top-gauge-strip > .card:nth-child(n+6) .ring svg{width:44px; height:44px;}
-  .top-gauge-strip > .card:nth-child(n+6) .ring-val{font-size:9.5px;}
-  .top-gauge-strip > .card:nth-child(n+6) .ring-label{font-size:8.5px;}
-  .top-gauge-strip > .card:nth-child(6) .checklist{gap:5px;}
-  .top-gauge-strip > .card:nth-child(6) .chk-item{font-size:10px;}
+  .top-gauge-strip > .card:nth-child(6){padding:12px 14px;}
+  .breadth-combined{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:9px;}
+  .breadth-group{min-width:0;}
+  .breadth-group + .breadth-group{border-left:1px solid var(--line-soft); padding-left:12px;}
+  .breadth-subtitle{font-size:9px; line-height:1.25; text-transform:uppercase; letter-spacing:.07em; color:var(--text-dim); font-weight:700; margin-bottom:7px;}
+  .breadth-combined .breadth-row{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:5px; margin-top:0;}
+  .breadth-combined .ring{width:48px; height:48px; margin:0 auto;}
+  .breadth-combined .ring svg{width:48px; height:48px;}
+  .breadth-combined .ring-val{font-size:10px;}
+  .breadth-combined .ring-label{font-size:8px; margin-top:2px;}
 
   .card{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:14px 16px;}
   .card .label{font-size:10.5px; text-transform:uppercase; letter-spacing:.1em; color:var(--text-faint); font-weight:600;}
@@ -490,21 +492,19 @@
       <div class="nasi-tooltip" id="nasiTooltip"></div>
     </div>
 
-<!-- Breadth & Factors Cards — same top row -->
-
+<!-- Combined breadth card — same top row -->
   <div class="card">
-    <div class="label">Factors vs SPY (Extremes)</div>
-    <div class="checklist" style="grid-template-columns:1fr;" id="factorsExtremesList"></div>
-  </div>
-
-  <div class="card">
-    <div class="label">Market Breadth (% above MAs)</div>
-    <div class="breadth-row" id="breadthRow"></div>
-  </div>
-
-  <div class="card">
-    <div class="label">Sector Breadth (% above MAs)</div>
-    <div class="breadth-row" id="sectorBreadthRow"></div>
+    <div class="label">Breadth Participation · % Above MAs</div>
+    <div class="breadth-combined">
+      <div class="breadth-group">
+        <div class="breadth-subtitle">Market Breadth</div>
+        <div class="breadth-row" id="breadthRow"></div>
+      </div>
+      <div class="breadth-group">
+        <div class="breadth-subtitle">Sector Breadth</div>
+        <div class="breadth-row" id="sectorBreadthRow"></div>
+      </div>
+    </div>
   </div>
 
   </div>
@@ -884,8 +884,13 @@ function renderAll(){
   })();
 
   const macro = DATA.macro; // Ensure this line exists to define the variable
-  const y = macro.yield10y;
+  const y = Number(macro.yield10y);
   const trend = macro.yieldTrend; 
+
+  const yieldBigEl = document.getElementById("yieldBig");
+  if (yieldBigEl && Number.isFinite(y)) {
+    yieldBigEl.textContent = `${y.toFixed(2)}%`;
+  }
 
   let yieldLabel, yieldColor;
 
@@ -1354,7 +1359,7 @@ function smartImport(rawText){
   } else report.push(["VIX", false, "kept previous"]);
 
 // 10Y Yield (Enhanced Parser)
-  const yieldAnchor = findLabel(grid, "10Y Yield");
+  const yieldAnchor = findLabel(grid, "10Y Yield") || findLabelContains(grid, "10Y Yield");
   if(yieldAnchor){
     const rawCells = scanRightValue(grid, yieldAnchor.r, yieldAnchor.c+1, 3);
     let y = null;
@@ -1366,7 +1371,7 @@ function smartImport(rawText){
         y = parseFloat(match[0]);
       }
       if (cellVal.toLowerCase().includes("rising") || cellVal.toLowerCase().includes("falling")) {
-        trend = cellVal.includes("Rising") ? "Rising" : "Falling";
+        trend = cellVal.toLowerCase().includes("rising") ? "Rising" : "Falling";
       }
     }
 
