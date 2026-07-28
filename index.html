@@ -382,6 +382,52 @@
     .top-gauge-strip{grid-template-columns:repeat(8,minmax(180px,1fr));}
     .market-mood-card{grid-column:auto;}
   }
+
+
+  /* ---------- CLICKABLE TICKERS + CHART MODAL ---------- */
+  .ticker-link{
+    display:inline-flex; align-items:baseline; gap:0; max-width:100%;
+    color:inherit; text-decoration:none; cursor:pointer; border-radius:4px;
+    transition:color .15s ease, background .15s ease, box-shadow .15s ease;
+  }
+  .ticker-link:hover{color:var(--teal); background:rgba(32,217,184,.08); box-shadow:0 0 0 3px rgba(32,217,184,.08);}
+  .ticker-link:focus-visible{outline:2px solid var(--teal); outline-offset:3px;}
+  .ticker-code{font-weight:800;}
+  .ticker-name{font-weight:500; color:var(--text-dim); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .ticker-link:hover .ticker-name{color:var(--teal);}
+
+  .chart-modal{
+    position:fixed; inset:0; z-index:9999; display:none; align-items:center; justify-content:center;
+    padding:28px; background:rgba(5,9,17,.72); backdrop-filter:blur(5px);
+  }
+  .chart-modal.open{display:flex;}
+  .chart-dialog{
+    width:min(1120px,92vw); height:min(760px,86vh); min-height:520px;
+    background:var(--panel); border:1px solid var(--line); border-radius:13px;
+    box-shadow:0 26px 80px rgba(0,0,0,.48); overflow:hidden; display:flex; flex-direction:column;
+  }
+  .chart-dialog-head{
+    min-height:56px; padding:0 16px; display:flex; align-items:center; justify-content:space-between;
+    border-bottom:1px solid var(--line); background:var(--panel);
+  }
+  .chart-dialog-title{display:flex; align-items:center; gap:8px; min-width:0; font-family:'JetBrains Mono',monospace;}
+  .chart-dialog-title strong{font-size:15px; color:var(--text);}
+  .chart-dialog-title span{font-size:11px; color:var(--text-dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .chart-actions{display:flex; align-items:center; gap:9px;}
+  .chart-live-badge{font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:800; letter-spacing:.06em; color:var(--teal); background:rgba(32,217,184,.09); border:1px solid rgba(32,217,184,.22); border-radius:5px; padding:5px 8px;}
+  .chart-close{width:30px; height:30px; border-radius:7px; border:1px solid var(--line); background:var(--panel2); color:var(--text-dim); cursor:pointer; font-size:19px; line-height:1;}
+  .chart-close:hover{color:var(--red); border-color:var(--red);}
+  .chart-frame-wrap{position:relative; flex:1; min-height:0; background:#fff;}
+  .chart-frame{display:block; width:100%; height:100%; border:0; background:#fff;}
+  .chart-loading{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font:600 12px 'JetBrains Mono',monospace; color:var(--text-dim); background:var(--panel2);}
+  .chart-frame-wrap.loaded .chart-loading{display:none;}
+  body.chart-modal-open{overflow:hidden;}
+  @media(max-width:700px){
+    .chart-modal{padding:10px;}
+    .chart-dialog{width:100%; height:86vh; min-height:440px;}
+    .chart-live-badge{display:none;}
+  }
+
 </style>
 </head>
 <body>
@@ -581,6 +627,27 @@
 
 </div>
  
+
+<!-- ================= CLICKABLE TICKER CHART MODAL ================= -->
+<div class="chart-modal" id="tickerChartModal" aria-hidden="true">
+  <div class="chart-dialog" role="dialog" aria-modal="true" aria-labelledby="tickerChartTitle">
+    <div class="chart-dialog-head">
+      <div class="chart-dialog-title">
+        <strong id="tickerChartTitle">—</strong>
+        <span id="tickerChartSubtitle">Institutional Daily Chart</span>
+      </div>
+      <div class="chart-actions">
+        <span class="chart-live-badge">LIVE TRADINGVIEW DATA</span>
+        <button class="chart-close" id="tickerChartClose" type="button" aria-label="Close chart">×</button>
+      </div>
+    </div>
+    <div class="chart-frame-wrap" id="tickerChartFrameWrap">
+      <div class="chart-loading">Loading chart…</div>
+      <iframe class="chart-frame" id="tickerChartFrame" title="Ticker chart" loading="eager" allowfullscreen></iframe>
+    </div>
+  </div>
+</div>
+
 </body>
 <script>
 /* ============================================================
@@ -722,9 +789,11 @@ function greenHeat(v){
 }
 function rowHTML(r){
   const [tic,name,d,p5,off,ytd,rs,thr] = r;
-  const identity = name
-    ? `<span class="ticker-code">${tic}</span><span class="ticker-name">: ${name}</span>`
-    : `<span class="ticker-code">${tic}</span>`;
+  const safeTicker = String(tic || "").trim().replace(/[^A-Za-z0-9.\-:^]/g, "");
+  const safeName = String(name || "").replace(/[<>&"]/g, ch => ({"<":"&lt;",">":"&gt;","&":"&amp;",'"':"&quot;"}[ch]));
+  const identity = `<button type="button" class="ticker-link" data-ticker="${safeTicker}" data-name="${safeName}" title="Open ${safeTicker} chart">
+    <span class="ticker-code">${safeTicker}</span>${safeName ? `<span class="ticker-name">: ${safeName}</span>` : ""}
+  </button>`;
   return `<tr>
     <td>${identity}</td>
     <td style="background:${divergeColor(d,3)}">${pctStr(d)}</td>
@@ -1763,6 +1832,85 @@ document.getElementById("btnAutoRefresh")?.addEventListener("click", fetchLiveMa
   armMoodSync();
   // ADD THIS LINE TO AUTO-LOAD ON STARTUP:
   fetchLiveMarketData();
+})();
+
+
+/* ============================================================
+   CLICKABLE TICKER CHART — same interaction pattern as Power List
+   ============================================================ */
+(function setupTickerChartModal(){
+  const modal = document.getElementById('tickerChartModal');
+  const frame = document.getElementById('tickerChartFrame');
+  const frameWrap = document.getElementById('tickerChartFrameWrap');
+  const title = document.getElementById('tickerChartTitle');
+  const subtitle = document.getElementById('tickerChartSubtitle');
+  const closeBtn = document.getElementById('tickerChartClose');
+  if(!modal || !frame || !frameWrap || !title || !closeBtn) return;
+
+  function tradingViewSymbol(raw){
+    // Bare tickers are intentionally used because the tables mix ETFs,
+    // US equities and international index symbols. TradingView resolves
+    // the best matching instrument and still allows symbol editing.
+    return String(raw || '').trim().toUpperCase();
+  }
+
+  function chartUrl(ticker){
+    const symbol = tradingViewSymbol(ticker);
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+    const params = new URLSearchParams({
+      frameElementId:'marketMonitorTickerChart',
+      symbol,
+      interval:'D',
+      hidesidetoolbar:'0',
+      symboledit:'1',
+      saveimage:'1',
+      toolbarbg: theme === 'dark' ? '#101625' : '#f1f3f6',
+      theme,
+      style:'1',
+      timezone:'exchange',
+      withdateranges:'1',
+      hideideas:'1',
+      studies:'[]',
+      locale:'en'
+    });
+    return `https://s.tradingview.com/widgetembed/?${params.toString()}`;
+  }
+
+  function openTickerChart(ticker, name=''){
+    if(!ticker) return;
+    title.textContent = ticker.toUpperCase();
+    subtitle.textContent = name ? `· ${name} · Daily Chart` : '· Institutional Daily Chart';
+    frameWrap.classList.remove('loaded');
+    frame.src = chartUrl(ticker);
+    modal.classList.add('open');
+    modal.setAttribute('aria-hidden','false');
+    document.body.classList.add('chart-modal-open');
+    closeBtn.focus({preventScroll:true});
+  }
+
+  function closeTickerChart(){
+    modal.classList.remove('open');
+    modal.setAttribute('aria-hidden','true');
+    document.body.classList.remove('chart-modal-open');
+    frame.src = 'about:blank';
+    frameWrap.classList.remove('loaded');
+  }
+
+  document.addEventListener('click', e => {
+    const tickerEl = e.target.closest('.ticker-link[data-ticker]');
+    if(tickerEl){
+      e.preventDefault();
+      openTickerChart(tickerEl.dataset.ticker, tickerEl.dataset.name || '');
+      return;
+    }
+    if(e.target === modal) closeTickerChart();
+  });
+  closeBtn.addEventListener('click', closeTickerChart);
+  frame.addEventListener('load', () => frameWrap.classList.add('loaded'));
+  document.addEventListener('keydown', e => {
+    if(e.key === 'Escape' && modal.classList.contains('open')) closeTickerChart();
+  });
+  window.openTickerChart = openTickerChart;
 })();
 
 </script>
