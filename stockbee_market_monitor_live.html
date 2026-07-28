@@ -133,12 +133,10 @@
 <body>
   <div class="wrap">
 
+  <!-- ================= APP TABS ================= -->
   <div class="app-tabs">
-    <a href="index.html">Market Dashboard</a>
-    <a href="MarketCommandCenter.html">Market Command Center</a>
-    <a href="Institutional_PM_Updated.html" >Institutional Update</a>
-    <a href="market_breadth.html">Market Breadth</a>
-    <a href="rs_radar.html" >RS Radar</a>
+    <a href="index.html" >Market Dashboard</a>
+    <a href="MarketCommandCenter.html" >Market Command Center</a>
     <a href="MarketRegime.html">Market Regime</a> 
     <a href="stockbee_market_monitor_live.html" class="active">Stockbee Monitor</a>
     <a href="sata_watchlist_dashboard.html">SATA Chart</a>
@@ -150,7 +148,7 @@
     <a href="tv_watchlist.html">TradingView Watchlist</a>
     <a href="PortfolioManagement.html">Portfolio Management</a>
     <a href="Playbook.html">Playbook</a>
-  </div
+  </div>
 
 <header class="top" style="display: block; border-bottom: 2px solid #e1e0d9; padding-bottom: 14px; margin-bottom: 18px;">
   <div class="brand-eyebrow" style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .18em; color: #1baf7a; text-transform: uppercase;">Stockbee Engine</div>
@@ -181,7 +179,7 @@
       <label class="chk"><input type="checkbox" id="sma200"> 200-day</label>
     </div>
   </div>
-  <p class="note" style="margin:0;">SPY and QQQ are assessed independently. Candle mode uses live OHLC data when available, including high–low wicks and bordered bodies; a close-to-close proxy is used only when an OHLC bar is unavailable.</p>
+  <p class="note" style="margin:0;">SPY and QQQ are assessed independently. Each price axis auto-fits the visible price, moving averages, and candle range. T2108 is overlaid on its own 0–100% left axis for direct time-by-time comparison with each index.</p>
 </div>
 
 <div class="benchmark-grid">
@@ -192,7 +190,7 @@
         <div class="benchmark-stats" id="spyStats"></div>
       </div>
       <div class="benchmark-chart"><canvas id="spyChart" role="img" aria-label="SPY chart with moving averages"></canvas></div>
-      <div class="benchmark-legend"><span><span class="swatch line" style="background:#4a3aa7"></span>20-day SMA</span><span><span class="swatch line" style="background:#d85a30"></span>50-day SMA</span><span class="ma200Legend" style="display:none"><span class="swatch line" style="background:#0f6e56"></span>200-day SMA</span></div>
+      <div class="benchmark-legend"><span><span class="swatch line" style="background:#4a3aa7"></span>20-day SMA</span><span><span class="swatch line" style="background:#d85a30"></span>50-day SMA</span><span class="ma200Legend" style="display:none"><span class="swatch line" style="background:#0f6e56"></span>200-day SMA</span><span><span class="swatch line" style="background:#eda100"></span>T2108</span><span><span class="swatch dash" style="border-color:#e34948"></span>20 / 80 zones</span></div>
     </div>
     <div class="danger-attached" id="spyDangerPanel">
       <div class="danger-head"><div class="danger-title"><span style="color:#eda100;font-weight:800">⚠</span><span class="panel-label" style="margin:0">SPY DANGER SIGNALS (<span id="spyDangerCount">0</span>)</span></div><span id="spyDangerBadge" style="padding:3px 10px;border-radius:100px;font-size:11px;font-family:'JetBrains Mono',monospace;font-weight:700;background:rgba(27,175,122,.15);color:#1baf7a">0 Active — Healthy</span></div>
@@ -207,7 +205,7 @@
         <div class="benchmark-stats" id="qqqStats"></div>
       </div>
       <div class="benchmark-chart"><canvas id="qqqChart" role="img" aria-label="QQQ chart with moving averages"></canvas></div>
-      <div class="benchmark-legend"><span><span class="swatch line" style="background:#4a3aa7"></span>20-day SMA</span><span><span class="swatch line" style="background:#d85a30"></span>50-day SMA</span><span class="ma200Legend" style="display:none"><span class="swatch line" style="background:#0f6e56"></span>200-day SMA</span></div>
+      <div class="benchmark-legend"><span><span class="swatch line" style="background:#4a3aa7"></span>20-day SMA</span><span><span class="swatch line" style="background:#d85a30"></span>50-day SMA</span><span class="ma200Legend" style="display:none"><span class="swatch line" style="background:#0f6e56"></span>200-day SMA</span><span><span class="swatch line" style="background:#eda100"></span>T2108</span><span><span class="swatch dash" style="border-color:#e34948"></span>20 / 80 zones</span></div>
     </div>
     <div class="danger-attached" id="qqqDangerPanel">
       <div class="danger-head"><div class="danger-title"><span style="color:#eda100;font-weight:800">⚠</span><span class="panel-label" style="margin:0">QQQ DANGER SIGNALS (<span id="qqqDangerCount">0</span>)</span></div><span id="qqqDangerBadge" style="padding:3px 10px;border-radius:100px;font-size:11px;font-family:'JetBrains Mono',monospace;font-weight:700;background:rgba(27,175,122,.15);color:#1baf7a">0 Active — Healthy</span></div>
@@ -216,17 +214,10 @@
   </section>
 </div>
 
-<div class="breadth-grid">
-  <div class="panel">
-    <p class="panel-label">T2108 · % of stocks above 40-day moving average</p>
-    <div class="chart-wrap t2108"><canvas id="t2108Chart"></canvas></div>
-    <div class="legend" style="margin-top:8px;margin-bottom:0"><span><span class="swatch line" style="background:#eda100"></span>T2108</span><span><span class="swatch dash" style="border-color:#e34948"></span>Oversold 20</span><span><span class="swatch dash" style="border-color:#1baf7a"></span>Overbought 80</span></div>
-  </div>
-  <div class="panel">
-    <p class="panel-label">Breadth ratios (dashed reference = 1, up days equal down days)</p>
-    <div class="chart-wrap ratio"><canvas id="ratioChart"></canvas></div>
-    <div class="legend" style="margin-top:8px;margin-bottom:0"><span><span class="swatch line" style="background:#1baf7a"></span>5-day ratio</span><span><span class="swatch dash" style="border-color:#e34948"></span>10-day ratio</span></div>
-  </div>
+<div class="panel">
+  <p class="panel-label">Breadth ratios (dashed reference = 1, up days equal down days)</p>
+  <div class="chart-wrap ratio"><canvas id="ratioChart"></canvas></div>
+  <div class="legend" style="margin-top:8px;margin-bottom:0"><span><span class="swatch line" style="background:#1baf7a"></span>5-day ratio</span><span><span class="swatch dash" style="border-color:#e34948"></span>10-day ratio</span></div>
 </div>
 
 <!-- Summary / commentary panel -->
@@ -317,7 +308,6 @@ function mergeEtfDataIntoDashboard() {
 let chartsBuilt = false;
 let spyChart = null;
 let qqqChart = null;
-let t2108Chart = null;
 let ratioChart = null;
 
 const commonX = {
@@ -401,6 +391,21 @@ function ohlcFor(symbol) {
   });
 }
 
+function autoPriceRange(symbol) {
+  const key=symbol==='SPY'?'sp':'nasdaq';
+  const close=currentData.map(d=>d[key]).filter(Number.isFinite);
+  const ohlc=ohlcFor(symbol);
+  const values=[];
+  ohlc.forEach(d=>{ if(d){ if(Number.isFinite(d.l)) values.push(d.l); if(Number.isFinite(d.h)) values.push(d.h); } });
+  if(showSma20) sma(close,20).forEach(v=>{if(Number.isFinite(v)) values.push(v)});
+  if(showSma50) sma(close,50).forEach(v=>{if(Number.isFinite(v)) values.push(v)});
+  if(showSma200) sma(close,200).forEach(v=>{if(Number.isFinite(v)) values.push(v)});
+  if(!values.length) return {min:undefined,max:undefined};
+  const lo=Math.min(...values), hi=Math.max(...values);
+  const span=Math.max(hi-lo, Math.abs(hi)*0.03, 1);
+  return {min:lo-span*0.08,max:hi+span*0.08};
+}
+
 function benchmarkDatasets(symbol) {
   const key=symbol==='SPY'?'sp':'nasdaq', close=currentData.map(d=>d[key]);
   const ohlc=ohlcFor(symbol), up='#1baf7a', down='#e34948';
@@ -410,15 +415,23 @@ function benchmarkDatasets(symbol) {
   if(showSma20) datasets.push({type:'line',label:'20-day SMA',data:sma(close,20),borderColor:'#4a3aa7',borderWidth:1.8,pointRadius:0,tension:.08,yAxisID:'y'});
   if(showSma50) datasets.push({type:'line',label:'50-day SMA',data:sma(close,50),borderColor:'#d85a30',borderWidth:1.8,pointRadius:0,tension:.08,yAxisID:'y'});
   if(showSma200) datasets.push({type:'line',label:'200-day SMA',data:sma(close,200),borderColor:'#0f6e56',borderWidth:1.8,pointRadius:0,tension:.08,yAxisID:'y'});
+  datasets.push({type:'line',label:'T2108',data:currentData.map(d=>d.t2108),borderColor:'#eda100',backgroundColor:'transparent',pointRadius:0,borderWidth:1.8,tension:.12,yAxisID:'yT2108'});
+  datasets.push({type:'line',label:'T2108 Oversold 20',data:currentData.map(()=>20),borderColor:'rgba(227,73,72,.65)',borderDash:[4,3],pointRadius:0,borderWidth:1,yAxisID:'yT2108'});
+  datasets.push({type:'line',label:'T2108 Overbought 80',data:currentData.map(()=>80),borderColor:'rgba(27,175,122,.65)',borderDash:[4,3],pointRadius:0,borderWidth:1,yAxisID:'yT2108'});
   return {datasets,close};
 }
 
 function chartOptions(symbol) {
-  return {responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false,callbacks:{label(ctx){
+  const range=autoPriceRange(symbol);
+  return {responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false,filter:item=>!item.dataset.label.includes('Oversold')&&!item.dataset.label.includes('Overbought'),callbacks:{label(ctx){
     const ds=ctx.dataset;
     if(ds.isCandle){const o=ds.ohlc[ctx.dataIndex];return `${symbol}  O ${o.o.toFixed(2)}  H ${o.h.toFixed(2)}  L ${o.l.toFixed(2)}  C ${o.c.toFixed(2)}`;}
-    const v=ctx.parsed.y; return `${ds.label}: ${v==null?'—':v.toFixed(2)}`;
-  }}}},scales:{x:commonX,y:{position:'right',grid:{color:'#ecebe6'},ticks:{color:'#898781',font:{size:10}},title:{display:true,text:symbol+' Price',color:symbol==='SPY'?'#2a78d6':'#9333ea',font:{size:10}}}}};
+    const v=ctx.parsed.y; return `${ds.label}: ${v==null?'—':v.toFixed(2)}${ds.yAxisID==='yT2108'?'%':''}`;
+  }}}},scales:{
+    x:commonX,
+    y:{min:range.min,max:range.max,beginAtZero:false,bounds:'data',position:'right',grid:{color:'#ecebe6'},ticks:{color:'#898781',font:{size:10}},title:{display:true,text:symbol+' Price',color:symbol==='SPY'?'#2a78d6':'#9333ea',font:{size:10}}},
+    yT2108:{min:0,max:100,position:'left',grid:{drawOnChartArea:false},ticks:{stepSize:20,color:'#b87700',font:{size:10},callback:v=>v+'%'},title:{display:true,text:'T2108 %',color:'#b87700',font:{size:10}}}
+  }};
 }
 
 function updateBenchmarkStats(symbol) {
@@ -432,7 +445,7 @@ function updateBenchmarkStats(symbol) {
 function refreshBenchmarkCharts() {
   ensureNasdaqData();
   const labels=currentData.map(d=>d.date).concat(['','','']);
-  [['SPY',spyChart],['QQQ',qqqChart]].forEach(([symbol,chart])=>{if(!chart)return;chart.data.labels=labels;chart.data.datasets=benchmarkDatasets(symbol).datasets;chart.update();updateBenchmarkStats(symbol);});
+  [['SPY',spyChart],['QQQ',qqqChart]].forEach(([symbol,chart])=>{if(!chart)return;chart.data.labels=labels;chart.data.datasets=benchmarkDatasets(symbol).datasets;const range=autoPriceRange(symbol);chart.options.scales.y.min=range.min;chart.options.scales.y.max=range.max;chart.update();updateBenchmarkStats(symbol);});
   document.querySelectorAll('.ma200Legend').forEach(el=>el.style.display=showSma200?'flex':'none');
 }
 
@@ -442,12 +455,10 @@ function buildOrUpdateCharts() {
   if(!chartsBuilt){
     spyChart=new Chart(document.getElementById('spyChart'),{data:{labels,datasets:benchmarkDatasets('SPY').datasets},options:chartOptions('SPY')});
     qqqChart=new Chart(document.getElementById('qqqChart'),{data:{labels,datasets:benchmarkDatasets('QQQ').datasets},options:chartOptions('QQQ')});
-    t2108Chart=new Chart(document.getElementById('t2108Chart'),{type:'line',data:{labels,datasets:[{label:'T2108',data:currentData.map(d=>d.t2108),borderColor:'#eda100',pointRadius:0,borderWidth:2,tension:.12},{label:'Oversold 20',data:currentData.map(()=>20),borderColor:'#e34948',borderDash:[4,3],pointRadius:0,borderWidth:1},{label:'Overbought 80',data:currentData.map(()=>80),borderColor:'#1baf7a',borderDash:[4,3],pointRadius:0,borderWidth:1}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:commonX,y:{min:0,max:100,position:'right',grid:{color:'#ecebe6'},ticks:{font:{size:10},color:'#898781'}}}}});
     ratioChart=new Chart(document.getElementById('ratioChart'),{type:'line',data:{labels,datasets:[{label:'5 day ratio',data:currentData.map(d=>d.r5),borderColor:'#1baf7a',pointRadius:0,borderWidth:2,tension:.15},{label:'10 day ratio',data:currentData.map(d=>d.r10),borderColor:'#e34948',borderDash:[5,3],pointRadius:0,borderWidth:2,tension:.15},{label:'Ratio = 1',data:currentData.map(()=>1),borderColor:'#898781',borderWidth:1,borderDash:[2,3],pointRadius:0}]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false}},scales:{x:commonX,y:{beginAtZero:true,grid:{color:'#ecebe6'},ticks:{font:{size:10},color:'#898781'}}}}});
     chartsBuilt=true;
   } else {
     refreshBenchmarkCharts();
-    t2108Chart.data.labels=labels;t2108Chart.data.datasets[0].data=currentData.map(d=>d.t2108);t2108Chart.data.datasets[1].data=currentData.map(()=>20);t2108Chart.data.datasets[2].data=currentData.map(()=>80);t2108Chart.update();
     ratioChart.data.labels=labels;ratioChart.data.datasets[0].data=currentData.map(d=>d.r5);ratioChart.data.datasets[1].data=currentData.map(d=>d.r10);ratioChart.data.datasets[2].data=currentData.map(()=>1);ratioChart.update();
   }
   updateBenchmarkStats('SPY'); updateBenchmarkStats('QQQ');
