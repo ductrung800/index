@@ -310,13 +310,14 @@
     font-size:10px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-dim);
     text-align:right; padding:8px 10px; border-bottom:1px solid var(--line); font-weight:600; white-space:nowrap;
   }
-  thead th:first-child, thead th:nth-child(2){text-align:left;}
+  thead th:first-child{text-align:left;}
   tbody td{
     padding:6px 10px; text-align:right; font-family:'JetBrains Mono',monospace; font-size:12px;
     border-bottom:1px solid var(--line-soft); color:var(--heat-text); white-space:nowrap;
   }
   tbody td:first-child{font-weight:700; color:var(--text); text-align:left; font-family:'JetBrains Mono',monospace; background:transparent !important;}
-  tbody td:nth-child(2){color:var(--text-dim); text-align:left; font-family:'Inter',sans-serif; font-size:11.5px; background:transparent !important;}
+  /* The former second-column Name styling was removed because ticker/name are now combined in column 1.
+     Keeping it would wipe the heatmap background from the % Daily column. */
   tbody tr:last-child td{border-bottom:none;}
   tbody tr:hover td{filter:brightness(1.06);}
 
