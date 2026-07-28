@@ -454,6 +454,20 @@ iframe, canvas, svg{
 @media(max-width:1000px){.bi-span8,.bi-span7,.bi-span6,.bi-span5,.bi-span4{grid-column:span 12}.bi-health{grid-template-columns:1.2fr repeat(5,.75fr)}.bi-part-grid{grid-template-columns:1fr 1fr}.bi-dist-grid{grid-template-columns:1fr}#coreDiagnostics .regime-grid{grid-template-columns:1fr}.bi-directive-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:700px){.pm-command-strip,.engines-grid,.bi-directive-grid,.bi-part-grid,.bi-internals,.bi-quadrant,.bi-triggers,.bi-history-stats{grid-template-columns:1fr}.bi-health{display:block}.bi-health>div{display:flex;justify-content:space-between}.bi-health .head{display:none}}
 
+
+/* Power List charts — TradingView Watchlist visual language */
+.pl-theme-block{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:14px}
+.pl-theme-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px;font-family:'JetBrains Mono',monospace}
+.pl-theme-head b{font-size:13px;color:var(--text)}.pl-theme-head span{margin-left:10px;font-size:9px;color:var(--text-faint);text-transform:uppercase}.pl-theme-head em{font-style:normal;font-size:10px;color:var(--teal)}
+.pl-chart-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.pl-chart-card{position:relative;height:320px;background:var(--panel);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.pl-chart-target{position:absolute;inset:0;width:100%;height:100%}
+.pl-chart-overlay{position:absolute;z-index:5;top:8px;left:10px;right:10px;display:flex;justify-content:space-between;align-items:flex-start;pointer-events:none;font-family:'JetBrains Mono',monospace}
+.pl-chart-overlay strong{display:block;font-size:11px;color:var(--text)}.pl-chart-overlay small{display:block;margin-top:3px;font-size:9px;color:var(--text-dim)}
+.pl-live-badge{font-size:8px;font-weight:800;color:var(--teal);background:rgba(32,217,184,.08);border:1px solid rgba(32,217,184,.25);border-radius:4px;padding:3px 5px}.pl-live-badge.failed{color:var(--red);background:rgba(255,92,114,.07);border-color:rgba(255,92,114,.25)}
+.pl-chart-error{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:var(--text-faint);font:10px 'JetBrains Mono',monospace;line-height:1.6}.pl-chart-error span{color:var(--text-dim);font-weight:800}
+@media(max-width:1200px){.pl-chart-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:720px){.pl-chart-grid{grid-template-columns:1fr}.pl-chart-card{height:290px}}
+
 </style>
 </head>
 <body>
@@ -1874,161 +1888,184 @@ function generateFallbackOHLC(symbol, count = 120) {
 }
 
 async function fetchThemeTickerOHLC(symbol) {
-  // Use the optional Python API only when this page itself is running locally.
-  // Public GitHub Pages must never attempt loopback/private-network requests.
+  const cleanSymbol = String(symbol || '').trim().toUpperCase().replace('.', '-');
+  if (!cleanSymbol) return null;
+
   if (IS_LOCAL_HOST) {
     try {
-      const localRes = await fetchWithTimeout(`http://localhost:8000/api/ohlc/${encodeURIComponent(symbol)}`, {}, 2000);
+      const localRes = await fetchWithTimeout(`http://localhost:8000/api/ohlc/${encodeURIComponent(cleanSymbol)}`, {}, 2500);
       if (localRes.ok) {
         const json = await localRes.json();
-        if (Array.isArray(json) && json.length > 0) return json;
+        if (Array.isArray(json) && json.length > 30) return json;
       }
-    } catch (e) {
-      // Local API is optional; continue to public fallbacks.
-    }
+    } catch (e) {}
   }
 
-  // Public proxy fallbacks for static hosting
-  const targetUrl6m = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=6m`;
-  for (const proxy of CORS_PROXIES) {
-    try {
-      const res = await fetchWithTimeout(proxy(targetUrl6m), { cache: "no-store" }, 6000);
-      if (!res.ok) continue;
-      const json = await res.json();
-      const result = json.chart?.result?.[0];
-      if (!result || !result.timestamp) continue;
-      
-      const timestamps = result.timestamp;
-      const quote = result.indicators.quote[0];
-      const bars = [];
-      for (let i = 0; i < timestamps.length; i++) {
-        if (quote.open[i] != null && quote.close[i] != null) {
-          const dateStr = new Date(timestamps[i] * 1000).toISOString().split('T')[0];
-          bars.push({ time: dateStr, open: Number(quote.open[i]), high: Number(quote.high[i]), low: Number(quote.low[i]), close: Number(quote.close[i]) });
+  const yahooHosts = ['query1.finance.yahoo.com', 'query2.finance.yahoo.com'];
+  const targets = yahooHosts.map(host => `https://${host}/v8/finance/chart/${encodeURIComponent(cleanSymbol)}?interval=1d&range=1y&includePrePost=false&events=div%2Csplits`);
+  const proxyBuilders = [
+    url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+    url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
+    url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`
+  ];
+
+  for (const targetUrl of targets) {
+    for (const proxy of proxyBuilders) {
+      try {
+        const res = await fetchWithTimeout(proxy(targetUrl), { cache: 'no-store' }, 9000);
+        if (!res.ok) continue;
+        const text = await res.text();
+        const json = JSON.parse(text);
+        const result = json?.chart?.result?.[0];
+        const timestamps = result?.timestamp || [];
+        const quote = result?.indicators?.quote?.[0];
+        if (!quote || timestamps.length < 35) continue;
+        const bars = [];
+        for (let i = 0; i < timestamps.length; i++) {
+          const close = Number(quote.close?.[i]);
+          if (!Number.isFinite(close)) continue;
+          const open = Number.isFinite(Number(quote.open?.[i])) ? Number(quote.open[i]) : close;
+          const high = Number.isFinite(Number(quote.high?.[i])) ? Number(quote.high[i]) : Math.max(open, close);
+          const low = Number.isFinite(Number(quote.low?.[i])) ? Number(quote.low[i]) : Math.min(open, close);
+          const volume = Number.isFinite(Number(quote.volume?.[i])) ? Number(quote.volume[i]) : 0;
+          bars.push({
+            time: new Date(timestamps[i] * 1000).toISOString().slice(0, 10),
+            open, high, low, close, volume
+          });
         }
-      }
-      if (bars.length > 30) return bars;
-    } catch(e) {}
+        if (bars.length > 30) return bars;
+      } catch (e) {}
+    }
   }
   return null;
 }
 
+function rollingChannel(data, length = 21) {
+  const upper = [], lower = [];
+  for (let i = length - 1; i < data.length; i++) {
+    const window = data.slice(i - length + 1, i + 1);
+    upper.push({ time: data[i].time, value: Math.max(...window.map(x => x.high)) });
+    lower.push({ time: data[i].time, value: Math.min(...window.map(x => x.low)) });
+  }
+  return { upper, lower };
+}
+
 async function renderLeaderThemeCharts() {
-  const container = document.getElementById("themesChartSectionsContainer");
+  const container = document.getElementById('themesChartSectionsContainer');
   if (!container) return;
 
   activeThemeCharts.forEach(item => {
-    if (item.observer) item.observer.disconnect();
-    item.chart.remove();
+    try { if (item.observer) item.observer.disconnect(); } catch (e) {}
+    try { item.chart.remove(); } catch (e) {}
   });
   activeThemeCharts = [];
 
   if (!LEADING_THEMES_DATA.length) {
-    container.innerHTML = `<div style="padding:22px;border:1px dashed var(--line);border-radius:9px;color:var(--text-dim);font-size:12px;">No Power List sector groups were extracted. Confirm the Power List has finished loading and includes Ticker and Sector columns, then press Refresh Live Data.</div>`;
+    container.innerHTML = `<div style="padding:22px;border:1px dashed var(--line);border-radius:9px;color:var(--text-dim);font-size:12px;">No Power List sector groups were extracted. Confirm Power List has completed loading, then press Refresh Live Data.</div>`;
     return;
   }
 
-  let htmlSections = "";
-  LEADING_THEMES_DATA.forEach((theme, tIdx) => {
-    htmlSections += `
-      <div style="background:var(--panel2); border:1px solid var(--line); border-radius:10px; padding:16px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-          <div>
-            <span style="font-size:13px; font-weight:800; font-family:'JetBrains Mono',monospace; color:var(--text);">${theme.name}</span>
-            <span style="font-size:10px; text-transform:uppercase; color:var(--text-faint); font-family:'JetBrains Mono',monospace; margin-left:8px;">${theme.category}</span>
-          </div>
-          <span style="font-size:10.5px; font-family:'JetBrains Mono',monospace; color:var(--teal);">${theme.tickers.length} Top Power List Stocks</span>
-        </div>
-        <div style="display:grid; grid-template-columns: repeat(5, 1fr); gap:10px;">
-          ${theme.tickers.map((tk, idx) => `
-            <div id="chart-card-${tIdx}-${idx}" style="background:var(--panel); border:1px solid var(--line); border-radius:8px; overflow:hidden; height:200px; position:relative; display:flex; flex-direction:column;">
-              <div style="position:absolute; top:6px; left:8px; right:8px; z-index:5; display:flex; justify-content:space-between; pointer-events:none;">
-                <span style="font-size:11px; font-weight:800; font-family:'JetBrains Mono',monospace; color:var(--text);">${tk}</span>
-                <span id="stat-${tIdx}-${idx}" style="font-size:9.5px; font-family:'JetBrains Mono',monospace; color:var(--text-dim);">...</span>
-              </div>
-              <div id="lw-target-${tIdx}-${idx}" style="flex:1; width:100%; height:100%;"></div>
-            </div>
-          `).join('')}
-        </div>
+  container.innerHTML = LEADING_THEMES_DATA.map((theme, tIdx) => `
+    <section class="pl-theme-block">
+      <div class="pl-theme-head">
+        <div><b>${theme.name}</b><span>${theme.category}</span></div>
+        <em>${theme.tickers.length} Power List leaders</em>
       </div>
-    `;
-  });
+      <div class="pl-chart-grid">
+        ${theme.tickers.map((tk, idx) => `
+          <article class="pl-chart-card">
+            <div class="pl-chart-overlay">
+              <div><strong>${tk}</strong><small id="meta-${tIdx}-${idx}">Loading live data…</small></div>
+              <span id="badge-${tIdx}-${idx}" class="pl-live-badge">● LIVE MARKET DATA</span>
+            </div>
+            <div id="lw-target-${tIdx}-${idx}" class="pl-chart-target"></div>
+          </article>`).join('')}
+      </div>
+    </section>`).join('');
 
-  container.innerHTML = htmlSections;
+  const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+  const chartBg = isDark ? '#101625' : '#ffffff';
+  const gridLine = isDark ? '#1a2233' : '#edf1f6';
+  const textColor = isDark ? '#8b93a8' : '#64748b';
+  const normalBar = isDark ? '#e7ebf3' : '#262626';
+  const weakBar = '#e600e6';
+  const emaColor = isDark ? '#9aa7bb' : '#b5bfce';
+  const channelColor = '#d99036';
 
-  const isDark = document.documentElement.getAttribute("data-theme") !== "light";
-  const chartBg = isDark ? "#101625" : "#ffffff";
-  const gridLine = isDark ? "#1a2233" : "#f1f5f9";
-  const textColor = isDark ? "#8b93a8" : "#64748b";
-
+  const jobs = [];
   LEADING_THEMES_DATA.forEach((theme, tIdx) => {
-    theme.tickers.forEach(async (tk, idx) => {
-      const target = document.getElementById(`lw-target-${tIdx}-${idx}`);
-      if (!target) return;
-
-      const data = await fetchThemeTickerOHLC(tk);
-      if (!target.isConnected) return;
-
-      // SAFETY CHECK ADDED HERE
-      if (!data || data.length === 0) {
-        const statEl = document.getElementById(`stat-${tIdx}-${idx}`);
-        if (statEl) statEl.innerHTML = `<span style="color:var(--text-faint)">Data Unavailable</span>`;
-        return; 
-      }
-
-      const lastBar = data[data.length - 1];
-      const prevBar = data[data.length - 2] || lastBar;
-      const chg = ((lastBar.close - prevBar.close) / prevBar.close * 100).toFixed(2);
-      const statEl = document.getElementById(`stat-${tIdx}-${idx}`);
-      if (statEl) {
-        statEl.innerHTML = `${lastBar.close.toFixed(2)} <span style="color:${chg >= 0 ? 'var(--teal)' : 'var(--red)'}">${chg >= 0 ? '+' : ''}${chg}%</span>`;
-      }
-
-      const chart = LightweightCharts.createChart(target, {
-        width: target.clientWidth || 220, height: target.clientHeight || 200,
-        layout: { background: { type: 'solid', color: chartBg }, textColor: textColor, fontFamily: 'JetBrains Mono, monospace', fontSize: 9 },
-        grid: { vertLines: { color: gridLine }, horzLines: { color: gridLine } },
-        rightPriceScale: { borderVisible: false, scaleMargins: { top: 0.2, bottom: 0.1 } },
-        timeScale: { borderVisible: false, timeVisible: false },
-        crosshair: { mode: LightweightCharts.CrosshairMode.Normal }
-      });
-
-      const observer = new ResizeObserver(entries => {
-        for (const entry of entries) {
-          const { width, height } = entry.contentRect;
-          if (width > 0 && height > 0) chart.applyOptions({ width, height });
-        }
-      });
-      observer.observe(target);
-      activeThemeCharts.push({ chart, observer });
-
-      const maHighData = calculateEMAObj(data, 21, 'high');
-      const maLowData = calculateEMAObj(data, 21, 'low');
-      const ema21Data = calculateEMAObj(data, 21, 'close');
-
-      const cloudHigh = chart.addAreaSeries({ topColor: 'rgba(200,200,205,0.08)', bottomColor: 'rgba(200,200,205,0.08)', lineColor: 'rgba(255,255,255,0.1)', lineWidth: 1, priceLineVisible: false, lastValueVisible: false });
-      cloudHigh.setData(maHighData);
-
-      const cloudLow = chart.addAreaSeries({ topColor: chartBg, bottomColor: chartBg, lineColor: 'rgba(255,255,255,0.1)', lineWidth: 1, priceLineVisible: false, lastValueVisible: false });
-      cloudLow.setData(maLowData);
-
-      const emaSeries = chart.addLineSeries({ color: isDark ? '#64748b' : '#94a3b8', lineWidth: 1, priceLineVisible: false, lastValueVisible: false });
-      emaSeries.setData(ema21Data);
-
-      const maHighMap = new Map(maHighData.map(i => [i.time, i.value]));
-      const coloredBars = data.map(bar => {
-        const mh = maHighMap.get(bar.time);
-        let color = isDark ? "#f8fafc" : "#000000";
-        if (mh !== undefined && bar.close < mh) color = "#e600e6";
-        return { ...bar, color };
-      });
-
-      const barSeries = chart.addBarSeries({ thinBars: true, openVisible: false });
-      barSeries.setData(coloredBars);
-
-      chart.timeScale().fitContent();
-    });
+    theme.tickers.forEach((tk, idx) => jobs.push({ theme, tIdx, tk, idx }));
   });
+
+  // Keep requests controlled so public quote proxies are not flooded.
+  for (const job of jobs) {
+    const { tIdx, tk, idx } = job;
+    const target = document.getElementById(`lw-target-${tIdx}-${idx}`);
+    const meta = document.getElementById(`meta-${tIdx}-${idx}`);
+    const badge = document.getElementById(`badge-${tIdx}-${idx}`);
+    if (!target) continue;
+
+    const data = await fetchThemeTickerOHLC(tk);
+    if (!target.isConnected) continue;
+    if (!data || data.length < 30) {
+      if (meta) meta.textContent = 'Quote feed unavailable';
+      if (badge) { badge.textContent = 'DATA UNAVAILABLE'; badge.classList.add('failed'); }
+      target.innerHTML = `<div class="pl-chart-error">Live OHLC could not be loaded.<br><span>${tk}</span></div>`;
+      continue;
+    }
+
+    const last = data.at(-1), prev = data.at(-2) || last;
+    const pct = prev.close ? ((last.close / prev.close) - 1) * 100 : 0;
+    if (meta) meta.innerHTML = `C: ${last.close.toFixed(2)} <span style="color:${pct >= 0 ? 'var(--teal)' : 'var(--red)'}">(${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%)</span>`;
+
+    const chart = LightweightCharts.createChart(target, {
+      width: target.clientWidth || 480,
+      height: target.clientHeight || 310,
+      layout: { background: { type: 'solid', color: chartBg }, textColor, fontFamily: 'JetBrains Mono, monospace', fontSize: 10 },
+      grid: { vertLines: { color: gridLine }, horzLines: { color: gridLine } },
+      rightPriceScale: { borderVisible: false, scaleMargins: { top: 0.11, bottom: 0.08 } },
+      timeScale: { borderVisible: false, timeVisible: false, rightOffset: 5, barSpacing: 5.5, minBarSpacing: 2.5 },
+      crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+      handleScroll: { mouseWheel: true, pressedMouseMove: true },
+      handleScale: { axisPressedMouseMove: true, mouseWheel: true, pinch: true }
+    });
+
+    const observer = new ResizeObserver(entries => {
+      for (const entry of entries) {
+        const { width, height } = entry.contentRect;
+        if (width > 0 && height > 0) chart.applyOptions({ width, height });
+      }
+    });
+    observer.observe(target);
+    activeThemeCharts.push({ chart, observer });
+
+    const emaHigh = calculateEMAObj(data, 21, 'high');
+    const emaLow = calculateEMAObj(data, 21, 'low');
+    const emaClose = calculateEMAObj(data, 21, 'close');
+    const channel = rollingChannel(data, 21);
+
+    const cloudTop = chart.addAreaSeries({ topColor: 'rgba(148,163,184,.16)', bottomColor: 'rgba(148,163,184,.04)', lineColor: 'rgba(148,163,184,.20)', lineWidth: 1, priceLineVisible: false, lastValueVisible: false });
+    cloudTop.setData(emaHigh);
+    const cloudBottom = chart.addAreaSeries({ topColor: chartBg, bottomColor: chartBg, lineColor: 'rgba(148,163,184,.16)', lineWidth: 1, priceLineVisible: false, lastValueVisible: false });
+    cloudBottom.setData(emaLow);
+    const ema = chart.addLineSeries({ color: emaColor, lineWidth: 1, priceLineVisible: false, lastValueVisible: false });
+    ema.setData(emaClose);
+
+    const upper = chart.addLineSeries({ color: channelColor, lineWidth: 1, lineStyle: 2, priceLineVisible: false, lastValueVisible: false });
+    const lower = chart.addLineSeries({ color: channelColor, lineWidth: 1, lineStyle: 2, priceLineVisible: false, lastValueVisible: false });
+    upper.setData(channel.upper); lower.setData(channel.lower);
+
+    const emaHighMap = new Map(emaHigh.map(x => [x.time, x.value]));
+    const bars = data.map(bar => {
+      const threshold = emaHighMap.get(bar.time);
+      const color = threshold != null && bar.close < threshold ? weakBar : normalBar;
+      return { ...bar, color };
+    });
+    const barSeries = chart.addBarSeries({ thinBars: true, openVisible: false, priceLineVisible: true, lastValueVisible: true });
+    barSeries.setData(bars);
+    chart.timeScale().fitContent();
+    await new Promise(r => setTimeout(r, 140));
+  }
 }
 
 
