@@ -595,7 +595,7 @@ iframe, canvas, svg{
         <div class="regime-metric"><div class="lbl">Today's Play</div><div class="val" style="font-size:13px; margin-top:6px;" id="execPlay">Selective Longs</div></div>
       </div>
       <div class="ai-strategy-box">
-        <b>Institutional Morning Note:</b> <span id="aiMorningNote">Breadth indicators ($NASI at -11.99) show contraction while price remains resilient. Energy and Defensive groups lead rotation. Focus strictly on top-ranked relative strength leaders.</span>
+        <b>Institutional Morning Note:</b> <span id="aiMorningNote">Synchronizing breadth, sentiment, and portfolio posture…</span>
       </div>
     </div>
 
@@ -1254,6 +1254,30 @@ async function renderMasterBriefingAndDiagnostics() {
       ? {label:"Warning — Below 50-DMA", participation:"Narrow", color:"var(--amber)"}
       : {label:"Constructive — Above 50-DMA", participation:"Broad", color:"var(--teal)"};
   const nasiCol = nasiState.color;
+
+  // Dynamic institutional morning note — always uses the synchronized live values.
+  const breadthMessage = nasiVal < 0
+    ? `Breadth is decisively contracting with $NASI at ${nasiVal.toFixed(2)}, below both zero and its 50-DMA of ${nasiSma.toFixed(2)}.`
+    : nasiVal < nasiSma
+      ? `Breadth remains narrow with $NASI at ${nasiVal.toFixed(2)}, below its 50-DMA of ${nasiSma.toFixed(2)}.`
+      : `Breadth is constructive with $NASI at ${nasiVal.toFixed(2)}, above its 50-DMA of ${nasiSma.toFixed(2)}.`;
+
+  const sentimentMessage = pcVal < 0.60
+    ? `Put/call at ${pcVal.toFixed(2)} signals complacency, increasing pullback risk.`
+    : pcVal > 0.95
+      ? `Put/call at ${pcVal.toFixed(2)} shows elevated hedging and a potential contrarian support signal.`
+      : `Put/call at ${pcVal.toFixed(2)} is neutral and provides no strong sentiment edge.`;
+
+  const implementationMessage = compositeScore >= 70
+    ? `Maintain broad risk exposure and buy controlled pullbacks in leading groups.`
+    : compositeScore >= 45
+      ? `Keep exposure selective and require confirmation from price and breadth before adding risk.`
+      : `Defend capital, reduce weak positions, and restrict new exposure to exceptional relative-strength setups.`;
+
+  const morningNoteEl = document.getElementById("aiMorningNote");
+  if (morningNoteEl) {
+    morningNoteEl.textContent = `${breadthMessage} ${sentimentMessage} ${implementationMessage}`;
+  }
 
   document.getElementById("enginesGridContainer").innerHTML = `
     <div class="engine-box">
