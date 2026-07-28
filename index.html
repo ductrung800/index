@@ -170,15 +170,28 @@
     height:100%;
   }
   .top-gauge-strip > .card:nth-child(6){padding:12px 14px;}
-  .breadth-combined{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:9px;}
-  .breadth-group{min-width:0;}
-  .breadth-group + .breadth-group{border-left:1px solid var(--line-soft); padding-left:12px;}
-  .breadth-subtitle{font-size:9px; line-height:1.25; text-transform:uppercase; letter-spacing:.07em; color:var(--text-dim); font-weight:700; margin-bottom:7px;}
-  .breadth-combined .breadth-row{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:5px; margin-top:0;}
-  .breadth-combined .ring{width:48px; height:48px; margin:0 auto;}
-  .breadth-combined .ring svg{width:48px; height:48px;}
-  .breadth-combined .ring-val{font-size:10px;}
-  .breadth-combined .ring-label{font-size:8px; margin-top:2px;}
+  .breadth-combined{display:flex; flex-direction:column; gap:12px; margin-top:10px;}
+  .breadth-group{min-width:0; padding:0 2px;}
+  .breadth-group + .breadth-group{border-left:0; border-top:1px solid var(--line-soft); padding:11px 2px 0;}
+  .breadth-subtitle{font-size:9px; line-height:1.25; text-transform:uppercase; letter-spacing:.08em; color:var(--text-dim); font-weight:800; margin-bottom:7px;}
+  .breadth-combined .breadth-row{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin-top:0;}
+  .breadth-combined .ring{width:62px; height:62px; margin:0 auto;}
+  .breadth-combined .ring svg{width:62px; height:62px;}
+  .breadth-combined .ring-val{font-size:11px;}
+  .breadth-combined .ring-label{font-size:8px; margin-top:3px;}
+
+  .metric-card{display:flex; flex-direction:column; position:relative; overflow:hidden;}
+  .metric-card:after{content:""; position:absolute; inset:auto -35px -45px auto; width:130px; height:130px; border-radius:50%; background:radial-gradient(circle,rgba(32,217,184,.08),transparent 68%); pointer-events:none;}
+  .metric-top{display:flex; justify-content:space-between; align-items:flex-start; gap:10px;}
+  .metric-icon{width:30px; height:30px; display:grid; place-items:center; border-radius:8px; background:var(--input-bg); border:1px solid var(--line-soft); color:var(--text-dim); font-size:15px;}
+  .metric-track{height:7px; border-radius:99px; margin:14px 0 10px; background:linear-gradient(90deg,rgba(32,217,184,.9) 0 38%,rgba(245,185,66,.9) 38% 68%,rgba(255,92,114,.9) 68% 100%); position:relative;}
+  .metric-marker{position:absolute; top:50%; width:11px; height:11px; border-radius:50%; background:var(--panel); border:3px solid currentColor; transform:translate(-50%,-50%); box-shadow:0 0 0 2px var(--panel);}
+  .metric-stats{display:grid; grid-template-columns:1fr 1fr; gap:7px; margin-top:8px;}
+  .metric-stat{padding:7px 8px; border:1px solid var(--line-soft); border-radius:7px; background:var(--input-bg);}
+  .metric-stat span{display:block; font-size:8px; color:var(--text-faint); text-transform:uppercase; letter-spacing:.07em;}
+  .metric-stat b{display:block; margin-top:3px; font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--text);}
+  .metric-callout{margin-top:auto; padding:9px 10px; border-radius:8px; border:1px solid rgba(32,217,184,.25); background:rgba(32,217,184,.055); color:var(--text-dim); font-size:9px; line-height:1.45;}
+  .metric-callout b{color:var(--teal);}
 
   .card{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:14px 16px;}
   .card .label{font-size:10.5px; text-transform:uppercase; letter-spacing:.1em; color:var(--text-faint); font-weight:600;}
@@ -444,52 +457,40 @@
         <div class="mood-state neutral" id="moodState">Neutral</div>
         <div class="mood-description" id="moodDescription">Normal volatility</div>
       </div>
-      <div class="mood-values"><span>VIX: <b id="vixBig">16.73</b></span><span>VVIX: <b id="vvixBig">—</b></span><span>21 EMA: <b id="moodBaseline">—</b></span></div>
-      <div class="mood-engine"><b>⚡ Quantitative Volatility Engine</b><span id="moodEngineText">Measures volatility stress relative to its 21-day baseline. Positive deviations indicate expanding risk; negative deviations indicate contracting volatility.</span><div class="mood-source" id="moodSource">Source: local VIX proxy · awaiting Breadth Institutional sync</div></div>
+      <div class="mood-values"><span>VIX: <b id="vixBig">16.73</b></span><span>VVIX/VIX: <b id="ratioBig">—</b></span><span>21 MA: <b id="moodBaseline">—</b></span></div>
       <div class="vix-tooltip" id="vixTooltip"></div>
       <iframe id="moodSyncFrame" class="mood-sync-frame" src="Market_Breadth_Institutional_Command.html" title="Volatility mood data sync"></iframe>
     </div>
 
-    <div class="card">
-      <div class="label">Credit Spreads (SHY/HYG)</div>
-      <div class="big" style="color:var(--teal)" id="spreadBig">1.03</div>
-      <div class="cap" id="spreadCap">Widening (Risk-off)</div>
-      <div class="strategy-note" style="margin-top:8px; font-size:9.5px;">
-        <b>Rising = Risk-off.</b> Widening spreads suggest investors are fleeing high-yield debt for safety.
-      </div>
+    <div class="card metric-card">
+      <div class="metric-top"><div><div class="label">Credit Spreads (SHY/HYG)</div><div class="big" style="color:var(--teal)" id="spreadBig">1.03</div><div class="cap" id="spreadCap">Tightening (Risk-on)</div></div><div class="metric-icon">⇄</div></div>
+      <div class="metric-track"><span class="metric-marker" id="spreadMarker" style="left:34%;color:var(--teal)"></span></div>
+      <div class="metric-stats"><div class="metric-stat"><span>Signal</span><b id="spreadSignal">Credit calm</b></div><div class="metric-stat"><span>Equity bias</span><b id="spreadBias">Supportive</b></div></div>
+      <div class="metric-callout"><b>Interpretation:</b> Rising SHY/HYG means widening credit stress. Falling or stable readings support risk assets.</div>
     </div>
 
-    <!-- 10Y Yield Card -->
-    <div class="card">
-      <div class="label">10Y Treasury Yield</div>
-      <div class="big" style="color:var(--amber)" id="yieldBig">4.55%</div>
-      <div class="cap" id="yieldCap">Rising</div>
-      <div class="strategy-note" style="margin-top:8px; font-size:9.5px;">
-        <b>Rates & Equities:</b> Rising yields pressure growth stock valuations. A steady, moderate climb is usually tolerable, but spikes often trigger market rotation.
-      </div>
-    </div>
-    
-    <!-- Put-Call Ratio Card -->
-    <div class="card">
-      <div class="label">Put/Call Ratio</div>
-      <div class="big" style="color:var(--red); font-size:20px; margin-top:10px;" id="pcBig">0.55</div>
-      <div class="cap pc-status" id="pcCap">Neutral</div>
-      <div class="strategy-note" style="margin-top:8px; font-size:9.5px;">
-        <b>Sentiment Gauge:</b> High ratios (fear) often signal bottoms; low ratios (complacency) often precede market pullbacks. Extremes are key.
-      </div>
+    <div class="card metric-card">
+      <div class="metric-top"><div><div class="label">10Y Treasury Yield</div><div class="big" style="color:var(--amber)" id="yieldBig">4.55%</div><div class="cap" id="yieldCap">Rising</div></div><div class="metric-icon">↗</div></div>
+      <div class="metric-track"><span class="metric-marker" id="yieldMarker" style="left:67%;color:var(--amber)"></span></div>
+      <div class="metric-stats"><div class="metric-stat"><span>Rate zone</span><b id="yieldZone">Restrictive</b></div><div class="metric-stat"><span>Growth impact</span><b id="yieldImpact">Valuation pressure</b></div></div>
+      <div class="metric-callout"><b>Portfolio read:</b> A steady rise is manageable; a sharp move higher usually pressures long-duration growth and favors value or defensives.</div>
     </div>
 
-    <div class="card nasi-tooltip-wrap" id="nasiCard">
-      <a href="https://stockcharts.com/sc3/ui/?s=%24NASI" target="_blank" style="text-decoration:none; color:inherit; display:block;">
-        <div class="label">$NASI · Nasdaq McClellan Summation</div>
-        <div class="big" id="nasiBig" style="font-size:22px;">108.19</div>
-        <div class="cap" id="nasiCap">Prev 127.04 · 50-DMA 160.48</div>
-        <div class="nasi-flagbar">
-          <div style="background:var(--red)"></div><div style="background:var(--amber)"></div><div style="background:var(--teal)"></div>
-        </div>
+    <div class="card metric-card">
+      <div class="metric-top"><div><div class="label">Put/Call Ratio</div><div class="big" style="color:var(--red);font-size:22px" id="pcBig">0.55</div><div class="cap pc-status" id="pcCap">Neutral</div></div><div class="metric-icon">◐</div></div>
+      <div class="metric-track"><span class="metric-marker" id="pcMarker" style="left:54%;color:var(--amber)"></span></div>
+      <div class="metric-stats"><div class="metric-stat"><span>Positioning</span><b id="pcPositioning">Balanced</b></div><div class="metric-stat"><span>Contrarian read</span><b id="pcContrarian">No extreme</b></div></div>
+      <div class="metric-callout"><b>Sentiment:</b> Very low readings warn of complacency; very high readings indicate fear and possible seller exhaustion.</div>
+    </div>
+
+    <div class="card metric-card nasi-tooltip-wrap" id="nasiCard">
+      <a href="https://stockcharts.com/sc3/ui/?s=%24NASI" target="_blank" style="text-decoration:none;color:inherit;display:flex;flex-direction:column;height:100%;">
+        <div class="metric-top"><div><div class="label">$NASI · Nasdaq McClellan Summation</div><div class="big" id="nasiBig" style="font-size:22px;">108.19</div><div class="cap" id="nasiCap">50-DMA 160.48</div></div><div class="metric-icon">Σ</div></div>
+        <div class="nasi-flagbar" style="margin-top:14px"><div style="background:var(--red)"></div><div style="background:var(--amber)"></div><div style="background:var(--teal)"></div></div>
         <span class="nasi-status warn" id="nasiStatus">⚠ Warning — below 50-DMA</span>
-      </a>
-      <div class="nasi-tooltip" id="nasiTooltip"></div>
+        <div class="metric-stats"><div class="metric-stat"><span>Zero line</span><b id="nasiZero">Below</b></div><div class="metric-stat"><span>50-DMA</span><b id="nasiTrend">Below</b></div></div>
+        <div class="metric-callout"><b>Breadth impulse:</b> Negative and below the 50-DMA confirms weak participation; improvement requires recovery through both thresholds.</div>
+      </a><div class="nasi-tooltip" id="nasiTooltip"></div>
     </div>
 
 <!-- Combined breadth card — same top row -->
@@ -756,6 +757,7 @@ function renderMarketMood(payload={}){
   const vix = Number(payload.vix);
   const baseline = Number(payload.baseline);
   const vvix = Number(payload.vvix);
+  const ratio = Number(payload.ratio);
   let score = Number(payload.score);
   // Fallback only: normalize VIX deviation by an 8% daily-regime band.
   if(!Number.isFinite(score)) score = (Number.isFinite(vix) && Number.isFinite(baseline) && baseline>0) ? (vix/baseline-1)/0.08 : 0;
@@ -767,9 +769,8 @@ function renderMarketMood(payload={}){
   if(stateEl){ stateEl.textContent=mood.state; stateEl.className="mood-state "+mood.cls; }
   const desc=document.getElementById("moodDescription"); if(desc) desc.textContent=mood.desc;
   const vixEl=document.getElementById("vixBig"); if(vixEl && Number.isFinite(vix)) vixEl.textContent=vix.toFixed(2);
-  const vvixEl=document.getElementById("vvixBig"); if(vvixEl) vvixEl.textContent=Number.isFinite(vvix)?vvix.toFixed(2):"—";
-  const baseEl=document.getElementById("moodBaseline"); if(baseEl) baseEl.textContent=Number.isFinite(baseline)?baseline.toFixed(2):"—";
-  const src=document.getElementById("moodSource"); if(src) src.textContent="Source: "+(payload.source||"Volatility engine");
+  const ratioEl=document.getElementById("ratioBig"); if(ratioEl) ratioEl.textContent=Number.isFinite(ratio)?ratio.toFixed(3):(Number.isFinite(vvix)&&Number.isFinite(vix)&&vix>0?(vvix/vix).toFixed(3):"—");
+  const baseEl=document.getElementById("moodBaseline"); if(baseEl) baseEl.textContent=Number.isFinite(baseline)?baseline.toFixed(3):"—";
 }
 function extractNumber(text, patterns){
   for(const re of patterns){ const m=text.match(re); if(m){ const n=parseFloat(m[1]); if(Number.isFinite(n)) return n; } }
@@ -790,11 +791,12 @@ function syncMoodFromBreadthPage(){
     const score=extractNumber(scope,[/([+-]?\d+(?:\.\d+)?)\s*σ/i,/z[\s-]*score\s*[:=]?\s*([+-]?\d+(?:\.\d+)?)/i,/standard deviation[^\d+-]*([+-]?\d+(?:\.\d+)?)/i]);
     const vix=extractNumber(scope,[/\bVIX\s*[:=]\s*(\d+(?:\.\d+)?)/i,/VIX Close\s*(\d+(?:\.\d+)?)/i]);
     const vvix=extractNumber(scope,[/\bVVIX\s*[:=]\s*(\d+(?:\.\d+)?)/i,/VVIX Close\s*(\d+(?:\.\d+)?)/i]);
-    const baseline=extractNumber(scope,[/21[- ](?:day )?(?:EMA|MA)\s*[:=]?\s*(\d+(?:\.\d+)?)/i,/21 EMA\s*(\d+(?:\.\d+)?)/i]);
+    const ratio=extractNumber(scope,[/VVIX\/VIX(?:\s+ratio)?\s*[:=]?\s*(\d+(?:\.\d+)?)/i]);
+    const baseline=extractNumber(scope,[/21[- ](?:day )?(?:EMA|MA)\s*[:=]?\s*(\d+(?:\.\d+)?)/i,/21 EMA\s*(\d+(?:\.\d+)?)/i,/21 MA\s*(\d+(?:\.\d+)?)/i]);
     const stateMatch=panelText.match(/\b(Extreme Fear|Fear|Neutral Mood|Neutral|Extreme Greed|Greed)\b/i);
     const descMatch=panelText.match(/\b(Elevated Volatility|Severe Volatility|Normal Volatility|Contracting Volatility|Low Volatility)\b/i);
     if(Number.isFinite(score)||stateMatch||Number.isFinite(vvix)){
-      renderMarketMood({score:Number.isFinite(score)?score:undefined,vix:Number.isFinite(vix)?vix:DATA.vix.level,vvix:Number.isFinite(vvix)?vvix:undefined,baseline:Number.isFinite(baseline)?baseline:DATA.vix.sma20,state:stateMatch?stateMatch[1].replace(/Neutral Mood/i,"Neutral"):undefined,description:descMatch?descMatch[1]:undefined,source:"Breadth Institutional · exact VVIX/VIX engine",isProxy:false});
+      renderMarketMood({score:Number.isFinite(score)?score:undefined,vix:Number.isFinite(vix)?vix:DATA.vix.level,vvix:Number.isFinite(vvix)?vvix:undefined,ratio:Number.isFinite(ratio)?ratio:undefined,baseline:Number.isFinite(baseline)?baseline:DATA.vix.sma20,state:stateMatch?stateMatch[1].replace(/Neutral Mood/i,"Neutral"):undefined,description:descMatch?descMatch[1]:undefined,isProxy:!Number.isFinite(score)});
     }
   }catch(err){ console.warn("Volatility mood sync unavailable:",err.message); }
 }
@@ -1020,13 +1022,13 @@ if (spread > 1.05) {
     const rings = [["20D",b.spx20],["50D",b.spx50],["200D",b.spx200]];
     let h = "";
     rings.forEach(([label,val])=>{
-      const circ = 2*Math.PI*22;
+      const circ = 2*Math.PI*26;
       const off = circ - (val/100)*circ;
       h += `<div>
         <div class="ring">
-          <svg width="52" height="52">
-            <circle cx="26" cy="26" r="22" stroke="var(--line)" stroke-width="5" fill="none"/>
-            <circle cx="26" cy="26" r="22" stroke="var(--teal)" stroke-width="5" fill="none"
+          <svg viewBox="0 0 62 62">
+            <circle cx="31" cy="31" r="26" stroke="var(--line)" stroke-width="6" fill="none"/>
+            <circle cx="31" cy="31" r="26" stroke="var(--teal)" stroke-width="6" fill="none"
               stroke-dasharray="${circ}" stroke-dashoffset="${off}" stroke-linecap="round"/>
           </svg>
           <div class="ring-val">${val.toFixed(0)}%</div>
@@ -1040,13 +1042,13 @@ if (spread > 1.05) {
     const secRings = [["20D",b.sec20],["50D",b.sec50],["200D",b.sec200]];
     let hSec = "";
     secRings.forEach(([label,val])=>{
-      const circ = 2*Math.PI*22;
+      const circ = 2*Math.PI*26;
       const off = circ - (val/100)*circ;
       hSec += `<div>
         <div class="ring">
-          <svg width="52" height="52">
-            <circle cx="26" cy="26" r="22" stroke="var(--line)" stroke-width="5" fill="none"/>
-            <circle cx="26" cy="26" r="22" stroke="var(--teal)" stroke-width="5" fill="none"
+          <svg viewBox="0 0 62 62">
+            <circle cx="31" cy="31" r="26" stroke="var(--line)" stroke-width="6" fill="none"/>
+            <circle cx="31" cy="31" r="26" stroke="var(--teal)" stroke-width="6" fill="none"
               stroke-dasharray="${circ}" stroke-dashoffset="${off}" stroke-linecap="round"/>
           </svg>
           <div class="ring-val">${val.toFixed(0)}%</div>
@@ -1082,6 +1084,19 @@ if (spread > 1.05) {
       statusEl.textContent = "✓ Constructive — above 50-DMA";
     }
   })(); 
+
+  // Enrich top macro cards with dynamic visual context
+  (function(){
+    const spread=Number(DATA.creditSpreads||1.03);
+    const sm=document.getElementById("spreadMarker"); if(sm) sm.style.left=Math.max(8,Math.min(92,((spread-.96)/.14)*100))+"%";
+    const ss=document.getElementById("spreadSignal"), sb=document.getElementById("spreadBias");
+    if(ss) ss.textContent=spread>1.05?"Stress widening":"Credit calm"; if(sb) sb.textContent=spread>1.05?"Defensive":"Supportive";
+    const y=Number(DATA.macro.yield10y); const ym=document.getElementById("yieldMarker"); if(ym) ym.style.left=Math.max(8,Math.min(92,((y-3)/2.5)*100))+"%";
+    const yz=document.getElementById("yieldZone"), yi=document.getElementById("yieldImpact"); if(yz) yz.textContent=y>=5?"Stress":y>=4.25?"Restrictive":"Moderate"; if(yi) yi.textContent=y>=4.25?"Valuation pressure":"Tolerable";
+    const pc=Number(DATA.putcall.value); const pm=document.getElementById("pcMarker"); if(pm) pm.style.left=Math.max(8,Math.min(92,((pc-.45)/.75)*100))+"%";
+    const pp=document.getElementById("pcPositioning"), pcon=document.getElementById("pcContrarian"); if(pp) pp.textContent=pc<.6?"Complacent":pc>.95?"Fearful":"Balanced"; if(pcon) pcon.textContent=(pc<.6||pc>.95)?"Extreme watch":"No extreme";
+    const n=DATA.nasi; const nz=document.getElementById("nasiZero"), nt=document.getElementById("nasiTrend"); if(nz) nz.textContent=n.current>=0?"Above":"Below"; if(nt) nt.textContent=n.current>=n.sma50?"Above":"Below";
+  })();
 
   updateThemeToggleUI();
 }
