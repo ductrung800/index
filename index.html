@@ -219,6 +219,45 @@
   .vix-tooltip tbody tr:last-child td{border-bottom:none;}
   .vix-tooltip tr.zone-current td{background:rgba(32,217,184,.12); color:var(--text) !important; font-weight:700;}
 
+
+  /* ---------- MARKET MOOD / VOLATILITY ENGINE ---------- */
+  .market-mood-card{
+    grid-column:span 2;
+    padding:16px 18px 15px;
+    min-height:310px;
+    overflow:hidden;
+    position:relative;
+  }
+  .market-mood-head{display:flex; align-items:center; gap:9px; padding-bottom:10px; border-bottom:1px solid var(--line-soft);}
+  .market-mood-icon{font-size:19px; color:var(--text-dim); line-height:1;}
+  .market-mood-title{font-size:15px; font-weight:800; letter-spacing:-.01em;}
+  .mood-gauge-wrap{position:relative; width:min(100%,330px); height:150px; margin:10px auto 0;}
+  .mood-gauge-svg{width:100%; height:100%; overflow:visible;}
+  .mood-arc{fill:none; stroke-width:14; stroke-linecap:butt;}
+  .mood-arc-base{fill:none; stroke:var(--line-soft); stroke-width:3; stroke-dasharray:3 5; opacity:.85;}
+  .mood-needle{
+    position:absolute; left:50%; bottom:18px; width:4px; height:86px;
+    background:linear-gradient(to top,#dce6f5 0%,#fff 68%,rgba(255,255,255,.55) 100%);
+    border-radius:4px; transform-origin:50% calc(100% - 1px); transform:translateX(-50%) rotate(0deg);
+    box-shadow:0 0 9px rgba(255,255,255,.8); transition:transform .65s cubic-bezier(.2,.8,.2,1);
+  }
+  .mood-needle:after{content:""; position:absolute; left:50%; bottom:-8px; transform:translateX(-50%); width:17px; height:17px; border-radius:50%; background:var(--panel); border:2px solid #344258; box-shadow:0 0 0 2px rgba(0,0,0,.12);}
+  .mood-pole{position:absolute; bottom:20px; font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700; text-transform:uppercase;}
+  .mood-pole.greedy{left:0; color:#21a36b;}
+  .mood-pole.fearful{right:0; color:#dc4059;}
+  .mood-reading{text-align:center; margin-top:-10px;}
+  .mood-score{font-family:'JetBrains Mono',monospace; font-weight:800; font-size:39px; letter-spacing:-.06em; line-height:1;}
+  .mood-score small{font-size:13px; color:var(--text-faint); letter-spacing:0; margin-left:5px;}
+  .mood-state{display:inline-flex; margin-top:10px; padding:5px 16px; border:1px solid rgba(255,92,114,.24); border-radius:8px; background:rgba(255,92,114,.07); color:var(--red); font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:800; letter-spacing:.18em; text-transform:uppercase;}
+  .mood-state.greedy{color:var(--teal); border-color:rgba(32,217,184,.25); background:rgba(32,217,184,.07);}
+  .mood-state.neutral{color:var(--amber); border-color:rgba(245,185,66,.25); background:rgba(245,185,66,.07);}
+  .mood-description{text-align:center; color:var(--text-dim); font-size:11px; margin-top:8px;}
+  .mood-values{display:flex; justify-content:space-between; gap:12px; padding:11px 0 9px; margin-top:12px; border-top:1px solid var(--line-soft); border-bottom:1px solid var(--line-soft); font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--text-dim);}
+  .mood-engine{margin-top:10px; font-size:10px; line-height:1.55; color:var(--text-dim);}
+  .mood-engine b{display:block; color:#21c7e8; text-transform:uppercase; letter-spacing:.06em; margin-bottom:4px; font-size:9.5px;}
+  .mood-source{font-size:9px; color:var(--text-faint); margin-top:4px; font-family:'JetBrains Mono',monospace;}
+  .mood-sync-frame{display:none!important; width:1px; height:1px; border:0;}
+
   /* ---------- SECTION ---------- */
   .section{margin-bottom:26px;}
   .section-head{
@@ -299,6 +338,7 @@
   }
   @media(max-width:700px){
     .gauge-strip{grid-template-columns:1fr 1fr;}
+    .market-mood-card{grid-column:1 / -1;}
   }
 </style>
 </head>
@@ -359,16 +399,32 @@
   <!-- ================= GAUGE STRIP ================= -->
   <div class="gauge-strip">
 
-    <div class="card vix-tooltip-wrap" id="vixCard">
-      <div class="label">VIX Level</div>
-      <div class="big" style="color:var(--teal)" id="vixBig">16.73</div>
-      <div class="cap" id="vixCap">20 SMA 17.03 </div>
- 
-      <div class="vix-zone-bar"><div class="vix-marker" id="vixMarker"></div></div>
-      <div class="cap" style="margin-top:6px; display:flex; justify-content:space-between; font-family:'JetBrains Mono',monospace; font-size:9.5px;">
-        <span>&lt;15</span><span>15–25</span><span>25–35</span><span>&gt;35</span>
+    <div class="card market-mood-card" id="vixCard">
+      <div class="market-mood-head">
+        <span class="market-mood-icon">〽</span>
+        <div class="market-mood-title">Market Mood</div>
       </div>
+      <div class="mood-gauge-wrap">
+        <svg class="mood-gauge-svg" viewBox="0 0 300 170" aria-label="Market mood gauge">
+          <path class="mood-arc-base" d="M35 145 A115 115 0 0 1 265 145"/>
+          <path class="mood-arc" d="M35 145 A115 115 0 0 1 265 145" pathLength="100" stroke="#23795b" stroke-dasharray="17 83" stroke-dashoffset="0"/>
+          <path class="mood-arc" d="M35 145 A115 115 0 0 1 265 145" pathLength="100" stroke="#2d674e" stroke-dasharray="17 83" stroke-dashoffset="-20"/>
+          <path class="mood-arc" d="M35 145 A115 115 0 0 1 265 145" pathLength="100" stroke="#825925" stroke-dasharray="17 83" stroke-dashoffset="-40"/>
+          <path class="mood-arc" d="M35 145 A115 115 0 0 1 265 145" pathLength="100" stroke="#ff6570" stroke-dasharray="17 83" stroke-dashoffset="-60"/>
+          <path class="mood-arc" d="M35 145 A115 115 0 0 1 265 145" pathLength="100" stroke="#7b2937" stroke-dasharray="17 83" stroke-dashoffset="-80"/>
+        </svg>
+        <div class="mood-needle" id="moodNeedle"></div>
+        <span class="mood-pole greedy">Greed</span><span class="mood-pole fearful">Fear</span>
+      </div>
+      <div class="mood-reading">
+        <div class="mood-score"><span id="moodScore">+0.00</span><small>σ</small></div>
+        <div class="mood-state neutral" id="moodState">Neutral</div>
+        <div class="mood-description" id="moodDescription">Normal volatility</div>
+      </div>
+      <div class="mood-values"><span>VIX: <b id="vixBig">16.73</b></span><span>VVIX: <b id="vvixBig">—</b></span><span>21 EMA: <b id="moodBaseline">—</b></span></div>
+      <div class="mood-engine"><b>⚡ Quantitative Volatility Engine</b><span id="moodEngineText">Measures volatility stress relative to its 21-day baseline. Positive deviations indicate expanding risk; negative deviations indicate contracting volatility.</span><div class="mood-source" id="moodSource">Source: local VIX proxy · awaiting Breadth Institutional sync</div></div>
       <div class="vix-tooltip" id="vixTooltip"></div>
+      <iframe id="moodSyncFrame" class="mood-sync-frame" src="Market_Breadth_Institutional_Command.html" title="Volatility mood data sync"></iframe>
     </div>
 
     <div class="card">
@@ -669,6 +725,67 @@ function buildTable(elId, rows){
   document.getElementById(elId).innerHTML = head + body;
 }
 
+
+function clamp(n,min,max){ return Math.max(min,Math.min(max,n)); }
+function moodClassification(score){
+  if(score >= 1.35) return {state:"Extreme Fear", desc:"Severe volatility expansion", cls:""};
+  if(score >= 0.55) return {state:"Fear", desc:"Elevated volatility", cls:""};
+  if(score > -0.55) return {state:"Neutral", desc:"Normal volatility", cls:"neutral"};
+  if(score > -1.35) return {state:"Greed", desc:"Contracting volatility", cls:"greedy"};
+  return {state:"Extreme Greed", desc:"Deep volatility complacency", cls:"greedy"};
+}
+function renderMarketMood(payload={}){
+  const vix = Number(payload.vix);
+  const baseline = Number(payload.baseline);
+  const vvix = Number(payload.vvix);
+  let score = Number(payload.score);
+  // Fallback only: normalize VIX deviation by an 8% daily-regime band.
+  if(!Number.isFinite(score)) score = (Number.isFinite(vix) && Number.isFinite(baseline) && baseline>0) ? (vix/baseline-1)/0.08 : 0;
+  score = clamp(score,-2.5,2.5);
+  const mood = payload.state ? {state:payload.state, desc:payload.description||"Volatility regime", cls:/greed/i.test(payload.state)?"greedy":/neutral/i.test(payload.state)?"neutral":""} : moodClassification(score);
+  const scoreEl=document.getElementById("moodScore"), needle=document.getElementById("moodNeedle"), stateEl=document.getElementById("moodState");
+  if(scoreEl) scoreEl.textContent=(score>=0?"+":"")+score.toFixed(2);
+  if(needle) needle.style.transform=`translateX(-50%) rotate(${clamp(score/2.5,-1,1)*78}deg)`;
+  if(stateEl){ stateEl.textContent=mood.state; stateEl.className="mood-state "+mood.cls; }
+  const desc=document.getElementById("moodDescription"); if(desc) desc.textContent=mood.desc;
+  const vixEl=document.getElementById("vixBig"); if(vixEl && Number.isFinite(vix)) vixEl.textContent=vix.toFixed(2);
+  const vvixEl=document.getElementById("vvixBig"); if(vvixEl) vvixEl.textContent=Number.isFinite(vvix)?vvix.toFixed(2):"—";
+  const baseEl=document.getElementById("moodBaseline"); if(baseEl) baseEl.textContent=Number.isFinite(baseline)?baseline.toFixed(2):"—";
+  const src=document.getElementById("moodSource"); if(src) src.textContent="Source: "+(payload.source||"Volatility engine");
+}
+function extractNumber(text, patterns){
+  for(const re of patterns){ const m=text.match(re); if(m){ const n=parseFloat(m[1]); if(Number.isFinite(n)) return n; } }
+  return NaN;
+}
+function syncMoodFromBreadthPage(){
+  const frame=document.getElementById("moodSyncFrame");
+  if(!frame) return;
+  try{
+    const doc=frame.contentDocument||frame.contentWindow.document;
+    if(!doc||!doc.body) return;
+    const bodyText=doc.body.innerText.replace(/\u00a0/g," ");
+    const nodes=[...doc.querySelectorAll("body *")];
+    const label=nodes.find(el=>el.children.length===0 && /^Volatility Mood$/i.test(el.textContent.trim()));
+    let panelText="";
+    if(label){ let p=label; for(let i=0;i<5&&p;i++,p=p.parentElement){ if((p.innerText||"").length>panelText.length && (p.innerText||"").length<900) panelText=p.innerText; } }
+    const scope=(panelText+"\n"+bodyText);
+    const score=extractNumber(scope,[/([+-]?\d+(?:\.\d+)?)\s*σ/i,/z[\s-]*score\s*[:=]?\s*([+-]?\d+(?:\.\d+)?)/i,/standard deviation[^\d+-]*([+-]?\d+(?:\.\d+)?)/i]);
+    const vix=extractNumber(scope,[/\bVIX\s*[:=]\s*(\d+(?:\.\d+)?)/i,/VIX Close\s*(\d+(?:\.\d+)?)/i]);
+    const vvix=extractNumber(scope,[/\bVVIX\s*[:=]\s*(\d+(?:\.\d+)?)/i,/VVIX Close\s*(\d+(?:\.\d+)?)/i]);
+    const baseline=extractNumber(scope,[/21[- ](?:day )?(?:EMA|MA)\s*[:=]?\s*(\d+(?:\.\d+)?)/i,/21 EMA\s*(\d+(?:\.\d+)?)/i]);
+    const stateMatch=panelText.match(/\b(Extreme Fear|Fear|Neutral Mood|Neutral|Extreme Greed|Greed)\b/i);
+    const descMatch=panelText.match(/\b(Elevated Volatility|Severe Volatility|Normal Volatility|Contracting Volatility|Low Volatility)\b/i);
+    if(Number.isFinite(score)||stateMatch||Number.isFinite(vvix)){
+      renderMarketMood({score:Number.isFinite(score)?score:undefined,vix:Number.isFinite(vix)?vix:DATA.vix.level,vvix:Number.isFinite(vvix)?vvix:undefined,baseline:Number.isFinite(baseline)?baseline:DATA.vix.sma20,state:stateMatch?stateMatch[1].replace(/Neutral Mood/i,"Neutral"):undefined,description:descMatch?descMatch[1]:undefined,source:"Breadth Institutional · live same-origin sync"});
+    }
+  }catch(err){ console.warn("Volatility mood sync unavailable:",err.message); }
+}
+function armMoodSync(){
+  const frame=document.getElementById("moodSyncFrame"); if(!frame) return;
+  const run=()=>{ syncMoodFromBreadthPage(); setTimeout(syncMoodFromBreadthPage,2500); setTimeout(syncMoodFromBreadthPage,7000); };
+  frame.addEventListener("load",run,{once:false}); setTimeout(run,1500);
+}
+
 function renderAll(){
   document.getElementById("dateLine").textContent = `${DATA.date} · Benchmark: ${DATA.benchmark}`;
 
@@ -821,16 +938,13 @@ if (spread > 1.05) {
     const nasi = DATA.nasi;
 
     document.getElementById("vixBig").textContent = v.level.toFixed(2);
-    document.getElementById("vixCap").textContent = `20 SMA ${v.sma20.toFixed(2)} · ${v.trendLabel}`;
-
-    // VIX Zone Gauge Positioning
-    let pct;
+    renderMarketMood({
+      vix: v.level,
+      baseline: v.sma20,
+      trendLabel: v.trendLabel,
+      source: "Local VIX proxy · awaiting Breadth Institutional sync"
+    });
     const vix = v.level;
-    if(vix < 15){ pct = (vix/15)*15; }
-    else if(vix < 25){ pct = 15 + ((vix-15)/10)*25; }
-    else if(vix < 35){ pct = 40 + ((vix-25)/10)*25; }
-    else { pct = 65 + Math.min(35, ((vix-35)/15)*35); }
-    document.getElementById("vixMarker").style.left = pct+"%";
 
     // Render VIX Tooltip Table
     let currentZoneIdx = vix > 35 ? 0 : vix >= 25 ? 1 : vix >= 15 ? 2 : 3;
@@ -1587,6 +1701,7 @@ document.getElementById("btnAutoRefresh")?.addEventListener("click", fetchLiveMa
     if(savedData && savedData.value){ DATA = JSON.parse(savedData.value); }
   }catch(e){}
   renderAll();
+  armMoodSync();
   // ADD THIS LINE TO AUTO-LOAD ON STARTUP:
   fetchLiveMarketData();
 })();
