@@ -1414,28 +1414,74 @@ async function renderMasterBriefingAndDiagnostics() {
   renderTradingViewWidgets();
 }
 
-function renderTradingViewWidgets() {
-  const createTvWidget = (containerId, mainSymbol, overlaySymbol) => {
-    const container = document.getElementById(containerId);
-    if (!container) return;
-    const isDark = (document.documentElement.getAttribute("data-theme") || "dark") === "dark";
-    container.innerHTML = '<div class="tradingview-widget-container__widget" style="height:100%;width:100%"></div>';
+let tradingViewLoaderPromise = null;
+function ensureTradingViewLibrary() {
+  if (window.TradingView && typeof window.TradingView.widget === "function") return Promise.resolve();
+  if (tradingViewLoaderPromise) return tradingViewLoaderPromise;
+  tradingViewLoaderPromise = new Promise((resolve, reject) => {
+    const existing = document.querySelector('script[data-tv-library="true"]');
+    if (existing) {
+      existing.addEventListener("load", resolve, { once:true });
+      existing.addEventListener("error", reject, { once:true });
+      return;
+    }
     const script = document.createElement("script");
-    script.type = "text/javascript";
-    script.src = "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
+    script.src = "https://s3.tradingview.com/tv.js";
     script.async = true;
-    script.innerHTML = JSON.stringify({
-      "autosize": true, "symbol": mainSymbol, "interval": "D", "timezone": "Etc/UTC",
-      "theme": isDark ? "dark" : "light", "style": "2", "locale": "en", "enable_publishing": false,
-      "backgroundColor": isDark ? "rgba(16, 22, 37, 1)" : "rgba(255, 255, 255, 1)",
-      "gridColor": isDark ? "rgba(33, 42, 61, 1)" : "rgba(221, 226, 236, 1)",
-      "hide_top_toolbar": false, "hide_legend": false, "save_image": false, "hide_volume": true,
-      "studies": [{ "id": "Overlay@tv-basicstudies", "inputs": { "symbol": overlaySymbol } }]
+    script.dataset.tvLibrary = "true";
+    script.onload = resolve;
+    script.onerror = reject;
+    document.head.appendChild(script);
+  });
+  return tradingViewLoaderPromise;
+}
+
+async function renderTradingViewWidgets() {
+  const isDark = (document.documentElement.getAttribute("data-theme") || "dark") === "dark";
+  try {
+    await ensureTradingViewLibrary();
+  } catch (error) {
+    ["qqqTvContainer", "spyTvContainer"].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = '<div style="padding:18px;color:var(--red);font:11px JetBrains Mono,monospace">TradingView library could not be loaded. Check browser content blockers and refresh.</div>';
     });
-    container.appendChild(script);
+    return;
+  }
+
+  const createTvWidget = (outerId, widgetId, putCallSymbol, priceSymbol) => {
+    const outer = document.getElementById(outerId);
+    if (!outer) return;
+    outer.innerHTML = `<div id="${widgetId}" style="height:100%;width:100%"></div>`;
+    try {
+      new TradingView.widget({
+        autosize: true,
+        symbol: putCallSymbol,
+        interval: "D",
+        timezone: "Etc/UTC",
+        theme: isDark ? "dark" : "light",
+        style: "2",
+        locale: "en",
+        toolbar_bg: isDark ? "#101625" : "#ffffff",
+        enable_publishing: false,
+        allow_symbol_change: true,
+        hide_top_toolbar: false,
+        hide_legend: false,
+        save_image: false,
+        withdateranges: true,
+        details: true,
+        hotlist: false,
+        calendar: false,
+        studies: [],
+        compareSymbols: [{ symbol: priceSymbol, position: "SameScale" }],
+        container_id: widgetId
+      });
+    } catch (error) {
+      outer.innerHTML = '<div style="padding:18px;color:var(--red);font:11px JetBrains Mono,monospace">TradingView chart initialization failed. Refresh the page or disable blocking extensions for this site.</div>';
+    }
   };
-  createTvWidget("qqqTvContainer", "INDEX:PCQQ", "QQQ");
-  createTvWidget("spyTvContainer", "INDEX:PCSP", "SPY");
+
+  createTvWidget("qqqTvContainer", "qqqTvWidget", "INDEX:PCQQ", "NASDAQ:QQQ");
+  createTvWidget("spyTvContainer", "spyTvWidget", "INDEX:PCSP", "AMEX:SPY");
 }
 
 function generateFallbackOHLC(symbol, count = 120) {
