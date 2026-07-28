@@ -469,7 +469,7 @@ iframe, canvas, svg{
         <div class="regime-dot-large" id="briefingDot"></div>
         <div>
           <div class="briefing-eyebrow">Master Market Regime Assessment</div>
-          <div class="briefing-main-title" id="briefingMainTitle">DEFENSIVE MARKET REGIME</div>
+          <div class="briefing-main-title" id="briefingMainTitle">SYNCHRONIZING MARKET REGIME</div>
         </div>
       </div>
       
@@ -478,77 +478,18 @@ iframe, canvas, svg{
           <span class="score-label">Composite Score</span>
           <span class="score-stars" id="briefingStars">★☆☆☆☆</span>
         </div>
-        <div class="score-value-row"><span id="briefingScoreNum">40</span><span style="font-size:13px; color:var(--text-faint)"> /100</span></div>
-        <div class="score-bar"><div class="score-bar-fill" id="briefingScoreFill" style="width: 40%;"></div></div>
+        <div class="score-value-row"><span id="briefingScoreNum">—</span><span style="font-size:13px; color:var(--text-faint)"> /100</span></div>
+        <div class="score-bar"><div class="score-bar-fill" id="briefingScoreFill" style="width:0%;"></div></div>
       </div>
     </div>
 
     <!-- 5 HORIZONTAL ENGINE CARDS -->
     <div class="engines-grid" id="enginesGridContainer">
-      <div class="engine-box">
-        <div>
-          <div class="engine-box-head"><span class="engine-name">Volatility Mood</span><span class="engine-status-dot" style="background:var(--teal)"></span></div>
-          <div class="engine-status" style="color:var(--teal)">Risk Appetite Improving</div>
-          <ul class="engine-bullets">
-            <li>VVIX/VIX ratio: <b>5.742</b></li>
-            <li>21-day MA: <b>5.444</b></li>
-            <li>Institutions unhedged</li>
-          </ul>
-        </div>
-        <div class="engine-conclusion">Options market supporting higher equity prices.</div>
-      </div>
-
-      <div class="engine-box">
-        <div>
-          <div class="engine-box-head"><span class="engine-name">QQQ Trend</span><span class="engine-status-dot" style="background:var(--red)"></span></div>
-          <div class="engine-status" style="color:var(--red)">Bear Cycle Broken</div>
-          <ul class="engine-bullets">
-            <li>QQQ: <b>705.35</b></li>
-            <li>21 EMA: <b>712.82</b></li>
-            <li>Candle test: <b>Below EMA</b></li>
-          </ul>
-        </div>
-        <div class="engine-conclusion">Tech leadership state under pressure.</div>
-      </div>
-
-      <div class="engine-box">
-        <div>
-          <div class="engine-box-head"><span class="engine-name">SPY Trend</span><span class="engine-status-dot" style="background:var(--amber)"></span></div>
-          <div class="engine-status" style="color:var(--amber)">SPY Consolidating</div>
-          <ul class="engine-bullets">
-            <li>SPY: <b>747.41</b></li>
-            <li>21 EMA: <b>746.47</b></li>
-            <li>Trend slope: <b>-0.08</b></li>
-          </ul>
-        </div>
-        <div class="engine-conclusion">Buying pressure is broad and active.</div>
-      </div>
-
-      <div class="engine-box">
-        <div>
-          <div class="engine-box-head"><span class="engine-name">Put / Call Ratio</span><span class="engine-status-dot" style="background:var(--teal)"></span></div>
-          <div class="engine-status" style="color:var(--teal)">Neutral to Bullish</div>
-          <ul class="engine-bullets">
-            <li>Current PCR: <b>0.93</b></li>
-            <li>Hedging pressure: <b>Normal</b></li>
-            <li>No panic / greed extremes</li>
-          </ul>
-        </div>
-        <div class="engine-conclusion">Sentiment supports trend continuation.</div>
-      </div>
-
-      <div class="engine-box">
-        <div>
-          <div class="engine-box-head"><span class="engine-name">$NASI Breadth</span><span class="engine-status-dot" style="background:var(--red)"></span></div>
-          <div class="engine-status" style="color:var(--red)">Breadth Contracting</div>
-          <ul class="engine-bullets">
-            <li>$NASI: <b>-11.99</b></li>
-            <li>50-DMA: <b>143.98</b></li>
-            <li>Participation: <b>Narrow</b></li>
-          </ul>
-        </div>
-        <div class="engine-conclusion">${sheetFeedLoaded ? 'Live Google Sheet feed' : 'Fallback data'} · ${nasiState.label}.</div>
-      </div>
+      <div class="engine-box"><div><div class="engine-box-head"><span class="engine-name">Volatility Mood</span><span class="engine-status-dot" style="background:var(--text-faint)"></span></div><div class="engine-status" style="color:var(--text-dim)">Synchronizing…</div><ul class="engine-bullets"><li>Awaiting live engine data</li></ul></div><div class="engine-conclusion">Live interpretation pending.</div></div>
+      <div class="engine-box"><div><div class="engine-box-head"><span class="engine-name">QQQ Trend</span><span class="engine-status-dot" style="background:var(--text-faint)"></span></div><div class="engine-status" style="color:var(--text-dim)">Synchronizing…</div><ul class="engine-bullets"><li>Awaiting live engine data</li></ul></div><div class="engine-conclusion">Live interpretation pending.</div></div>
+      <div class="engine-box"><div><div class="engine-box-head"><span class="engine-name">SPY Trend</span><span class="engine-status-dot" style="background:var(--text-faint)"></span></div><div class="engine-status" style="color:var(--text-dim)">Synchronizing…</div><ul class="engine-bullets"><li>Awaiting live engine data</li></ul></div><div class="engine-conclusion">Live interpretation pending.</div></div>
+      <div class="engine-box"><div><div class="engine-box-head"><span class="engine-name">Put / Call Ratio</span><span class="engine-status-dot" style="background:var(--text-faint)"></span></div><div class="engine-status" style="color:var(--text-dim)">Synchronizing…</div><ul class="engine-bullets"><li>Awaiting live engine data</li></ul></div><div class="engine-conclusion">Live interpretation pending.</div></div>
+      <div class="engine-box"><div><div class="engine-box-head"><span class="engine-name">$NASI Breadth</span><span class="engine-status-dot" style="background:var(--text-faint)"></span></div><div class="engine-status" style="color:var(--text-dim)">Synchronizing…</div><ul class="engine-bullets"><li>Awaiting live engine data</li></ul></div><div class="engine-conclusion">Live interpretation pending.</div></div>
     </div>
 
     <!-- CONCLUSION & POSTURE FOOTER -->
@@ -556,18 +497,13 @@ iframe, canvas, svg{
       <div class="conclusion-section">
         <h4>Final Conclusion</h4>
         <ul class="conclusion-bullets" id="briefingFinalConclusionList">
-          <li>The market is currently under institutional distribution.</li>
-          <li>Fear alone (Put/Call) is insufficient to buy without price confirmation.</li>
-          <li>Capital preservation takes top priority.</li>
+          <li>Synchronizing final conclusion…</li>
         </ul>
       </div>
       <div class="posture-section">
         <h4>Recommended Posture</h4>
         <ul class="posture-bullets" id="briefingPostureList">
-          <li>Raise cash levels significantly</li>
-          <li>Avoid aggressive long entries</li>
-          <li>Hold only exceptional market leaders</li>
-          <li>Wait for breadth and trend confirmation before re-deploying.</li>
+          <li>Synchronizing recommended posture…</li>
         </ul>
       </div>
     </div>
@@ -613,9 +549,9 @@ iframe, canvas, svg{
         <div class="prob-box"><div class="p-lbl">Bear</div><div class="p-val" id="probBear" style="color:var(--red)">8%</div></div>
       </div>
       <div class="pm-scenario-note">
-        <div class="pm-scenario"><b style="color:var(--teal)">BASE CASE</b><p id="scenarioBase">Price stabilization with selective leadership. Confirmed by SPY/QQQ trend repair and breadth stabilization.</p></div>
-        <div class="pm-scenario"><b style="color:var(--amber)">DOWNSIDE</b><p id="scenarioDown">Breadth-led correction. Triggered by renewed EMA failure and further NASI deterioration.</p></div>
-        <div class="pm-scenario"><b style="color:var(--red)">TAIL RISK</b><p id="scenarioTail">Volatility shock. Triggered when volatility mood, SPY and QQQ align bearish.</p></div>
+        <div class="pm-scenario"><b style="color:var(--teal)">BASE CASE</b><p id="scenarioBase">Synchronizing base-case conditions…</p></div>
+        <div class="pm-scenario"><b style="color:var(--amber)">DOWNSIDE</b><p id="scenarioDown">Synchronizing downside triggers…</p></div>
+        <div class="pm-scenario"><b style="color:var(--red)">TAIL RISK</b><p id="scenarioTail">Synchronizing tail-risk triggers…</p></div>
       </div>
     </div>
   </div>
@@ -623,41 +559,27 @@ iframe, canvas, svg{
   <!-- ================= ZONE 4: LOWER FLOWS & PORTFOLIO GUIDANCE ================= -->
   <div class="lower-grid" style="margin-top:24px;">
     <div class="zone-card" style="margin-bottom:0;">
-      <div class="zone-title"><span>Capital Rotation &amp; Flows</span><span>Asset Class</span></div>
-      <div class="flow-row"><span>Crude Oil / Energy</span><span class="flow-arrow up">↑↑ Top Inflow</span></div>
-      <div class="flow-row"><span>Consumer Defensive</span><span class="flow-arrow up">↑ Strong Accumulation</span></div>
-      <div class="flow-row"><span>Semiconductors / AI</span><span class="flow-arrow up">↑ Overweight</span></div>
-      <div class="flow-row"><span>Small Caps / Growth</span><span class="flow-arrow neutral">→ Selective Hold</span></div>
-      <div class="flow-row"><span>Financials</span><span class="flow-arrow neutral">→ Balanced</span></div>
-      <div class="flow-row"><span>Utilities / Bonds</span><span class="flow-arrow down">↓ Outflows</span></div>
+      <div class="zone-title"><span>Engine Alignment &amp; Signals</span><span>Verified Inputs</span></div>
+      <div id="engineSignalsList"><div class="flow-row"><span>Synchronizing engines</span><span class="flow-arrow neutral">—</span></div></div>
     </div>
 
     <div class="zone-card" style="margin-bottom:0;">
       <div class="zone-title"><span>Portfolio Guidance</span><span>Model Target</span></div>
-      <div class="alloc-grid">
-        <div class="alloc-box"><div class="a-lbl">Growth / Energy</div><div class="a-val">40%</div></div>
-        <div class="alloc-box"><div class="a-lbl">Quality Leader</div><div class="a-val">30%</div></div>
-        <div class="alloc-box"><div class="a-lbl">Cash Buffer</div><div class="a-val">20%</div></div>
-        <div class="alloc-box"><div class="a-lbl">Defensive / Fixed</div><div class="a-val">10%</div></div>
+      <div class="alloc-grid" id="allocationGrid">
+        <div class="alloc-box"><div class="a-lbl">Risk Assets</div><div class="a-val">—</div></div>
+        <div class="alloc-box"><div class="a-lbl">Selective Leaders</div><div class="a-val">—</div></div>
+        <div class="alloc-box"><div class="a-lbl">Cash Buffer</div><div class="a-val">—</div></div>
+        <div class="alloc-box"><div class="a-lbl">Defensive / Fixed</div><div class="a-val">—</div></div>
       </div>
       <div style="margin-top:16px;">
         <div class="zone-title" style="margin-bottom:6px;"><span>Macro Internals Check</span></div>
-        <div style="font-size:11.5px; font-family:'JetBrains Mono',monospace; line-height:1.5; color:var(--text-dim);" id="macroInternalsText">
-          • VIX: <b style="color:var(--teal)">16.64 (Stable)</b><br>
-          • Credit Spread: <b style="color:var(--teal)">1.03 (Tightening)</b><br>
-          • Put/Call Ratio: <b style="color:var(--amber)">0.93 (Balanced)</b><br>
-          • $NASI Summation: <b style="color:var(--red)">-11.99 (Contraction)</b>
-        </div>
+        <div style="font-size:11.5px; font-family:'JetBrains Mono',monospace; line-height:1.5; color:var(--text-dim);" id="macroInternalsText">Synchronizing verified internals…</div>
       </div>
     </div>
 
     <div class="zone-card" style="margin-bottom:0;">
       <div class="zone-title"><span>Execution Directive</span><span>Institutional</span></div>
-      <div style="font-size:12px; line-height:1.6; color:var(--text); font-family:'Inter',sans-serif;">
-        <p style="margin-bottom:8px;"><b style="color:var(--teal);">Primary Objective:</b> Protect capital while participating in top-tier defensive and energy momentum rotation.</p>
-        <p style="margin-bottom:8px;"><b style="color:var(--teal);">Risk Parameter:</b> Restrict new entries to stocks displaying RS scores &gt; 90 with institutional volume confirmation.</p>
-        <p><b style="color:var(--teal);">Action:</b> Maintain 20% cash buffer and avoid chasing low-quality setups.</p>
-      </div>
+      <div id="executionDirectiveText" style="font-size:12px; line-height:1.6; color:var(--text); font-family:'Inter',sans-serif;">Synchronizing portfolio directive…</div>
     </div>
   </div>
 
@@ -1279,6 +1201,103 @@ async function renderMasterBriefingAndDiagnostics() {
     morningNoteEl.textContent = `${breadthMessage} ${sentimentMessage} ${implementationMessage}`;
   }
 
+
+  // -------- Fully dynamic narrative, risk, allocation and execution panels --------
+  const stateWord = s => s === "bull" ? "Bullish" : (s === "bear" ? "Bearish" : "Mixed");
+  const stateArrow = s => s === "bull" ? "↑" : (s === "bear" ? "↓" : "→");
+  const stateArrowClass = s => s === "bull" ? "up" : (s === "bear" ? "down" : "neutral");
+
+  const trendScore = Math.round((qqqScoreNorm + spyScoreNorm) / 2);
+  const breadthScore = nasiScoreNorm;
+  const momentumScore = Math.round((trendScore * 0.70) + (moodScoreNorm * 0.30));
+  const liquidityScore = Math.round((pcScoreNorm * 0.45) + (moodScoreNorm * 0.55));
+  const volatilityScore = moodScoreNorm;
+
+  const setMeter = (barId, valId, score) => {
+    const b = document.getElementById(barId), v = document.getElementById(valId);
+    const col = score >= 65 ? "var(--teal)" : (score >= 40 ? "var(--amber)" : "var(--red)");
+    if (b) { b.style.width = `${score}%`; b.style.background = col; }
+    if (v) { v.textContent = score; v.style.color = col; }
+  };
+  setMeter("barTrend", "valTrend", trendScore);
+  setMeter("barBreadth", "valBreadth", breadthScore);
+  setMeter("barMom", "valMom", momentumScore);
+  setMeter("barLiq", "valLiq", liquidityScore);
+  setMeter("barVol", "valVol", volatilityScore);
+
+  const setRiskMetric = (id, text, color) => { const el=document.getElementById(id); if(el){el.textContent=text; el.style.color=color;} };
+  const volatilityLabel = last.moodState === "bull" ? "SUPPORTIVE" : (last.moodState === "bear" ? "STRESSED" : "NEUTRAL");
+  const trendLabel = (last.qqqState === last.spyState) ? stateWord(last.qqqState).toUpperCase() : "MIXED";
+  const breadthLabel = nasiVal < 0 ? "BELOW ZERO" : (nasiVal < nasiSma ? "NARROW" : "EXPANDING");
+  const sentimentLabel = pcState.label.toUpperCase();
+  const appetiteLabel = compositeScore >= 70 ? "HIGH" : (compositeScore >= 45 ? "SELECTIVE" : "LOW");
+  const riskLabel = compositeScore >= 70 ? "LOW–MODERATE" : (compositeScore >= 45 ? "MODERATE" : "HIGH");
+  setRiskMetric("rmVolatility", volatilityLabel, moodCol);
+  setRiskMetric("rmTrend", trendLabel, trendScore >= 65 ? "var(--teal)" : (trendScore >= 40 ? "var(--amber)" : "var(--red)"));
+  setRiskMetric("rmBreadth", breadthLabel, nasiCol);
+  setRiskMetric("rmSentiment", sentimentLabel, pcCol);
+  setRiskMetric("rmAppetite", appetiteLabel, compositeScore >= 70 ? "var(--teal)" : (compositeScore >= 45 ? "var(--amber)" : "var(--red)"));
+  setRiskMetric("rmRiskLevel", riskLabel, compositeScore >= 70 ? "var(--teal)" : (compositeScore >= 45 ? "var(--amber)" : "var(--red)"));
+
+  const conclusions = [
+    `QQQ trend is ${stateWord(last.qqqState).toLowerCase()} and SPY trend is ${stateWord(last.spyState).toLowerCase()} versus their 21-day EMAs.`,
+    nasiVal < 0 ? `$NASI is ${nasiVal.toFixed(2)}, confirming breadth below the zero line.` : (nasiVal < nasiSma ? `$NASI remains below its 50-DMA (${nasiSma.toFixed(2)}), so participation is still narrow.` : `$NASI is above its 50-DMA, confirming broader participation.`),
+    `The composite engine score is ${compositeScore}/100, supporting a ${regimeLabel.toLowerCase()} posture.`
+  ];
+  const posture = compositeScore >= 70
+    ? ["Maintain broad but risk-controlled exposure.", "Add on constructive pullbacks rather than extended moves.", "Use breadth deterioration or EMA failures as de-risking triggers."]
+    : compositeScore >= 45
+      ? ["Keep exposure selective and below maximum allocation.", "Require price confirmation and improving breadth before adding risk.", "Prioritize liquid relative-strength leaders and defined stops."]
+      : ["Preserve capital and reduce weak or technically broken positions.", "Restrict new entries to exceptional setups with favorable reward-to-risk.", "Rebuild exposure only after SPY/QQQ trend and breadth repair."];
+  const conclusionEl=document.getElementById("briefingFinalConclusionList");
+  const postureEl=document.getElementById("briefingPostureList");
+  if(conclusionEl) conclusionEl.innerHTML=conclusions.map(x=>`<li>${x}</li>`).join("");
+  if(postureEl) postureEl.innerHTML=posture.map(x=>`<li>${x}</li>`).join("");
+
+  pmSet("scenarioBase", compositeScore >= 70
+    ? `Continuation remains the base case while SPY and QQQ hold above their 21-day EMAs and $NASI stays above ${nasiSma.toFixed(2)}.`
+    : compositeScore >= 45
+      ? `A selective, range-bound market is the base case while trend engines disagree and $NASI is ${nasiVal.toFixed(2)}.`
+      : `Defensive consolidation is the base case while the composite score remains ${compositeScore}/100 and breadth has not repaired.`);
+  pmSet("scenarioDown", `Downside risk increases if SPY and QQQ both turn bearish and $NASI deteriorates from ${nasiVal.toFixed(2)}.`);
+  pmSet("scenarioTail", `Tail risk requires simultaneous volatility stress, bearish SPY/QQQ alignment, and further breadth deterioration below the current $NASI reading.`);
+
+  const signalRows = [
+    ["QQQ 21-EMA Trend", last.qqqState, `${stateArrow(last.qqqState)} ${stateWord(last.qqqState)}`],
+    ["SPY 21-EMA Trend", last.spyState, `${stateArrow(last.spyState)} ${stateWord(last.spyState)}`],
+    ["Volatility Mood", last.moodState, `${stateArrow(last.moodState)} ${stateWord(last.moodState)}`],
+    ["Put/Call Sentiment", pcVal > 0.95 ? "bull" : (pcVal < 0.60 ? "bear" : "neutral"), pcState.label],
+    ["$NASI Breadth", nasiVal > nasiSma ? "bull" : (nasiVal < 0 ? "bear" : "neutral"), nasiState.label],
+    ["Composite Regime", regimeType === "bullish" ? "bull" : (regimeType === "bearish" ? "bear" : "neutral"), `${compositeScore}/100`]
+  ];
+  const signalsEl=document.getElementById("engineSignalsList");
+  if(signalsEl) signalsEl.innerHTML=signalRows.map(([name,st,val])=>`<div class="flow-row"><span>${name}</span><span class="flow-arrow ${stateArrowClass(st)}">${val}</span></div>`).join("");
+
+  const cashPct = compositeScore >= 70 ? 10 : (compositeScore >= 45 ? 30 : 55);
+  const defensivePct = compositeScore >= 70 ? 10 : (compositeScore >= 45 ? 20 : 25);
+  const leaderPct = compositeScore >= 70 ? 30 : (compositeScore >= 45 ? 30 : 15);
+  const riskPct = 100 - cashPct - defensivePct - leaderPct;
+  const allocEl=document.getElementById("allocationGrid");
+  if(allocEl) allocEl.innerHTML=`
+    <div class="alloc-box"><div class="a-lbl">Broad Risk Assets</div><div class="a-val">${riskPct}%</div></div>
+    <div class="alloc-box"><div class="a-lbl">Selective Leaders</div><div class="a-val">${leaderPct}%</div></div>
+    <div class="alloc-box"><div class="a-lbl">Cash Buffer</div><div class="a-val">${cashPct}%</div></div>
+    <div class="alloc-box"><div class="a-lbl">Defensive / Fixed</div><div class="a-val">${defensivePct}%</div></div>`;
+
+  const macroEl=document.getElementById("macroInternalsText");
+  if(macroEl) macroEl.innerHTML=`
+    • VIX: <b style="color:${last.vix >= 25 ? 'var(--red)' : (last.vix >= 18 ? 'var(--amber)' : 'var(--teal)')}">${fmtNum(last.vix)} (${last.vix >= 25 ? 'Elevated' : (last.vix >= 18 ? 'Watch' : 'Contained')})</b><br>
+    • VVIX/VIX: <b style="color:${moodCol}">${fmtNum(last.ratio,3)} vs 21-MA ${fmtNum(last.ratioMA,3)}</b><br>
+    • Put/Call Ratio: <b style="color:${pcCol}">${pcVal.toFixed(2)} (${pcState.label})</b><br>
+    • $NASI Summation: <b style="color:${nasiCol}">${nasiVal.toFixed(2)} (${nasiState.label})</b><br>
+    • Data Source: <b>${sheetFeedLoaded ? 'Live Google Sheet' : 'Fallback cache/defaults'}</b>`;
+
+  const executionEl=document.getElementById("executionDirectiveText");
+  const primaryObjective = compositeScore >= 70 ? "Participate in confirmed upside while controlling extension risk." : (compositeScore >= 45 ? "Preserve flexibility while selectively participating in confirmed leadership." : "Protect capital until trend and breadth repair are confirmed.");
+  const riskParameter = compositeScore >= 70 ? "Use normal position sizing with defined stops; avoid chasing extended entries." : (compositeScore >= 45 ? "Use reduced position sizing and require alignment between price, breadth, and liquidity." : "Use minimal initial size, tight risk limits, and avoid adding to technically broken positions.");
+  const nextAction = compositeScore >= 70 ? "Buy controlled pullbacks in liquid leaders while monitoring breadth." : (compositeScore >= 45 ? "Take only high-quality setups and keep the cash buffer near the model target." : "Reduce weak exposure, maintain the modeled cash buffer, and wait for SPY/QQQ plus $NASI confirmation.");
+  if(executionEl) executionEl.innerHTML=`<p style="margin-bottom:8px;"><b style="color:var(--teal);">Primary Objective:</b> ${primaryObjective}</p><p style="margin-bottom:8px;"><b style="color:var(--teal);">Risk Parameter:</b> ${riskParameter}</p><p><b style="color:var(--teal);">Action:</b> ${nextAction}</p>`;
+
   document.getElementById("enginesGridContainer").innerHTML = `
     <div class="engine-box">
       <div>
@@ -1287,10 +1306,10 @@ async function renderMasterBriefingAndDiagnostics() {
         <ul class="engine-bullets">
           <li>VVIX/VIX ratio: <b>${fmtNum(last.ratio, 3)}</b></li>
           <li>21-day MA: <b>${fmtNum(last.ratioMA, 3)}</b></li>
-          <li>Institutions unhedged</li>
+          <li>Ratio vs MA: <b>${last.ratio > last.ratioMA ? 'Above' : 'Below'}</b></li>
         </ul>
       </div>
-      <div class="engine-conclusion">Options market supporting higher equity prices.</div>
+      <div class="engine-conclusion">${last.moodState === 'bull' ? 'Volatility conditions support risk-taking.' : (last.moodState === 'bear' ? 'Volatility conditions argue for reduced risk.' : 'Volatility conditions are neutral and require price confirmation.')}</div>
     </div>
 
     <div class="engine-box">
@@ -1300,10 +1319,10 @@ async function renderMasterBriefingAndDiagnostics() {
         <ul class="engine-bullets">
           <li>QQQ: <b>${fmtNum(last.qClose)}</b></li>
           <li>21 EMA: <b>${fmtNum(last.qEma)}</b></li>
-          <li>Candle test: <b>${last.qqqState === 'bull' ? 'Above EMA' : 'Below EMA'}</b></li>
+          <li>Candle test: <b>${last.qqqState === 'bull' ? 'Entire candle above EMA' : (last.qqqState === 'bear' ? 'Entire candle below EMA' : 'Candle straddles EMA')}</b></li>
         </ul>
       </div>
-      <div class="engine-conclusion">Tech leadership state is derived from the current candle/EMA test.</div>
+      <div class="engine-conclusion">${last.qqqState === 'bull' ? 'Technology trend is confirmed above the 21 EMA.' : (last.qqqState === 'bear' ? 'Technology trend is confirmed below the 21 EMA.' : 'Technology trend is unresolved around the 21 EMA.')}</div>
     </div>
 
     <div class="engine-box">
@@ -1316,7 +1335,7 @@ async function renderMasterBriefingAndDiagnostics() {
           <li>Trend slope: <b>${fmtSigned(last.spySlope, 2)}</b></li>
         </ul>
       </div>
-      <div class="engine-conclusion">Buying pressure is broad and active.</div>
+      <div class="engine-conclusion">${last.spyState === 'bull' ? 'Broad-market price trend is constructive.' : (last.spyState === 'bear' ? 'Broad-market price trend is under pressure.' : 'Broad-market price is consolidating around the 21 EMA.')}</div>
     </div>
 
     <div class="engine-box">
@@ -1329,7 +1348,7 @@ async function renderMasterBriefingAndDiagnostics() {
           <li>${pcState.detail}</li>
         </ul>
       </div>
-      <div class="engine-conclusion">Sentiment supports trend continuation.</div>
+      <div class="engine-conclusion">${pcVal > 0.95 ? 'Elevated hedging can provide contrarian support, but price confirmation is required.' : (pcVal < 0.60 ? 'Complacency raises pullback risk.' : 'Sentiment is neutral and adds no directional edge.')}</div>
     </div>
 
     <div class="engine-box">
@@ -1342,7 +1361,7 @@ async function renderMasterBriefingAndDiagnostics() {
           <li>Participation: <b>${nasiState.participation}</b></li>
         </ul>
       </div>
-      <div class="engine-conclusion">Breadth contracting below 50-DMA.</div>
+      <div class="engine-conclusion">${sheetFeedLoaded ? 'Live Google Sheet feed' : 'Fallback data'} · ${nasiState.label}.</div>
     </div>
   `;
 
