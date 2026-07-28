@@ -162,13 +162,22 @@
     margin-bottom:20px;
   }
   .top-gauge-strip{
-    grid-template-columns:repeat(5,minmax(0,1fr));
+    grid-template-columns:repeat(8,minmax(0,1fr));
     align-items:stretch;
   }
   .top-gauge-strip > .card{
     min-width:0;
     height:100%;
   }
+  .top-gauge-strip > .card:nth-child(n+6){padding:12px 12px;}
+  .top-gauge-strip > .card:nth-child(n+6) .breadth-row{gap:8px; justify-content:space-between;}
+  .top-gauge-strip > .card:nth-child(n+6) .ring{width:44px; height:44px;}
+  .top-gauge-strip > .card:nth-child(n+6) .ring svg{width:44px; height:44px;}
+  .top-gauge-strip > .card:nth-child(n+6) .ring-val{font-size:9.5px;}
+  .top-gauge-strip > .card:nth-child(n+6) .ring-label{font-size:8.5px;}
+  .top-gauge-strip > .card:nth-child(6) .checklist{gap:5px;}
+  .top-gauge-strip > .card:nth-child(6) .chk-item{font-size:10px;}
+
   .card{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:14px 16px;}
   .card .label{font-size:10.5px; text-transform:uppercase; letter-spacing:.1em; color:var(--text-faint); font-weight:600;}
   .card .big{font-family:'JetBrains Mono',monospace; font-weight:700; font-size:26px; margin-top:6px;}
@@ -338,18 +347,18 @@
   footer{margin-top:30px; text-align:center; color:var(--text-faint); font-size:10.5px; font-family:'JetBrains Mono',monospace;}
 
   @media(max-width:1500px){
-    .top-gauge-strip{grid-template-columns:repeat(5,minmax(180px,1fr)); overflow-x:auto;}
+    .top-gauge-strip{grid-template-columns:repeat(8,minmax(190px,1fr)); overflow-x:auto;}
   }
   @media(max-width:1300px){
     .gauge-strip{grid-template-columns:1fr 1fr 1fr;}
-    .top-gauge-strip{grid-template-columns:repeat(5,minmax(175px,1fr));}
+    .top-gauge-strip{grid-template-columns:repeat(8,minmax(185px,1fr));}
   }
   @media(max-width:1200px){
     .two-col,.three-col{grid-template-columns:1fr;}
   }
   @media(max-width:700px){
     .gauge-strip{grid-template-columns:1fr 1fr;}
-    .top-gauge-strip{grid-template-columns:repeat(5,minmax(170px,1fr));}
+    .top-gauge-strip{grid-template-columns:repeat(8,minmax(180px,1fr));}
     .market-mood-card{grid-column:auto;}
   }
 </style>
@@ -481,9 +490,8 @@
       <div class="nasi-tooltip" id="nasiTooltip"></div>
     </div>
 
-<!-- Breadth & Factors Row -->
-<div class="gauge-strip" style="grid-template-columns: 1fr 1fr 1fr; margin-bottom: 26px;">
-  
+<!-- Breadth & Factors Cards — same top row -->
+
   <div class="card">
     <div class="label">Factors vs SPY (Extremes)</div>
     <div class="checklist" style="grid-template-columns:1fr;" id="factorsExtremesList"></div>
@@ -498,8 +506,6 @@
     <div class="label">Sector Breadth (% above MAs)</div>
     <div class="breadth-row" id="sectorBreadthRow"></div>
   </div>
-
-</div>
 
   </div>
  
@@ -756,7 +762,7 @@ function renderMarketMood(payload={}){
   score = clamp(score,-2.5,2.5);
   const mood = payload.state ? {state:payload.state, desc:payload.description||"Volatility regime", cls:/greed/i.test(payload.state)?"greedy":/neutral/i.test(payload.state)?"neutral":""} : moodClassification(score);
   const scoreEl=document.getElementById("moodScore"), needle=document.getElementById("moodNeedle"), stateEl=document.getElementById("moodState");
-  if(scoreEl) scoreEl.textContent=(score>=0?"+":"")+score.toFixed(2);
+  if(scoreEl){ scoreEl.textContent=(payload.isProxy?"≈":"")+(score>=0?"+":"")+score.toFixed(2); scoreEl.title=payload.isProxy?"Approximate fallback using VIX versus its baseline; exact Market Mood requires the VVIX/VIX ratio engine.":"Exact score supplied by the volatility engine."; }
   if(needle) needle.style.transform=`translateX(-50%) rotate(${clamp(score/2.5,-1,1)*78}deg)`;
   if(stateEl){ stateEl.textContent=mood.state; stateEl.className="mood-state "+mood.cls; }
   const desc=document.getElementById("moodDescription"); if(desc) desc.textContent=mood.desc;
@@ -788,7 +794,7 @@ function syncMoodFromBreadthPage(){
     const stateMatch=panelText.match(/\b(Extreme Fear|Fear|Neutral Mood|Neutral|Extreme Greed|Greed)\b/i);
     const descMatch=panelText.match(/\b(Elevated Volatility|Severe Volatility|Normal Volatility|Contracting Volatility|Low Volatility)\b/i);
     if(Number.isFinite(score)||stateMatch||Number.isFinite(vvix)){
-      renderMarketMood({score:Number.isFinite(score)?score:undefined,vix:Number.isFinite(vix)?vix:DATA.vix.level,vvix:Number.isFinite(vvix)?vvix:undefined,baseline:Number.isFinite(baseline)?baseline:DATA.vix.sma20,state:stateMatch?stateMatch[1].replace(/Neutral Mood/i,"Neutral"):undefined,description:descMatch?descMatch[1]:undefined,source:"Breadth Institutional · live same-origin sync"});
+      renderMarketMood({score:Number.isFinite(score)?score:undefined,vix:Number.isFinite(vix)?vix:DATA.vix.level,vvix:Number.isFinite(vvix)?vvix:undefined,baseline:Number.isFinite(baseline)?baseline:DATA.vix.sma20,state:stateMatch?stateMatch[1].replace(/Neutral Mood/i,"Neutral"):undefined,description:descMatch?descMatch[1]:undefined,source:"Breadth Institutional · exact VVIX/VIX engine",isProxy:false});
     }
   }catch(err){ console.warn("Volatility mood sync unavailable:",err.message); }
 }
@@ -954,7 +960,8 @@ if (spread > 1.05) {
       vix: v.level,
       baseline: v.sma20,
       trendLabel: v.trendLabel,
-      source: "Local VIX proxy · awaiting Breadth Institutional sync"
+      source: "Approximate VIX/EMA proxy · exact VVIX/VIX score pending",
+      isProxy: true
     });
     const vix = v.level;
 
