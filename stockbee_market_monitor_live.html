@@ -169,6 +169,24 @@
     .benchmark-chart { height: 330px; }
     #refreshBtn { margin-left: 0; }
   }
+
+  /* ---------- HISTORICAL TIME MACHINE ---------- */
+  .time-machine { background:#fff; border:1px solid #e1e0d9; border-radius:12px; padding:14px 16px; margin-bottom:16px; }
+  .tm-head { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:10px; }
+  .tm-title { font:700 11px 'JetBrains Mono',monospace; text-transform:uppercase; letter-spacing:.08em; color:#2a78d6; }
+  .tm-readout { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .tm-date { font:800 14px 'JetBrains Mono',monospace; color:#0b0b0b; min-width:105px; text-align:center; }
+  .tm-badge { font:700 10px 'JetBrains Mono',monospace; text-transform:uppercase; padding:4px 8px; border-radius:999px; background:#eef4fb; color:#2a78d6; }
+  .tm-badge.live { background:#e7f6f0; color:#087c55; }
+  .tm-controls { display:grid; grid-template-columns:auto auto auto minmax(220px,1fr) auto auto; gap:8px; align-items:center; }
+  .tm-btn { border:1px solid #d3d1c7; background:#fff; color:#52514e; border-radius:7px; min-height:32px; padding:5px 10px; cursor:pointer; font:700 11px 'JetBrains Mono',monospace; }
+  .tm-btn:hover { background:#f1efe8; color:#0b0b0b; }
+  .tm-btn:disabled { opacity:.45; cursor:default; }
+  .tm-slider { width:100%; accent-color:#2a78d6; cursor:pointer; }
+  .tm-range { display:flex; justify-content:space-between; margin-top:7px; padding:0 2px; color:#898781; font:10px 'JetBrains Mono',monospace; }
+  .historical-mode .command-strip { box-shadow:0 0 0 2px rgba(42,120,214,.10); }
+  @media (max-width:850px) { .tm-controls { grid-template-columns:repeat(3,auto); } .tm-slider { grid-column:1/-1; grid-row:2; } .tm-range { display:none; } }
+
 </style>
 </head>
 <body>
@@ -202,6 +220,26 @@
   <span id="statusText">Loading latest data…</span>
   <button id="refreshBtn">Refresh now</button>
 </div>
+
+
+<section class="time-machine" id="timeMachine" aria-label="Historical time machine">
+  <div class="tm-head">
+    <div>
+      <div class="tm-title">◷ Market Time Machine</div>
+      <div style="font-size:11px;color:#898781;margin-top:3px;">Replay the dashboard using only information available through the selected trading date.</div>
+    </div>
+    <div class="tm-readout"><span class="tm-badge live" id="tmBadge">Latest</span><span class="tm-date" id="tmDate">—</span></div>
+  </div>
+  <div class="tm-controls">
+    <button class="tm-btn" id="tmPrev" title="Previous trading day">◀</button>
+    <button class="tm-btn" id="tmPlay" title="Play historical sequence">▶ Play</button>
+    <button class="tm-btn" id="tmNext" title="Next trading day">▶</button>
+    <input class="tm-slider" id="tmSlider" type="range" min="0" max="0" value="0" step="1" aria-label="Select historical trading date">
+    <button class="tm-btn" id="tmYtd">YTD</button>
+    <button class="tm-btn" id="tmLatest">↻ Latest</button>
+  </div>
+  <div class="tm-range"><span id="tmStart">—</span><span id="tmEnd">—</span></div>
+</section>
 
 <!-- Decision-first market environment summary -->
 <section class="command-strip regime-neutral" id="commandStrip">
@@ -321,9 +359,12 @@ async function fetchDirectEtfHistory() {
 }
 
 function mergeEtfDataIntoDashboard() {
-  if (!currentData || currentData.length === 0) return;
-  
-  currentData.forEach(row => {
+  const targets = [];
+  if (fullData && fullData.length) targets.push(...fullData);
+  if (currentData && currentData.length) targets.push(...currentData);
+  if (!targets.length) return;
+  const uniqueTargets = [...new Set(targets)];
+  uniqueTargets.forEach(row => {
     const parts = row.date.split('/');
     if (parts.length === 3) {
       const year = parts[2];
@@ -409,6 +450,9 @@ function sma(arr, period) {
 const priceType='candle';
 let showSma20=true, showSma50=true, showSma200=false;
 let currentData=[];
+let fullData=[];
+let selectedIndex=-1;
+let playTimer=null;
 
 function ensureNasdaqData() {
   currentData.forEach(d=>{ if(d.nasdaq==null && d.sp!=null) d.nasdaq=Math.round(d.sp*(d.sp<1500?.9354:3.15)*100)/100; });
@@ -640,13 +684,110 @@ function renderSummary() {
   `;
 }
 
+
+function stochasticSeries(ohlc, period=14, smooth=3) {
+  const raw = new Array(ohlc.length).fill(null);
+  for (let i=period-1;i<ohlc.length;i++) {
+    const win=ohlc.slice(i-period+1,i+1);
+    const highs=win.map(x=>x?.h).filter(Number.isFinite), lows=win.map(x=>x?.l).filter(Number.isFinite);
+    const c=ohlc[i]?.c;
+    if (highs.length===period && lows.length===period && Number.isFinite(c)) {
+      const hi=Math.max(...highs), lo=Math.min(...lows);
+      raw[i]=hi===lo?50:((c-lo)/(hi-lo))*100;
+    }
+  }
+  const fast=sma(raw,smooth), slow=sma(fast,smooth);
+  return {fast,slow};
+}
+
+function calculateHistoricalDangerSignals(symbol) {
+  if (!currentData.length) return [];
+  const key=symbol==='SPY'?'sp':'nasdaq';
+  const close=currentData.map(d=>d[key]);
+  const ohlc=ohlcFor(symbol);
+  const ma20=sma(close,20), ma50=sma(close,50);
+  const i=close.length-1, signals=[];
+  const last=close[i];
+  if (Number.isFinite(last) && Number.isFinite(ma20[i]) && last<ma20[i]) signals.push('Price Closes Below Moving Average (20 SMA)');
+  if (Number.isFinite(last) && Number.isFinite(ma50[i]) && last<ma50[i]) signals.push('Price Closes Below Intermediate Trend (50 SMA)');
+  const {fast,slow}=stochasticSeries(ohlc);
+  if (Number.isFinite(fast[i]) && Number.isFinite(slow[i]) && fast[i]<slow[i]) signals.push('Fast Stochastic Below Slow Stochastic');
+  if (i>=2 && Number.isFinite(fast[i]) && Number.isFinite(fast[i-1]) && Number.isFinite(slow[i]) && Number.isFinite(slow[i-1]) && fast[i]<fast[i-1] && slow[i]<slow[i-1]) signals.push('Fast & Slow Stochastic Curved Down');
+  if (i>=2 && ohlc[i] && ohlc[i-1] && ohlc[i-2] && ohlc[i].l<ohlc[i-1].l && ohlc[i-1].l<ohlc[i-2].l) signals.push('3 Consecutive Days of Lower Lows');
+  if (i>=3 && Number.isFinite(last)) {
+    const priorLows=ohlc.slice(i-3,i).map(x=>x?.l).filter(Number.isFinite);
+    if (priorLows.length===3 && last<Math.min(...priorLows)) signals.push('Close Lower Than 3 Previous Lows');
+  }
+  if (i>=3 && Number.isFinite(ma20[i]) && Number.isFinite(ma20[i-3]) && Number.isFinite(ma50[i]) && Number.isFinite(ma50[i-3]) && ma20[i]<ma20[i-3] && ma50[i]<ma50[i-3]) signals.push('Moving Averages Begin to Slope Downward');
+  return signals;
+}
+
+function formatTmDate(dateString) {
+  const d=new Date(dateString+' 12:00:00');
+  return Number.isNaN(d.getTime())?dateString:d.toLocaleDateString(undefined,{day:'2-digit',month:'short',year:'numeric'});
+}
+
+function updateTimeMachineUi() {
+  if (!fullData.length) return;
+  const latest=selectedIndex===fullData.length-1;
+  const row=fullData[selectedIndex];
+  const slider=document.getElementById('tmSlider');
+  slider.max=String(fullData.length-1); slider.value=String(selectedIndex);
+  document.getElementById('tmDate').textContent=formatTmDate(row.date);
+  const badge=document.getElementById('tmBadge');
+  badge.textContent=latest?'Latest':'Historical snapshot'; badge.className='tm-badge'+(latest?' live':'');
+  document.getElementById('tmStart').textContent=formatTmDate(fullData[0].date);
+  document.getElementById('tmEnd').textContent=formatTmDate(fullData.at(-1).date);
+  document.getElementById('tmPrev').disabled=selectedIndex<=0;
+  document.getElementById('tmNext').disabled=latest;
+  document.getElementById('tmLatest').disabled=latest;
+  document.body.classList.toggle('historical-mode',!latest);
+}
+
+function applyTimeMachineIndex(index, announce=true) {
+  if (!fullData.length) return;
+  selectedIndex=Math.max(0,Math.min(fullData.length-1,Number(index)||0));
+  currentData=fullData.slice(0,selectedIndex+1).map(row=>({...row,spyOhlc:row.spyOhlc?{...row.spyOhlc}:undefined,qqqOhlc:row.qqqOhlc?{...row.qqqOhlc}:undefined}));
+  mergeEtfDataIntoDashboard();
+  renderAll();
+  updateTimeMachineUi();
+  if (announce) {
+    const latest=selectedIndex===fullData.length-1;
+    setStatus(latest?'live':'stale',latest?'Latest dashboard snapshot · '+formatTmDate(fullData[selectedIndex].date):'Historical snapshot · '+formatTmDate(fullData[selectedIndex].date)+' · future observations excluded');
+  }
+}
+
+function initializeTimeMachine(data) {
+  fullData=data.map(row=>({...row,spyOhlc:row.spyOhlc?{...row.spyOhlc}:undefined,qqqOhlc:row.qqqOhlc?{...row.qqqOhlc}:undefined}));
+  selectedIndex=fullData.length-1;
+  applyTimeMachineIndex(selectedIndex,false);
+}
+
+function stopPlayback() {
+  if (playTimer) { clearInterval(playTimer); playTimer=null; }
+  const b=document.getElementById('tmPlay'); if (b) b.textContent='▶ Play';
+}
+
+function togglePlayback() {
+  if (playTimer) { stopPlayback(); return; }
+  if (selectedIndex>=fullData.length-1) selectedIndex=0;
+  document.getElementById('tmPlay').textContent='Ⅱ Pause';
+  playTimer=setInterval(()=>{
+    if (selectedIndex>=fullData.length-1) { stopPlayback(); return; }
+    applyTimeMachineIndex(selectedIndex+1,false);
+    setStatus('stale','Historical playback · '+formatTmDate(fullData[selectedIndex].date));
+  },650);
+}
+
 function renderAll() {
+  renderDangerPanel('spy', calculateHistoricalDangerSignals('SPY'), true);
+  renderDangerPanel('qqq', calculateHistoricalDangerSignals('QQQ'), true);
   buildOrUpdateCharts();
   renderSummary();
 }
 
 // Generic dynamic renderer for both panels
-function renderDangerPanel(prefix, signals) {
+function renderDangerPanel(prefix, signals, suppressSummary=false) {
   const count = signals && Array.isArray(signals) ? signals.length : 0;
   dangerCounts[prefix] = count;
   const countEl = document.getElementById(`${prefix}DangerCount`);
@@ -673,7 +814,7 @@ function renderDangerPanel(prefix, signals) {
 
   if (count === 0) {
     listEl.innerHTML = `<li style="color:#898781; font-style:italic; padding:4px 0;">No active danger signals. Price action is constructive.</li>`;
-    if (currentData && currentData.length) renderSummary();
+    if (!suppressSummary && currentData && currentData.length) renderSummary();
     return;
   }
 
@@ -683,7 +824,7 @@ function renderDangerPanel(prefix, signals) {
       <span style="width:7px; height:7px; border-radius:50%; background:#e34948; box-shadow:0 0 8px #e34948; flex-shrink:0; margin-left:12px;"></span>
     </li>
   `).join("");
-  if (currentData && currentData.length) renderSummary();
+  if (!suppressSummary && currentData && currentData.length) renderSummary();
 }
 
 // Revised fetching sequence reading both matrices
@@ -716,12 +857,12 @@ async function loadData(isManualRefresh) {
   if (live && live.length > 0) {
     currentData = live;
     mergeEtfDataIntoDashboard(); // Re-merge ETF data over the fresh sheet numbers
-    renderAll();
+    initializeTimeMachine(currentData);
     setStatus('live', 'Live data loaded from the published sheet · ' + now);
   } else if (currentData.length === 0) {
-    currentData = SEED_DATA;
+    currentData = SEED_DATA.map(row=>({...row}));
     mergeEtfDataIntoDashboard();
-    renderAll();
+    initializeTimeMachine(currentData);
     setStatus('error', 'Could not reach the live sheet. Showing last saved snapshot through ' + SEED_DATA[SEED_DATA.length - 1].date + '.');
   } else {
     setStatus('error', 'Refresh failed — keeping previously loaded data. ' + now);
@@ -736,8 +877,22 @@ document.getElementById('refreshBtn').addEventListener('click', () => {
   loadData(true);
 });
 
+
+document.getElementById('tmSlider').addEventListener('input', e => { stopPlayback(); applyTimeMachineIndex(Number(e.target.value)); });
+document.getElementById('tmPrev').addEventListener('click', () => { stopPlayback(); applyTimeMachineIndex(selectedIndex-1); });
+document.getElementById('tmNext').addEventListener('click', () => { stopPlayback(); applyTimeMachineIndex(selectedIndex+1); });
+document.getElementById('tmPlay').addEventListener('click', togglePlayback);
+document.getElementById('tmLatest').addEventListener('click', () => { stopPlayback(); applyTimeMachineIndex(fullData.length-1); });
+document.getElementById('tmYtd').addEventListener('click', () => {
+  stopPlayback();
+  if (!fullData.length) return;
+  const latestYear=new Date(fullData.at(-1).date+' 12:00:00').getFullYear();
+  const idx=fullData.findIndex(row=>new Date(row.date+' 12:00:00').getFullYear()===latestYear);
+  applyTimeMachineIndex(idx<0?0:idx);
+});
+
 // Initialize Application
-fetchPythonDangerSignals();
+// Danger signals are calculated locally for every selected historical date.
 fetchDirectEtfHistory();
 loadData(false);
 </script>
