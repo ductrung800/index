@@ -247,7 +247,7 @@ footer{text-align:center;color:var(--text-faint);font:9px 'JetBrains Mono',monos
     <div class="command-cell">
       <div class="cell-label">Risk Level</div>
       <div class="cell-value" id="mcRisk">—</div>
-      <div class="cell-sub" id="riskSub">—</div>
+      <div class="cell-sub" id="riskSub">Model-defined distribution pressure</div>
     </div>
     <div class="command-cell">
       <div class="cell-label">Today's Playbook</div>
@@ -255,9 +255,9 @@ footer{text-align:center;color:var(--text-faint);font:9px 'JetBrains Mono',monos
       <div class="cell-sub" id="pbSize">—</div>
     </div>
     <div class="command-cell">
-      <div class="cell-label">Suggested Exposure</div>
+      <div class="cell-label">Model Exposure</div>
       <div class="cell-value" id="mcExp">—</div>
-      <div class="cell-sub" id="mcOut">—</div>
+      <div class="cell-sub" id="mcOut">Current breadth bias</div>
     </div>
   </section>
 
@@ -265,7 +265,7 @@ footer{text-align:center;color:var(--text-faint);font:9px 'JetBrains Mono',monos
     <div class="section-title"><span class="left">Portfolio Directive</span><span id="directiveSync" class="up">● Live</span></div>
     <div class="directive-grid">
       <div class="directive-item"><div class="cell-label">Position Size</div><div class="v" id="dirSize">—</div></div>
-      <div class="directive-item"><div class="cell-label">Bull Probability</div><div class="v" id="dirProb">—</div></div>
+      <div class="directive-item"><div class="cell-label">Risk-On Confidence</div><div class="v" id="dirProb">—</div></div>
       <div class="directive-item"><div class="cell-label">Target Leadership</div><div class="v up" id="pbLead">—</div></div>
       <div class="directive-item"><div class="cell-label">Avoid / Underweight</div><div class="v down" id="pbAvoid">—</div></div>
       <div class="directive-item"><div class="cell-label">Breadth Trend</div><div class="v" id="pbTrend">—</div></div>
@@ -306,7 +306,7 @@ footer{text-align:center;color:var(--text-faint);font:9px 'JetBrains Mono',monos
   </section>
 
   <section class="card span5">
-    <div class="section-title"><span class="left">Breadth Participation Matrix</span><span class="muted">Sector rotation</span></div>
+    <div class="section-title"><span class="left">Breadth Participation Matrix</span><span class="muted">Sector ETF relative breadth</span></div>
     <div class="quadrant">
       <div class="quad"><h4 class="up">Leading / Expanding</h4><div id="qLeading"></div></div>
       <div class="quad"><h4 class="blue">Improving / Weak</h4><div id="qImproving"></div></div>
@@ -320,7 +320,7 @@ footer{text-align:center;color:var(--text-faint);font:9px 'JetBrains Mono',monos
     <div class="tabs">
       <button class="active" data-pane="pane50">50DMA Breadth</button>
       <button data-pane="pane200">200DMA Breadth</button>
-      <button data-pane="paneHL">New Highs / Lows</button>
+      <button data-pane="paneHL">Near 52W High / Low</button>
       <button data-pane="paneAD">Advance / Decline</button>
     </div>
     <div class="chart-pane active" id="pane50"><div class="tv-container" id="tv_chart_50"></div></div>
@@ -330,7 +330,7 @@ footer{text-align:center;color:var(--text-faint);font:9px 'JetBrains Mono',monos
   </section>
 
   <section class="card span12">
-    <div class="section-title"><span class="left">Sector Breadth Leadership</span><span class="muted">Rank · trend · breadth · momentum · state</span></div>
+    <div class="section-title"><span class="left">Sector Breadth Leadership</span><span class="muted">Sector ETFs vs SPY · rank · momentum · state</span></div>
     <div class="table-wrap">
       <table>
         <thead>
@@ -357,7 +357,7 @@ footer{text-align:center;color:var(--text-faint);font:9px 'JetBrains Mono',monos
 
 </main>
 
-<footer>Market Breadth Command Center · Live Yahoo Finance proxy data · TradingView breadth evidence · Informational use only</footer>
+<footer>Market Breadth Command Center · 50-stock breadth proxy + sector ETF relative-strength model · TradingView evidence · Informational use only</footer>
 
 <script>
 const BREADTH_PROXY=['AAPL','MSFT','NVDA','AMZN','META','GOOGL','BRK-B','TSLA','AVGO','JPM','UNH','V','XOM','JNJ','MA','PG','HD','COST','ABBV','MRK','CRM','CVX','PEP','ADBE','AMD','WMT','BAC','ACN','MCD','LIN','TMO','CSCO','ABT','NFLX','DHR','ORCL','TXN','WFC','INTC','CMCSA','PFE','PM','COP','VZ','NEE','IBM','RTX','HON','QCOM','UNP'];
@@ -470,15 +470,38 @@ function buildBreadthHistory(){
   return arr;
 }
 function stateForScore(score){
-  if(score>=70)return{regime:score>=85?'EUPHORIA / EXTENDED':'HEALTHY EXPANSION',risk:score>=85?'Elevated':'Low',out:'Bullish',exp:'80–90%',strat:score>=85?'Trail Stops / Trim':'Buy Pullbacks',size:'Full',prob:82,trend:'Constructive',color:'var(--teal)'};
-  if(score>=55)return{regime:'SELECTIVE RISK-ON',risk:'Moderate',out:'Constructive',exp:'60–70%',strat:'Selective Breakouts',size:'Three-quarter',prob:65,trend:'Improving',color:'var(--blue)'};
-  if(score>=40)return{regime:'ROTATION / CHOP',risk:'Moderate',out:'Mixed',exp:'40–50%',strat:'Mean Reversion',size:'Half',prob:55,trend:'Stalling',color:'var(--amber)'};
-  return{regime:'DETERIORATION / RISK-OFF',risk:'High',out:'Bearish',exp:'10–25%',strat:'Capital Preservation',size:'Minimal',prob:22,trend:'Contracting',color:'var(--red)'};
+  if(score>=70)return{regime:score>=85?'EUPHORIA / EXTENDED':'HEALTHY EXPANSION',risk:score>=85?'Elevated':'Low',out:'Bullish',exp:'80–90%',strat:score>=85?'Trail Stops / Trim':'Buy Pullbacks',size:'Full',confidence:82,trend:'Constructive',color:'var(--teal)'};
+  if(score>=55)return{regime:'SELECTIVE RISK-ON',risk:'Moderate',out:'Constructive',exp:'60–70%',strat:'Selective Breakouts',size:'Three-quarter',confidence:65,trend:'Improving',color:'var(--blue)'};
+  if(score>=40)return{regime:'ROTATION / CHOP',risk:'Moderate',out:'Mixed',exp:'40–50%',strat:'Mean Reversion',size:'Half',confidence:55,trend:'Stalling',color:'var(--amber)'};
+  return{regime:'DETERIORATION / RISK-OFF',risk:'High',out:'Bearish',exp:'10–25%',strat:'Capital Preservation',size:'Minimal',confidence:22,trend:'Contracting',color:'var(--red)'};
 }
 function metricState(v){
   if(v>=60)return['Constructive','state-good'];
   if(v>=45)return['Mixed','state-mid'];
   return['Weak','state-bad'];
+}
+
+function scoreBand(score){
+  if(score>=70)return 'expansion';
+  if(score>=55)return 'selective';
+  if(score>=40)return 'rotation';
+  return 'riskoff';
+}
+function regimeAgeSessions(history){
+  if(!history?.length)return 0;
+  const currentBand=scoreBand(history.at(-1).score);
+  let age=0;
+  for(let i=history.length-1;i>=0;i--){
+    if(scoreBand(history[i].score)!==currentBand)break;
+    age++;
+  }
+  return age;
+}
+function thresholdsForScore(score){
+  if(score>=70)return {upgrade:85,downgrade:69,invalidation:69};
+  if(score>=55)return {upgrade:70,downgrade:54,invalidation:54};
+  if(score>=40)return {upgrade:55,downgrade:39,invalidation:39};
+  return {upgrade:40,downgrade:30,invalidation:30};
 }
 
 function sectorEngine(){
@@ -512,7 +535,7 @@ function renderHealth(history){
     ['Above 20DMA',now.p20,now.p20-d1.p20,now.p20-d5.p20],
     ['Above 50DMA',now.p50,now.p50-d1.p50,now.p50-d5.p50],
     ['Above 200DMA',now.p200,now.p200-d1.p200,now.p200-d5.p200],
-    ['New Highs Share',now.hlPct,now.hlPct-d1.hlPct,now.hlPct-d5.hlPct]
+    ['Near 52W High Share',now.hlPct,now.hlPct-d1.hlPct,now.hlPct-d5.hlPct]
   ];
   let h='<div class="health-head">Metric</div><div class="health-head">Current</div><div class="health-head">1D Δ</div><div class="health-head">5D Δ</div><div class="health-head">State</div>';
   metrics.forEach(([name,val,c1,c5])=>{
@@ -592,7 +615,8 @@ function renderAll(){
   document.getElementById('scoreDelta').innerHTML=`1D <b class="${now.score-d1.score>=0?'up':'down'}">${signed(now.score-d1.score)}</b> · 5D <b class="${now.score-d5.score>=0?'up':'down'}">${signed(now.score-d5.score)}</b>`;
   document.getElementById('masterRegime').textContent=regime.regime;
   document.getElementById('masterRegime').style.color=regime.color;
-  document.getElementById('regimeAge').textContent=`Current score range implies ${regime.out.toLowerCase()} conditions`;
+  const regimeAge=regimeAgeSessions(history);
+  document.getElementById('regimeAge').textContent=`${regimeAge} session${regimeAge===1?'':'s'} in current score band`;
   document.getElementById('mcPart').textContent=now.participation>=60?'Broad':now.participation>=45?'Mixed':'Narrow';
   document.getElementById('partSub').textContent=`${now.p50}% above 50DMA · ${now.p200}% above 200DMA`;
   document.getElementById('mcRisk').textContent=regime.risk;
@@ -602,34 +626,39 @@ function renderAll(){
   document.getElementById('pbSize').textContent=`${regime.size} position sizing`;
   document.getElementById('mcExp').textContent=regime.exp;
   document.getElementById('mcExp').style.color=regime.color;
-  document.getElementById('mcOut').textContent=`${regime.out} 5-day outlook`;
+  document.getElementById('mcOut').textContent=`${regime.out} current breadth bias`;
 
   document.getElementById('dirSize').textContent=regime.size;
-  document.getElementById('dirProb').textContent=`${regime.prob}% bullish`;
+  document.getElementById('dirProb').textContent=`${regime.confidence}% score-derived`;
   document.getElementById('pbLead').textContent=`${top?.n||'—'} / ${second?.n||'—'}`;
   document.getElementById('pbAvoid').textContent=bottom?.n||'—';
   document.getElementById('pbTrend').textContent=regime.trend;
   document.getElementById('pbTrend').style.color=regime.color;
-  document.getElementById('invalidation').textContent=now.score>=55?'Breadth score < 50':'Breadth score < 40';
+  const thresholds=thresholdsForScore(now.score);
+  document.getElementById('invalidation').textContent=`Score ≤ ${thresholds.invalidation}`;
 
   const direction5=now.score-d5.score;
+  const directionWord=direction5>0?'improved':direction5<0?'deteriorated':'was unchanged';
+  const breadthStructure=now.p20>=now.p50&&now.p50>=now.p200?'short-, intermediate- and long-term participation are positively stacked':
+    now.p20<=now.p50&&now.p50<=now.p200?'short-term participation is weaker than the longer-term structure':'participation is mixed across timeframes';
   document.getElementById('aiText').innerHTML=
-    `Breadth is <b>${regime.trend.toLowerCase()}</b>: the composite score is <b>${now.score}/100</b>, ${direction5>=0?'up':'down'} <b>${Math.abs(direction5)} points</b> over five sessions. `+
-    `<b>${now.p50}%</b> of the mega-cap proxy universe is above its 50-day average and <b>${now.p200}%</b> remains above its 200-day average. `+
-    `Leadership is concentrated in <b>${top?.n}</b> and <b>${second?.n}</b>, while <b>${bottom?.n}</b> remains the weakest expression. `+
-    `SPY and QQQ carry <b>${distSpy}</b> and <b>${distQqq}</b> distribution days, respectively. The current posture is <b>${regime.strat.toLowerCase()}</b> with <b>${regime.size.toLowerCase()}</b> position sizing—not broad risk deployment.`;
+    `The <b>50-stock breadth proxy</b> scores <b>${now.score}/100</b> and ${directionWord} by <b>${Math.abs(direction5)} points</b> over five sessions. `+
+    `<b>${now.p20}%</b>, <b>${now.p50}%</b>, and <b>${now.p200}%</b> of valid constituents are above their 20-, 50-, and 200-day averages, respectively; ${breadthStructure}. `+
+    `The highest-ranked sector ETFs versus SPY are <b>${top?.n||'unavailable'}</b> and <b>${second?.n||'unavailable'}</b>; the lowest-ranked is <b>${bottom?.n||'unavailable'}</b>. `+
+    `SPY and QQQ currently register <b>${distSpy}</b> and <b>${distQqq}</b> model-defined distribution days in the latest 25-session windows. `+
+    `This evidence maps to <b>${regime.strat.toLowerCase()}</b>, <b>${regime.size.toLowerCase()}</b> sizing, and a model exposure range of <b>${regime.exp}</b>.`;
 
   document.getElementById('upgradeList').innerHTML=[
-    `Breadth score closes above ${now.score>=55?70:60}`,
-    `More than 55% of the universe above the 50DMA`,
-    `SPY and QQQ distribution days fall below 6`,
-    `Technology moves into Leading / Expanding`
+    `Composite breadth closes at or above ${thresholds.upgrade}`,
+    `50DMA participation rises above ${Math.max(55,Math.min(70,now.p50+5))}%`,
+    `SPY and QQQ distribution counts are both below 6`,
+    `${bottom?.n||'The lowest-ranked sector'} exits Lagging and improves versus SPY`
   ].map(x=>`<li>${x}</li>`).join('');
   document.getElementById('downgradeList').innerHTML=[
-    `Breadth score closes below ${now.score>=55?50:40}`,
-    `Less than 45% of the universe above the 200DMA`,
-    `QQQ distribution days rise above 9`,
-    `Technology and Consumer Discretionary both deteriorate`
+    `Composite breadth closes at or below ${thresholds.downgrade}`,
+    `200DMA participation falls below ${Math.min(45,Math.max(30,now.p200-5))}%`,
+    `Either SPY or QQQ reaches 6 or more distribution days`,
+    `${top?.n||'The current leader'} loses its Leading state or falls below its 50DMA`
   ].map(x=>`<li>${x}</li>`).join('');
 
   renderHealth(history);
@@ -641,7 +670,7 @@ function renderAll(){
   renderHistory(history);
 
   const lastDate=new Date((STATE.data.SPY?.at(-1)?.t||Date.now())*1000).toISOString().slice(0,10);
-  document.getElementById('subtitle').textContent=`${lastDate} · ${Object.keys(STATE.data).length} live streams · Breadth score ${now.score} · SPY distribution ${distSpy} · QQQ distribution ${distQqq}`;
+  document.getElementById('subtitle').textContent=`${lastDate} · ${Object.keys(STATE.data).length} live streams · 50-stock proxy score ${now.score} · SPY distribution ${distSpy} · QQQ distribution ${distQqq}`;
   try{
     localStorage.setItem('market-breadth-state',JSON.stringify({
       updated:lastDate,score:now.score,regime:regime.regime,exposure:regime.exp,participation:now.participation,
