@@ -123,6 +123,44 @@
   .chart-wrap.t2108 { height:190px; }
   @media (max-width: 1100px) { .benchmark-grid,.breadth-grid { grid-template-columns:1fr; } }
 
+
+  /* ---------- MARKET ENVIRONMENT COMMAND STRIP ---------- */
+  .command-strip { background:#fff; border:1px solid #dcdad1; border-radius:12px; margin-bottom:16px; overflow:hidden; box-shadow:0 1px 0 rgba(0,0,0,.02); }
+  .command-strip.regime-bull { border-left:5px solid #1baf7a; }
+  .command-strip.regime-neutral { border-left:5px solid #eda100; }
+  .command-strip.regime-bear { border-left:5px solid #e34948; }
+  .command-top { display:flex; justify-content:space-between; align-items:flex-start; gap:18px; padding:14px 16px 12px; border-bottom:1px solid #e8e7e1; }
+  .command-eyebrow { font:700 10px 'JetBrains Mono',monospace; color:#898781; text-transform:uppercase; letter-spacing:.10em; margin-bottom:4px; }
+  .command-title-row { display:flex; align-items:center; flex-wrap:wrap; gap:9px; }
+  .command-title { font-size:20px; font-weight:800; letter-spacing:-.02em; }
+  .command-verdict { display:inline-flex; align-items:center; font:700 11px 'JetBrains Mono',monospace; padding:4px 9px; border-radius:999px; }
+  .command-verdict.bull { background:#e5f5ef; color:#0f6e56; }
+  .command-verdict.neutral { background:#fff4da; color:#8a5a00; }
+  .command-verdict.bear { background:#fcebeb; color:#9e2928; }
+  .command-asof { font:500 10px 'JetBrains Mono',monospace; color:#898781; white-space:nowrap; padding-top:3px; }
+  .command-grid { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); }
+  .command-cell { min-width:0; padding:11px 13px; border-right:1px solid #ecebe6; }
+  .command-cell:last-child { border-right:none; }
+  .command-label { font:600 9px 'JetBrains Mono',monospace; color:#898781; text-transform:uppercase; letter-spacing:.06em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .command-value { margin-top:3px; font-size:15px; font-weight:800; line-height:1.15; }
+  .command-value.pos { color:#1baf7a; } .command-value.neg { color:#e34948; } .command-value.warn { color:#b87700; } .command-value.neu { color:#444441; }
+  .command-sub { margin-top:2px; font-size:10px; color:#898781; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .command-bottom { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:16px; align-items:center; padding:11px 16px; background:#fcfcfa; border-top:1px solid #ecebe6; }
+  .command-conclusion { font-size:12.5px; line-height:1.45; color:#2c2c2a; }
+  .command-action { font:700 10px 'JetBrains Mono',monospace; text-transform:uppercase; letter-spacing:.05em; padding:6px 10px; border-radius:6px; background:#f1efe8; color:#444441; white-space:nowrap; }
+  .benchmark-read { margin-top:5px; font-size:11px; font-weight:650; color:#52514e; }
+  .benchmark-read.bull { color:#0f6e56; } .benchmark-read.bear { color:#b93433; } .benchmark-read.neutral { color:#8a5a00; }
+  .breadth-head { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:4px; }
+  .breadth-read { font:700 10px 'JetBrains Mono',monospace; padding:4px 8px; border-radius:999px; background:#f1efe8; color:#52514e; }
+  details.detail-panel { background:#fff; border:1px solid #e1e0d9; border-radius:12px; margin-bottom:16px; overflow:hidden; }
+  details.detail-panel summary { cursor:pointer; list-style:none; padding:13px 16px; display:flex; align-items:center; justify-content:space-between; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:#52514e; }
+  details.detail-panel summary::-webkit-details-marker { display:none; }
+  details.detail-panel summary::after { content:'＋'; color:#898781; font-size:16px; }
+  details.detail-panel[open] summary::after { content:'−'; }
+  .detail-content { border-top:1px solid #ecebe6; padding:14px 16px 16px; }
+  @media (max-width:1300px){ .command-grid{grid-template-columns:repeat(4,minmax(0,1fr));}.command-cell:nth-child(4){border-right:none}.command-cell:nth-child(-n+4){border-bottom:1px solid #ecebe6;} }
+  @media (max-width:700px){ .command-top,.command-bottom{grid-template-columns:1fr;display:grid}.command-grid{grid-template-columns:repeat(2,minmax(0,1fr));}.command-cell:nth-child(odd){border-right:1px solid #ecebe6}.command-cell:nth-child(even){border-right:none}.command-cell{border-bottom:1px solid #ecebe6}.command-action{white-space:normal}.command-asof{white-space:normal}.command-title{font-size:17px;} }
+
   @media (max-width: 600px) {
     body { padding: 12px; }
     .benchmark-chart { height: 330px; }
@@ -162,6 +200,33 @@
   <button id="refreshBtn">Refresh now</button>
 </div>
 
+<!-- Decision-first market environment summary -->
+<section class="command-strip regime-neutral" id="commandStrip">
+  <div class="command-top">
+    <div>
+      <div class="command-eyebrow">Market Environment · Decision First</div>
+      <div class="command-title-row">
+        <div class="command-title" id="commandTitle">Loading market posture…</div>
+        <span class="command-verdict neutral" id="verdictBadge">Neutral / mixed</span>
+      </div>
+    </div>
+    <div class="command-asof" id="asOf"></div>
+  </div>
+  <div class="command-grid">
+    <div class="command-cell"><div class="command-label">Risk level</div><div class="command-value neu" id="riskLevel">—</div><div class="command-sub" id="riskSub">Composite evidence</div></div>
+    <div class="command-cell"><div class="command-label">Exposure</div><div class="command-value neu" id="exposureGuide">—</div><div class="command-sub" id="exposureSub">Positioning guide</div></div>
+    <div class="command-cell"><div class="command-label">SPY</div><div class="command-value neu" id="spyCommand">—</div><div class="command-sub" id="spyCommandSub">Trend state</div></div>
+    <div class="command-cell"><div class="command-label">QQQ</div><div class="command-value neu" id="qqqCommand">—</div><div class="command-sub" id="qqqCommandSub">Leadership state</div></div>
+    <div class="command-cell"><div class="command-label">T2108</div><div class="command-value neu" id="t2108Command">—</div><div class="command-sub" id="t2108CommandSub">Breadth participation</div></div>
+    <div class="command-cell"><div class="command-label">5D / 10D ratio</div><div class="command-value neu" id="ratioCommand">—</div><div class="command-sub" id="ratioCommandSub">Breadth impulse</div></div>
+    <div class="command-cell"><div class="command-label">Quarterly breadth</div><div class="command-value neu" id="quarterCommand">—</div><div class="command-sub" id="quarterCommandSub">Intermediate structure</div></div>
+  </div>
+  <div class="command-bottom">
+    <div class="command-conclusion" id="commandConclusion">Building the market conclusion from benchmark trend, danger signals, T2108 and breadth ratios…</div>
+    <div class="command-action" id="commandAction">Wait for live data</div>
+  </div>
+</section>
+
 <!-- Benchmark controls -->
 <div class="panel" style="padding-bottom:12px;">
   <div class="benchmark-controls">
@@ -186,7 +251,7 @@
   <section class="benchmark-module">
     <div class="benchmark-chart-panel">
       <div class="benchmark-head">
-        <div><div class="benchmark-kicker">Broad-market benchmark</div><div class="benchmark-title">SPY Market Health</div></div>
+        <div><div class="benchmark-kicker">Broad-market benchmark</div><div class="benchmark-title">SPY Market Health</div><div class="benchmark-read neutral" id="spyBenchmarkRead">Assessing trend…</div></div>
         <div class="benchmark-stats" id="spyStats"></div>
       </div>
       <div class="benchmark-chart"><canvas id="spyChart" role="img" aria-label="SPY chart with moving averages"></canvas></div>
@@ -201,7 +266,7 @@
   <section class="benchmark-module">
     <div class="benchmark-chart-panel">
       <div class="benchmark-head">
-        <div><div class="benchmark-kicker">Growth / leadership benchmark</div><div class="benchmark-title">QQQ Market Health</div></div>
+        <div><div class="benchmark-kicker">Growth / leadership benchmark</div><div class="benchmark-title">QQQ Market Health</div><div class="benchmark-read neutral" id="qqqBenchmarkRead">Assessing leadership…</div></div>
         <div class="benchmark-stats" id="qqqStats"></div>
       </div>
       <div class="benchmark-chart"><canvas id="qqqChart" role="img" aria-label="QQQ chart with moving averages"></canvas></div>
@@ -215,19 +280,19 @@
 </div>
 
 <div class="panel">
-  <p class="panel-label">Breadth ratios (dashed reference = 1, up days equal down days)</p>
+  <div class="breadth-head"><p class="panel-label" style="margin:0">Breadth ratios (dashed reference = 1, up days equal down days)</p><span class="breadth-read" id="breadthRead">Assessing breadth impulse…</span></div>
   <div class="chart-wrap ratio"><canvas id="ratioChart"></canvas></div>
   <div class="legend" style="margin-top:8px;margin-bottom:0"><span><span class="swatch line" style="background:#1baf7a"></span>5-day ratio</span><span><span class="swatch dash" style="border-color:#e34948"></span>10-day ratio</span></div>
 </div>
 
-<!-- Summary / commentary panel -->
-<div class="panel">
-  <p class="panel-label">Market state summary</p>
-  <p class="asof" id="asOf"></p>
-  <span class="verdict" id="verdictBadge"></span>
-  <div class="summary-grid" id="summaryGrid"></div>
-  <div class="commentary" id="commentaryText"></div>
-</div>
+<!-- Detailed interpretation remains available without delaying the first read -->
+<details class="detail-panel">
+  <summary>Detailed market interpretation</summary>
+  <div class="detail-content">
+    <div class="summary-grid" id="summaryGrid"></div>
+    <div class="commentary" id="commentaryText"></div>
+  </div>
+</details>
  
 
  
@@ -464,6 +529,14 @@ function buildOrUpdateCharts() {
   updateBenchmarkStats('SPY'); updateBenchmarkStats('QQQ');
 }
 
+let dangerCounts = { spy: 0, qqq: 0 };
+
+function setTone(el, tone) {
+  if (!el) return;
+  el.classList.remove('pos','neg','warn','neu','bull','bear','neutral');
+  el.classList.add(tone);
+}
+
 function renderSummary() {
   const n = currentData.length;
   const today = currentData[n - 1];
@@ -485,9 +558,49 @@ function renderSummary() {
   if (ratioTone === 'pos' && quarterlyBull) { overallTone = 'bull'; overallLabel = 'Constructive — trend intact'; }
   else if (ratioTone === 'neg') { overallTone = 'bear'; overallLabel = 'Defensive — short-term caution'; }
 
+  const spyClose = currentData.map(d=>d.sp);
+  const qqqClose = currentData.map(d=>d.nasdaq);
+  const spy20 = sma(spyClose,20).at(-1), spy50 = sma(spyClose,50).at(-1);
+  const qqq20 = sma(qqqClose,20).at(-1), qqq50 = sma(qqqClose,50).at(-1);
+  const spyLast = spyClose.at(-1), qqqLast = qqqClose.at(-1);
+  const stateFor = (last,m20,m50) => {
+    if (![last,m20,m50].every(Number.isFinite)) return {label:'Data pending',tone:'neu',sub:'Awaiting moving averages'};
+    if (last>m20 && last>m50 && m20>=m50) return {label:'Constructive',tone:'pos',sub:'Above 20DMA & 50DMA'};
+    if (last<m20 && last<m50) return {label:'Defensive',tone:'neg',sub:'Below 20DMA & 50DMA'};
+    return {label:'Mixed',tone:'warn',sub:last<m20?'Below 20DMA; near 50DMA':'Above 20DMA; mixed trend'};
+  };
+  const spyState=stateFor(spyLast,spy20,spy50), qqqState=stateFor(qqqLast,qqq20,qqq50);
+  const dangerLoad = dangerCounts.spy + dangerCounts.qqq;
+  let riskLevel='Moderate', riskTone='warn', exposure='Reduced / selective', exposureTone='warn';
+  if (overallTone==='bull' && dangerLoad<=4 && spyState.tone==='pos' && qqqState.tone==='pos') { riskLevel='Low–moderate';riskTone='pos';exposure='Normal / opportunistic';exposureTone='pos'; }
+  else if (overallTone==='bear' || dangerLoad>=9 || qqqState.tone==='neg') { riskLevel='Elevated';riskTone='neg';exposure='Reduced / defensive';exposureTone='neg'; }
+  const divergence = spyState.tone!==qqqState.tone ? (qqqState.tone==='neg'?'QQQ is weaker than SPY.':'SPY and QQQ are not fully aligned.') : '';
+
   const badge = document.getElementById('verdictBadge');
   badge.textContent = overallLabel;
-  badge.className = 'verdict ' + overallTone;
+  badge.className = 'command-verdict ' + overallTone;
+  const strip=document.getElementById('commandStrip');
+  strip.className='command-strip regime-'+overallTone;
+  document.getElementById('commandTitle').textContent = overallTone==='bull'?'Constructive market environment':overallTone==='bear'?'Defensive market environment':'Mixed market environment';
+  document.getElementById('riskLevel').textContent=riskLevel; setTone(document.getElementById('riskLevel'),riskTone);
+  document.getElementById('riskSub').textContent=`${dangerCounts.spy+dangerCounts.qqq} total benchmark warnings`;
+  document.getElementById('exposureGuide').textContent=exposure; setTone(document.getElementById('exposureGuide'),exposureTone);
+  document.getElementById('exposureSub').textContent=exposureTone==='neg'?'Prioritize A-quality setups':'Follow-through still required';
+  document.getElementById('spyCommand').textContent=spyState.label; setTone(document.getElementById('spyCommand'),spyState.tone);
+  document.getElementById('spyCommandSub').textContent=`${spyState.sub} · ${dangerCounts.spy} warnings`;
+  document.getElementById('qqqCommand').textContent=qqqState.label; setTone(document.getElementById('qqqCommand'),qqqState.tone);
+  document.getElementById('qqqCommandSub').textContent=`${qqqState.sub} · ${dangerCounts.qqq} warnings`;
+  document.getElementById('t2108Command').textContent=today.t2108.toFixed(1)+'%'; setTone(document.getElementById('t2108Command'),t2108Tone==='pos'?'warn':t2108Tone==='neg'?'warn':'neu');
+  document.getElementById('t2108CommandSub').textContent=t2108Zone;
+  document.getElementById('ratioCommand').textContent=`${today.r5.toFixed(2)} / ${today.r10.toFixed(2)}`; setTone(document.getElementById('ratioCommand'),ratioTone==='pos'?'pos':ratioTone==='neg'?'neg':'warn');
+  document.getElementById('ratioCommandSub').textContent=ratioLabel;
+  document.getElementById('quarterCommand').textContent=`${today.up25q} / ${today.down25q}`; setTone(document.getElementById('quarterCommand'),quarterlyBull?'pos':'neg');
+  document.getElementById('quarterCommandSub').textContent=quarterlyBull?'Structural bull':'Structural bear';
+  document.getElementById('commandAction').textContent=exposure;
+  document.getElementById('commandConclusion').innerHTML=`<strong>Bottom line:</strong> ${overallTone==='bull'?'Benchmark trend and breadth are broadly constructive. Continue taking quality breakouts, but use the danger counts as a brake on position size.':overallTone==='bear'?'Short-term breadth and benchmark evidence warrant defense. Keep exposure reduced, avoid marginal breakouts, and wait for the 10-day ratio plus benchmark trend to improve.':'Signals disagree across timeframes. Use smaller positions, demand cleaner setups, and wait for stronger benchmark and breadth confirmation.'} ${divergence}`;
+  const spyRead=document.getElementById('spyBenchmarkRead'); spyRead.textContent=`${spyState.label} · ${spyState.sub} · ${dangerCounts.spy} active warnings`; spyRead.className='benchmark-read '+(spyState.tone==='pos'?'bull':spyState.tone==='neg'?'bear':'neutral');
+  const qqqRead=document.getElementById('qqqBenchmarkRead'); qqqRead.textContent=`${qqqState.label} · ${qqqState.sub} · ${dangerCounts.qqq} active warnings`; qqqRead.className='benchmark-read '+(qqqState.tone==='pos'?'bull':qqqState.tone==='neg'?'bear':'neutral');
+  document.getElementById('breadthRead').textContent=ratioTone==='pos'?'Breadth impulse: constructive':ratioTone==='neg'?'Breadth impulse: defensive':'Breadth impulse: mixed';
 
   const grid = document.getElementById('summaryGrid');
   grid.innerHTML = `
@@ -532,6 +645,7 @@ function renderAll() {
 // Generic dynamic renderer for both panels
 function renderDangerPanel(prefix, signals) {
   const count = signals && Array.isArray(signals) ? signals.length : 0;
+  dangerCounts[prefix] = count;
   const countEl = document.getElementById(`${prefix}DangerCount`);
   const badgeEl = document.getElementById(`${prefix}DangerBadge`);
   const listEl = document.getElementById(`${prefix}DangerList`);
@@ -556,6 +670,7 @@ function renderDangerPanel(prefix, signals) {
 
   if (count === 0) {
     listEl.innerHTML = `<li style="color:#898781; font-style:italic; padding:4px 0;">No active danger signals. Price action is constructive.</li>`;
+    if (currentData && currentData.length) renderSummary();
     return;
   }
 
@@ -565,6 +680,7 @@ function renderDangerPanel(prefix, signals) {
       <span style="width:7px; height:7px; border-radius:50%; background:#e34948; box-shadow:0 0 8px #e34948; flex-shrink:0; margin-left:12px;"></span>
     </li>
   `).join("");
+  if (currentData && currentData.length) renderSummary();
 }
 
 // Revised fetching sequence reading both matrices
