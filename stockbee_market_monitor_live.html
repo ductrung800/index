@@ -105,6 +105,10 @@
   .benchmark-controls { display:flex; flex-wrap:wrap; align-items:center; gap:18px; margin-bottom:16px; }
   .benchmark-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; margin-bottom:16px; }
   .benchmark-module { background:#fff; border:1px solid #e1e0d9; border-radius:12px; overflow:hidden; min-width:0; }
+  .evidence-grid,.danger-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; margin-bottom:16px; }
+  .evidence-panel { margin-bottom:0; min-width:0; }
+  .evidence-panel .chart-wrap { height:210px; }
+  .danger-panel { background:#fff; border:1px solid #e1e0d9; border-radius:12px; overflow:hidden; min-width:0; }
   .benchmark-chart-panel { padding:16px 18px 12px; }
   .benchmark-head { display:flex; justify-content:space-between; align-items:flex-start; gap:14px; margin-bottom:10px; }
   .benchmark-title { font-size:16px; font-weight:750; letter-spacing:-.01em; }
@@ -121,7 +125,7 @@
   .danger-list { list-style:none; display:flex; flex-direction:column; gap:7px; font-family:'JetBrains Mono',monospace; font-size:11px; margin:0; padding:0; }
   .breadth-grid { display:grid; grid-template-columns:minmax(0,.7fr) minmax(0,1.3fr); gap:16px; }
   .chart-wrap.t2108 { height:190px; }
-  @media (max-width: 1100px) { .benchmark-grid,.breadth-grid { grid-template-columns:1fr; } }
+  @media (max-width: 1100px) { .benchmark-grid,.breadth-grid,.evidence-grid,.danger-grid { grid-template-columns:1fr; } }
 
 
   /* ---------- MARKET ENVIRONMENT COMMAND STRIP ---------- */
@@ -292,10 +296,6 @@
       <div class="benchmark-chart"><canvas id="spyChart" role="img" aria-label="SPY chart with moving averages"></canvas></div>
       <div class="benchmark-legend"><span><span class="swatch line" style="background:#4a3aa7"></span>20-day SMA</span><span><span class="swatch line" style="background:#d85a30"></span>50-day SMA</span><span><span class="swatch line" style="background:#eda100"></span>T2108</span><span><span class="swatch dash" style="border-color:#e34948"></span>20 / 80 zones</span></div>
     </div>
-    <div class="danger-attached" id="spyDangerPanel">
-      <div class="danger-head"><div class="danger-title"><span style="color:#eda100;font-weight:800">⚠</span><span class="panel-label" style="margin:0">SPY DANGER SIGNALS (<span id="spyDangerCount">0</span>)</span></div><span id="spyDangerBadge" style="padding:3px 10px;border-radius:100px;font-size:11px;font-family:'JetBrains Mono',monospace;font-weight:700;background:rgba(27,175,122,.15);color:#1baf7a">0 Active — Healthy</span></div>
-      <ul id="spyDangerList" class="danger-list"><li style="color:#898781;font-style:italic">Scanning for active signals...</li></ul>
-    </div>
   </section>
 
   <section class="benchmark-module">
@@ -307,17 +307,35 @@
       <div class="benchmark-chart"><canvas id="qqqChart" role="img" aria-label="QQQ chart with moving averages"></canvas></div>
       <div class="benchmark-legend"><span><span class="swatch line" style="background:#4a3aa7"></span>20-day SMA</span><span><span class="swatch line" style="background:#d85a30"></span>50-day SMA</span><span><span class="swatch line" style="background:#eda100"></span>T2108</span><span><span class="swatch dash" style="border-color:#e34948"></span>20 / 80 zones</span></div>
     </div>
-    <div class="danger-attached" id="qqqDangerPanel">
+  </section>
+</div>
+
+<div class="evidence-grid">
+  <section class="panel evidence-panel">
+    <div class="breadth-head"><p class="panel-label" style="margin:0">Breadth ratios (dashed reference = 1, up days equal down days)</p><span class="breadth-read" id="breadthRead">Assessing breadth impulse…</span></div>
+    <div class="chart-wrap"><canvas id="ratioChart" role="img" aria-label="Five-day and ten-day breadth ratios"></canvas></div>
+    <div class="legend" style="margin-top:8px;margin-bottom:0"><span><span class="swatch line" style="background:#1baf7a"></span>5-day ratio</span><span><span class="swatch dash" style="border-color:#e34948"></span>10-day ratio</span></div>
+  </section>
+  <section class="panel evidence-panel">
+    <div class="breadth-head"><p class="panel-label" style="margin:0">Quarterly breadth (stocks moving 25%+ over the quarter)</p><span class="breadth-read" id="quarterlyRead">Assessing structural breadth…</span></div>
+    <div class="chart-wrap"><canvas id="quarterlyChart" role="img" aria-label="Stocks up and down twenty-five percent or more over the quarter"></canvas></div>
+    <div class="legend" style="margin-top:8px;margin-bottom:0"><span><span class="swatch line" style="background:#1baf7a"></span>Up 25%+</span><span><span class="swatch line" style="background:#e34948"></span>Down 25%+</span></div>
+  </section>
+</div>
+
+<div class="danger-grid">
+  <section class="danger-panel">
+    <div class="danger-attached" id="spyDangerPanel" style="border-top:none;">
+      <div class="danger-head"><div class="danger-title"><span style="color:#eda100;font-weight:800">⚠</span><span class="panel-label" style="margin:0">SPY DANGER SIGNALS (<span id="spyDangerCount">0</span>)</span></div><span id="spyDangerBadge" style="padding:3px 10px;border-radius:100px;font-size:11px;font-family:'JetBrains Mono',monospace;font-weight:700;background:rgba(27,175,122,.15);color:#1baf7a">0 Active — Healthy</span></div>
+      <ul id="spyDangerList" class="danger-list"><li style="color:#898781;font-style:italic">Scanning for active signals...</li></ul>
+    </div>
+  </section>
+  <section class="danger-panel">
+    <div class="danger-attached" id="qqqDangerPanel" style="border-top:none;">
       <div class="danger-head"><div class="danger-title"><span style="color:#eda100;font-weight:800">⚠</span><span class="panel-label" style="margin:0">QQQ DANGER SIGNALS (<span id="qqqDangerCount">0</span>)</span></div><span id="qqqDangerBadge" style="padding:3px 10px;border-radius:100px;font-size:11px;font-family:'JetBrains Mono',monospace;font-weight:700;background:rgba(27,175,122,.15);color:#1baf7a">0 Active — Healthy</span></div>
       <ul id="qqqDangerList" class="danger-list"><li style="color:#898781;font-style:italic">Scanning for active signals...</li></ul>
     </div>
   </section>
-</div>
-
-<div class="panel">
-  <div class="breadth-head"><p class="panel-label" style="margin:0">Breadth ratios (dashed reference = 1, up days equal down days)</p><span class="breadth-read" id="breadthRead">Assessing breadth impulse…</span></div>
-  <div class="chart-wrap ratio"><canvas id="ratioChart"></canvas></div>
-  <div class="legend" style="margin-top:8px;margin-bottom:0"><span><span class="swatch line" style="background:#1baf7a"></span>5-day ratio</span><span><span class="swatch dash" style="border-color:#e34948"></span>10-day ratio</span></div>
 </div>
 
 <script>
@@ -401,6 +419,7 @@ let chartsBuilt = false;
 let spyChart = null;
 let qqqChart = null;
 let ratioChart = null;
+let quarterlyChart = null;
 
 const commonX = {
   type: 'category',
@@ -551,10 +570,12 @@ function buildOrUpdateCharts() {
     spyChart=new Chart(document.getElementById('spyChart'),{data:{labels,datasets:benchmarkDatasets('SPY').datasets},options:chartOptions('SPY')});
     qqqChart=new Chart(document.getElementById('qqqChart'),{data:{labels,datasets:benchmarkDatasets('QQQ').datasets},options:chartOptions('QQQ')});
     ratioChart=new Chart(document.getElementById('ratioChart'),{type:'line',data:{labels,datasets:[{label:'5 day ratio',data:currentData.map(d=>d.r5),borderColor:'#1baf7a',pointRadius:0,borderWidth:2,tension:.15},{label:'10 day ratio',data:currentData.map(d=>d.r10),borderColor:'#e34948',borderDash:[5,3],pointRadius:0,borderWidth:2,tension:.15},{label:'Ratio = 1',data:currentData.map(()=>1),borderColor:'#898781',borderWidth:1,borderDash:[2,3],pointRadius:0}]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false}},scales:{x:commonX,y:{beginAtZero:true,grid:{color:'#ecebe6'},ticks:{font:{size:10},color:'#898781'}}}}});
+    quarterlyChart=new Chart(document.getElementById('quarterlyChart'),{type:'line',data:{labels,datasets:[{label:'Up 25%+',data:currentData.map(d=>d.up25q),borderColor:'#1baf7a',backgroundColor:'rgba(27,175,122,.08)',fill:true,pointRadius:0,borderWidth:2,tension:.15},{label:'Down 25%+',data:currentData.map(d=>d.down25q),borderColor:'#e34948',backgroundColor:'rgba(227,73,72,.06)',fill:true,pointRadius:0,borderWidth:2,tension:.15}]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${Number(ctx.parsed.y).toLocaleString()}`}}},scales:{x:commonX,y:{beginAtZero:false,grid:{color:'#ecebe6'},ticks:{font:{size:10},color:'#898781',callback:v=>Number(v).toLocaleString()}}}}});
     chartsBuilt=true;
   } else {
     refreshBenchmarkCharts();
     ratioChart.data.labels=labels;ratioChart.data.datasets[0].data=currentData.map(d=>d.r5);ratioChart.data.datasets[1].data=currentData.map(d=>d.r10);ratioChart.data.datasets[2].data=currentData.map(()=>1);ratioChart.update();
+    quarterlyChart.data.labels=labels;quarterlyChart.data.datasets[0].data=currentData.map(d=>d.up25q);quarterlyChart.data.datasets[1].data=currentData.map(d=>d.down25q);quarterlyChart.update();
   }
   updateBenchmarkStats('SPY'); updateBenchmarkStats('QQQ');
 }
@@ -648,6 +669,14 @@ function renderSummary() {
   const spyRead=document.getElementById('spyBenchmarkRead'); spyRead.textContent=`${spyState.label} · ${spyState.sub} · ${dangerCounts.spy} active warnings`; spyRead.className='benchmark-read '+(spyState.tone==='pos'?'bull':spyState.tone==='neg'?'bear':'neutral');
   const qqqRead=document.getElementById('qqqBenchmarkRead'); qqqRead.textContent=`${qqqState.label} · ${qqqState.sub} · ${dangerCounts.qqq} active warnings`; qqqRead.className='benchmark-read '+(qqqState.tone==='pos'?'bull':qqqState.tone==='neg'?'bear':'neutral');
   document.getElementById('breadthRead').textContent=ratioTone==='pos'?'Breadth impulse: constructive':ratioTone==='neg'?'Breadth impulse: defensive':'Breadth impulse: mixed';
+  const quarterlyEl=document.getElementById('quarterlyRead');
+  if(quarterlyEl){
+    const structuralBull=today.up25q>today.down25q;
+    const spread=Math.abs(today.up25q-today.down25q);
+    quarterlyEl.textContent=(structuralBull?'Structural breadth: bullish':'Structural breadth: bearish')+` · ${spread.toLocaleString()} stock spread`;
+    quarterlyEl.style.background=structuralBull?'#e7f6f0':'#fcebeb';
+    quarterlyEl.style.color=structuralBull?'#087c55':'#9e2928';
+  }
 
   const grid = document.getElementById('summaryGrid');
   grid.innerHTML = `
