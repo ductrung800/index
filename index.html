@@ -57,11 +57,16 @@
     font-size: 10px;
     letter-spacing: -0.03em;
   }
-  /* Hide the lengthy 'Name' column (2nd column) so 3 tables can fit side-by-side */
-  .compact-panels table th:nth-child(2),
-  .compact-panels table td:nth-child(2) {
-    display: none; 
+  /* Ticker and name are combined in the first column, matching the Google Sheet. */
+  .compact-panels table th:first-child,
+  .compact-panels table td:first-child {
+    min-width: 150px;
+    max-width: 220px;
+    white-space: normal;
+    line-height: 1.25;
   }
+  .ticker-code{font-weight:800; color:var(--text);}
+  .ticker-name{font-family:'Inter',sans-serif; font-weight:500; color:var(--text-dim);}
   .compact-panels .bartrack {
     width: 24px;
     height: 5px;
@@ -716,9 +721,11 @@ function greenHeat(v){
 }
 function rowHTML(r){
   const [tic,name,d,p5,off,ytd,rs,thr] = r;
+  const identity = name
+    ? `<span class="ticker-code">${tic}</span><span class="ticker-name">: ${name}</span>`
+    : `<span class="ticker-code">${tic}</span>`;
   return `<tr>
-    <td>${tic}</td>
-    <td>${name}</td>
+    <td>${identity}</td>
     <td style="background:${divergeColor(d,3)}">${pctStr(d)}</td>
     <td style="background:${divergeColor(p5,8)}">${pctStr(p5)}</td>
     <td style="background:${divergeColor(off,20)}">${pctStr(off)}</td>
@@ -737,7 +744,7 @@ function rowHTML(r){
 }
 function buildTable(elId, rows){
   const head = `<thead><tr>
-    <th>Ticker</th><th>Name</th><th>% Daily</th><th>% P5D</th><th>% Off 52W Hi</th>
+    <th>Ticker / Name</th><th>% Daily</th><th>% P5D</th><th>% Off 52W Hi</th>
     <th>% YTD</th><th>1-Mth RS %</th><th>RS Thrust %</th>
   </tr></thead>`;
   const body = "<tbody>" + rows.map(rowHTML).join("") + "</tbody>";
@@ -760,18 +767,24 @@ function renderMarketMood(payload={}){
   const ratio = Number(payload.ratio);
   let score = Number(payload.score);
   const hasExactScore = Number.isFinite(score);
-  // Never combine VIX (about 18) with a VVIX/VIX-ratio baseline (about 5.5).
-  // The Institutional Command page exposes the ratio, its 21-day MA and the mood label,
-  // but it does not expose the standard deviation required to reproduce an exact sigma score.
-  if(!hasExactScore) score = 0;
+  // When the source does not publish its rolling standard deviation, calculate a stable
+  // directional proxy from the VVIX/VIX ratio versus its 21-day baseline. A 1.25% move
+  // from baseline is treated as approximately one gauge unit. Lower ratio = more fear.
+  const hasProxyInputs = Number.isFinite(ratio) && Number.isFinite(baseline) && baseline > 0;
+  const proxyScore = hasProxyInputs ? ((baseline - ratio) / baseline) / 0.0125 : NaN;
+  const hasDisplayScore = hasExactScore || Number.isFinite(proxyScore);
+  if(!hasExactScore && Number.isFinite(proxyScore)) score = proxyScore;
+  if(!hasDisplayScore) score = 0;
   score = clamp(score,-2.5,2.5);
   const mood = payload.state ? {state:payload.state, desc:payload.description||"Volatility regime", cls:/greed/i.test(payload.state)?"greedy":/neutral/i.test(payload.state)?"neutral":""} : moodClassification(score);
   const scoreEl=document.getElementById("moodScore"), needle=document.getElementById("moodNeedle"), stateEl=document.getElementById("moodState");
   if(scoreEl){
-    scoreEl.textContent = hasExactScore ? ((score>=0?"+":"")+score.toFixed(2)) : "—";
-    scoreEl.title = hasExactScore ? "Exact sigma score supplied by the volatility engine." : "The source page supplies VVIX/VIX, its 21-day MA and the mood classification, but not the standard deviation needed for an exact sigma score.";
+    scoreEl.textContent = hasDisplayScore ? ((hasExactScore?"":"≈")+(score>=0?"+":"")+score.toFixed(2)) : "—";
+    scoreEl.title = hasExactScore
+      ? "Exact score supplied by the volatility engine."
+      : (hasDisplayScore ? "Approximate normalized VVIX/VIX deviation versus its 21-day baseline." : "Waiting for VVIX/VIX and its 21-day baseline.");
   }
-  if(needle) needle.style.transform=`translateX(-50%) rotate(${hasExactScore ? clamp(score/2.5,-1,1)*78 : 0}deg)`;
+  if(needle) needle.style.transform=`translateX(-50%) rotate(${hasDisplayScore ? clamp(score/2.5,-1,1)*78 : 0}deg)`;
   if(stateEl){ stateEl.textContent=mood.state; stateEl.className="mood-state "+mood.cls; }
   const desc=document.getElementById("moodDescription"); if(desc) desc.textContent=mood.desc;
   const vixEl=document.getElementById("vixBig"); if(vixEl && Number.isFinite(vix)) vixEl.textContent=vix.toFixed(2);
