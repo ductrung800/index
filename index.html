@@ -184,6 +184,15 @@
   .breadth-combined .ring svg{width:62px; height:62px;}
   .breadth-combined .ring-val{font-size:11px;}
   .breadth-combined .ring-label{font-size:8px; margin-top:3px;}
+  .breadth-ring-item{position:relative;text-align:center;}
+  .breadth-ring-item .ring-val{color:var(--text);}
+  .breadth-status-dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:4px;vertical-align:1px;}
+  .breadth-interpretation{margin-top:2px;padding:9px 10px;border:1px solid var(--line-soft);border-radius:8px;background:var(--input-bg);font-size:9px;line-height:1.45;color:var(--text-dim);}
+  .breadth-interpretation strong{color:var(--text);}
+  .breadth-interpretation .breadth-headline{display:block;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;margin-bottom:3px;}
+  .breadth-interpretation.constructive .breadth-headline{color:var(--teal);}
+  .breadth-interpretation.caution .breadth-headline{color:var(--amber);}
+  .breadth-interpretation.weak .breadth-headline{color:var(--red);}
 
   .metric-card{display:flex; flex-direction:column; position:relative; overflow:hidden;}
   .metric-card:after{content:""; position:absolute; inset:auto -35px -45px auto; width:130px; height:130px; border-radius:50%; background:radial-gradient(circle,rgba(32,217,184,.08),transparent 68%); pointer-events:none;}
@@ -557,6 +566,10 @@
         <div class="breadth-subtitle">Sector Breadth</div>
         <div class="breadth-row" id="sectorBreadthRow"></div>
       </div>
+    </div>
+    <div class="breadth-interpretation caution" id="breadthInterpretation">
+      <span class="breadth-headline">Breadth read</span>
+      Waiting for live participation data.
     </div>
   </div>
 
@@ -1103,50 +1116,57 @@ if (spread > 1.05) {
 
 
 
-// Breadth rings + detail table
+// Breadth rings + institutional interpretation
   (function(){
     const b = DATA.breadth;
-    
-    // 1. Render Market Breadth Rings (SPX)
-    const rings = [["20D",b.spx20],["50D",b.spx50],["200D",b.spx200]];
-    let h = "";
-    rings.forEach(([label,val])=>{
-      const circ = 2*Math.PI*26;
-      const off = circ - (val/100)*circ;
-      h += `<div>
-        <div class="ring">
-          <svg viewBox="0 0 62 62">
-            <circle cx="31" cy="31" r="26" stroke="var(--line)" stroke-width="6" fill="none"/>
-            <circle cx="31" cy="31" r="26" stroke="var(--teal)" stroke-width="6" fill="none"
-              stroke-dasharray="${circ}" stroke-dashoffset="${off}" stroke-linecap="round"/>
-          </svg>
-          <div class="ring-val">${val.toFixed(0)}%</div>
-        </div>
-        <div class="ring-label">${label}</div>
-      </div>`;
-    });
-    document.getElementById("breadthRow").innerHTML = h;
 
-    // 2. Render Sector Breadth Rings (using sec20, sec50, sec200)
-    const secRings = [["20D",b.sec20],["50D",b.sec50],["200D",b.sec200]];
-    let hSec = "";
-    secRings.forEach(([label,val])=>{
-      const circ = 2*Math.PI*26;
-      const off = circ - (val/100)*circ;
-      hSec += `<div>
-        <div class="ring">
-          <svg viewBox="0 0 62 62">
-            <circle cx="31" cy="31" r="26" stroke="var(--line)" stroke-width="6" fill="none"/>
-            <circle cx="31" cy="31" r="26" stroke="var(--teal)" stroke-width="6" fill="none"
-              stroke-dasharray="${circ}" stroke-dashoffset="${off}" stroke-linecap="round"/>
-          </svg>
-          <div class="ring-val">${val.toFixed(0)}%</div>
-        </div>
-        <div class="ring-label">${label}</div>
-      </div>`;
-    });
-    if(document.getElementById("sectorBreadthRow")){
-      document.getElementById("sectorBreadthRow").innerHTML = hSec;
+    function breadthTone(val){
+      if(!Number.isFinite(val)) return {color:'var(--text-faint)', label:'Unavailable'};
+      if(val >= 70) return {color:'var(--teal)', label:'Strong'};
+      if(val >= 55) return {color:'#32b89c', label:'Constructive'};
+      if(val >= 45) return {color:'var(--amber)', label:'Mixed'};
+      return {color:'var(--red)', label:'Weak'};
+    }
+
+    function renderRings(elId, rows){
+      const el = document.getElementById(elId);
+      if(!el) return;
+      el.innerHTML = rows.map(([label,val])=>{
+        const tone = breadthTone(val);
+        const safeVal = Number.isFinite(val) ? Math.max(0,Math.min(100,val)) : 0;
+        const circ = 2*Math.PI*26;
+        const off = circ - (safeVal/100)*circ;
+        return `<div class="breadth-ring-item" title="${tone.label}: ${Number.isFinite(val)?val.toFixed(2)+'%':'N/A'} above ${label} moving average">
+          <div class="ring">
+            <svg viewBox="0 0 62 62">
+              <circle cx="31" cy="31" r="26" stroke="var(--line)" stroke-width="6" fill="none"/>
+              <circle cx="31" cy="31" r="26" stroke="${tone.color}" stroke-width="6" fill="none"
+                stroke-dasharray="${circ}" stroke-dashoffset="${off}" stroke-linecap="round"/>
+            </svg>
+            <div class="ring-val">${Number.isFinite(val)?val.toFixed(0)+'%':'—'}</div>
+          </div>
+          <div class="ring-label"><span class="breadth-status-dot" style="background:${tone.color}"></span>${label}</div>
+        </div>`;
+      }).join('');
+    }
+
+    renderRings('breadthRow', [['20D',b.spx20],['50D',b.spx50],['200D',b.spx200]]);
+    renderRings('sectorBreadthRow', [['20D',b.sec20],['50D',b.sec50],['200D',b.sec200]]);
+
+    const interp = document.getElementById('breadthInterpretation');
+    if(interp){
+      const marketLong = b.spx200;
+      const marketMid = b.spx50;
+      const sectorLong = b.sec200;
+      const sectorMid = b.sec50;
+      let cls='caution', headline='Rotation / deterioration';
+      if(marketMid >= 60 && sectorMid >= 60){ cls='constructive'; headline='Broad participation constructive'; }
+      else if(marketMid < 45 || sectorMid < 40){ cls='weak'; headline='Breadth breakdown risk'; }
+      interp.className = `breadth-interpretation ${cls}`;
+      interp.innerHTML = `<span class="breadth-headline">${headline}</span>` +
+        `<strong>Long-term participation remains resilient</strong> (${marketLong.toFixed(0)}% of the market and ${sectorLong.toFixed(0)}% of sectors above 200D), ` +
+        `but <strong>intermediate participation is uneven</strong> (${marketMid.toFixed(0)}% market and ${sectorMid.toFixed(0)}% sector breadth above 50D). ` +
+        `This is consistent with rotation and deterioration beneath the surface rather than a complete broad-market breakdown.`;
     }
   })();
 
