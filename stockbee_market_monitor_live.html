@@ -119,11 +119,49 @@
   .compact-subchart-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:8px; }
   .compact-osc-status { display:flex; align-items:center; gap:8px; }
   .compact-osc-metrics { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin-bottom:8px; }
-  .oscillator-chart-wrap { height:365px !important; }
+  .oscillator-chart-wrap { height:315px !important; }
   .compact-guidance { margin-top:6px; padding-top:7px; font-size:10px; line-height:1.35; }
   .oscillator-inline .institutional-title { font-size:15px; }
   .oscillator-inline .engine-feed-status { white-space:nowrap; }
   .oscillator-inline .breadth-read { white-space:nowrap; }
+  .osc-interpretation {
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:8px;
+    margin-top:9px;
+  }
+  .osc-insight {
+    border:1px solid #e1e0d9;
+    background:#fff;
+    border-radius:8px;
+    padding:9px 10px;
+    min-width:0;
+  }
+  .osc-insight span {
+    display:block;
+    font:700 9px 'JetBrains Mono',monospace;
+    color:#898781;
+    text-transform:uppercase;
+    letter-spacing:.05em;
+  }
+  .osc-insight strong {
+    display:block;
+    margin-top:4px;
+    font-size:12px;
+    line-height:1.2;
+  }
+  .osc-insight p {
+    margin:4px 0 0;
+    color:#666;
+    font-size:10px;
+    line-height:1.35;
+  }
+  .osc-insight .pos { color:#11865f; }
+  .osc-insight .neg { color:#c93635; }
+  .osc-insight .warn { color:#b67800; }
+  @media (max-width:1100px) {
+    .osc-interpretation { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  }
   #spyBenchmarkModule .breadth-subchart { background:#fcfcfa; }
   #qqqBenchmarkModule .institutional-inline { background:#fcfcfa; border-top:1px solid #e1e0d9; }
   .danger-panel { background:#fff; min-width:0; }
@@ -469,6 +507,29 @@
         <canvas id="nasiChart"
                 role="img"
                 aria-label="McClellan Oscillator synchronized with QQQ"></canvas>
+      </div>
+
+      <div class="osc-interpretation" id="oscInterpretation">
+        <div class="osc-insight">
+          <span>Territory</span>
+          <strong id="oscTerritory">—</strong>
+          <p id="oscTerritoryDetail">Waiting for oscillator data.</p>
+        </div>
+        <div class="osc-insight">
+          <span>Condition</span>
+          <strong id="oscExtreme">—</strong>
+          <p id="oscExtremeDetail">No extreme reading detected.</p>
+        </div>
+        <div class="osc-insight">
+          <span>Momentum shift</span>
+          <strong id="oscCross">—</strong>
+          <p id="oscCrossDetail">No recent zero-line cross.</p>
+        </div>
+        <div class="osc-insight">
+          <span>QQQ divergence</span>
+          <strong id="oscDivergence">—</strong>
+          <p id="oscDivergenceDetail">No divergence detected.</p>
+        </div>
       </div>
 
       <div class="engine-guidance compact-guidance" id="engineGuidance">
@@ -1057,6 +1118,126 @@ function renderNasiChart(rows) {
 
   linkChartGroup([qqqChart, nasiChart]);
 }
+
+function findLatestZeroCross(history) {
+  for (let i = history.length - 1; i > 0; i--) {
+    const previous = Number(history[i - 1]?.oscillator);
+    const current = Number(history[i]?.oscillator);
+
+    if (!Number.isFinite(previous) || !Number.isFinite(current)) continue;
+
+    if (previous <= 0 && current > 0) {
+      return {
+        type:'bull',
+        date:history[i].date,
+        label:'Bullish cross'
+      };
+    }
+
+    if (previous >= 0 && current < 0) {
+      return {
+        type:'bear',
+        date:history[i].date,
+        label:'Bearish cross'
+      };
+    }
+  }
+
+  return null;
+}
+
+
+function detectOscillatorDivergence(history) {
+  const lookback = 20;
+
+  if (history.length < lookback + 1 || currentData.length < lookback + 1) {
+    return {
+      type:'none',
+      label:'No clear divergence',
+      detail:'Insufficient matched history for a reliable comparison.'
+    };
+  }
+
+  const recentHistory = history.slice(-lookback);
+  const recentPrices = currentData.slice(-lookback);
+
+  const oscillatorValues = recentHistory.map(row => Number(row.oscillator));
+  const qqqValues = recentPrices.map(row => Number(row.qqq));
+
+  if (
+    oscillatorValues.some(value => !Number.isFinite(value)) ||
+    qqqValues.some(value => !Number.isFinite(value))
+  ) {
+    return {
+      type:'none',
+      label:'No clear divergence',
+      detail:'Matched QQQ or oscillator values are incomplete.'
+    };
+  }
+
+  const half = Math.floor(lookback / 2);
+
+  const firstPriceHigh = Math.max(...qqqValues.slice(0, half));
+  const secondPriceHigh = Math.max(...qqqValues.slice(half));
+  const firstOscHigh = Math.max(...oscillatorValues.slice(0, half));
+  const secondOscHigh = Math.max(...oscillatorValues.slice(half));
+
+  const firstPriceLow = Math.min(...qqqValues.slice(0, half));
+  const secondPriceLow = Math.min(...qqqValues.slice(half));
+  const firstOscLow = Math.min(...oscillatorValues.slice(0, half));
+  const secondOscLow = Math.min(...oscillatorValues.slice(half));
+
+  const bearish =
+    secondPriceHigh > firstPriceHigh * 1.005 &&
+    secondOscHigh < firstOscHigh - 5;
+
+  const bullish =
+    secondPriceLow < firstPriceLow * 0.995 &&
+    secondOscLow > firstOscLow + 5;
+
+  if (bearish) {
+    return {
+      type:'bear',
+      label:'Bearish divergence',
+      detail:'QQQ made a higher high while breadth momentum made a lower high.'
+    };
+  }
+
+  if (bullish) {
+    return {
+      type:'bull',
+      label:'Bullish divergence',
+      detail:'QQQ made a lower low while breadth momentum made a higher low.'
+    };
+  }
+
+  return {
+    type:'none',
+    label:'No clear divergence',
+    detail:'QQQ and breadth momentum are not showing a material 20-session divergence.'
+  };
+}
+
+
+function setOscillatorInsight(id, label, detail, tone) {
+  const title = document.getElementById(id);
+  const body = document.getElementById(id + 'Detail');
+
+  if (title) {
+    title.textContent = label;
+    title.className =
+      tone === 'bull'
+        ? 'pos'
+        : tone === 'bear'
+          ? 'neg'
+          : tone === 'warn'
+            ? 'warn'
+            : '';
+  }
+
+  if (body) body.textContent = detail;
+}
+
 function renderInstitutionalBreadth() {
   const panel = document.getElementById('institutionalBreadthPanel');
   if (!panel) return;
@@ -1148,6 +1329,106 @@ function renderInstitutionalBreadth() {
       `Risk mode: ${snapshot.riskMode || '—'} · ` +
       `Signal: ${snapshot.signal || '—'}.`;
   }
+
+  const oscillatorValue = Number(snapshot.oscillator);
+
+  if (oscillatorValue > 0) {
+    setOscillatorInsight(
+      'oscTerritory',
+      'Positive territory',
+      'Advancing issues are outpacing decliners; short-term breadth momentum is bullish.',
+      'bull'
+    );
+  } else if (oscillatorValue < 0) {
+    setOscillatorInsight(
+      'oscTerritory',
+      'Negative territory',
+      'Declining issues are outpacing advancers; short-term breadth momentum is bearish.',
+      'bear'
+    );
+  } else {
+    setOscillatorInsight(
+      'oscTerritory',
+      'At zero',
+      'Short-term breadth momentum is balanced between advancing and declining issues.',
+      'warn'
+    );
+  }
+
+  if (oscillatorValue <= -100) {
+    setOscillatorInsight(
+      'oscExtreme',
+      'Deeply oversold',
+      'An extreme negative reading may precede a relief rally, but confirmation is still required.',
+      'warn'
+    );
+  } else if (oscillatorValue <= -50) {
+    setOscillatorInsight(
+      'oscExtreme',
+      'Oversold',
+      'Selling pressure is stretched; watch for stabilization or a bullish zero-line recovery.',
+      'warn'
+    );
+  } else if (oscillatorValue >= 100) {
+    setOscillatorInsight(
+      'oscExtreme',
+      'Deeply overbought',
+      'Breadth momentum is extremely stretched and vulnerable to consolidation.',
+      'warn'
+    );
+  } else if (oscillatorValue >= 50) {
+    setOscillatorInsight(
+      'oscExtreme',
+      'Overbought',
+      'Breadth momentum is strong but increasingly extended.',
+      'warn'
+    );
+  } else {
+    setOscillatorInsight(
+      'oscExtreme',
+      'Normal range',
+      'The oscillator is not at a statistically notable short-term extreme.',
+      'neutral'
+    );
+  }
+
+  const zeroCross = findLatestZeroCross(history);
+
+  if (zeroCross) {
+    const sessionsAgo =
+      Math.max(
+        0,
+        history.length - 1 -
+        history.findIndex(row => row.date === zeroCross.date)
+      );
+
+    const recent = sessionsAgo <= 5;
+
+    setOscillatorInsight(
+      'oscCross',
+      zeroCross.label,
+      recent
+        ? `${zeroCross.label} occurred ${sessionsAgo} session${sessionsAgo === 1 ? '' : 's'} ago, signalling a recent momentum shift.`
+        : `${zeroCross.label} occurred on ${zeroCross.date}; the signal is no longer fresh.`,
+      zeroCross.type
+    );
+  } else {
+    setOscillatorInsight(
+      'oscCross',
+      'No recent cross',
+      'No valid zero-line momentum shift is present in the available history.',
+      'neutral'
+    );
+  }
+
+  const divergence = detectOscillatorDivergence(history);
+
+  setOscillatorInsight(
+    'oscDivergence',
+    divergence.label,
+    divergence.detail,
+    divergence.type
+  );
 
   renderNasiChart(history);
 }
