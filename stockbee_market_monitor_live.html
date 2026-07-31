@@ -115,6 +115,15 @@
   .benchmark-chart-panel { flex:0 0 auto; }
   .danger-attached { margin-top:auto; }
   #institutionalBreadthPanel .nasi-chart-wrap { height:430px; }
+  .oscillator-inline { padding:12px 18px 10px; }
+  .compact-subchart-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:8px; }
+  .compact-osc-status { display:flex; align-items:center; gap:8px; }
+  .compact-osc-metrics { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin-bottom:8px; }
+  .oscillator-chart-wrap { height:365px !important; }
+  .compact-guidance { margin-top:6px; padding-top:7px; font-size:10px; line-height:1.35; }
+  .oscillator-inline .institutional-title { font-size:15px; }
+  .oscillator-inline .engine-feed-status { white-space:nowrap; }
+  .oscillator-inline .breadth-read { white-space:nowrap; }
   #spyBenchmarkModule .breadth-subchart { background:#fcfcfa; }
   #qqqBenchmarkModule .institutional-inline { background:#fcfcfa; }
   .danger-panel { background:#fff; min-width:0; }
@@ -426,33 +435,44 @@
       </div>
     </div>
 
-    <div class="benchmark-subchart institutional-panel institutional-inline" id="institutionalBreadthPanel" aria-labelledby="institutionalBreadthTitle">
-      <div class="institutional-head">
+    
+    <div class="benchmark-subchart institutional-panel institutional-inline oscillator-inline"
+         id="institutionalBreadthPanel"
+         aria-labelledby="institutionalBreadthTitle">
+      <div class="compact-subchart-head">
         <div>
-          <div class="benchmark-kicker">Nasdaq internal confirmation</div>
-          <div class="institutional-title" id="institutionalBreadthTitle">Nasdaq Institutional Breadth Engine</div>
-          <div class="institutional-subtitle">NASI chart directly beneath QQQ for synchronized price-versus-breadth comparison.</div>
+          <div class="benchmark-kicker">Momentum</div>
+          <div class="institutional-title" id="institutionalBreadthTitle">McClellan Oscillator</div>
         </div>
-        <span class="engine-feed-status" id="breadthEngineFeedStatus">Loading published breadth feeds…</span>
+        <div class="compact-osc-status">
+          <span class="engine-feed-status" id="breadthEngineFeedStatus">Loading breadth…</span>
+          <span class="breadth-read" id="oscillatorBadge">—</span>
+        </div>
       </div>
 
-      <div class="nasi-metrics">
-        <div class="nasi-metric"><span>FMP NASI</span><strong id="engineNasi">—</strong></div>
-        <div class="nasi-metric"><span>NASI 50 SMA</span><strong id="engineNasiSma">—</strong></div>
-        <div class="nasi-metric"><span>NASI vs SMA</span><strong id="engineNasiDistance">—</strong></div>
-        <div class="nasi-metric"><span>McClellan Oscillator</span><strong id="engineOscillator">—</strong></div>
+      <div class="compact-osc-metrics">
+        <div class="nasi-metric">
+          <span>Current</span>
+          <strong id="engineOscillator">—</strong>
+        </div>
+        <div class="nasi-metric">
+          <span>5-day change</span>
+          <strong id="engineOscillatorChange">—</strong>
+        </div>
+        <div class="nasi-metric">
+          <span>State</span>
+          <strong id="engineOscillatorState">—</strong>
+        </div>
       </div>
 
-      <div class="nasi-chart-wrap">
-        <canvas id="nasiChart" role="img" aria-label="FMP Nasdaq McClellan Summation Index with fifty-day moving average"></canvas>
+      <div class="nasi-chart-wrap oscillator-chart-wrap">
+        <canvas id="nasiChart"
+                role="img"
+                aria-label="McClellan Oscillator synchronized with QQQ"></canvas>
       </div>
-      <div class="legend" style="margin-top:8px;margin-bottom:0">
-        <span><span class="swatch line" style="background:#111827"></span>FMP NASI</span>
-        <span><span class="swatch line" style="background:#2a78d6"></span>50-day SMA</span>
-        <span><span class="swatch dash" style="border-color:#898781"></span>Zero reference</span>
-      </div>
-      <div class="engine-guidance" id="engineGuidance">
-        <strong>Institutional breadth guidance:</strong> Waiting for the published FMP breadth engine.
+
+      <div class="engine-guidance compact-guidance" id="engineGuidance">
+        Waiting for the published breadth engine.
       </div>
     </div>
 
@@ -948,27 +968,34 @@ function renderNasiChart(rows) {
 
   const labels = currentData.map(row => row.date).concat(['','','']);
   const snapshots = currentData.map(row => breadthSnapshotForDate(row.date));
+  const oscillator = snapshots.map(row =>
+    row && Number.isFinite(row.oscillator)
+      ? row.oscillator
+      : null
+  );
   const pad = values => values.concat([null, null, null]);
 
   const datasets = [
     {
-      label:'FMP NASI',
-      data:pad(snapshots.map(row => row && Number.isFinite(row.nasi) ? row.nasi : null)),
-      borderColor:'#111827',
-      pointRadius:0,
-      borderWidth:2,
-      tension:.12,
-      spanGaps:true,
-      segment:{borderColor:ctx => ctx.p1.parsed.y >= ctx.p0.parsed.y ? '#111827' : '#e34948'}
-    },
-    {
-      label:'NASI 50 SMA',
-      data:pad(snapshots.map(row => row && Number.isFinite(row.nasi50) ? row.nasi50 : null)),
-      borderColor:'#2a78d6',
+      label:'McClellan Oscillator',
+      data:pad(oscillator),
+      borderColor:'#6d52c7',
+      backgroundColor:pad(oscillator.map(value =>
+        value == null
+          ? 'rgba(0,0,0,0)'
+          : value >= 0
+            ? 'rgba(27,175,122,.22)'
+            : 'rgba(227,73,72,.18)'
+      )),
+      fill:true,
       pointRadius:0,
       borderWidth:1.8,
       tension:.12,
-      spanGaps:true
+      spanGaps:true,
+      segment:{
+        borderColor:ctx =>
+          ctx.p1.parsed.y >= 0 ? '#1baf7a' : '#e34948'
+      }
     },
     {
       label:'Zero',
@@ -988,7 +1015,12 @@ function renderNasiChart(rows) {
       legend:{display:false},
       tooltip:{
         callbacks:{
-          label:ctx => `${ctx.dataset.label}: ${ctx.parsed.y == null ? '—' : Number(ctx.parsed.y).toFixed(0)}`
+          label:ctx =>
+            `${ctx.dataset.label}: ${
+              ctx.parsed.y == null
+                ? '—'
+                : Number(ctx.parsed.y).toFixed(1)
+            }`
         }
       }
     },
@@ -996,14 +1028,26 @@ function renderNasiChart(rows) {
       x:commonX,
       y:{
         beginAtZero:false,
+        suggestedMin:-80,
+        suggestedMax:80,
         grid:{color:'#ecebe6'},
-        ticks:{font:{size:10},color:'#898781'}
+        ticks:{font:{size:10},color:'#898781'},
+        title:{
+          display:true,
+          text:'Oscillator',
+          color:'#898781',
+          font:{size:10}
+        }
       }
     }
   };
 
   if (!nasiChart) {
-    nasiChart = new Chart(canvas, {type:'line',data:{labels,datasets},options});
+    nasiChart = new Chart(canvas, {
+      type:'line',
+      data:{labels,datasets},
+      options
+    });
   } else {
     nasiChart.data.labels = labels;
     nasiChart.data.datasets = datasets;
@@ -1025,33 +1069,46 @@ function renderInstitutionalBreadth() {
 
   if (!snapshot) {
     panel.className =
-      'benchmark-subchart institutional-panel institutional-inline';
+      'benchmark-subchart institutional-panel institutional-inline oscillator-inline';
 
-    const guidance =
-      document.getElementById('engineGuidance');
-
+    const guidance = document.getElementById('engineGuidance');
     if (guidance) {
-      guidance.innerHTML =
-        `<strong>Institutional breadth guidance:</strong> ${
-          breadthEngineLoadError ||
-          'No FMP breadth observation is available for the selected date.'
-        }`;
+      guidance.textContent =
+        breadthEngineLoadError ||
+        'No breadth observation is available for the selected date.';
     }
 
     renderNasiChart([]);
     return;
   }
 
-  const tone = engineTone(snapshot);
+  const history = breadthRowsThroughSelectedDate();
+  const latestIndex = history.findIndex(row => row.date === snapshot.date);
+  const fiveBack = latestIndex >= 5
+    ? history[latestIndex - 5]
+    : null;
+
+  const oscChange =
+    fiveBack && Number.isFinite(fiveBack.oscillator)
+      ? snapshot.oscillator - fiveBack.oscillator
+      : null;
+
+  const state =
+    snapshot.oscillator > 10
+      ? 'Positive impulse'
+      : snapshot.oscillator < -10
+        ? 'Negative impulse'
+        : 'Neutral / mixed';
+
+  const tone =
+    snapshot.oscillator > 10
+      ? 'bull'
+      : snapshot.oscillator < -10
+        ? 'bear'
+        : 'warn';
 
   panel.className =
-    `benchmark-subchart institutional-panel institutional-inline tone-${
-      tone === 'pos'
-        ? 'bull'
-        : tone === 'neg'
-          ? 'bear'
-          : 'warn'
-    }`;
+    `benchmark-subchart institutional-panel institutional-inline oscillator-inline tone-${tone}`;
 
   const setText = (id, value) => {
     const element = document.getElementById(id);
@@ -1059,45 +1116,40 @@ function renderInstitutionalBreadth() {
   };
 
   setText(
-    'engineNasi',
-    formatEngineNumber(snapshot.nasi, 0, true)
-  );
-
-  setText(
-    'engineNasiSma',
-    formatEngineNumber(snapshot.nasi50, 0, true)
-  );
-
-  setText(
-    'engineNasiDistance',
-    formatEngineNumber(snapshot.nasiVs50, 0, true)
-  );
-
-  setText(
     'engineOscillator',
     formatEngineNumber(snapshot.oscillator, 1, true)
   );
 
-  const guidance =
-    document.getElementById('engineGuidance');
+  setText(
+    'engineOscillatorChange',
+    formatEngineNumber(oscChange, 1, true)
+  );
 
-  if (guidance) {
-    guidance.innerHTML =
-      `<strong>Institutional breadth guidance:</strong> ${
-        snapshot.guidance ||
-        'No tactical guidance supplied.'
-      } ` +
-      `<span style="color:#898781">` +
-      `As of ${snapshot.date} · ` +
-      `Risk mode: ${snapshot.riskMode || '—'} · ` +
-      `Signal: ${snapshot.signal || '—'} · ` +
-      `A/D ratio: ${formatEngineNumber(snapshot.adRatio, 2)}.` +
-      `</span>`;
+  setText(
+    'engineOscillatorState',
+    state
+  );
+
+  const badge = document.getElementById('oscillatorBadge');
+  if (badge) {
+    badge.textContent = state;
+    badge.className =
+      `breadth-read ${tone === 'bull' ? 'pos' : tone === 'bear' ? 'neg' : 'neutral'}`;
   }
 
-  renderNasiChart(
-    breadthRowsThroughSelectedDate()
-  );
+  const guidance = document.getElementById('engineGuidance');
+  if (guidance) {
+    guidance.innerHTML =
+      `<strong>${state}.</strong> ` +
+      `Oscillator ${snapshot.oscillator >= 0 ? 'above' : 'below'} zero` +
+      `${Number.isFinite(oscChange)
+        ? ` and ${oscChange >= 0 ? 'improving' : 'deteriorating'} over five sessions`
+        : ''}. ` +
+      `Risk mode: ${snapshot.riskMode || '—'} · ` +
+      `Signal: ${snapshot.signal || '—'}.`;
+  }
+
+  renderNasiChart(history);
 }
 function applyInstitutionalBreadthDecisionLayer(today) {
   const snapshot = breadthSnapshotForDate(today?.date);
