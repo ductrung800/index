@@ -414,8 +414,18 @@ const CSV_URLS = [
   `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`
 ];
 
-const MARKET_BREADTH_ENGINE_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQJgJsQkbBX3USosTbGEO8iwpdXK6Clc6hoUq6lqA7IlbJnkboWtq0asanPGUuZoMIXx9VxRC9d-q6h/pub?gid=1906345525&single=true&output=csv';
-const MARKET_BREADTH_LATEST_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQJgJsQkbBX3USosTbGEO8iwpdXK6Clc6hoUq6lqA7IlbJnkboWtq0asanPGUuZoMIXx9VxRC9d-q6h/pub?gid=1126999134&single=true&output=csv';
+const MARKET_BREADTH_PUBLISHED_ID = '2PACX-1vQJgJsQkbBX3USosTbGEO8iwpdXK6Clc6hoUq6lqA7IlbJnkboWtq0asanPGUuZoMIXx9VxRC9d-q6h';
+const MARKET_BREADTH_GIDS = ['1906345525', '1126999134'];
+
+function googlePublishedCsvCandidates(gid) {
+  const base = `https://docs.google.com/spreadsheets/d/e/${MARKET_BREADTH_PUBLISHED_ID}`;
+  const stamp = Date.now();
+  return [
+    `${base}/pub?gid=${gid}&single=true&output=csv&_=${stamp}`,
+    `${base}/gviz/tq?tqx=out:csv&gid=${gid}&headers=1&_=${stamp}`,
+    `${base}/pub?output=csv&single=true&gid=${gid}&_=${stamp}`
+  ];
+}
 let breadthEngineRows = [];
 let breadthLatestMetrics = {};
 let breadthEngineLoadError = '';
@@ -623,40 +633,126 @@ function parseLatestMetricsCsv(text) {
 }
 
 async function fetchPublishedCsv(url) {
-  const response = await fetch(url, { cache:'no-store' });
-  if (!response.ok) throw new Error(`HTTP ${response.status}`);
-  const text = await response.text();
-  if (!text || text.trim().startsWith('<')) throw new Error('Published CSV returned HTML');
-  return text;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 15000);
+  try {
+    const response = await fetch(url, {
+      cache: 'no-store',
+      mode: 'cors',
+      redirect: 'follow',
+      credentials: 'omit',
+      signal: controller.signal,
+      headers: { 'Accept': 'text/csv,text/plain,*/*' }
+    });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const text = await response.text();
+    if (!text || text.trim().startsWith('<')) throw new Error('Google returned HTML instead of CSV');
+    return text.replace(/^\uFEFF/, '');
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function fetchFirstWorkingCsv(gid) {
+  const errors = [];
+  for (const url of googlePublishedCsvCandidates(gid)) {
+    try {
+      const text = await fetchPublishedCsv(url);
+      if (text && text.includes(',')) return { text, url };
+      errors.push('empty CSV');
+    } catch (error) {
+      errors.push(error?.name === 'AbortError' ? 'timeout' : (error?.message || String(error)));
+    }
+  }
+  throw new Error(`gid ${gid}: ${errors.join(' · ')}`);
+}
+
+function detectBreadthFeed(text) {
+  const firstLine = String(text || '').split(/\r?\n/, 1)[0].toLowerCase();
+  const historyRows = parseBreadthEngineCsv(text);
+  const latestMap = parseLatestMetricsCsv(text);
+  const metricCount = Object.keys(latestMap).length;
+  const looksHistory = firstLine.includes('date') && firstLine.includes('advances') && historyRows.length > 0;
+  const looksLatest = firstLine.includes('metric') && firstLine.includes('value') && metricCount > 0;
+  return { historyRows, latestMap, looksHistory, looksLatest, firstLine };
 }
 
 async function fetchMarketBreadthFeeds() {
   const status = document.getElementById('breadthEngineFeedStatus');
-  if (status) { status.textContent = 'Loading published breadth feeds…'; status.className = 'engine-feed-status'; }
-  breadthEngineLoadError = '';
-  const results = await Promise.allSettled([
-    fetchPublishedCsv(MARKET_BREADTH_ENGINE_CSV),
-    fetchPublishedCsv(MARKET_BREADTH_LATEST_CSV)
-  ]);
-  if (results[0].status === 'fulfilled') {
-    breadthEngineRows = parseBreadthEngineCsv(results[0].value);
-  } else {
-    breadthEngineRows = [];
-    breadthEngineLoadError = results[0].reason?.message || 'History feed failed';
+  if (status) {
+    status.textContent = 'Loading published breadth feeds…';
+    status.className = 'engine-feed-status';
   }
-  if (results[1].status === 'fulfilled') breadthLatestMetrics = parseLatestMetricsCsv(results[1].value);
-  else breadthLatestMetrics = {};
+
+  breadthEngineLoadError = '';
+  breadthEngineRows = [];
+  breadthLatestMetrics = {};
+
+  const results = await Promise.allSettled(
+    MARKET_BREADTH_GIDS.map(gid => fetchFirstWorkingCsv(gid))
+  );
+
+  const diagnostics = [];
+  results.forEach((result, index) => {
+    const gid = MARKET_BREADTH_GIDS[index];
+    if (result.status !== 'fulfilled') {
+      diagnostics.push(result.reason?.message || `gid ${gid} failed`);
+      return;
+    }
+
+    try {
+      const detected = detectBreadthFeed(result.value.text);
+      if (detected.looksHistory && detected.historyRows.length > breadthEngineRows.length) {
+        breadthEngineRows = detected.historyRows;
+      }
+      if (detected.looksLatest && Object.keys(detected.latestMap).length > Object.keys(breadthLatestMetrics).length) {
+        breadthLatestMetrics = detected.latestMap;
+      }
+
+      // Defensive fallback: feeds may have been supplied in reverse order.
+      if (!breadthEngineRows.length && detected.historyRows.length) breadthEngineRows = detected.historyRows;
+      if (!Object.keys(breadthLatestMetrics).length && detected.looksLatest) breadthLatestMetrics = detected.latestMap;
+    } catch (error) {
+      diagnostics.push(`gid ${gid} parse: ${error?.message || error}`);
+    }
+  });
+
+  // If the latest sheet failed but history loaded, derive the latest snapshot directly.
+  if (breadthEngineRows.length && !Object.keys(breadthLatestMetrics).length) {
+    const last = breadthEngineRows.at(-1);
+    breadthLatestMetrics = {
+      Date: last.date,
+      'Breadth Health Score': last.healthScore ?? '',
+      'Risk Mode': last.riskMode || '',
+      Signal: last.signal || '',
+      'Breadth Trend / Regime': last.regime || '',
+      'Breadth Momentum': last.momentum || '',
+      'Tactical Guidance': last.guidance || '',
+      Advances: last.advances ?? '',
+      Declines: last.declines ?? '',
+      'Eligible Universe': last.eligible ?? '',
+      'FMP NASI': last.nasi ?? '',
+      'NASI 50 SMA': last.nasi50 ?? '',
+      'McClellan Oscillator': last.oscillator ?? '',
+      'Data Quality %': last.dataQuality ?? ''
+    };
+  }
 
   if (breadthEngineRows.length) {
     if (status) {
       status.textContent = `${breadthEngineRows.length} sessions · latest ${breadthEngineRows.at(-1).date}`;
       status.className = 'engine-feed-status live';
+      status.title = diagnostics.join('\n');
     }
     return true;
   }
+
+  breadthEngineLoadError = diagnostics.join(' | ') || 'No valid MARKET_BREADTH_ENGINE rows found';
+  console.error('FMP breadth feed unavailable:', breadthEngineLoadError);
   if (status) {
-    status.textContent = 'Breadth feed unavailable';
+    status.textContent = `Breadth feed unavailable · ${breadthEngineLoadError}`;
     status.className = 'engine-feed-status error';
+    status.title = breadthEngineLoadError;
   }
   return false;
 }
