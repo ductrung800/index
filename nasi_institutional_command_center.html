@@ -149,8 +149,8 @@
         <div class="combined-subchart">
           <div class="combined-subhead">
             <div>
-              <div class="label">Participation</div>
-              <div class="combined-subtitle">Daily advances / declines</div>
+              
+              <div class="combined-subtitle">Daily net advances</div>
             </div>
             <span class="pill" id="participationBadge">—</span>
           </div>
@@ -161,7 +161,7 @@
         <div class="combined-subchart">
           <div class="combined-subhead">
             <div>
-              <div class="label">Participation quality</div>
+        
               <div class="combined-subtitle">Advance / decline ratio</div>
             </div>
             <span class="pill" id="adRatioBadge">—</span>
@@ -170,7 +170,7 @@
         </div>
 
       </div>
-      <div class="feed-note">QQQ, daily advances/declines and the A/D ratio share the same visible sessions and horizontal time scale. Hover any chart to compare the same date.</div>
+      <div class="feed-note">QQQ, daily net advances and the A/D ratio share the same visible sessions and horizontal time scale. Green columns show positive net breadth; red columns show negative net breadth. Hover any chart to compare the same date.</div>
     </section>
   </div>
 </div>
@@ -569,51 +569,72 @@ function renderCharts(h){
 
   const adLabels=qqqRows.map(r=>r.date).concat(['','','','']);
   const adPad=a=>a.concat([null,null,null,null]);
+  const netBreadth=qqqRows.map(r=>(r.adv||0)-(r.dec||0));
+
   const adSets=[
     {
       type:'bar',
-      label:'Advances',
-      data:adPad(qqqRows.map(r=>r.adv)),
-      backgroundColor:'rgba(17,153,110,.78)',
-      borderColor:'#087c55',
-      borderWidth:.5,
-      barPercentage:.9,
-      categoryPercentage:.95
-    },
-    {
-      type:'bar',
-      label:'Declines',
-      data:adPad(qqqRows.map(r=>-(r.dec||0))),
-      backgroundColor:'rgba(215,71,71,.76)',
-      borderColor:'#a52322',
-      borderWidth:.5,
-      barPercentage:.9,
-      categoryPercentage:.95
+      label:'Net advances',
+      data:adPad(netBreadth),
+      backgroundColor:adPad(netBreadth.map(v=>
+        v>=0?'rgba(17,153,110,.80)':'rgba(215,71,71,.78)'
+      )),
+      borderColor:adPad(netBreadth.map(v=>
+        v>=0?'#087c55':'#a52322'
+      )),
+      borderWidth:.7,
+      barPercentage:.78,
+      categoryPercentage:.92
     },
     {
       type:'line',
-      label:'Net advances',
-      data:adPad(qqqRows.map(r=>(r.adv||0)-(r.dec||0))),
-      borderColor:'#2f6fde',
+      label:'Zero',
+      data:adPad(qqqRows.map(()=>0)),
+      borderColor:'#8b8f8c',
+      borderDash:[3,3],
       pointRadius:0,
-      borderWidth:1.3,
-      tension:.08
+      borderWidth:1
     }
   ];
+
   const adOpts={
     ...common,
+    plugins:{
+      ...common.plugins,
+      tooltip:{
+        mode:'index',
+        intersect:false,
+        callbacks:{
+          label(ctx){
+            const value=Number(ctx.parsed.y||0);
+            if(ctx.dataset.label==='Zero') return 'Zero reference';
+            return `Net advances: ${value>=0?'+':''}${value.toLocaleString()}`;
+          }
+        }
+      }
+    },
     scales:{
       ...common.scales,
       y:{
         ...common.scales.y,
-        stacked:false,
+        suggestedMin:-1200,
+        suggestedMax:1200,
         ticks:{
           ...common.scales.y.ticks,
-          callback:v=>Math.abs(Number(v)).toLocaleString()
+          callback:value=>{
+            const number=Number(value);
+            return `${number>0?'+':''}${number.toLocaleString()}`;
+          }
+        },
+        title:{
+          display:true,
+          text:'Advances − Declines',
+          color:'#666'
         }
       }
     }
   };
+
   adChart=upsert(adChart,'adChart','bar',adLabels,adSets,adOpts);
 
   // RANA is aligned to the same visible SPY sessions and right-side spacing.
