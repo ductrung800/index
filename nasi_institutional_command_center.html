@@ -40,11 +40,11 @@
 
 <div class="benchmark-grid">
   <div class="benchmark-column">
-    <section class="panel"><div class="panelhead"><div><div class="label">Broad-market benchmark</div><div class="title">SPY × McClellan Summation Index</div></div><span class="pill" id="spyTrendBadge">—</span></div><div class="primary-read">Candlestick · 20-day SMA · 50-day SMA · adjusted NASI · NASI 50-day SMA</div><div class="chartbox benchmark-chart"><canvas id="spyNasiChart"></canvas></div><div class="legend"><span><i class="line" style="background:#4a3aa7"></i>20-day SMA</span><span><i class="line" style="background:#d85a30"></i>50-day SMA</span><span><i class="line" style="background:#0f766e"></i>Adjusted NASI</span><span><i class="line" style="background:#2f6fde"></i>NASI 50-day SMA</span><span><i class="line" style="background:#999"></i>NASI zero</span></div><div class="feed-note">SPY and NASI begin on the first valid SPY session. Price auto-fits on the right axis; NASI uses the independent left axis. Extra space is reserved after the latest candle.</div></section>
+    <section class="panel"><div class="panelhead"><div><div class="label">Broad-market benchmark</div><div class="title">SPY × McClellan Summation Index</div></div><span class="pill" id="spyTrendBadge">—</span></div><div class="primary-read">Candlestick · adjusted NASI · NASI 50-day SMA</div><div class="chartbox benchmark-chart"><canvas id="spyNasiChart"></canvas></div><div class="legend"><span><i class="line" style="background:#0f766e"></i>Adjusted NASI</span><span><i class="line" style="background:#2f6fde"></i>NASI 50-day SMA</span><span><i class="line" style="background:#999"></i>NASI zero</span></div><div class="feed-note">SPY and NASI begin on the first valid SPY session. Price auto-fits on the right axis; NASI uses the independent left axis. Candles are reconstructed from daily closes; source discontinuities above 15% are neutralized so they cannot create misleading giant candles. Extra space is reserved after the latest candle.</div></section>
     <section class="panel"><div class="panelhead"><div><div class="label">Momentum</div><div class="title">McClellan Oscillator</div></div><span class="pill" id="oscBadge">—</span></div><div class="chartbox support-chart"><canvas id="oscChart"></canvas></div></section>
   </div>
   <div class="benchmark-column">
-    <section class="panel"><div class="panelhead"><div><div class="label">Growth / leadership benchmark</div><div class="title">QQQ × McClellan Summation Index</div></div><span class="pill" id="qqqTrendBadge">—</span></div><div class="primary-read" id="qqqRead">Candlestick · 20-day SMA · 50-day SMA · adjusted NASI · NASI 50-day SMA</div><div class="chartbox benchmark-chart"><canvas id="qqqNasiChart"></canvas></div><div class="legend"><span><i class="line" style="background:#4a3aa7"></i>20-day SMA</span><span><i class="line" style="background:#d85a30"></i>50-day SMA</span><span><i class="line" style="background:#0f766e"></i>Adjusted NASI</span><span><i class="line" style="background:#2f6fde"></i>NASI 50-day SMA</span><span><i class="line" style="background:#999"></i>NASI zero</span></div><div class="feed-note">QQQ and NASI begin on the first valid QQQ session. Price auto-fits independently, and extra space is reserved after the latest candle.</div></section>
+    <section class="panel"><div class="panelhead"><div><div class="label">Growth / leadership benchmark</div><div class="title">QQQ × McClellan Summation Index</div></div><span class="pill" id="qqqTrendBadge">—</span></div><div class="primary-read" id="qqqRead">Candlestick · adjusted NASI · NASI 50-day SMA</div><div class="chartbox benchmark-chart"><canvas id="qqqNasiChart"></canvas></div><div class="legend"><span><i class="line" style="background:#0f766e"></i>Adjusted NASI</span><span><i class="line" style="background:#2f6fde"></i>NASI 50-day SMA</span><span><i class="line" style="background:#999"></i>NASI zero</span></div><div class="feed-note">QQQ and NASI begin on the first valid QQQ session. Price auto-fits independently. Candles are reconstructed from daily closes; source discontinuities above 15% are neutralized so they cannot create misleading giant candles. Extra space is reserved after the latest candle.</div></section>
     <section class="panel"><div class="panelhead"><div><div class="label">Participation</div><div class="title">Daily advances / declines</div></div><span class="pill" id="participationBadge">—</span></div><div class="participation-stats" id="participationStats"></div><div class="chartbox support-chart"><canvas id="adChart"></canvas></div><div class="feed-note">Green columns plot advances above zero; red columns plot declines below zero. The net line highlights daily internal direction.</div></section>
   </div>
 </div>
@@ -161,7 +161,32 @@ function adjusted(r){return {...r,adjNasi:r.nasi+offset,adj50:r.nasi50==null?nul
 function tone(r){const risk=String(val(r,'risk')).toUpperCase(),signal=String(val(r,'signal')).toUpperCase(),health=Number(val(r,'health'));if(risk.includes('OFF')||signal.includes('BREAK')||signal.includes('SELL')||health<35)return'bear';if(risk.includes('ON')&&health>=70)return'bull';return'warn'}
 function fmt(x,d=0,s=false){if(x==null||!Number.isFinite(Number(x)))return'—';const v=Number(x);return(s&&v>0?'+':'')+v.toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d})}
 function smaSeries(values,period){const out=new Array(values.length).fill(null);for(let i=period-1;i<values.length;i++){const w=values.slice(i-period+1,i+1);if(w.every(Number.isFinite))out[i]=w.reduce((a,b)=>a+b,0)/period;}return out}
-function syntheticOhlc(values){return values.map((c,i)=>{if(!Number.isFinite(c))return null;const prev=i&&Number.isFinite(values[i-1])?values[i-1]:c;const body=Math.max(Math.abs(c-prev),Math.abs(c)*.0015);return{o:prev,c,h:Math.max(prev,c)+body*.28,l:Math.min(prev,c)-body*.28};});}
+function syntheticOhlc(values){
+  return values.map((c,i)=>{
+    if(!Number.isFinite(c)) return null;
+
+    const prev=i&&Number.isFinite(values[i-1])?values[i-1]:c;
+    const pctMove=prev!==0?Math.abs(c-prev)/Math.abs(prev):0;
+
+    /*
+     * The benchmark source supplies daily closes, not true OHLC bars.
+     * We reconstruct a visual candle from consecutive closes. When a
+     * source/proxy discontinuity exceeds 15%, do not draw a giant body;
+     * anchor the synthetic open to the current close and use a normal wick.
+     */
+    const isOutlier=pctMove>0.15;
+    const open=isOutlier?c:prev;
+    const typicalRange=Math.max(Math.abs(c)*0.004,Math.abs(c-open)*0.30);
+
+    return{
+      o:open,
+      c,
+      h:Math.max(open,c)+typicalRange,
+      l:Math.min(open,c)-typicalRange,
+      sourceOutlier:isOutlier
+    };
+  });
+}
 function autoRange(series,extras=[]){const vals=[];series.forEach(o=>{if(o){if(Number.isFinite(o.l))vals.push(o.l);if(Number.isFinite(o.h))vals.push(o.h)}});extras.flat().forEach(v=>{if(Number.isFinite(v))vals.push(v)});if(!vals.length)return{};const lo=Math.min(...vals),hi=Math.max(...vals),span=Math.max(hi-lo,Math.abs(hi)*.025,1);return{min:lo-span*.08,max:hi+span*.08};}
 const candleWicksPlugin={id:'labCandleWicks',afterDatasetsDraw(chart){const{ctx}=chart;chart.data.datasets.forEach((ds,di)=>{if(!ds.isCandle||!ds.ohlc)return;const meta=chart.getDatasetMeta(di),scale=chart.scales[ds.yAxisID||'yPrice'];ctx.save();ctx.strokeStyle='#454843';ctx.lineWidth=1;meta.data.forEach((bar,i)=>{const o=ds.ohlc[i];if(!o)return;ctx.beginPath();ctx.moveTo(bar.x,scale.getPixelForValue(o.h));ctx.lineTo(bar.x,scale.getPixelForValue(o.l));ctx.stroke()});ctx.restore()})}};
 Chart.register(candleWicksPlugin);
@@ -217,8 +242,7 @@ function renderBenchmarkNasiChart(symbol,h,chart,id){
   const rightPad=4;
   const labels=visible.map(r=>r.date).concat(new Array(rightPad).fill(''));
   const ohlc=syntheticOhlc(price);
-  const ma20=smaSeries(price,20),ma50=smaSeries(price,50);
-  const range=autoRange(ohlc,[ma20,ma50]);
+  const range=autoRange(ohlc,[]);
   const pad=a=>a.concat(new Array(rightPad).fill(null));
   const paddedOhlc=ohlc.concat(new Array(rightPad).fill(null));
 
@@ -227,8 +251,6 @@ function renderBenchmarkNasiChart(symbol,h,chart,id){
 
   const datasets=[
     {type:'bar',label:symbol,data:pad(ohlc.map(o=>o?[o.o,o.c]:null)),ohlc:paddedOhlc,isCandle:true,backgroundColor:candleColors,borderColor:candleBorders,borderWidth:1.1,borderSkipped:false,barPercentage:.68,categoryPercentage:.92,yAxisID:'yPrice'},
-    {type:'line',label:'20-day SMA',data:pad(ma20),borderColor:'#4a3aa7',pointRadius:0,borderWidth:1.8,tension:.08,yAxisID:'yPrice',spanGaps:true},
-    {type:'line',label:'50-day SMA',data:pad(ma50),borderColor:'#d85a30',pointRadius:0,borderWidth:1.8,tension:.08,yAxisID:'yPrice',spanGaps:true},
     {type:'line',label:'Adjusted NASI',data:pad(visible.map(r=>r.adjNasi)),borderColor:'#0f766e',pointRadius:0,borderWidth:2,tension:.12,yAxisID:'y',segment:{borderColor:c=>c.p1.parsed.y>=c.p0.parsed.y?'#0f766e':'#d74747'}},
     {type:'line',label:'NASI 50 SMA',data:pad(visible.map(r=>r.adj50)),borderColor:'#2f6fde',pointRadius:0,borderWidth:1.7,tension:.12,yAxisID:'y'},
     {type:'line',label:'NASI Zero',data:pad(visible.map(()=>0)),borderColor:'#999',borderDash:[4,3],pointRadius:0,borderWidth:1,yAxisID:'y'}
@@ -254,7 +276,7 @@ function renderCharts(h){
   const common={responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:9,color:'#777',font:{size:10}}},y:{grid:{color:'#ecece7'},ticks:{color:'#777',font:{size:10}}}}};
   spyNasiChart=renderBenchmarkNasiChart('SPY',h,spyNasiChart,'spyNasiChart');
   qqqNasiChart=renderBenchmarkNasiChart('QQQ',h,qqqNasiChart,'qqqNasiChart');
-  document.getElementById('qqqRead').textContent=`Candlestick · 20-day SMA · 50-day SMA · adjusted NASI · NASI 50-day SMA${qqqUsesProxy?' · QQQ proxy from SPY (source QQQ column unavailable)':''}`;
+  document.getElementById('qqqRead').textContent=`Candlestick · adjusted NASI · NASI 50-day SMA${qqqUsesProxy?' · QQQ proxy from SPY (source QQQ column unavailable)':''}`;
   const oscSets=[{label:'Oscillator',data:h.map(r=>r.osc),borderColor:'#6d52c7',backgroundColor:h.map(r=>r.osc>=0?'rgba(17,153,110,.25)':'rgba(215,71,71,.22)'),fill:true,pointRadius:0,borderWidth:1.5,tension:.1},{label:'Zero',data:h.map(()=>0),borderColor:'#999',borderDash:[3,3],pointRadius:0,borderWidth:1}];
   oscChart=upsert(oscChart,'oscChart','line',labels,oscSets,common);
   const adSets=[{type:'bar',label:'Advances',data:h.map(r=>r.adv),backgroundColor:'rgba(17,153,110,.78)',borderColor:'#087c55',borderWidth:.5,barPercentage:.9,categoryPercentage:.95},{type:'bar',label:'Declines',data:h.map(r=>-(r.dec||0)),backgroundColor:'rgba(215,71,71,.76)',borderColor:'#a52322',borderWidth:.5,barPercentage:.9,categoryPercentage:.95},{type:'line',label:'Net advances',data:h.map(r=>(r.adv||0)-(r.dec||0)),borderColor:'#2f6fde',pointRadius:0,borderWidth:1.3,tension:.08}];
