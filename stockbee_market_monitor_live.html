@@ -182,7 +182,7 @@
   .tm-date { font:800 14px 'JetBrains Mono',monospace; color:#0b0b0b; min-width:105px; text-align:center; }
   .tm-badge { font:700 10px 'JetBrains Mono',monospace; text-transform:uppercase; padding:4px 8px; border-radius:999px; background:#eef4fb; color:#2a78d6; }
   .tm-badge.live { background:#e7f6f0; color:#087c55; }
-  .tm-controls { display:grid; grid-template-columns:auto auto auto minmax(220px,1fr) auto auto; gap:8px; align-items:center; }
+  .tm-controls { display:grid; grid-template-columns:auto auto auto minmax(220px,1fr) minmax(145px,auto) auto auto; gap:8px; align-items:center; }
   .tm-btn { border:1px solid #d3d1c7; background:#fff; color:#52514e; border-radius:7px; min-height:32px; padding:5px 10px; cursor:pointer; font:700 11px 'JetBrains Mono',monospace; }
   .tm-btn:hover { background:#f1efe8; color:#0b0b0b; }
   .tm-btn:disabled { opacity:.45; cursor:default; }
@@ -190,6 +190,38 @@
   .tm-range { display:flex; justify-content:space-between; margin-top:7px; padding:0 2px; color:#898781; font:10px 'JetBrains Mono',monospace; }
   .historical-mode .command-strip { box-shadow:0 0 0 2px rgba(42,120,214,.10); }
   @media (max-width:850px) { .tm-controls { grid-template-columns:repeat(3,auto); } .tm-slider { grid-column:1/-1; grid-row:2; } .tm-range { display:none; } }
+
+
+  /* ---------- FMP INSTITUTIONAL BREADTH ENGINE ---------- */
+  .tm-date-input { border:1px solid #d3d1c7; background:#fff; color:#0b0b0b; border-radius:7px; min-height:32px; padding:5px 9px; font:700 11px 'JetBrains Mono',monospace; }
+  .institutional-panel { border-left:5px solid #898781; overflow:hidden; }
+  .institutional-panel.tone-bull { border-left-color:#1baf7a; }
+  .institutional-panel.tone-warn { border-left-color:#eda100; }
+  .institutional-panel.tone-bear { border-left-color:#e34948; }
+  .institutional-head { display:flex; justify-content:space-between; align-items:flex-start; gap:14px; flex-wrap:wrap; margin-bottom:12px; }
+  .institutional-title { font-size:17px; font-weight:800; letter-spacing:-.01em; }
+  .institutional-subtitle { margin-top:3px; color:#898781; font-size:10px; line-height:1.45; }
+  .engine-feed-status { display:inline-flex; align-items:center; gap:6px; font:700 10px 'JetBrains Mono',monospace; color:#898781; background:#f8f8f6; border:1px solid #ecebe6; border-radius:999px; padding:5px 9px; }
+  .engine-feed-status::before { content:''; width:7px; height:7px; border-radius:50%; background:#b0aea5; }
+  .engine-feed-status.live::before { background:#1baf7a; }
+  .engine-feed-status.error::before { background:#e34948; }
+  .institutional-grid { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:8px; margin-bottom:10px; }
+  .institutional-card { min-width:0; background:#f8f8f6; border:1px solid #ecebe6; border-radius:8px; padding:9px 10px; }
+  .institutional-card .label { font:600 9px 'JetBrains Mono',monospace; color:#898781; text-transform:uppercase; letter-spacing:.05em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .institutional-card .value { margin-top:3px; font-size:14px; font-weight:800; line-height:1.18; word-break:break-word; }
+  .institutional-card .sub { margin-top:3px; font-size:9px; color:#898781; line-height:1.3; }
+  .institutional-card.pos .value { color:#0f7b5b; }
+  .institutional-card.warn .value { color:#a96d00; }
+  .institutional-card.neg .value { color:#b93433; }
+  .nasi-metrics { display:grid; grid-template-columns:repeat(4,minmax(120px,1fr)); gap:8px; margin:8px 0 10px; }
+  .nasi-metric { background:#fff; border:1px solid #ecebe6; border-radius:7px; padding:8px 10px; }
+  .nasi-metric span { display:block; font-size:9px; color:#898781; text-transform:uppercase; letter-spacing:.05em; }
+  .nasi-metric strong { display:block; margin-top:2px; font:800 14px 'JetBrains Mono',monospace; }
+  .nasi-chart-wrap { height:275px; position:relative; }
+  .engine-guidance { margin-top:12px; border-top:1px solid #ecebe6; padding-top:11px; font-size:12.5px; line-height:1.5; color:#2c2c2a; }
+  .engine-source { margin-top:8px; color:#898781; font-size:10px; }
+  @media(max-width:1180px){.institutional-grid{grid-template-columns:repeat(3,minmax(0,1fr));}}
+  @media(max-width:760px){.institutional-grid,.nasi-metrics{grid-template-columns:repeat(2,minmax(0,1fr));}.tm-date-input{grid-column:1/-1;}}
 
 </style>
 </head>
@@ -216,7 +248,7 @@
 <header class="top" style="display: block; border-bottom: 2px solid #e1e0d9; padding-bottom: 14px; margin-bottom: 18px;">
   <div class="brand-eyebrow" style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .18em; color: #1baf7a; text-transform: uppercase;">Stockbee Engine</div>
   <h1 style="font-size: 26px; font-weight: 800; letter-spacing: -.02em; margin-top: 2px; color: #0b0b0b;">Stockbee Market Monitor</h1>
-  <div class="subline" style="color: #52514e; font-size: 12.5px; margin-top: 4px; font-family: 'JetBrains Mono', monospace;">S&amp;P 500, T2108, and breadth ratios — auto-updating from the published Stockbee sheet</div>
+  <div class="subline" style="color: #52514e; font-size: 12.5px; margin-top: 4px; font-family: 'JetBrains Mono', monospace;">SPY, QQQ, T2108, Stockbee ratios, and the FMP Nasdaq Breadth Engine — synchronized from published sheets</div>
 </header>
 
 <div class="status-bar">
@@ -239,6 +271,7 @@
     <button class="tm-btn" id="tmPlay" title="Play historical sequence">▶ Play</button>
     <button class="tm-btn" id="tmNext" title="Next trading day">▶</button>
     <input class="tm-slider" id="tmSlider" type="range" min="0" max="0" value="0" step="1" aria-label="Select historical trading date">
+    <input class="tm-date-input" id="tmDateInput" type="date" aria-label="Jump to a specific date">
     <button class="tm-btn" id="tmYtd">YTD</button>
     <button class="tm-btn" id="tmLatest">↻ Latest</button>
   </div>
@@ -283,7 +316,7 @@
   </div>
   <div class="summary-grid" id="summaryGrid"></div>
   <div class="commentary" id="commentaryText"></div>
-  <p class="note" style="margin:12px 0 0;">SPY and QQQ use fixed candlestick charts with 20-day and 50-day moving averages. Each price axis auto-fits the visible candle range. T2108 remains overlaid on its own 0–100% axis for direct time-by-time comparison.</p>
+  <p class="note" style="margin:12px 0 0;">SPY and QQQ use fixed candlestick charts with 20-day and 50-day moving averages. Each price axis auto-fits the visible candle range. T2108 stays on its own 0–100% axis, while the FMP breadth engine supplies the independent internal-market risk and NASI confirmation layer.</p>
 </section>
 
 <div class="benchmark-grid">
@@ -323,6 +356,39 @@
   </section>
 </div>
 
+
+<section class="panel institutional-panel" id="institutionalBreadthPanel" aria-labelledby="institutionalBreadthTitle">
+  <div class="institutional-head">
+    <div>
+      <div class="benchmark-kicker">Independent internal-market confirmation</div>
+      <div class="institutional-title" id="institutionalBreadthTitle">FMP Nasdaq Institutional Breadth Engine</div>
+      <div class="institutional-subtitle">Proprietary FMP-derived Nasdaq breadth series · McClellan Oscillator · Summation Index · risk and signal layer</div>
+    </div>
+    <span class="engine-feed-status" id="breadthEngineFeedStatus">Loading published breadth feeds…</span>
+  </div>
+
+  <div class="institutional-grid">
+    <div class="institutional-card" id="engineHealthCard"><div class="label">Breadth health</div><div class="value" id="engineHealth">—</div><div class="sub" id="engineHealthSub">0–100 composite</div></div>
+    <div class="institutional-card" id="engineRiskCard"><div class="label">Risk mode</div><div class="value" id="engineRisk">—</div><div class="sub">Internal positioning mode</div></div>
+    <div class="institutional-card" id="engineSignalCard"><div class="label">Signal</div><div class="value" id="engineSignal">—</div><div class="sub">Breadth switch / warning</div></div>
+    <div class="institutional-card" id="engineRegimeCard"><div class="label">Trend / regime</div><div class="value" id="engineRegime">—</div><div class="sub">Intermediate internal structure</div></div>
+    <div class="institutional-card" id="engineMomentumCard"><div class="label">Momentum</div><div class="value" id="engineMomentum">—</div><div class="sub">Short-term breadth impulse</div></div>
+    <div class="institutional-card" id="engineQualityCard"><div class="label">Data quality</div><div class="value" id="engineQuality">—</div><div class="sub" id="engineQualitySub">Eligible universe coverage</div></div>
+  </div>
+
+  <div class="nasi-metrics">
+    <div class="nasi-metric"><span>FMP NASI</span><strong id="engineNasi">—</strong></div>
+    <div class="nasi-metric"><span>NASI 50 SMA</span><strong id="engineNasiSma">—</strong></div>
+    <div class="nasi-metric"><span>NASI vs SMA</span><strong id="engineNasiDistance">—</strong></div>
+    <div class="nasi-metric"><span>McClellan Oscillator</span><strong id="engineOscillator">—</strong></div>
+  </div>
+
+  <div class="nasi-chart-wrap"><canvas id="nasiChart" role="img" aria-label="FMP Nasdaq McClellan Summation Index with fifty-day moving average"></canvas></div>
+  <div class="legend" style="margin-top:8px;margin-bottom:0"><span><span class="swatch line" style="background:#111827"></span>FMP NASI</span><span><span class="swatch line" style="background:#2a78d6"></span>50-day SMA</span><span><span class="swatch dash" style="border-color:#898781"></span>Zero reference</span></div>
+  <div class="engine-guidance" id="engineGuidance"><strong>Institutional breadth guidance:</strong> Waiting for the published FMP breadth engine.</div>
+  <div class="engine-source">This is an independently calculated FMP-derived breadth model and is not the official StockCharts $NASI series.</div>
+</section>
+
 <div class="danger-grid">
   <section class="danger-panel">
     <div class="danger-attached" id="spyDangerPanel" style="border-top:none;">
@@ -348,6 +414,13 @@ const CSV_URLS = [
   `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`
 ];
 
+const MARKET_BREADTH_ENGINE_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQJgJsQkbBX3USosTbGEO8iwpdXK6Clc6hoUq6lqA7IlbJnkboWtq0asanPGUuZoMIXx9VxRC9d-q6h/pub?gid=1906345525&single=true&output=csv';
+const MARKET_BREADTH_LATEST_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQJgJsQkbBX3USosTbGEO8iwpdXK6Clc6hoUq6lqA7IlbJnkboWtq0asanPGUuZoMIXx9VxRC9d-q6h/pub?gid=1126999134&single=true&output=csv';
+let breadthEngineRows = [];
+let breadthLatestMetrics = {};
+let breadthEngineLoadError = '';
+
+
 // Global storage for direct ETF data
 let liveEtfData = { SPY: {}, QQQ: {} };
 
@@ -370,7 +443,7 @@ async function fetchDirectEtfHistory() {
     
     console.log("✅ Successfully loaded direct ETF price feeds from Python!");
     mergeEtfDataIntoDashboard();
-    renderAll();
+    if (currentData.length) renderAll();
   } catch (err) {
     console.warn("⚠️ Could not fetch direct ETF history. Falling back to sheet numbers:", err);
   }
@@ -420,6 +493,7 @@ let spyChart = null;
 let qqqChart = null;
 let ratioChart = null;
 let quarterlyChart = null;
+let nasiChart = null;
 
 const commonX = {
   type: 'category',
@@ -450,6 +524,272 @@ async function fetchLiveData() {
     } catch (err) { console.warn('Fetch failed for', url, err); }
   }
   return null;
+}
+
+
+function normalizeHeader(value) {
+  return String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, '');
+}
+
+function parseNumeric(value) {
+  const text = String(value ?? '').replace(/,/g, '').trim();
+  if (!text) return null;
+  const n = Number(text.replace('%', ''));
+  return Number.isFinite(n) ? n : null;
+}
+
+function parsePercent(value) {
+  const text = String(value ?? '').replace(/,/g, '').trim();
+  if (!text) return null;
+  const n = Number(text.replace('%', ''));
+  if (!Number.isFinite(n)) return null;
+  return text.includes('%') ? n / 100 : n;
+}
+
+function parseBoolean(value) {
+  return /^(true|yes|1)$/i.test(String(value ?? '').trim());
+}
+
+function toIsoDate(value) {
+  const raw = String(value || '').trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+  const match = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (match) return `${match[3]}-${match[1].padStart(2,'0')}-${match[2].padStart(2,'0')}`;
+  const parsed = new Date(raw);
+  if (Number.isNaN(parsed.getTime())) return '';
+  return `${parsed.getFullYear()}-${String(parsed.getMonth()+1).padStart(2,'0')}-${String(parsed.getDate()).padStart(2,'0')}`;
+}
+
+function displayIsoDate(iso) {
+  if (!iso) return '—';
+  const [y,m,d] = iso.split('-');
+  return `${Number(m)}/${Number(d)}/${y}`;
+}
+
+function rowValue(row, normalizedKey) {
+  const key = Object.keys(row).find(k => normalizeHeader(k) === normalizedKey);
+  return key ? row[key] : null;
+}
+
+function parseBreadthEngineCsv(text) {
+  const parsed = Papa.parse(text.trim(), { header:true, skipEmptyLines:true });
+  return (parsed.data || []).map(row => {
+    const date = toIsoDate(rowValue(row, 'date'));
+    if (!date) return null;
+    return {
+      date,
+      advances: parseNumeric(rowValue(row, 'advances')),
+      declines: parseNumeric(rowValue(row, 'declines')),
+      unchanged: parseNumeric(rowValue(row, 'unchanged')),
+      eligible: parseNumeric(rowValue(row, 'eligibleuniverse')),
+      dataQuality: parsePercent(rowValue(row, 'dataquality')),
+      advancingPct: parsePercent(rowValue(row, 'advancing')),
+      decliningPct: parsePercent(rowValue(row, 'declining')),
+      netAdvances: parseNumeric(rowValue(row, 'netadvances')),
+      netAdvancePct: parsePercent(rowValue(row, 'netadvance')),
+      adRatio: parseNumeric(rowValue(row, 'advancedeclineratio')),
+      rana: parseNumeric(rowValue(row, 'rana')),
+      ema19: parseNumeric(rowValue(row, 'ema19')),
+      ema39: parseNumeric(rowValue(row, 'ema39')),
+      oscillator: parseNumeric(rowValue(row, 'mcclellanoscillator')),
+      oscillator5d: parseNumeric(rowValue(row, 'oscillator5dchange')),
+      nasi: parseNumeric(rowValue(row, 'fmpnasi')),
+      nasi50: parseNumeric(rowValue(row, 'nasi50sma')),
+      nasiVs50: parseNumeric(rowValue(row, 'nasivs50sma')),
+      nasi5d: parseNumeric(rowValue(row, 'nasi5dchange')),
+      positiveDays5: parseNumeric(rowValue(row, 'positivedays5d')),
+      averageNetPct5: parsePercent(rowValue(row, 'averagenet5d')),
+      momentum: String(rowValue(row, 'breadthmomentum') || '').trim(),
+      regime: String(rowValue(row, 'breadthtrendregime') || '').trim(),
+      thrust: parseBoolean(rowValue(row, 'breadththrust')),
+      washout: parseBoolean(rowValue(row, 'washout')),
+      healthScore: parseNumeric(rowValue(row, 'breadthhealthscore')),
+      riskMode: String(rowValue(row, 'riskmode') || '').trim(),
+      signal: String(rowValue(row, 'signal') || '').trim(),
+      guidance: String(rowValue(row, 'tacticalguidance') || '').trim(),
+      validSession: parseBoolean(rowValue(row, 'validsession'))
+    };
+  }).filter(row => row && (row.validSession || row.validSession === false) && Number.isFinite(row.nasi)).sort((a,b) => a.date.localeCompare(b.date));
+}
+
+function parseLatestMetricsCsv(text) {
+  const rows = Papa.parse(text.trim(), { skipEmptyLines:true }).data || [];
+  const map = {};
+  rows.slice(1).forEach(row => {
+    const key = String(row?.[0] || '').trim();
+    if (key) map[key] = row?.[1] ?? '';
+  });
+  return map;
+}
+
+async function fetchPublishedCsv(url) {
+  const response = await fetch(url, { cache:'no-store' });
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  const text = await response.text();
+  if (!text || text.trim().startsWith('<')) throw new Error('Published CSV returned HTML');
+  return text;
+}
+
+async function fetchMarketBreadthFeeds() {
+  const status = document.getElementById('breadthEngineFeedStatus');
+  if (status) { status.textContent = 'Loading published breadth feeds…'; status.className = 'engine-feed-status'; }
+  breadthEngineLoadError = '';
+  const results = await Promise.allSettled([
+    fetchPublishedCsv(MARKET_BREADTH_ENGINE_CSV),
+    fetchPublishedCsv(MARKET_BREADTH_LATEST_CSV)
+  ]);
+  if (results[0].status === 'fulfilled') {
+    breadthEngineRows = parseBreadthEngineCsv(results[0].value);
+  } else {
+    breadthEngineRows = [];
+    breadthEngineLoadError = results[0].reason?.message || 'History feed failed';
+  }
+  if (results[1].status === 'fulfilled') breadthLatestMetrics = parseLatestMetricsCsv(results[1].value);
+  else breadthLatestMetrics = {};
+
+  if (breadthEngineRows.length) {
+    if (status) {
+      status.textContent = `${breadthEngineRows.length} sessions · latest ${breadthEngineRows.at(-1).date}`;
+      status.className = 'engine-feed-status live';
+    }
+    return true;
+  }
+  if (status) {
+    status.textContent = 'Breadth feed unavailable';
+    status.className = 'engine-feed-status error';
+  }
+  return false;
+}
+
+function breadthSnapshotForDate(dateValue) {
+  if (!breadthEngineRows.length) return null;
+  const iso = toIsoDate(dateValue);
+  if (!iso) return breadthEngineRows.at(-1);
+  let lo = 0, hi = breadthEngineRows.length - 1, answer = -1;
+  while (lo <= hi) {
+    const mid = (lo + hi) >> 1;
+    if (breadthEngineRows[mid].date <= iso) { answer = mid; lo = mid + 1; }
+    else hi = mid - 1;
+  }
+  return answer >= 0 ? breadthEngineRows[answer] : null;
+}
+
+function breadthRowsThroughSelectedDate() {
+  if (!breadthEngineRows.length || !currentData.length) return [];
+  const end = toIsoDate(currentData.at(-1).date);
+  const start = toIsoDate(currentData[0].date);
+  let rows = breadthEngineRows.filter(row => row.date <= end && (!start || row.date >= start));
+  if (!rows.length) rows = breadthEngineRows.filter(row => row.date <= end).slice(-160);
+  return rows;
+}
+
+function engineTone(snapshot) {
+  const risk = String(snapshot?.riskMode || '').toUpperCase();
+  const signal = String(snapshot?.signal || '').toUpperCase();
+  const score = Number(snapshot?.healthScore);
+  if (risk.includes('RISK-OFF') || signal.includes('BREAKDOWN') || signal.includes('SELL') || score < 35) return 'neg';
+  if (risk.includes('RISK-ON') && !risk.includes('SELECTIVE') && score >= 70) return 'pos';
+  return 'warn';
+}
+
+function setInstitutionalCardTone(id, tone) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.remove('pos','warn','neg');
+  el.classList.add(tone);
+}
+
+function formatEngineNumber(value, decimals=0, signed=false) {
+  if (!Number.isFinite(value)) return '—';
+  const prefix = signed && value > 0 ? '+' : '';
+  return prefix + value.toLocaleString(undefined, { minimumFractionDigits:decimals, maximumFractionDigits:decimals });
+}
+
+function renderNasiChart(rows) {
+  const canvas = document.getElementById('nasiChart');
+  if (!canvas) return;
+  const labels = rows.map(row => displayIsoDate(row.date));
+  const datasets = [
+    { label:'FMP NASI', data:rows.map(row => row.nasi), borderColor:'#111827', pointRadius:0, borderWidth:2, tension:.12, segment:{ borderColor:ctx => ctx.p1.parsed.y >= ctx.p0.parsed.y ? '#111827' : '#e34948' } },
+    { label:'NASI 50 SMA', data:rows.map(row => row.nasi50), borderColor:'#2a78d6', pointRadius:0, borderWidth:1.8, tension:.12 },
+    { label:'Zero', data:rows.map(() => 0), borderColor:'#898781', borderDash:[4,3], pointRadius:0, borderWidth:1 }
+  ];
+  const options = { responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false}, plugins:{ legend:{display:false}, tooltip:{callbacks:{label:ctx => `${ctx.dataset.label}: ${ctx.parsed.y == null ? '—' : Number(ctx.parsed.y).toFixed(0)}`}} }, scales:{ x:{...commonX}, y:{ beginAtZero:false, grid:{color:'#ecebe6'}, ticks:{font:{size:10},color:'#898781'} } } };
+  if (!nasiChart) nasiChart = new Chart(canvas, { type:'line', data:{labels,datasets}, options });
+  else { nasiChart.data.labels = labels; nasiChart.data.datasets = datasets; nasiChart.update(); }
+}
+
+function renderInstitutionalBreadth() {
+  const panel = document.getElementById('institutionalBreadthPanel');
+  if (!panel) return;
+  const selectedDate = currentData.length ? currentData.at(-1).date : null;
+  const snapshot = breadthSnapshotForDate(selectedDate);
+  if (!snapshot) {
+    panel.className = 'panel institutional-panel';
+    document.getElementById('engineGuidance').innerHTML = `<strong>Institutional breadth guidance:</strong> ${breadthEngineLoadError || 'No FMP breadth observation is available for the selected date.'}`;
+    renderNasiChart([]);
+    return;
+  }
+  const tone = engineTone(snapshot);
+  panel.className = `panel institutional-panel tone-${tone === 'pos' ? 'bull' : tone === 'neg' ? 'bear' : 'warn'}`;
+
+  document.getElementById('engineHealth').textContent = formatEngineNumber(snapshot.healthScore, 0);
+  document.getElementById('engineHealthSub').textContent = `As of ${snapshot.date} · 0–100 composite`;
+  document.getElementById('engineRisk').textContent = snapshot.riskMode || '—';
+  document.getElementById('engineSignal').textContent = snapshot.signal || '—';
+  document.getElementById('engineRegime').textContent = snapshot.regime || '—';
+  document.getElementById('engineMomentum').textContent = snapshot.momentum || '—';
+  document.getElementById('engineQuality').textContent = Number.isFinite(snapshot.dataQuality) ? `${(snapshot.dataQuality*100).toFixed(1)}%` : '—';
+  document.getElementById('engineQualitySub').textContent = `${formatEngineNumber(snapshot.eligible)} eligible stocks`;
+  document.getElementById('engineNasi').textContent = formatEngineNumber(snapshot.nasi, 0, true);
+  document.getElementById('engineNasiSma').textContent = formatEngineNumber(snapshot.nasi50, 0, true);
+  document.getElementById('engineNasiDistance').textContent = formatEngineNumber(snapshot.nasiVs50, 0, true);
+  document.getElementById('engineOscillator').textContent = formatEngineNumber(snapshot.oscillator, 1, true);
+  document.getElementById('engineGuidance').innerHTML = `<strong>Institutional breadth guidance:</strong> ${snapshot.guidance || 'No tactical guidance supplied.'} <span style="color:#898781">Risk mode: ${snapshot.riskMode || '—'} · Signal: ${snapshot.signal || '—'} · A/D ratio: ${formatEngineNumber(snapshot.adRatio,2)}.</span>`;
+
+  setInstitutionalCardTone('engineHealthCard', tone);
+  setInstitutionalCardTone('engineRiskCard', tone);
+  setInstitutionalCardTone('engineSignalCard', tone);
+  setInstitutionalCardTone('engineRegimeCard', tone);
+  setInstitutionalCardTone('engineMomentumCard', snapshot.oscillator > 0 ? 'pos' : snapshot.oscillator < 0 ? 'neg' : 'warn');
+  setInstitutionalCardTone('engineQualityCard', snapshot.dataQuality >= .97 ? 'pos' : snapshot.dataQuality >= .90 ? 'warn' : 'neg');
+  renderNasiChart(breadthRowsThroughSelectedDate());
+}
+
+function applyInstitutionalBreadthDecisionLayer(today) {
+  const snapshot = breadthSnapshotForDate(today?.date);
+  if (!snapshot) return;
+  const tone = engineTone(snapshot);
+  const breadthValue = document.getElementById('breadthCommand');
+  const breadthSub = document.getElementById('breadthCommandSub');
+  breadthValue.textContent = snapshot.signal || snapshot.regime || 'FMP breadth';
+  setTone(breadthValue, tone === 'pos' ? 'pos' : tone === 'neg' ? 'neg' : 'warn');
+  breadthSub.textContent = `Health ${formatEngineNumber(snapshot.healthScore)} · ${snapshot.riskMode || '—'} · ${snapshot.momentum || '—'}`;
+
+  const summaryGrid = document.getElementById('summaryGrid');
+  if (summaryGrid) summaryGrid.insertAdjacentHTML('beforeend', `
+    <div class="metric"><div class="metric-label">FMP Breadth Health</div><div class="metric-value ${tone}">${formatEngineNumber(snapshot.healthScore)}</div><div class="metric-sub">${snapshot.riskMode || '—'} · ${snapshot.signal || '—'}</div></div>
+    <div class="metric"><div class="metric-label">FMP NASI vs 50 SMA</div><div class="metric-value ${snapshot.nasiVs50 >= 0 ? 'pos' : 'neg'}">${formatEngineNumber(snapshot.nasiVs50,0,true)}</div><div class="metric-sub">Oscillator ${formatEngineNumber(snapshot.oscillator,1,true)}</div></div>`);
+
+  if (tone === 'neg') {
+    const strip = document.getElementById('commandStrip');
+    strip.className = 'command-strip regime-bear';
+    document.getElementById('commandTitle').textContent = 'Defensive market environment';
+    const badge = document.getElementById('verdictBadge');
+    badge.textContent = `${snapshot.riskMode || 'RISK-OFF'} · ${snapshot.signal || 'INTERNAL WEAKNESS'}`;
+    badge.className = 'command-verdict bear';
+    document.getElementById('riskLevel').textContent = 'Elevated'; setTone(document.getElementById('riskLevel'),'neg');
+    document.getElementById('riskSub').textContent = `FMP breadth health ${formatEngineNumber(snapshot.healthScore)} · ${snapshot.regime || 'weak internals'}`;
+    document.getElementById('exposureGuide').textContent = 'Reduced / defensive'; setTone(document.getElementById('exposureGuide'),'neg');
+    document.getElementById('exposureSub').textContent = 'Internal breadth overrides marginal long setups';
+    document.getElementById('playbookCommand').textContent = 'Capital preservation'; setTone(document.getElementById('playbookCommand'),'neg');
+    document.getElementById('playbookCommandSub').textContent = 'Cut exposure · tighten stops · avoid aggressive new longs';
+    document.getElementById('commandAction').textContent = 'CAPITAL PRESERVATION';
+    document.getElementById('commandConclusion').innerHTML = `<strong>Portfolio Manager Guidance:</strong> ${snapshot.guidance || 'Internal breadth is risk-off.'} The FMP engine shows ${snapshot.signal || 'internal weakness'} with a health score of ${formatEngineNumber(snapshot.healthScore)}. Treat apparent benchmark strength cautiously until NASI and the McClellan Oscillator repair.`;
+  } else {
+    const existing = document.getElementById('commandConclusion').innerHTML;
+    document.getElementById('commandConclusion').innerHTML = `${existing} <strong>FMP internal breadth:</strong> ${snapshot.guidance || `${snapshot.riskMode || '—'} · ${snapshot.signal || '—'}`}`;
+  }
 }
 
 function setStatus(kind, text) {
@@ -710,7 +1050,7 @@ function renderSummary() {
     <p><strong>Structural trend:</strong> ${today.up25q.toLocaleString()} stocks are up 25%+ over the quarter versus ${today.down25q.toLocaleString()} down 25%+, ${quarterlyBull ? 'keeping the intermediate-term structure bullish even while the short-term ratios chop' : 'putting the intermediate-term structure on the bearish side'}.</p>
     <p><strong>T2108:</strong> at ${today.t2108.toFixed(2)}%, the percent of stocks above their 40-day moving average is in ${t2108Tone === 'neu' ? 'neutral territory — neither an oversold buy zone (below 20) nor an overbought warning zone (above 80)' : t2108Tone === 'pos' ? 'the oversold zone (below 20), the kind of washed-out reading that has historically preceded sharp bounces' : 'the overbought zone (above 80), where the Stockbee approach is to tighten stops and hold off on new long entries'}.</p>
     <p>SPY closed at ${today.sp.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}${prior ? ', ' + (spChange >= 0 ? 'up' : 'down') + ' ' + Math.abs(spChange) + '% from the prior session' : ''}. <strong>Bottom line:</strong> ${overallTone === 'bull' ? 'both the short-term ratios and the longer structural breadth are aligned bullish — this favors staying aggressive on breakouts.' : overallTone === 'bear' ? 'the short-term breadth ratios argue for caution even though the structural quarterly trend remains intact — a defensive-to-neutral stance on new longs makes sense until the ratios turn back above 1.0.' : 'signals are mixed across timeframes, which typically argues for smaller position sizing and waiting for confirmation before committing capital aggressively in either direction.'}</p>
-  `;
+  `;  applyInstitutionalBreadthDecisionLayer(today);
 }
 
 
@@ -763,6 +1103,7 @@ function updateTimeMachineUi() {
   const slider=document.getElementById('tmSlider');
   slider.max=String(fullData.length-1); slider.value=String(selectedIndex);
   document.getElementById('tmDate').textContent=formatTmDate(row.date);
+  const dateInput=document.getElementById('tmDateInput'); if(dateInput) dateInput.value=toIsoDate(row.date);
   const badge=document.getElementById('tmBadge');
   badge.textContent=latest?'Latest':'Historical snapshot'; badge.className='tm-badge'+(latest?' live':'');
   document.getElementById('tmStart').textContent=formatTmDate(fullData[0].date);
@@ -813,6 +1154,7 @@ function renderAll() {
   renderDangerPanel('qqq', calculateHistoricalDangerSignals('QQQ'), true);
   buildOrUpdateCharts();
   renderSummary();
+  renderInstitutionalBreadth();
 }
 
 // Generic dynamic renderer for both panels
@@ -880,19 +1222,19 @@ async function loadData(isManualRefresh) {
   btn.disabled = true;
   setStatus('stale', isManualRefresh ? 'Refreshing…' : 'Loading latest data…');
 
-  const live = await fetchLiveData();
+  const [live, breadthLoaded] = await Promise.all([fetchLiveData(), fetchMarketBreadthFeeds()]);
   const now = new Date().toLocaleString();
 
   if (live && live.length > 0) {
     currentData = live;
     mergeEtfDataIntoDashboard(); // Re-merge ETF data over the fresh sheet numbers
     initializeTimeMachine(currentData);
-    setStatus('live', 'Live data loaded from the published sheet · ' + now);
+    setStatus('live', 'Stockbee data loaded' + (breadthLoaded ? ' · FMP breadth engine synchronized' : ' · FMP breadth feed unavailable') + ' · ' + now);
   } else if (currentData.length === 0) {
     currentData = SEED_DATA.map(row=>({...row}));
     mergeEtfDataIntoDashboard();
     initializeTimeMachine(currentData);
-    setStatus('error', 'Could not reach the live sheet. Showing last saved snapshot through ' + SEED_DATA[SEED_DATA.length - 1].date + '.');
+    setStatus('error', 'Could not reach the Stockbee sheet. Showing saved snapshot through ' + SEED_DATA[SEED_DATA.length - 1].date + (breadthLoaded ? ' · FMP breadth engine is live.' : '.')) ;
   } else {
     setStatus('error', 'Refresh failed — keeping previously loaded data. ' + now);
   }
@@ -912,6 +1254,19 @@ document.getElementById('tmPrev').addEventListener('click', () => { stopPlayback
 document.getElementById('tmNext').addEventListener('click', () => { stopPlayback(); applyTimeMachineIndex(selectedIndex+1); });
 document.getElementById('tmPlay').addEventListener('click', togglePlayback);
 document.getElementById('tmLatest').addEventListener('click', () => { stopPlayback(); applyTimeMachineIndex(fullData.length-1); });
+
+document.getElementById('tmDateInput').addEventListener('change', e => {
+  stopPlayback();
+  if (!fullData.length || !e.target.value) return;
+  const target = e.target.value;
+  let index = -1;
+  for (let i=0;i<fullData.length;i++) {
+    if (toIsoDate(fullData[i].date) <= target) index = i;
+    else break;
+  }
+  applyTimeMachineIndex(index < 0 ? 0 : index);
+});
+
 document.getElementById('tmYtd').addEventListener('click', () => {
   stopPlayback();
   if (!fullData.length) return;
