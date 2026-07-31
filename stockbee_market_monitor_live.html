@@ -115,7 +115,7 @@
   .benchmark-chart-panel { flex:0 0 auto; }
   .danger-attached { margin-top:auto; }
   #institutionalBreadthPanel .nasi-chart-wrap { height:430px; }
-  .oscillator-inline { padding:12px 18px 10px; }
+  .oscillator-inline { padding:12px 18px 10px; border-left:0 !important; box-shadow:none !important; }
   .compact-subchart-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:8px; }
   .compact-osc-status { display:flex; align-items:center; gap:8px; }
   .compact-osc-metrics { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin-bottom:8px; }
@@ -125,7 +125,7 @@
   .oscillator-inline .engine-feed-status { white-space:nowrap; }
   .oscillator-inline .breadth-read { white-space:nowrap; }
   #spyBenchmarkModule .breadth-subchart { background:#fcfcfa; }
-  #qqqBenchmarkModule .institutional-inline { background:#fcfcfa; }
+  #qqqBenchmarkModule .institutional-inline { background:#fcfcfa; border-top:1px solid #e1e0d9; }
   .danger-panel { background:#fff; min-width:0; }
   .engine-link { display:inline-flex; align-items:center; color:#2a78d6; text-decoration:none; font:700 10px 'JetBrains Mono',monospace; margin-top:5px; }
   .engine-link:hover { text-decoration:underline; }
@@ -216,9 +216,9 @@
   .tm-date-input { border:1px solid #d3d1c7; background:#fff; color:#0b0b0b; border-radius:7px; min-height:32px; padding:5px 9px; font:700 11px 'JetBrains Mono',monospace; }
   .institutional-panel { border-left:5px solid #898781; overflow:hidden; }
   .institutional-inline { border-left:none; border-radius:0; margin:0; background:#fcfcfa; }
-  .institutional-inline.tone-bull { box-shadow:inset 5px 0 #1baf7a; }
-  .institutional-inline.tone-warn { box-shadow:inset 5px 0 #eda100; }
-  .institutional-inline.tone-bear { box-shadow:inset 5px 0 #e34948; }
+  .institutional-inline.tone-bull,
+  .institutional-inline.tone-warn,
+  .institutional-inline.tone-bear { box-shadow:none; }
   .institutional-panel.tone-bull { border-left-color:#1baf7a; }
   .institutional-panel.tone-warn { border-left-color:#eda100; }
   .institutional-panel.tone-bear { border-left-color:#e34948; }
