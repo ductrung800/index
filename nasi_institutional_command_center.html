@@ -31,7 +31,7 @@
     <a href="PortfolioManagement.html">Portfolio Management</a>
     <a href="Playbook.html">Playbook</a>
   </div>
-<header class="head"><div><div class="eyebrow">Institutional Breadth Engine</div><h1>NASDAQ Institutional Breadth Laboratory</h1><div class="sub">Decision-first NASI, McClellan, participation, thrust, washout, calibration and historical regime analysis</div></div><div class="status warn" id="status">Loading breadth and exact Stockbee benchmark feeds…</div></header>
+<header class="head"><div><div class="eyebrow">Institutional Breadth Engine</div><h1>NASDAQ Institutional Breadth Laboratory</h1><div class="sub">Decision-first NASI, McClellan, participation, thrust, washout, calibration and historical regime analysis</div></div><div class="status warn" id="status">Loading breadth and Stockbee benchmark feeds…</div></header>
 <section class="panel"><div class="panelhead"><div><div class="label">Time machine</div><div class="title">Historical breadth replay</div></div><div class="asof" id="selectedLabel">—</div></div><div class="controls"><button class="btn" id="prev">◀</button><button class="btn" id="play">▶ Play</button><button class="btn" id="next">▶</button><input id="slider" class="slider" type="range" min="0" max="0" value="0"><input id="dateInput" type="date"><button class="btn" id="latest">↻ Latest</button></div><div class="range"><span id="startDate">—</span><span id="endDate">—</span></div></section>
 <section class="panel decision" id="decision"><div class="decision-top"><div><div class="label">Decision first</div><div class="decision-title" id="decisionTitle">Loading internal breadth…</div><div style="margin-top:6px"><span class="pill warn" id="riskPill">Waiting</span> <span class="pill" id="signalPill">—</span></div></div><div class="asof" id="asof">—</div></div><div class="metrics" id="metrics"></div><div class="guide" id="guidance">Building the institutional breadth conclusion…</div></section>
 <section class="panel"><div class="panelhead"><div><div class="label">Institutional internals laboratory</div><div class="title">Breadth composite, slope, participation and signal quality</div></div><span class="pill" id="gradeBadge">—</span></div><div class="diagnostic-grid" id="diagnostics"></div><div class="signal-table" id="signalLab" style="margin-top:10px"></div></section>
@@ -40,11 +40,11 @@
 
 <div class="benchmark-grid">
   <div class="benchmark-column">
-    <section class="panel"><div class="panelhead"><div><div class="label">Broad-market benchmark</div><div class="title">SPY × McClellan Summation Index</div></div><span class="pill" id="spyTrendBadge">—</span></div><div class="primary-read">Candlestick · adjusted NASI · NASI 50-day SMA</div><div class="chartbox benchmark-chart"><canvas id="spyNasiChart"></canvas></div><div class="legend"><span><i class="line" style="background:#0f766e"></i>Adjusted NASI</span><span><i class="line" style="background:#2f6fde"></i>NASI 50-day SMA</span><span><i class="line" style="background:#999"></i>NASI zero</span></div><div class="feed-note">SPY uses the exact date and benchmark column mapping from stockbee_market_monitor_live.html. NASI begins on the first matching Stockbee session, price auto-fits on the right axis, and extra space is reserved after the latest candle.</div></section>
+    <section class="panel"><div class="panelhead"><div><div class="label">Broad-market benchmark</div><div class="title">SPY × McClellan Summation Index</div></div><span class="pill" id="spyTrendBadge">—</span></div><div class="primary-read">Candlestick · adjusted NASI · NASI 50-day SMA</div><div class="chartbox benchmark-chart"><canvas id="spyNasiChart"></canvas></div><div class="legend"><span><i class="line" style="background:#0f766e"></i>Adjusted NASI</span><span><i class="line" style="background:#2f6fde"></i>NASI 50-day SMA</span><span><i class="line" style="background:#999"></i>NASI zero</span></div><div class="feed-note">SPY uses the same date and fixed benchmark column mapping as stockbee_market_monitor_live.html. NASI begins on the first matching session, price auto-fits independently, and extra space is reserved after the latest candle.</div></section>
     <section class="panel"><div class="panelhead"><div><div class="label">Momentum</div><div class="title">McClellan Oscillator</div></div><span class="pill" id="oscBadge">—</span></div><div class="chartbox support-chart"><canvas id="oscChart"></canvas></div></section>
   </div>
   <div class="benchmark-column">
-    <section class="panel"><div class="panelhead"><div><div class="label">Growth / leadership benchmark</div><div class="title">QQQ × McClellan Summation Index</div></div><span class="pill" id="qqqTrendBadge">—</span></div><div class="primary-read" id="qqqRead">Candlestick · adjusted NASI · NASI 50-day SMA</div><div class="chartbox benchmark-chart"><canvas id="qqqNasiChart"></canvas></div><div class="legend"><span><i class="line" style="background:#0f766e"></i>Adjusted NASI</span><span><i class="line" style="background:#2f6fde"></i>NASI 50-day SMA</span><span><i class="line" style="background:#999"></i>NASI zero</span></div><div class="feed-note">QQQ uses the exact date and benchmark column mapping from stockbee_market_monitor_live.html. NASI begins on the first matching Stockbee session, price auto-fits independently, and extra space is reserved after the latest candle.</div></section>
+    <section class="panel"><div class="panelhead"><div><div class="label">Growth / leadership benchmark</div><div class="title">QQQ × McClellan Summation Index</div></div><span class="pill" id="qqqTrendBadge">—</span></div><div class="primary-read" id="qqqRead">Candlestick · adjusted NASI · NASI 50-day SMA</div><div class="chartbox benchmark-chart"><canvas id="qqqNasiChart"></canvas></div><div class="legend"><span><i class="line" style="background:#0f766e"></i>Adjusted NASI</span><span><i class="line" style="background:#2f6fde"></i>NASI 50-day SMA</span><span><i class="line" style="background:#999"></i>NASI zero</span></div><div class="feed-note">QQQ uses the same date and fixed benchmark column mapping as stockbee_market_monitor_live.html. NASI begins on the first matching session, price auto-fits independently, and extra space is reserved after the latest candle.</div></section>
     <section class="panel"><div class="panelhead"><div><div class="label">Participation</div><div class="title">Daily advances / declines</div></div><span class="pill" id="participationBadge">—</span></div><div class="participation-stats" id="participationStats"></div><div class="chartbox support-chart"><canvas id="adChart"></canvas></div><div class="feed-note">Green columns plot advances above zero; red columns plot declines below zero. The net line highlights daily internal direction.</div></section>
   </div>
 </div>
@@ -83,7 +83,7 @@ function parseStockbeePrices(text){
       return Number.isFinite(valueNumber)?valueNumber:null;
     };
 
-    // Exact mapping used by stockbee_market_monitor_live.html.
+    // Exact mapping from stockbee_market_monitor_live.html.
     parsed.push({
       sourceDate:String(row[0]).trim(),
       spy:num(row[15]),
@@ -91,51 +91,70 @@ function parseStockbeePrices(text){
     });
   }
 
-  // The Stockbee sheet is newest-first; reverse to chronological order.
+  // Stockbee data is newest-first.
   parsed.reverse();
 
   const out={};
   parsed.forEach(item=>{
     const parts=item.sourceDate.split('/').map(Number);
     if(parts.length!==3) return;
+
     const date=`${parts[2]}-${String(parts[0]).padStart(2,'0')}-${String(parts[1]).padStart(2,'0')}`;
 
-    out[date]={
-      spy:item.spy,
-      qqq:item.qqq
-    };
+    if(Number.isFinite(item.spy)||Number.isFinite(item.qqq)){
+      out[date]={
+        spy:item.spy,
+        qqq:item.qqq
+      };
+    }
   });
 
   return out;
 }
 async function loadBenchmarkPrices(){
   let best={};
-  let lastError=null;
 
   for(const url of STOCKBEE_URLS){
     try{
       const csv=await fetchText(url);
       const parsed=parseStockbeePrices(csv);
-
-      const validCount=Object.values(parsed).filter(
-        row=>Number.isFinite(row.spy)||Number.isFinite(row.qqq)
-      ).length;
-
-      if(validCount>Object.keys(best).length) best=parsed;
-      if(validCount>20) break;
+      if(Object.keys(parsed).length>Object.keys(best).length) best=parsed;
+      if(Object.keys(best).length>20) break;
     }catch(error){
-      lastError=error;
-      console.warn('Stockbee benchmark feed failed',error);
+      console.warn('Benchmark price feed failed',error);
     }
   }
 
   priceByDate=best;
-
-  if(!Object.keys(best).length&&lastError){
-    throw lastError;
-  }
-
   return Object.keys(best).length;
+}
+async function load(){
+  setStatus('warn','Loading breadth and Stockbee benchmark feeds…');
+  let hist=[],latest={},errors=[];
+  try{
+    const pricePromise=loadBenchmarkPrices();
+    for(const gid of GIDS){
+      for(const u of candidates(gid)){
+        try{
+          const t=await fetchText(u);
+          const h=parseHistory(t); if(h.length>hist.length)hist=h;
+          const l=parseLatest(t); if(Object.keys(l).length>Object.keys(latest).length)latest=l;
+          if(h.length||Object.keys(l).length)break;
+        }catch(e){errors.push(`${gid}:${e.message}`)}
+      }
+    }
+    const priceCount=await pricePromise;
+    if(!hist.length){setStatus('err','Breadth feed unavailable · '+errors.slice(-2).join(' | '));return}
+    rows=hist; metrics=latest; idx=rows.length-1;
+    document.getElementById('slider').max=rows.length-1;
+    document.getElementById('anchorDate').value=anchorDateSaved;
+    document.getElementById('anchorValue').value=anchorValueSaved;
+    render();
+    setStatus('ok',`${rows.length} breadth sessions loaded · ${priceCount?priceCount+' SPY/QQQ sessions linked':'benchmark price overlay unavailable'} · latest ${rows.at(-1).date}`);
+  }catch(e){
+    console.error(e);
+    setStatus('err','Render error · '+e.message);
+  }
 }
 function setStatus(k,t){const e=document.getElementById('status');e.className='status '+k;e.textContent=t}
 function val(r,key){if(r[key]!=null)return r[key];const m={health:'breadth health score',risk:'risk mode',signal:'signal',regime:'breadth trend regime',momentum:'breadth momentum',guidance:'tactical guidance'};return metrics[m[key]]??''}
@@ -144,18 +163,28 @@ function tone(r){const risk=String(val(r,'risk')).toUpperCase(),signal=String(va
 function fmt(x,d=0,s=false){if(x==null||!Number.isFinite(Number(x)))return'—';const v=Number(x);return(s&&v>0?'+':'')+v.toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d})}
 function smaSeries(values,period){const out=new Array(values.length).fill(null);for(let i=period-1;i<values.length;i++){const w=values.slice(i-period+1,i+1);if(w.every(Number.isFinite))out[i]=w.reduce((a,b)=>a+b,0)/period;}return out}
 function syntheticOhlc(values){
-  return values.map((close,index)=>{
-    if(!Number.isFinite(close)) return null;
+  return values.map((c,i)=>{
+    if(!Number.isFinite(c)) return null;
 
-    const previous=index&&Number.isFinite(values[index-1])
-      ? values[index-1]
-      : close;
+    const prev=i&&Number.isFinite(values[i-1])?values[i-1]:c;
+    const pctMove=prev!==0?Math.abs(c-prev)/Math.abs(prev):0;
+
+    /*
+     * The benchmark source supplies daily closes, not true OHLC bars.
+     * We reconstruct a visual candle from consecutive closes. When a
+     * source/proxy discontinuity exceeds 15%, do not draw a giant body;
+     * anchor the synthetic open to the current close and use a normal wick.
+     */
+    const isOutlier=pctMove>0.15;
+    const open=isOutlier?c:prev;
+    const typicalRange=Math.max(Math.abs(c)*0.004,Math.abs(c-open)*0.30);
 
     return{
-      o:previous,
-      h:Math.max(previous,close),
-      l:Math.min(previous,close),
-      c:close
+      o:open,
+      c,
+      h:Math.max(open,c)+typicalRange,
+      l:Math.min(open,c)-typicalRange,
+      sourceOutlier:isOutlier
     };
   });
 }
