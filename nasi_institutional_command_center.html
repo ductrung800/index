@@ -115,7 +115,7 @@
           <div class="combined-subhead">
             <div>
               <div class="label">Ratio-adjusted breadth</div>
-              <div class="combined-subtitle">RANA impulse</div>
+              <div class="combined-subtitle">RANA impulse · daily bars + 5-day mean</div>
             </div>
             <span class="pill" id="ranaBadge">—</span>
           </div>
@@ -123,7 +123,7 @@
         </div>
 
       </div>
-      <div class="feed-note">SPY, McClellan Oscillator and RANA use the same visible sessions and horizontal time scale. Hover any chart to compare the same date.</div>
+      <div class="feed-note">SPY, McClellan Oscillator and RANA share one synchronized date scale. The visible time axis appears only on the bottom RANA chart; hover any chart to compare the same session.</div>
     </section>
   </div>
 
@@ -149,7 +149,7 @@
         <div class="combined-subchart">
           <div class="combined-subhead">
             <div>
-              
+              <div class="label">Participation</div>
               <div class="combined-subtitle">Daily net advances</div>
             </div>
             <span class="pill" id="participationBadge">—</span>
@@ -161,8 +161,8 @@
         <div class="combined-subchart">
           <div class="combined-subhead">
             <div>
-        
-              <div class="combined-subtitle">Advance / decline ratio</div>
+              <div class="label">Participation quality</div>
+              <div class="combined-subtitle">A/D balance vs neutral · daily bars + 5-day mean</div>
             </div>
             <span class="pill" id="adRatioBadge">—</span>
           </div>
@@ -524,15 +524,45 @@ function renderInterpretation(r,h,t){
   document.getElementById('interpRepairDetail').textContent='1. Oscillator > 0 · 2. NASI five-day slope > 0 · 3. NASI reclaims 50-day SMA · 4. A/D ratio sustains > 1.0.';
   const defensive=t==='bear'||risk.includes('OFF')||signal.includes('BREAKDOWN')||signal.includes('SELL');document.getElementById('interpPortfolio').textContent=defensive?'Capital preservation':'Selective participation';document.getElementById('interpPortfolioDetail').textContent=defensive?'Keep gross exposure reduced, avoid marginal breakouts, prioritize relative-strength leaders and add exposure only after breadth repair is confirmed.':'Maintain selective exposure, favor quality leaders and increase size only when benchmark trend and breadth remain aligned.';
 }
+function rollingMean(values,period){
+  return values.map((value,index)=>{
+    if(index<period-1) return null;
+    const window=values.slice(index-period+1,index+1).filter(Number.isFinite);
+    return window.length===period
+      ? window.reduce((sum,item)=>sum+item,0)/period
+      : null;
+  });
+}
+
 function renderCharts(h){
-  const common={
+  const baseCommon={
     responsive:true,
     maintainAspectRatio:false,
     interaction:{mode:'index',intersect:false},
     plugins:{legend:{display:false}},
     scales:{
-      x:{grid:{display:false},ticks:{maxTicksLimit:9,color:'#777',font:{size:10}}},
-      y:{grid:{color:'#ecece7'},ticks:{color:'#777',font:{size:10}}}
+      x:{
+        grid:{display:false},
+        ticks:{maxTicksLimit:9,color:'#777',font:{size:10}}
+      },
+      y:{
+        grid:{color:'#ecece7'},
+        ticks:{color:'#777',font:{size:10}}
+      }
+    }
+  };
+
+  // Upper and middle charts suppress x-axis labels. Only the bottom
+  // chart in each panel shows the shared visible date scale.
+  const hiddenXCommon={
+    ...baseCommon,
+    scales:{
+      ...baseCommon.scales,
+      x:{
+        grid:{display:false},
+        ticks:{display:false},
+        border:{display:false}
+      }
     }
   };
 
@@ -543,6 +573,7 @@ function renderCharts(h){
   qqqNasiChart=renderBenchmarkNasiChart('QQQ',h,qqqNasiChart,'qqqNasiChart');
   document.getElementById('qqqRead').textContent='Candlestick · adjusted NASI · NASI 50-day SMA · exact Stockbee QQQ series';
 
+  // SPY middle: McClellan Oscillator, with hidden x labels.
   const oscLabels=spyRows.map(r=>r.date).concat(['','','','']);
   const oscPad=a=>a.concat([null,null,null,null]);
   const oscSets=[
@@ -565,8 +596,9 @@ function renderCharts(h){
       borderWidth:1
     }
   ];
-  oscChart=upsert(oscChart,'oscChart','line',oscLabels,oscSets,common);
+  oscChart=upsert(oscChart,'oscChart','line',oscLabels,oscSets,hiddenXCommon);
 
+  // QQQ middle: net advances, with hidden x labels.
   const adLabels=qqqRows.map(r=>r.date).concat(['','','','']);
   const adPad=a=>a.concat([null,null,null,null]);
   const netBreadth=qqqRows.map(r=>(r.adv||0)-(r.dec||0));
@@ -598,9 +630,9 @@ function renderCharts(h){
   ];
 
   const adOpts={
-    ...common,
+    ...hiddenXCommon,
     plugins:{
-      ...common.plugins,
+      ...hiddenXCommon.plugins,
       tooltip:{
         mode:'index',
         intersect:false,
@@ -614,13 +646,13 @@ function renderCharts(h){
       }
     },
     scales:{
-      ...common.scales,
+      ...hiddenXCommon.scales,
       y:{
-        ...common.scales.y,
+        ...hiddenXCommon.scales.y,
         suggestedMin:-1200,
         suggestedMax:1200,
         ticks:{
-          ...common.scales.y.ticks,
+          ...hiddenXCommon.scales.y.ticks,
           callback:value=>{
             const number=Number(value);
             return `${number>0?'+':''}${number.toLocaleString()}`;
@@ -634,27 +666,40 @@ function renderCharts(h){
       }
     }
   };
-
   adChart=upsert(adChart,'adChart','bar',adLabels,adSets,adOpts);
 
-  // RANA is aligned to the same visible SPY sessions and right-side spacing.
+  // SPY bottom: RANA as diverging columns plus 5-day mean.
   const ranaLabels=spyRows.map(r=>r.date).concat(['','','','']);
   const ranaPad=a=>a.concat([null,null,null,null]);
+  const ranaValues=spyRows.map(r=>Number(r.rana));
+  const ranaMean5=rollingMean(ranaValues,5);
+
   const ranaSets=[
     {
-      label:'RANA',
-      data:ranaPad(spyRows.map(r=>r.rana)),
-      borderColor:'#6d52c7',
-      backgroundColor:ranaPad(spyRows.map(r=>r.rana>=0?'rgba(17,153,110,.16)':'rgba(215,71,71,.14)')),
-      fill:true,
-      pointRadius:0,
-      borderWidth:1.6,
-      tension:.1,
-      segment:{
-        borderColor:c=>c.p1.parsed.y>=0?'#11996e':'#d74747'
-      }
+      type:'bar',
+      label:'Daily RANA',
+      data:ranaPad(ranaValues),
+      backgroundColor:ranaPad(ranaValues.map(v=>
+        v>=0?'rgba(17,153,110,.78)':'rgba(215,71,71,.76)'
+      )),
+      borderColor:ranaPad(ranaValues.map(v=>
+        v>=0?'#087c55':'#a52322'
+      )),
+      borderWidth:.6,
+      barPercentage:.78,
+      categoryPercentage:.92
     },
     {
+      type:'line',
+      label:'RANA 5-day mean',
+      data:ranaPad(ranaMean5),
+      borderColor:'#2f6fde',
+      pointRadius:0,
+      borderWidth:1.7,
+      tension:.18
+    },
+    {
+      type:'line',
       label:'Zero',
       data:ranaPad(spyRows.map(()=>0)),
       borderColor:'#999',
@@ -663,34 +708,132 @@ function renderCharts(h){
       borderWidth:1
     }
   ];
-  ranaChart=upsert(ranaChart,'ranaChart','line',ranaLabels,ranaSets,common);
 
-  const ratioLabels=qqqRows.map(r=>r.date).concat(['','','','']);
-  const ratioPad=a=>a.concat([null,null,null,null]);
-  const ratioSets=[
-    {
-      label:'A/D ratio',
-      data:ratioPad(qqqRows.map(r=>r.dec?r.adv/r.dec:null)),
-      borderColor:'#0f766e',
-      backgroundColor:ratioPad(qqqRows.map(r=>(r.dec&&r.adv/r.dec>=1)?'rgba(17,153,110,.14)':'rgba(215,71,71,.12)')),
-      fill:true,
-      pointRadius:0,
-      borderWidth:1.7,
-      tension:.1,
-      segment:{
-        borderColor:c=>c.p1.parsed.y>=1?'#11996e':'#d74747'
+  const ranaOpts={
+    ...baseCommon,
+    plugins:{
+      ...baseCommon.plugins,
+      tooltip:{
+        mode:'index',
+        intersect:false,
+        callbacks:{
+          label(ctx){
+            const value=ctx.parsed.y;
+            if(value==null) return `${ctx.dataset.label}: —`;
+            return `${ctx.dataset.label}: ${Number(value)>=0?'+':''}${Number(value).toFixed(1)}`;
+          }
+        }
       }
     },
+    scales:{
+      ...baseCommon.scales,
+      y:{
+        ...baseCommon.scales.y,
+        suggestedMin:-700,
+        suggestedMax:700,
+        ticks:{
+          ...baseCommon.scales.y.ticks,
+          callback:value=>`${Number(value)>0?'+':''}${Number(value).toFixed(0)}`
+        },
+        title:{
+          display:true,
+          text:'RANA impulse',
+          color:'#666'
+        }
+      }
+    }
+  };
+  ranaChart=upsert(ranaChart,'ranaChart','bar',ranaLabels,ranaSets,ranaOpts);
+
+  // QQQ bottom: A/D balance as deviation from neutral ratio 1.0,
+  // shown as diverging columns plus a 5-day mean. Tooltip retains the
+  // actual A/D ratio for direct interpretation.
+  const ratioLabels=qqqRows.map(r=>r.date).concat(['','','','']);
+  const ratioPad=a=>a.concat([null,null,null,null]);
+  const actualRatios=qqqRows.map(r=>r.dec?r.adv/r.dec:null);
+  const ratioDeviation=actualRatios.map(v=>Number.isFinite(v)?v-1:null);
+  const ratioMean5=rollingMean(ratioDeviation,5);
+
+  const ratioSets=[
     {
-      label:'Neutral 1.0',
-      data:ratioPad(qqqRows.map(()=>1)),
+      type:'bar',
+      label:'A/D balance',
+      data:ratioPad(ratioDeviation),
+      actualRatios:ratioPad(actualRatios),
+      backgroundColor:ratioPad(ratioDeviation.map(v=>
+        v==null?'rgba(0,0,0,0)':v>=0?'rgba(17,153,110,.78)':'rgba(215,71,71,.75)'
+      )),
+      borderColor:ratioPad(ratioDeviation.map(v=>
+        v==null?'rgba(0,0,0,0)':v>=0?'#087c55':'#a52322'
+      )),
+      borderWidth:.6,
+      barPercentage:.78,
+      categoryPercentage:.92
+    },
+    {
+      type:'line',
+      label:'5-day balance mean',
+      data:ratioPad(ratioMean5),
+      borderColor:'#2f6fde',
+      pointRadius:0,
+      borderWidth:1.7,
+      tension:.18
+    },
+    {
+      type:'line',
+      label:'Neutral',
+      data:ratioPad(qqqRows.map(()=>0)),
       borderColor:'#999',
       borderDash:[4,3],
       pointRadius:0,
       borderWidth:1
     }
   ];
-  adRatioChart=upsert(adRatioChart,'adRatioChart','line',ratioLabels,ratioSets,common);
+
+  const ratioOpts={
+    ...baseCommon,
+    plugins:{
+      ...baseCommon.plugins,
+      tooltip:{
+        mode:'index',
+        intersect:false,
+        callbacks:{
+          label(ctx){
+            if(ctx.dataset.label==='A/D balance'){
+              const ratio=ctx.dataset.actualRatios?.[ctx.dataIndex];
+              const deviation=ctx.parsed.y;
+              return Number.isFinite(ratio)
+                ? `A/D ratio: ${ratio.toFixed(2)} · balance ${deviation>=0?'+':''}${deviation.toFixed(2)}`
+                : 'A/D ratio: —';
+            }
+            const value=ctx.parsed.y;
+            return `${ctx.dataset.label}: ${value==null?'—':`${Number(value)>=0?'+':''}${Number(value).toFixed(2)}`}`;
+          }
+        }
+      }
+    },
+    scales:{
+      ...baseCommon.scales,
+      y:{
+        ...baseCommon.scales.y,
+        suggestedMin:-1,
+        suggestedMax:1.5,
+        ticks:{
+          ...baseCommon.scales.y.ticks,
+          callback:value=>{
+            const ratio=Number(value)+1;
+            return `${ratio.toFixed(1)}×`;
+          }
+        },
+        title:{
+          display:true,
+          text:'A/D ratio (neutral = 1.0×)',
+          color:'#666'
+        }
+      }
+    }
+  };
+  adRatioChart=upsert(adRatioChart,'adRatioChart','bar',ratioLabels,ratioSets,ratioOpts);
 
   linkChartPair(spyNasiChart,oscChart);
   linkChartPair(spyNasiChart,ranaChart);
