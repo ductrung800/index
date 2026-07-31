@@ -9,7 +9,7 @@
 <style>
 :root{--bg:#f7f8f6;--card:#fff;--line:#dedfd8;--text:#101214;--muted:#6f736e;--green:#11996e;--red:#d74747;--amber:#b97700;--blue:#2f6fde;--teal:#0f766e;--purple:#6d52c7;--mono:'SFMono-Regular',Consolas,'Liberation Mono',monospace}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;padding:10px 12px 48px;overflow-x:hidden}.wrap{width:100%;max-width:none;margin:0}.app-tabs{display:flex;gap:4px;margin-bottom:24px;border-bottom:1px solid var(--line);padding-bottom:0;flex-wrap:nowrap;overflow-x:auto}.app-tabs a{padding:10px 18px;text-decoration:none;color:#777;font-size:11.5px;font-weight:600;border:1px solid transparent;border-bottom:none;border-radius:8px 8px 0 0;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;transition:all .15s;font-family:var(--mono)}.app-tabs a.active{background:#fff;color:var(--teal);border-color:var(--line);border-bottom-color:#fff;margin-bottom:-1px}.app-tabs a:hover:not(.active){color:#0b0b0b;background:rgba(0,0,0,.03)}.head{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;border-bottom:2px solid var(--line);padding-bottom:14px;margin-bottom:14px}.eyebrow{font:700 10px var(--mono);letter-spacing:.16em;color:var(--teal);text-transform:uppercase}.head h1{font-size:27px;margin:2px 0 4px;letter-spacing:-.03em}.sub{font:12px var(--mono);color:var(--muted)}.status{font:11px var(--mono);padding:8px 10px;border:1px solid var(--line);background:#fff;border-radius:8px;min-width:260px}.status.ok{color:#087c55}.status.warn{color:#8a5a00}.status.err{color:#a52322}.panel{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:15px 16px;margin-bottom:14px}.decision{border-left:5px solid var(--amber)}.decision.bull{border-left-color:var(--green)}.decision.bear{border-left-color:var(--red)}.decision-top{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}.decision-title{font-size:22px;font-weight:850;letter-spacing:-.025em}.pill{display:inline-flex;padding:5px 9px;border-radius:999px;font:750 10px var(--mono);text-transform:uppercase;background:#f2f2ee;color:#555}.pill.bull{background:#e5f5ef;color:#0f6e56}.pill.bear{background:#fbeaea;color:#9a2c2b}.pill.warn{background:#fff3d8;color:#875800}.asof{font:10px var(--mono);color:var(--muted)}.metrics{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:8px;margin-top:13px}.metric{background:#f8f8f5;border:1px solid #ecece7;border-radius:8px;padding:9px 10px;min-width:0}.metric span{display:block;font:650 9px var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.04em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.metric strong{display:block;margin-top:4px;font-size:17px;line-height:1.1}.metric small{display:block;margin-top:3px;color:var(--muted);font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pos{color:var(--green)!important}.neg{color:var(--red)!important}.warnText{color:var(--amber)!important}.guide{margin-top:12px;border-top:1px solid #ecece7;padding-top:11px;font-size:12.5px;line-height:1.55}.controls{display:grid;grid-template-columns:auto auto auto minmax(260px,1fr) auto auto;gap:8px;align-items:center}.btn,input[type=date],input[type=number]{border:1px solid #d7d8d1;background:#fff;border-radius:7px;padding:7px 10px;font:700 11px var(--mono);color:#3f423f}.btn{cursor:pointer}.btn:hover{background:#f0f1ed}.slider{width:100%;accent-color:var(--teal)}.range{display:flex;justify-content:space-between;color:var(--muted);font:10px var(--mono);margin-top:7px}.grid2{display:grid;grid-template-columns:1fr;gap:14px}.chartbox{height:430px;position:relative}.primary-tools{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.chart-toggle{display:flex;border:1px solid #d7d8d1;border-radius:7px;overflow:hidden}.chart-toggle button{border:0;background:#fff;padding:5px 10px;font:700 10px var(--mono);cursor:pointer;color:#60645f}.chart-toggle button+button{border-left:1px solid #d7d8d1}.chart-toggle button.active{background:#0f766e;color:#fff}.primary-read{font:700 10px var(--mono);color:var(--muted)}.chartbox.small{height:250px}.chartbox.medium{height:310px}.chartbox.support-chart{height:285px}.panelhead{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:9px}.label{font:700 10px var(--mono);text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}.title{font-size:16px;font-weight:800;margin-top:2px}.legend{display:flex;gap:13px;flex-wrap:wrap;font-size:10px;color:var(--muted);margin-top:7px}.participation-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin:4px 0 8px}.pstat{background:#f8f8f5;border:1px solid #ecece7;border-radius:7px;padding:7px 9px}.pstat span{display:block;font:650 8px var(--mono);text-transform:uppercase;color:var(--muted);letter-spacing:.04em}.pstat strong{display:block;font-size:14px;margin-top:2px}.feed-note{font:10px var(--mono);color:var(--muted);margin-top:5px}.line{width:15px;height:2px;display:inline-block;vertical-align:middle;margin-right:4px}.calibration{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}.calibration label{font:650 10px var(--mono);color:var(--muted);text-transform:uppercase}.calibration input{width:100%;margin-top:5px}.note{font-size:11px;color:var(--muted);line-height:1.5}.tablewrap{overflow:auto;max-height:360px;border:1px solid var(--line);border-radius:8px}table{border-collapse:collapse;width:100%;font:11px var(--mono)}th,td{padding:7px 8px;border-bottom:1px solid #ecece7;text-align:right;white-space:nowrap}th{position:sticky;top:0;background:#f3f4f0;color:#575b57;text-transform:uppercase;font-size:9px}th:first-child,td:first-child{text-align:left}.source{font-size:10px;color:var(--muted);margin-top:8px}.diagnostic-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:9px}.diag{background:#f8f8f5;border:1px solid #ecece7;border-radius:9px;padding:10px 11px}.diag .dlabel{font:700 9px var(--mono);text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}.diag .dvalue{font-size:16px;font-weight:850;margin-top:5px}.diag .dsub{font-size:10px;color:var(--muted);margin-top:3px;line-height:1.35}.traffic{display:inline-flex;align-items:center;gap:7px}.traffic-dot{width:9px;height:9px;border-radius:50%;background:var(--amber);box-shadow:0 0 0 3px rgba(185,119,0,.12)}.traffic-dot.bull{background:var(--green);box-shadow:0 0 0 3px rgba(17,153,110,.12)}.traffic-dot.bear{background:var(--red);box-shadow:0 0 0 3px rgba(215,71,71,.12)}.signal-table{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}.signal-card{border:1px solid var(--line);border-radius:9px;padding:11px;background:#fff}.signal-card strong{display:block;font-size:13px}.signal-card span{display:block;font-size:10px;color:var(--muted);margin-top:4px;line-height:1.4}.footer{text-align:center;font:10px var(--mono);color:var(--muted);margin-top:18px}@media(max-width:1250px){.metrics{grid-template-columns:repeat(4,1fr)}.diagnostic-grid{grid-template-columns:repeat(3,1fr)}.signal-table{grid-template-columns:repeat(2,1fr)}.grid2{grid-template-columns:1fr}}@media(max-width:760px){body{padding:10px}.head{display:block}.status{margin-top:10px}.metrics,.diagnostic-grid,.signal-table{grid-template-columns:repeat(2,1fr)}.controls{grid-template-columns:repeat(3,auto)}.slider{grid-column:1/-1;grid-row:2}.calibration{grid-template-columns:1fr 1fr}.chartbox{height:340px}}
-.benchmark-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:start}.benchmark-column{display:flex;flex-direction:column;gap:14px;min-width:0}.benchmark-column>.panel{margin-bottom:0}.benchmark-chart{height:390px}.interpretation-panel{border-left:5px solid var(--amber)}.interpretation-panel.bull{border-left-color:var(--green)}.interpretation-panel.bear{border-left-color:var(--red)}.interpretation-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.interpret-card{background:#f8f8f5;border:1px solid #ecece7;border-radius:9px;padding:12px}.interpret-card span{display:block;font:700 9px var(--mono);text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}.interpret-card strong{display:block;font-size:14px;margin-top:6px}.interpret-card p{font-size:11px;line-height:1.5;color:#4f534f;margin:7px 0 0}@media(max-width:1250px){.benchmark-grid{grid-template-columns:1fr}.interpretation-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:760px){.interpretation-grid{grid-template-columns:1fr}.benchmark-chart{height:340px}.chartbox.support-chart{height:270px}}</style>
+.benchmark-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:start}.benchmark-column{min-width:0}.benchmark-column>.panel{margin-bottom:0}.benchmark-chart{height:390px}.combined-chart-stack{display:grid;grid-template-rows:minmax(330px,1.65fr) minmax(220px,.9fr);gap:0}.combined-subchart{border-top:1px solid var(--line);padding-top:8px;min-height:220px}.combined-subhead{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:4px 2px 7px}.combined-subtitle{font:800 11px var(--mono);text-transform:uppercase;letter-spacing:.05em;color:#4f534f}.combined-subchart .chartbox{height:220px}.interpretation-panel{border-left:5px solid var(--amber)}.interpretation-panel.bull{border-left-color:var(--green)}.interpretation-panel.bear{border-left-color:var(--red)}.interpretation-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.interpret-card{background:#f8f8f5;border:1px solid #ecece7;border-radius:9px;padding:12px}.interpret-card span{display:block;font:700 9px var(--mono);text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}.interpret-card strong{display:block;font-size:14px;margin-top:6px}.interpret-card p{font-size:11px;line-height:1.5;color:#4f534f;margin:7px 0 0}@media(max-width:1250px){.benchmark-grid{grid-template-columns:1fr}.interpretation-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:760px){.interpretation-grid{grid-template-columns:1fr}.benchmark-chart{height:340px}.chartbox.support-chart{height:270px}}</style>
 </head>
 <body><div class="wrap">
 <div class="app-tabs">
@@ -38,16 +38,78 @@
 
 <section class="panel"><div class="panelhead"><div><div class="label">Calibration layer</div><div class="title">Align the proprietary series to an official reference point</div></div><span class="pill" id="calBadge">Uncalibrated</span></div><div class="calibration"><div><label>Anchor date<input id="anchorDate" type="date"></label></div><div><label>Official NASI at anchor<input id="anchorValue" type="number" step="0.01" placeholder="e.g. -222"></label></div><div><label>Current offset<input id="offsetDisplay" type="number" readonly></label></div><div style="display:flex;align-items:end;gap:7px"><button class="btn" id="applyCal">Apply calibration</button><button class="btn" id="resetCal">Reset</button></div></div><div class="note" style="margin-top:9px">Calibration adds one constant offset to the entire NASI series and its 50-day SMA. It does not alter the McClellan Oscillator, turning points, slopes or divergences. This is the correct way to align a cumulative series to a known official value without falsifying the underlying breadth calculations.</div></section>
 
+
 <div class="benchmark-grid">
   <div class="benchmark-column">
-    <section class="panel"><div class="panelhead"><div><div class="label">Broad-market benchmark</div><div class="title">SPY × McClellan Summation Index</div></div><span class="pill" id="spyTrendBadge">—</span></div><div class="primary-read">Candlestick · adjusted NASI · NASI 50-day SMA</div><div class="chartbox benchmark-chart"><canvas id="spyNasiChart"></canvas></div><div class="legend"><span><i class="line" style="background:#0f766e"></i>Adjusted NASI</span><span><i class="line" style="background:#2f6fde"></i>NASI 50-day SMA</span><span><i class="line" style="background:#999"></i>NASI zero</span></div><div class="feed-note">SPY now uses the same direct ETF OHLC endpoint as the Stockbee page when available, with the Stockbee sheet as fallback. NASI begins on the first matching session and price auto-fits independently.</div></section>
-    <section class="panel"><div class="panelhead"><div><div class="label">Momentum</div><div class="title">McClellan Oscillator</div></div><span class="pill" id="oscBadge">—</span></div><div class="chartbox support-chart"><canvas id="oscChart"></canvas></div></section>
+    <section class="panel">
+      <div class="panelhead">
+        <div>
+          <div class="label">Broad-market benchmark</div>
+          <div class="title">SPY × McClellan Summation Index</div>
+        </div>
+        <span class="pill" id="spyTrendBadge">—</span>
+      </div>
+      <div class="primary-read">Candlestick · adjusted NASI · NASI 50-day SMA</div>
+      <div class="combined-chart-stack">
+        <div>
+          <div class="chartbox benchmark-chart"><canvas id="spyNasiChart"></canvas></div>
+          <div class="legend">
+            <span><i class="line" style="background:#0f766e"></i>Adjusted NASI</span>
+            <span><i class="line" style="background:#2f6fde"></i>NASI 50-day SMA</span>
+            <span><i class="line" style="background:#999"></i>NASI zero</span>
+          </div>
+        </div>
+        <div class="combined-subchart">
+          <div class="combined-subhead">
+            <div>
+              <div class="label">Momentum</div>
+              <div class="combined-subtitle">McClellan Oscillator</div>
+            </div>
+            <span class="pill" id="oscBadge">—</span>
+          </div>
+          <div class="chartbox"><canvas id="oscChart"></canvas></div>
+        </div>
+      </div>
+      <div class="feed-note">SPY and its McClellan Oscillator use the same visible sessions and horizontal time scale. Hover either chart to compare the same date.</div>
+    </section>
   </div>
+
   <div class="benchmark-column">
-    <section class="panel"><div class="panelhead"><div><div class="label">Growth / leadership benchmark</div><div class="title">QQQ × McClellan Summation Index</div></div><span class="pill" id="qqqTrendBadge">—</span></div><div class="primary-read" id="qqqRead">Candlestick · adjusted NASI · NASI 50-day SMA</div><div class="chartbox benchmark-chart"><canvas id="qqqNasiChart"></canvas></div><div class="legend"><span><i class="line" style="background:#0f766e"></i>Adjusted NASI</span><span><i class="line" style="background:#2f6fde"></i>NASI 50-day SMA</span><span><i class="line" style="background:#999"></i>NASI zero</span></div><div class="feed-note">QQQ now uses the same direct ETF OHLC endpoint as the Stockbee page when available, with the Stockbee sheet as fallback. NASI begins on the first matching session and price auto-fits independently.</div></section>
-    <section class="panel"><div class="panelhead"><div><div class="label">Participation</div><div class="title">Daily advances / declines</div></div><span class="pill" id="participationBadge">—</span></div><div class="participation-stats" id="participationStats"></div><div class="chartbox support-chart"><canvas id="adChart"></canvas></div><div class="feed-note">Green columns plot advances above zero; red columns plot declines below zero. The net line highlights daily internal direction.</div></section>
+    <section class="panel">
+      <div class="panelhead">
+        <div>
+          <div class="label">Growth / leadership benchmark</div>
+          <div class="title">QQQ × McClellan Summation Index</div>
+        </div>
+        <span class="pill" id="qqqTrendBadge">—</span>
+      </div>
+      <div class="primary-read" id="qqqRead">Candlestick · adjusted NASI · NASI 50-day SMA · exact Stockbee QQQ series</div>
+      <div class="combined-chart-stack">
+        <div>
+          <div class="chartbox benchmark-chart"><canvas id="qqqNasiChart"></canvas></div>
+          <div class="legend">
+            <span><i class="line" style="background:#0f766e"></i>Adjusted NASI</span>
+            <span><i class="line" style="background:#2f6fde"></i>NASI 50-day SMA</span>
+            <span><i class="line" style="background:#999"></i>NASI zero</span>
+          </div>
+        </div>
+        <div class="combined-subchart">
+          <div class="combined-subhead">
+            <div>
+              <div class="label">Participation</div>
+              <div class="combined-subtitle">Daily advances / declines</div>
+            </div>
+            <span class="pill" id="participationBadge">—</span>
+          </div>
+          <div class="participation-stats" id="participationStats"></div>
+          <div class="chartbox"><canvas id="adChart"></canvas></div>
+        </div>
+      </div>
+      <div class="feed-note">QQQ and daily advances/declines use the same visible sessions and horizontal time scale. Green bars are advances; red bars are declines below zero; blue is net A−D.</div>
+    </section>
   </div>
 </div>
+
 <section class="panel interpretation-panel"><div class="panelhead"><div><div class="label">Decision translation</div><div class="title">Institutional Breadth Interpretation</div></div><span class="pill" id="interpretationBadge">—</span></div><div class="interpretation-grid"><div class="interpret-card"><span>Current state</span><strong id="interpState">—</strong><p id="interpWhy">Waiting for breadth evidence.</p></div><div class="interpret-card"><span>What is deteriorating</span><strong id="interpDeterioration">—</strong><p id="interpDeteriorationDetail">—</p></div><div class="interpret-card"><span>What would improve the signal</span><strong id="interpRepair">Breadth repair checklist</strong><p id="interpRepairDetail">—</p></div><div class="interpret-card"><span>Portfolio implication</span><strong id="interpPortfolio">—</strong><p id="interpPortfolioDetail">—</p></div></div></section>
 
 
@@ -305,15 +367,19 @@ function renderDiagnostics(r,history,t){
   document.getElementById('adRatioBadge').className='pill '+(ratio>=1?'bull':'bear');
 }
 function render(){if(!rows.length)return;const r=adjusted(rows[idx]),t=tone(r),history=rows.slice(0,idx+1).map(adjusted);document.getElementById('decision').className='panel decision '+t;document.getElementById('decisionTitle').textContent=t==='bear'?'Defensive internal breadth':t==='bull'?'Constructive internal breadth':'Transitional internal breadth';const risk=val(r,'risk')||'—',signal=val(r,'signal')||'—';document.getElementById('riskPill').textContent=risk;document.getElementById('riskPill').className='pill '+t;document.getElementById('signalPill').textContent=signal;document.getElementById('asof').textContent='As of '+r.date;document.getElementById('selectedLabel').textContent=r.date;document.getElementById('slider').value=idx;document.getElementById('dateInput').value=r.date;document.getElementById('startDate').textContent=rows[0].date;document.getElementById('endDate').textContent=rows.at(-1).date;document.getElementById('prev').disabled=idx===0;document.getElementById('next').disabled=idx===rows.length-1;const health=Number(val(r,'health'));const dist=r.adj50==null?null:r.adjNasi-r.adj50;const five=history.length>5?r.adjNasi-history.at(-6).adjNasi:null;document.getElementById('metrics').innerHTML=[['Breadth health',fmt(health),'0–100 composite',health>=65?'pos':health<40?'neg':'warnText'],['Adjusted NASI',fmt(r.adjNasi,0,true),'Calibrated cumulative breadth',r.adjNasi>=0?'pos':'neg'],['NASI vs 50 SMA',fmt(dist,0,true),'Trend confirmation',dist>=0?'pos':'neg'],['McClellan Osc',fmt(r.osc,1,true),'Short-term breadth impulse',r.osc>=0?'pos':'neg'],['5-day NASI change',fmt(five,0,true),'Slope / momentum',five>=0?'pos':'neg'],['A/D ratio',fmt(r.dec? r.adv/r.dec:null,2),'Daily participation',r.adv>r.dec?'pos':'neg'],['Eligible universe',fmt(r.eligible),'Data breadth',''],['Data quality',r.quality!=null?fmt(r.quality>1?r.quality:r.quality*100,1)+'%':'—','Coverage','']].map(x=>`<div class="metric"><span>${x[0]}</span><strong class="${x[3]}">${x[1]}</strong><small>${x[2]}</small></div>`).join('');const guide=val(r,'guidance')||`${val(r,'regime')||'Breadth regime unavailable'} · ${val(r,'momentum')||'Momentum unavailable'}`;document.getElementById('guidance').innerHTML=`<strong>Portfolio guidance:</strong> ${guide}`;document.getElementById('spyTrendBadge').textContent=val(r,'regime')||'—';document.getElementById('spyTrendBadge').className='pill '+t;document.getElementById('qqqTrendBadge').textContent=val(r,'regime')||'—';document.getElementById('qqqTrendBadge').className='pill '+t;document.getElementById('oscBadge').textContent=r.osc>=0?'Positive impulse':'Negative impulse';document.getElementById('oscBadge').className='pill '+(r.osc>=0?'bull':'bear');renderInterpretation(r,history,t);const net=(r.adv||0)-(r.dec||0),adRatio=r.dec?r.adv/r.dec:null,partTone=net>=0?'bull':'bear';document.getElementById('participationBadge').textContent=net>=0?'Net advancing':'Net declining';document.getElementById('participationBadge').className='pill '+partTone;document.getElementById('participationStats').innerHTML=`<div class="pstat"><span>Advances</span><strong class="pos">${fmt(r.adv)}</strong></div><div class="pstat"><span>Declines</span><strong class="neg">${fmt(r.dec)}</strong></div><div class="pstat"><span>Net A−D</span><strong class="${net>=0?'pos':'neg'}">${fmt(net,0,true)}</strong></div><div class="pstat"><span>A/D ratio</span><strong class="${adRatio>=1?'pos':'neg'}">${fmt(adRatio,2)}</strong></div>`;renderDiagnostics(r,history,t);renderCharts(history);renderTable(history.slice(-15).reverse());updateCalBadge()}
+function benchmarkVisibleSlice(symbol,h){
+  const key=symbol==='SPY'?'spy':'qqq';
+  const firstValid=h.findIndex(row=>Number.isFinite(priceByDate[row.date]?.[key]));
+  const startIndex=firstValid>=0?firstValid:0;
+  return h.slice(startIndex);
+}
+
 function renderBenchmarkNasiChart(symbol,h,chart,id){
   const key=symbol==='SPY'?'spy':'qqq';
   const ohlcKey=symbol==='SPY'?'spyOhlc':'qqqOhlc';
 
-  const rawPrice=h.map(r=>priceByDate[r.date]?.[key]??null);
-  const firstValid=rawPrice.findIndex(Number.isFinite);
-  const startIndex=firstValid>=0?firstValid:0;
-  const visible=h.slice(startIndex);
-  const price=rawPrice.slice(startIndex);
+  const visible=benchmarkVisibleSlice(symbol,h);
+  const price=visible.map(r=>priceByDate[r.date]?.[key]??null);
 
   const exactOhlc=visible.map((row,index)=>{
     const direct=priceByDate[row.date]?.[ohlcKey];
@@ -372,7 +438,7 @@ function renderBenchmarkNasiChart(symbol,h,chart,id){
       }
     },
     scales:{
-      x:{grid:{display:false},ticks:{maxTicksLimit:9,color:'#777',font:{size:10}}},
+      x:{grid:{display:false},ticks:{display:false},border:{display:false}},
       y:{position:'left',grid:{color:'#ecece7'},ticks:{color:'#0f766e',font:{size:10}},title:{display:true,text:'FMP NASI',color:'#0f766e'}},
       yPrice:{position:'right',min:range.min,max:range.max,beginAtZero:false,bounds:'data',grid:{drawOnChartArea:false},ticks:{color:symbol==='SPY'?'#2a78d6':'#9333ea',font:{size:10}},title:{display:true,text:symbol+' Price',color:symbol==='SPY'?'#2a78d6':'#9333ea'}}
     }
@@ -393,19 +459,153 @@ function renderInterpretation(r,h,t){
   const defensive=t==='bear'||risk.includes('OFF')||signal.includes('BREAKDOWN')||signal.includes('SELL');document.getElementById('interpPortfolio').textContent=defensive?'Capital preservation':'Selective participation';document.getElementById('interpPortfolioDetail').textContent=defensive?'Keep gross exposure reduced, avoid marginal breakouts, prioritize relative-strength leaders and add exposure only after breadth repair is confirmed.':'Maintain selective exposure, favor quality leaders and increase size only when benchmark trend and breadth remain aligned.';
 }
 function renderCharts(h){
-  const labels=h.map(r=>r.date);
-  const common={responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:9,color:'#777',font:{size:10}}},y:{grid:{color:'#ecece7'},ticks:{color:'#777',font:{size:10}}}}};
+  const common={
+    responsive:true,
+    maintainAspectRatio:false,
+    interaction:{mode:'index',intersect:false},
+    plugins:{legend:{display:false}},
+    scales:{
+      x:{grid:{display:false},ticks:{maxTicksLimit:9,color:'#777',font:{size:10}}},
+      y:{grid:{color:'#ecece7'},ticks:{color:'#777',font:{size:10}}}
+    }
+  };
+
+  const spyRows=benchmarkVisibleSlice('SPY',h);
+  const qqqRows=benchmarkVisibleSlice('QQQ',h);
+
   spyNasiChart=renderBenchmarkNasiChart('SPY',h,spyNasiChart,'spyNasiChart');
   qqqNasiChart=renderBenchmarkNasiChart('QQQ',h,qqqNasiChart,'qqqNasiChart');
   document.getElementById('qqqRead').textContent='Candlestick · adjusted NASI · NASI 50-day SMA · exact Stockbee QQQ series';
-  const oscSets=[{label:'Oscillator',data:h.map(r=>r.osc),borderColor:'#6d52c7',backgroundColor:h.map(r=>r.osc>=0?'rgba(17,153,110,.25)':'rgba(215,71,71,.22)'),fill:true,pointRadius:0,borderWidth:1.5,tension:.1},{label:'Zero',data:h.map(()=>0),borderColor:'#999',borderDash:[3,3],pointRadius:0,borderWidth:1}];
-  oscChart=upsert(oscChart,'oscChart','line',labels,oscSets,common);
-  const adSets=[{type:'bar',label:'Advances',data:h.map(r=>r.adv),backgroundColor:'rgba(17,153,110,.78)',borderColor:'#087c55',borderWidth:.5,barPercentage:.9,categoryPercentage:.95},{type:'bar',label:'Declines',data:h.map(r=>-(r.dec||0)),backgroundColor:'rgba(215,71,71,.76)',borderColor:'#a52322',borderWidth:.5,barPercentage:.9,categoryPercentage:.95},{type:'line',label:'Net advances',data:h.map(r=>(r.adv||0)-(r.dec||0)),borderColor:'#2f6fde',pointRadius:0,borderWidth:1.3,tension:.08}];
-  const adOpts={...common,scales:{...common.scales,y:{...common.scales.y,stacked:false,ticks:{...common.scales.y.ticks,callback:v=>Math.abs(Number(v)).toLocaleString()}}}};adChart=upsert(adChart,'adChart','bar',labels,adSets,adOpts);
-  const ranaSets=[{label:'RANA',data:h.map(r=>r.rana),borderColor:'#6d52c7',backgroundColor:'rgba(109,82,199,.12)',fill:true,pointRadius:0,borderWidth:1.6,tension:.1,segment:{borderColor:c=>c.p1.parsed.y>=0?'#11996e':'#d74747',backgroundColor:c=>c.p1.parsed.y>=0?'rgba(17,153,110,.16)':'rgba(215,71,71,.14)'}},{label:'Zero',data:h.map(()=>0),borderColor:'#999',borderDash:[3,3],pointRadius:0,borderWidth:1}];ranaChart=upsert(ranaChart,'ranaChart','line',labels,ranaSets,common);
-  const ratioSets=[{label:'A/D ratio',data:h.map(r=>r.dec?r.adv/r.dec:null),borderColor:'#0f766e',backgroundColor:'rgba(15,118,110,.10)',fill:true,pointRadius:0,borderWidth:1.7,tension:.1},{label:'Neutral 1.0',data:h.map(()=>1),borderColor:'#999',borderDash:[4,3],pointRadius:0,borderWidth:1}];adRatioChart=upsert(adRatioChart,'adRatioChart','line',labels,ratioSets,common);
+
+  const oscLabels=spyRows.map(r=>r.date).concat(['','','','']);
+  const oscPad=a=>a.concat([null,null,null,null]);
+  const oscSets=[
+    {
+      label:'Oscillator',
+      data:oscPad(spyRows.map(r=>r.osc)),
+      borderColor:'#6d52c7',
+      backgroundColor:oscPad(spyRows.map(r=>r.osc>=0?'rgba(17,153,110,.25)':'rgba(215,71,71,.22)')),
+      fill:true,
+      pointRadius:0,
+      borderWidth:1.5,
+      tension:.1
+    },
+    {
+      label:'Zero',
+      data:oscPad(spyRows.map(()=>0)),
+      borderColor:'#999',
+      borderDash:[3,3],
+      pointRadius:0,
+      borderWidth:1
+    }
+  ];
+  oscChart=upsert(oscChart,'oscChart','line',oscLabels,oscSets,common);
+
+  const adLabels=qqqRows.map(r=>r.date).concat(['','','','']);
+  const adPad=a=>a.concat([null,null,null,null]);
+  const adSets=[
+    {
+      type:'bar',
+      label:'Advances',
+      data:adPad(qqqRows.map(r=>r.adv)),
+      backgroundColor:'rgba(17,153,110,.78)',
+      borderColor:'#087c55',
+      borderWidth:.5,
+      barPercentage:.9,
+      categoryPercentage:.95
+    },
+    {
+      type:'bar',
+      label:'Declines',
+      data:adPad(qqqRows.map(r=>-(r.dec||0))),
+      backgroundColor:'rgba(215,71,71,.76)',
+      borderColor:'#a52322',
+      borderWidth:.5,
+      barPercentage:.9,
+      categoryPercentage:.95
+    },
+    {
+      type:'line',
+      label:'Net advances',
+      data:adPad(qqqRows.map(r=>(r.adv||0)-(r.dec||0))),
+      borderColor:'#2f6fde',
+      pointRadius:0,
+      borderWidth:1.3,
+      tension:.08
+    }
+  ];
+  const adOpts={
+    ...common,
+    scales:{
+      ...common.scales,
+      y:{
+        ...common.scales.y,
+        stacked:false,
+        ticks:{
+          ...common.scales.y.ticks,
+          callback:v=>Math.abs(Number(v)).toLocaleString()
+        }
+      }
+    }
+  };
+  adChart=upsert(adChart,'adChart','bar',adLabels,adSets,adOpts);
+
+  // Keep secondary diagnostics unchanged.
+  const labels=h.map(r=>r.date);
+  const ranaSets=[
+    {label:'RANA',data:h.map(r=>r.rana),borderColor:'#6d52c7',backgroundColor:'rgba(109,82,199,.12)',fill:true,pointRadius:0,borderWidth:1.6,tension:.1,segment:{borderColor:c=>c.p1.parsed.y>=0?'#11996e':'#d74747',backgroundColor:c=>c.p1.parsed.y>=0?'rgba(17,153,110,.16)':'rgba(215,71,71,.14)'}},
+    {label:'Zero',data:h.map(()=>0),borderColor:'#999',borderDash:[3,3],pointRadius:0,borderWidth:1}
+  ];
+  ranaChart=upsert(ranaChart,'ranaChart','line',labels,ranaSets,common);
+
+  const ratioSets=[
+    {label:'A/D ratio',data:h.map(r=>r.dec?r.adv/r.dec:null),borderColor:'#0f766e',backgroundColor:'rgba(15,118,110,.10)',fill:true,pointRadius:0,borderWidth:1.7,tension:.1},
+    {label:'Neutral 1.0',data:h.map(()=>1),borderColor:'#999',borderDash:[4,3],pointRadius:0,borderWidth:1}
+  ];
+  adRatioChart=upsert(adRatioChart,'adRatioChart','line',labels,ratioSets,common);
+
+  linkChartPair(spyNasiChart,oscChart);
+  linkChartPair(qqqNasiChart,adChart);
 }
 function upsert(chart,id,type,labels,datasets,options){if(!chart)return new Chart(document.getElementById(id),{type,data:{labels,datasets},options});chart.data.labels=labels;chart.data.datasets=datasets;chart.options=options;chart.update();return chart}
+function linkChartPair(topChart,bottomChart){
+  if(!topChart||!bottomChart) return;
+
+  const bind=(source,target)=>{
+    const canvas=source.canvas;
+    if(canvas.dataset.linkedHover==='1') return;
+    canvas.dataset.linkedHover='1';
+
+    canvas.addEventListener('mousemove',event=>{
+      const points=source.getElementsAtEventForMode(
+        event,
+        'index',
+        {intersect:false},
+        false
+      );
+      if(!points.length) return;
+
+      const index=points[0].index;
+      const active=target.data.datasets
+        .map((dataset,datasetIndex)=>dataset.data[index]!=null?{datasetIndex,index}:null)
+        .filter(Boolean);
+
+      target.setActiveElements(active);
+      target.tooltip.setActiveElements(active,{x:0,y:0});
+      target.update('none');
+    });
+
+    canvas.addEventListener('mouseleave',()=>{
+      target.setActiveElements([]);
+      target.tooltip.setActiveElements([],{x:0,y:0});
+      target.update('none');
+    });
+  };
+
+  bind(topChart,bottomChart);
+  bind(bottomChart,topChart);
+}
+
 function renderTable(list){document.getElementById('tbody').innerHTML=list.map(r=>`<tr><td>${r.date}</td><td>${fmt(r.adv)}</td><td>${fmt(r.dec)}</td><td>${fmt(r.dec?r.adv/r.dec:null,2)}</td><td>${fmt(r.rana,1,true)}</td><td>${fmt(r.osc,1,true)}</td><td>${fmt(r.adjNasi,0,true)}</td><td>${fmt(r.adj50,0,true)}</td><td>${fmt(Number(val(r,'health')))}</td><td>${val(r,'risk')||'—'}</td><td>${val(r,'signal')||'—'}</td></tr>`).join('')}
 function updateCalBadge(){const b=document.getElementById('calBadge');document.getElementById('offsetDisplay').value=offset.toFixed(2);b.textContent=offset?'Calibrated':'Uncalibrated';b.className='pill '+(offset?'bull':'')}
 document.getElementById('prev').onclick=()=>{if(idx>0){idx--;render()}};document.getElementById('next').onclick=()=>{if(idx<rows.length-1){idx++;render()}};document.getElementById('latest').onclick=()=>{idx=rows.length-1;render()};document.getElementById('slider').oninput=e=>{idx=Number(e.target.value);render()};document.getElementById('dateInput').onchange=e=>{const d=e.target.value;let i=rows.findIndex(r=>r.date>=d);idx=i<0?rows.length-1:i;render()};document.getElementById('play').onclick=()=>{if(timer){clearInterval(timer);timer=null;document.getElementById('play').textContent='▶ Play';return}if(idx===rows.length-1)idx=0;document.getElementById('play').textContent='Ⅱ Pause';timer=setInterval(()=>{if(idx>=rows.length-1){clearInterval(timer);timer=null;document.getElementById('play').textContent='▶ Play';return}idx++;render()},450)};document.getElementById('refresh').onclick=load;document.getElementById('applyCal').onclick=()=>{const d=document.getElementById('anchorDate').value,v=n(document.getElementById('anchorValue').value);const r=rows.find(x=>x.date===d);if(!r||v==null){alert('Choose a valid anchor date and official NASI value.');return}offset=v-r.nasi;localStorage.setItem('nasiCalibrationOffset',offset);localStorage.setItem('nasiAnchorDate',d);localStorage.setItem('nasiAnchorValue',v);render()};document.getElementById('resetCal').onclick=()=>{offset=0;localStorage.removeItem('nasiCalibrationOffset');localStorage.removeItem('nasiAnchorDate');localStorage.removeItem('nasiAnchorValue');document.getElementById('anchorDate').value='';document.getElementById('anchorValue').value='';render()};load();
