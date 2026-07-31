@@ -108,13 +108,15 @@
   .benchmark-module > * + * { border-top:1px solid #e1e0d9; }
   .benchmark-subchart { padding:14px 18px 12px; }
   .benchmark-subchart .nasi-chart-wrap { height:235px; }
-  .breadth-evidence-panel { padding:0; overflow:hidden; }
-  .breadth-evidence-head { padding:14px 18px 10px; border-bottom:1px solid #ecebe6; }
-  .breadth-stack { display:grid; grid-template-rows:225px 245px; }
-  .breadth-subchart { min-height:0; padding:12px 18px 10px; }
-  .breadth-subchart + .breadth-subchart { border-top:1px solid #e1e0d9; }
-  .breadth-subchart .chart-wrap { height:165px; }
-  .breadth-subchart.quarterly .chart-wrap { height:185px; }
+    .breadth-subchart { min-height:0; padding:12px 18px 10px; }
+  .breadth-subchart .chart-wrap { height:180px; }
+  .breadth-subchart.quarterly .chart-wrap { height:210px; }
+  .benchmark-module { display:flex; flex-direction:column; }
+  .benchmark-chart-panel { flex:0 0 auto; }
+  .danger-attached { margin-top:auto; }
+  #institutionalBreadthPanel .nasi-chart-wrap { height:430px; }
+  #spyBenchmarkModule .breadth-subchart { background:#fcfcfa; }
+  #qqqBenchmarkModule .institutional-inline { background:#fcfcfa; }
   .danger-panel { background:#fff; min-width:0; }
   .engine-link { display:inline-flex; align-items:center; color:#2a78d6; text-decoration:none; font:700 10px 'JetBrains Mono',monospace; margin-top:5px; }
   .engine-link:hover { text-decoration:underline; }
@@ -333,6 +335,7 @@
 </section>
 
 
+
 <div class="benchmark-grid">
   <section class="benchmark-module" id="spyBenchmarkModule">
     <div class="benchmark-chart-panel">
@@ -356,6 +359,37 @@
       </div>
     </div>
 
+    <div class="benchmark-subchart breadth-subchart">
+      <div class="breadth-head">
+        <p class="panel-label" style="margin:0">Breadth ratios (dashed reference = 1, up days equal down days)</p>
+        <span class="breadth-read" id="breadthRead">Assessing breadth impulse…</span>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="ratioChart" role="img" aria-label="Five-day and ten-day breadth ratios"></canvas>
+      </div>
+      <div class="legend" style="margin-top:8px;margin-bottom:0">
+        <span><span class="swatch line" style="background:#1baf7a"></span>5-day ratio</span>
+        <span><span class="swatch dash" style="border-color:#e34948"></span>10-day ratio</span>
+      </div>
+    </div>
+
+    <div class="benchmark-subchart breadth-subchart quarterly">
+      <div class="breadth-head">
+        <p class="panel-label" style="margin:0">Quarterly breadth (stocks moving 25%+ over the quarter)</p>
+        <span class="breadth-read" id="quarterlyRead">Assessing structural breadth…</span>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="quarterlyChart" role="img" aria-label="Stocks up and down twenty-five percent or more over the quarter"></canvas>
+      </div>
+      <div class="legend" style="margin-top:8px;margin-bottom:0">
+        <span><span class="swatch line" style="background:#1baf7a"></span>Up 25%+</span>
+        <span><span class="swatch line" style="background:#e34948"></span>Down 25%+</span>
+      </div>
+      <div class="engine-guidance" style="margin-top:8px">
+        SPY, breadth ratios and quarterly breadth share the same synchronized date scale. Only this lower chart displays the visible horizontal axis.
+      </div>
+    </div>
+
     <div class="danger-attached" id="spyDangerPanel">
       <div class="danger-head">
         <div class="danger-title">
@@ -364,7 +398,9 @@
         </div>
         <span id="spyDangerBadge" style="padding:3px 10px;border-radius:100px;font-size:11px;font-family:'JetBrains Mono',monospace;font-weight:700;background:rgba(27,175,122,.15);color:#1baf7a">0 Active — Healthy</span>
       </div>
-      <ul id="spyDangerList" class="danger-list"><li style="color:#898781;font-style:italic">Scanning for active signals...</li></ul>
+      <ul id="spyDangerList" class="danger-list">
+        <li style="color:#898781;font-style:italic">Scanning for active signals...</li>
+      </ul>
     </div>
   </section>
 
@@ -394,20 +430,10 @@
       <div class="institutional-head">
         <div>
           <div class="benchmark-kicker">Nasdaq internal confirmation</div>
-          <div class="institutional-title" id="institutionalBreadthTitle">Institutional Breadth Confirmation</div>
-          <div class="institutional-subtitle">Compact NASI, McClellan and risk confirmation for the QQQ decision workflow.</div>
-          <a class="engine-link" href="nasi_institutional_command_center.html">Open full NASI Command Center ↗</a>
+          <div class="institutional-title" id="institutionalBreadthTitle">Nasdaq Institutional Breadth Engine</div>
+          <div class="institutional-subtitle">NASI chart directly beneath QQQ for synchronized price-versus-breadth comparison.</div>
         </div>
         <span class="engine-feed-status" id="breadthEngineFeedStatus">Loading published breadth feeds…</span>
-      </div>
-
-      <div class="institutional-grid">
-        <div class="institutional-card" id="engineHealthCard"><div class="label">Breadth health</div><div class="value" id="engineHealth">—</div><div class="sub" id="engineHealthSub">0–100 composite</div></div>
-        <div class="institutional-card" id="engineRiskCard"><div class="label">Risk mode</div><div class="value" id="engineRisk">—</div><div class="sub">Internal positioning mode</div></div>
-        <div class="institutional-card" id="engineSignalCard"><div class="label">Signal</div><div class="value" id="engineSignal">—</div><div class="sub">Breadth switch / warning</div></div>
-        <div class="institutional-card" id="engineRegimeCard"><div class="label">Trend / regime</div><div class="value" id="engineRegime">—</div><div class="sub">Intermediate internal structure</div></div>
-        <div class="institutional-card" id="engineMomentumCard"><div class="label">Momentum</div><div class="value" id="engineMomentum">—</div><div class="sub">Short-term breadth impulse</div></div>
-        <div class="institutional-card" id="engineQualityCard"><div class="label">Data quality</div><div class="value" id="engineQuality">—</div><div class="sub" id="engineQualitySub">Eligible universe coverage</div></div>
       </div>
 
       <div class="nasi-metrics">
@@ -425,7 +451,9 @@
         <span><span class="swatch line" style="background:#2a78d6"></span>50-day SMA</span>
         <span><span class="swatch dash" style="border-color:#898781"></span>Zero reference</span>
       </div>
-      <div class="engine-guidance" id="engineGuidance"><strong>Institutional breadth guidance:</strong> Waiting for the published FMP breadth engine.</div>
+      <div class="engine-guidance" id="engineGuidance">
+        <strong>Institutional breadth guidance:</strong> Waiting for the published FMP breadth engine.
+      </div>
     </div>
 
     <div class="danger-attached" id="qqqDangerPanel">
@@ -436,44 +464,12 @@
         </div>
         <span id="qqqDangerBadge" style="padding:3px 10px;border-radius:100px;font-size:11px;font-family:'JetBrains Mono',monospace;font-weight:700;background:rgba(27,175,122,.15);color:#1baf7a">0 Active — Healthy</span>
       </div>
-      <ul id="qqqDangerList" class="danger-list"><li style="color:#898781;font-style:italic">Scanning for active signals...</li></ul>
+      <ul id="qqqDangerList" class="danger-list">
+        <li style="color:#898781;font-style:italic">Scanning for active signals...</li>
+      </ul>
     </div>
   </section>
 </div>
-
-<section class="panel breadth-evidence-panel" id="breadthEvidencePanel">
-  <div class="breadth-evidence-head">
-    <div class="benchmark-kicker">Stockbee participation evidence</div>
-    <div class="benchmark-title">Breadth Impulse × Quarterly Structure</div>
-    <div class="institutional-subtitle">Both charts share one synchronized date scale. The visible horizontal axis appears only beneath quarterly breadth.</div>
-  </div>
-
-  <div class="breadth-stack">
-    <div class="breadth-subchart">
-      <div class="breadth-head">
-        <p class="panel-label" style="margin:0">Breadth ratios (dashed reference = 1, up days equal down days)</p>
-        <span class="breadth-read" id="breadthRead">Assessing breadth impulse…</span>
-      </div>
-      <div class="chart-wrap"><canvas id="ratioChart" role="img" aria-label="Five-day and ten-day breadth ratios"></canvas></div>
-      <div class="legend" style="margin-top:8px;margin-bottom:0">
-        <span><span class="swatch line" style="background:#1baf7a"></span>5-day ratio</span>
-        <span><span class="swatch dash" style="border-color:#e34948"></span>10-day ratio</span>
-      </div>
-    </div>
-
-    <div class="breadth-subchart quarterly">
-      <div class="breadth-head">
-        <p class="panel-label" style="margin:0">Quarterly breadth (stocks moving 25%+ over the quarter)</p>
-        <span class="breadth-read" id="quarterlyRead">Assessing structural breadth…</span>
-      </div>
-      <div class="chart-wrap"><canvas id="quarterlyChart" role="img" aria-label="Stocks up and down twenty-five percent or more over the quarter"></canvas></div>
-      <div class="legend" style="margin-top:8px;margin-bottom:0">
-        <span><span class="swatch line" style="background:#1baf7a"></span>Up 25%+</span>
-        <span><span class="swatch line" style="background:#e34948"></span>Down 25%+</span>
-      </div>
-    </div>
-  </div>
-</section>
 
 <script>
 // ---- Seed data: last known-good snapshot ----
@@ -997,7 +993,7 @@ function renderNasiChart(rows) {
       }
     },
     scales:{
-      x:symbol==='QQQ'?hiddenCommonX:commonX,
+      x:hiddenCommonX,
       y:{
         beginAtZero:false,
         grid:{color:'#ecebe6'},
@@ -1015,7 +1011,6 @@ function renderNasiChart(rows) {
     nasiChart.update();
   }
 
-  linkChartGroup([qqqChart, nasiChart]);
 }
 function renderInstitutionalBreadth() {
   const panel = document.getElementById('institutionalBreadthPanel');
@@ -1243,7 +1238,8 @@ function buildOrUpdateCharts() {
     quarterlyChart.data.labels=labels;quarterlyChart.data.datasets[0].data=currentData.map(d=>d.up25q);quarterlyChart.data.datasets[1].data=currentData.map(d=>d.down25q);quarterlyChart.update();
   }
   updateBenchmarkStats('SPY'); updateBenchmarkStats('QQQ');
-  linkChartGroup([ratioChart, quarterlyChart]);
+  linkChartGroup([spyChart, ratioChart, quarterlyChart]);
+  linkChartGroup([qqqChart, nasiChart]);
 }
 
 let dangerCounts = { spy: 0, qqq: 0 };
