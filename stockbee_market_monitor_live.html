@@ -316,7 +316,7 @@
   </div>
   <div class="summary-grid" id="summaryGrid"></div>
   <div class="commentary" id="commentaryText"></div>
-  <p class="note" style="margin:12px 0 0;">SPY and QQQ use fixed candlestick charts with 20-day and 50-day moving averages. Each price axis auto-fits the visible candle range. T2108 stays on its own 0–100% axis, while the FMP breadth engine supplies the independent internal-market risk and NASI confirmation layer.</p>
+  <p class="note" style="margin:12px 0 0;">SPY and QQQ use fixed candlestick charts with 20-day and 50-day moving averages. Each price axis auto-fits the visible candle range. T2108 stays on its own 0–100% axis, while FMP NASI is overlaid on a separate breadth axis for direct index-versus-internals comparison.</p>
 </section>
 
 <div class="benchmark-grid">
@@ -327,7 +327,7 @@
         <div class="benchmark-stats" id="spyStats"></div>
       </div>
       <div class="benchmark-chart"><canvas id="spyChart" role="img" aria-label="SPY chart with moving averages"></canvas></div>
-      <div class="benchmark-legend"><span><span class="swatch line" style="background:#4a3aa7"></span>20-day SMA</span><span><span class="swatch line" style="background:#d85a30"></span>50-day SMA</span><span><span class="swatch line" style="background:#eda100"></span>T2108</span><span><span class="swatch dash" style="border-color:#e34948"></span>20 / 80 zones</span></div>
+      <div class="benchmark-legend"><span><span class="swatch line" style="background:#4a3aa7"></span>20-day SMA</span><span><span class="swatch line" style="background:#d85a30"></span>50-day SMA</span><span><span class="swatch line" style="background:#eda100"></span>T2108</span><span><span class="swatch line" style="background:#0f766e"></span>FMP NASI</span><span><span class="swatch dash" style="border-color:#e34948"></span>20 / 80 zones</span></div>
     </div>
   </section>
 
@@ -338,7 +338,7 @@
         <div class="benchmark-stats" id="qqqStats"></div>
       </div>
       <div class="benchmark-chart"><canvas id="qqqChart" role="img" aria-label="QQQ chart with moving averages"></canvas></div>
-      <div class="benchmark-legend"><span><span class="swatch line" style="background:#4a3aa7"></span>20-day SMA</span><span><span class="swatch line" style="background:#d85a30"></span>50-day SMA</span><span><span class="swatch line" style="background:#eda100"></span>T2108</span><span><span class="swatch dash" style="border-color:#e34948"></span>20 / 80 zones</span></div>
+      <div class="benchmark-legend"><span><span class="swatch line" style="background:#4a3aa7"></span>20-day SMA</span><span><span class="swatch line" style="background:#d85a30"></span>50-day SMA</span><span><span class="swatch line" style="background:#eda100"></span>T2108</span><span><span class="swatch line" style="background:#0f766e"></span>FMP NASI</span><span><span class="swatch dash" style="border-color:#e34948"></span>20 / 80 zones</span></div>
     </div>
   </section>
 </div>
@@ -956,6 +956,26 @@ function autoPriceRange(symbol) {
   return {min:lo-span*0.08,max:hi+span*0.08};
 }
 
+function nasiSeriesForCurrentData() {
+  if (!currentData.length || !breadthEngineRows.length) {
+    return currentData.map(() => null);
+  }
+  return currentData.map(row => {
+    const snapshot = breadthSnapshotForDate(row.date);
+    return snapshot && Number.isFinite(snapshot.nasi) ? snapshot.nasi : null;
+  });
+}
+
+function nasiAxisRange() {
+  const values = nasiSeriesForCurrentData().filter(Number.isFinite);
+  if (!values.length) return { min: undefined, max: undefined };
+  let min = Math.min(...values), max = Math.max(...values);
+  const span = Math.max(max - min, 100);
+  min -= span * 0.10;
+  max += span * 0.10;
+  return { min, max };
+}
+
 function benchmarkDatasets(symbol) {
   const key=symbol==='SPY'?'sp':'nasdaq', close=currentData.map(d=>d[key]);
   const ohlc=ohlcFor(symbol), up='#1baf7a', down='#e34948';
@@ -966,6 +986,7 @@ function benchmarkDatasets(symbol) {
   if(showSma50) datasets.push({type:'line',label:'50-day SMA',data:sma(close,50),borderColor:'#d85a30',borderWidth:1.8,pointRadius:0,tension:.08,yAxisID:'y'});
   if(showSma200) datasets.push({type:'line',label:'200-day SMA',data:sma(close,200),borderColor:'#0f6e56',borderWidth:1.8,pointRadius:0,tension:.08,yAxisID:'y'});
   datasets.push({type:'line',label:'T2108',data:currentData.map(d=>d.t2108),borderColor:'#eda100',backgroundColor:'transparent',pointRadius:0,borderWidth:1.8,tension:.12,yAxisID:'yT2108'});
+  datasets.push({type:'line',label:'FMP NASI',data:nasiSeriesForCurrentData(),borderColor:'#0f766e',backgroundColor:'transparent',pointRadius:0,borderWidth:2,tension:.12,yAxisID:'yNasi',spanGaps:true});
   datasets.push({type:'line',label:'T2108 Oversold 20',data:currentData.map(()=>20),borderColor:'rgba(227,73,72,.65)',borderDash:[4,3],pointRadius:0,borderWidth:1,yAxisID:'yT2108'});
   datasets.push({type:'line',label:'T2108 Overbought 80',data:currentData.map(()=>80),borderColor:'rgba(27,175,122,.65)',borderDash:[4,3],pointRadius:0,borderWidth:1,yAxisID:'yT2108'});
   return {datasets,close};
@@ -973,14 +994,20 @@ function benchmarkDatasets(symbol) {
 
 function chartOptions(symbol) {
   const range=autoPriceRange(symbol);
+  const nasiRange=nasiAxisRange();
   return {responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false,filter:item=>!item.dataset.label.includes('Oversold')&&!item.dataset.label.includes('Overbought'),callbacks:{label(ctx){
     const ds=ctx.dataset;
     if(ds.isCandle){const o=ds.ohlc[ctx.dataIndex];return `${symbol}  O ${o.o.toFixed(2)}  H ${o.h.toFixed(2)}  L ${o.l.toFixed(2)}  C ${o.c.toFixed(2)}`;}
-    const v=ctx.parsed.y; return `${ds.label}: ${v==null?'—':v.toFixed(2)}${ds.yAxisID==='yT2108'?'%':''}`;
+    const v=ctx.parsed.y;
+    if(v==null) return `${ds.label}: —`;
+    if(ds.yAxisID==='yT2108') return `${ds.label}: ${v.toFixed(2)}%`;
+    if(ds.yAxisID==='yNasi') return `${ds.label}: ${v.toFixed(0)}`;
+    return `${ds.label}: ${v.toFixed(2)}`;
   }}}},scales:{
     x:commonX,
     y:{min:range.min,max:range.max,beginAtZero:false,bounds:'data',position:'right',grid:{color:'#ecebe6'},ticks:{color:'#898781',font:{size:10}},title:{display:true,text:symbol+' Price',color:symbol==='SPY'?'#2a78d6':'#9333ea',font:{size:10}}},
-    yT2108:{min:0,max:100,position:'left',grid:{drawOnChartArea:false},ticks:{stepSize:20,color:'#b87700',font:{size:10},callback:v=>v+'%'},title:{display:true,text:'T2108 %',color:'#b87700',font:{size:10}}}
+    yT2108:{min:0,max:100,position:'left',grid:{drawOnChartArea:false},ticks:{stepSize:20,color:'#b87700',font:{size:10},callback:v=>v+'%'},title:{display:true,text:'T2108 %',color:'#b87700',font:{size:10}}},
+    yNasi:{min:nasiRange.min,max:nasiRange.max,beginAtZero:false,position:'right',grid:{drawOnChartArea:false},ticks:{color:'#0f766e',font:{size:10},callback:v=>Number(v).toLocaleString()},title:{display:true,text:'FMP NASI',color:'#0f766e',font:{size:10}}}
   }};
 }
 
@@ -995,7 +1022,7 @@ function updateBenchmarkStats(symbol) {
 function refreshBenchmarkCharts() {
   ensureNasdaqData();
   const labels=currentData.map(d=>d.date).concat(['','','']);
-  [['SPY',spyChart],['QQQ',qqqChart]].forEach(([symbol,chart])=>{if(!chart)return;chart.data.labels=labels;chart.data.datasets=benchmarkDatasets(symbol).datasets;const range=autoPriceRange(symbol);chart.options.scales.y.min=range.min;chart.options.scales.y.max=range.max;chart.update();updateBenchmarkStats(symbol);});
+  [['SPY',spyChart],['QQQ',qqqChart]].forEach(([symbol,chart])=>{if(!chart)return;chart.data.labels=labels;chart.data.datasets=benchmarkDatasets(symbol).datasets;const range=autoPriceRange(symbol);const nasiRange=nasiAxisRange();chart.options.scales.y.min=range.min;chart.options.scales.y.max=range.max;chart.options.scales.yNasi.min=nasiRange.min;chart.options.scales.yNasi.max=nasiRange.max;chart.update();updateBenchmarkStats(symbol);});
   document.querySelectorAll('.ma200Legend').forEach(el=>el.style.display=showSma200?'flex':'none');
 }
 
