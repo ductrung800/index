@@ -103,12 +103,21 @@
 
 
   .benchmark-controls { display:flex; flex-wrap:wrap; align-items:center; gap:18px; margin-bottom:16px; }
-  .benchmark-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; margin-bottom:16px; }
+  .benchmark-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; margin-bottom:16px; align-items:start; }
   .benchmark-module { background:#fff; border:1px solid #e1e0d9; border-radius:12px; overflow:hidden; min-width:0; }
-  .evidence-grid,.danger-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; margin-bottom:16px; }
-  .evidence-panel { margin-bottom:0; min-width:0; }
-  .evidence-panel .chart-wrap { height:210px; }
-  .danger-panel { background:#fff; border:1px solid #e1e0d9; border-radius:12px; overflow:hidden; min-width:0; }
+  .benchmark-module > * + * { border-top:1px solid #e1e0d9; }
+  .benchmark-subchart { padding:14px 18px 12px; }
+  .benchmark-subchart .nasi-chart-wrap { height:235px; }
+  .breadth-evidence-panel { padding:0; overflow:hidden; }
+  .breadth-evidence-head { padding:14px 18px 10px; border-bottom:1px solid #ecebe6; }
+  .breadth-stack { display:grid; grid-template-rows:225px 245px; }
+  .breadth-subchart { min-height:0; padding:12px 18px 10px; }
+  .breadth-subchart + .breadth-subchart { border-top:1px solid #e1e0d9; }
+  .breadth-subchart .chart-wrap { height:165px; }
+  .breadth-subchart.quarterly .chart-wrap { height:185px; }
+  .danger-panel { background:#fff; min-width:0; }
+  .engine-link { display:inline-flex; align-items:center; color:#2a78d6; text-decoration:none; font:700 10px 'JetBrains Mono',monospace; margin-top:5px; }
+  .engine-link:hover { text-decoration:underline; }
   .benchmark-chart-panel { padding:16px 18px 12px; }
   .benchmark-head { display:flex; justify-content:space-between; align-items:flex-start; gap:14px; margin-bottom:10px; }
   .benchmark-title { font-size:16px; font-weight:750; letter-spacing:-.01em; }
@@ -195,6 +204,10 @@
   /* ---------- FMP INSTITUTIONAL BREADTH ENGINE ---------- */
   .tm-date-input { border:1px solid #d3d1c7; background:#fff; color:#0b0b0b; border-radius:7px; min-height:32px; padding:5px 9px; font:700 11px 'JetBrains Mono',monospace; }
   .institutional-panel { border-left:5px solid #898781; overflow:hidden; }
+  .institutional-inline { border-left:none; border-radius:0; margin:0; background:#fcfcfa; }
+  .institutional-inline.tone-bull { box-shadow:inset 5px 0 #1baf7a; }
+  .institutional-inline.tone-warn { box-shadow:inset 5px 0 #eda100; }
+  .institutional-inline.tone-bear { box-shadow:inset 5px 0 #e34948; }
   .institutional-panel.tone-bull { border-left-color:#1baf7a; }
   .institutional-panel.tone-warn { border-left-color:#eda100; }
   .institutional-panel.tone-bear { border-left-color:#e34948; }
@@ -205,7 +218,7 @@
   .engine-feed-status::before { content:''; width:7px; height:7px; border-radius:50%; background:#b0aea5; }
   .engine-feed-status.live::before { background:#1baf7a; }
   .engine-feed-status.error::before { background:#e34948; }
-  .institutional-grid { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:8px; margin-bottom:10px; }
+  .institutional-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin-bottom:10px; }
   .institutional-card { min-width:0; background:#f8f8f6; border:1px solid #ecebe6; border-radius:8px; padding:9px 10px; }
   .institutional-card .label { font:600 9px 'JetBrains Mono',monospace; color:#898781; text-transform:uppercase; letter-spacing:.05em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .institutional-card .value { margin-top:3px; font-size:14px; font-weight:800; line-height:1.18; word-break:break-word; }
@@ -213,7 +226,7 @@
   .institutional-card.pos .value { color:#0f7b5b; }
   .institutional-card.warn .value { color:#a96d00; }
   .institutional-card.neg .value { color:#b93433; }
-  .nasi-metrics { display:grid; grid-template-columns:repeat(4,minmax(120px,1fr)); gap:8px; margin:8px 0 10px; }
+  .nasi-metrics { display:grid; grid-template-columns:repeat(4,minmax(90px,1fr)); gap:8px; margin:8px 0 10px; }
   .nasi-metric { background:#fff; border:1px solid #ecebe6; border-radius:7px; padding:8px 10px; }
   .nasi-metric span { display:block; font-size:9px; color:#898781; text-transform:uppercase; letter-spacing:.05em; }
   .nasi-metric strong { display:block; margin-top:2px; font:800 14px 'JetBrains Mono',monospace; }
@@ -319,90 +332,148 @@
   <p class="note" style="margin:12px 0 0;">SPY and QQQ use fixed candlestick charts with 20-day and 50-day moving averages. Each price axis auto-fits the visible candle range. T2108 stays on its own 0–100% axis, while FMP NASI is overlaid on a separate breadth axis for direct index-versus-internals comparison.</p>
 </section>
 
+
 <div class="benchmark-grid">
-  <section class="benchmark-module">
+  <section class="benchmark-module" id="spyBenchmarkModule">
     <div class="benchmark-chart-panel">
       <div class="benchmark-head">
-        <div><div class="benchmark-kicker">Broad-market benchmark</div><div class="benchmark-title">SPY Market Health</div><div class="benchmark-read neutral" id="spyBenchmarkRead">Assessing trend…</div></div>
+        <div>
+          <div class="benchmark-kicker">Broad-market benchmark</div>
+          <div class="benchmark-title">SPY Market Health</div>
+          <div class="benchmark-read neutral" id="spyBenchmarkRead">Assessing trend…</div>
+        </div>
         <div class="benchmark-stats" id="spyStats"></div>
       </div>
-      <div class="benchmark-chart"><canvas id="spyChart" role="img" aria-label="SPY chart with moving averages"></canvas></div>
-      <div class="benchmark-legend"><span><span class="swatch line" style="background:#4a3aa7"></span>20-day SMA</span><span><span class="swatch line" style="background:#d85a30"></span>50-day SMA</span><span><span class="swatch line" style="background:#eda100"></span>T2108</span><span><span class="swatch line" style="background:#0f766e"></span>FMP NASI</span><span><span class="swatch dash" style="border-color:#e34948"></span>20 / 80 zones</span></div>
-    </div>
-  </section>
-
-  <section class="benchmark-module">
-    <div class="benchmark-chart-panel">
-      <div class="benchmark-head">
-        <div><div class="benchmark-kicker">Growth / leadership benchmark</div><div class="benchmark-title">QQQ Market Health</div><div class="benchmark-read neutral" id="qqqBenchmarkRead">Assessing leadership…</div></div>
-        <div class="benchmark-stats" id="qqqStats"></div>
+      <div class="benchmark-chart">
+        <canvas id="spyChart" role="img" aria-label="SPY chart with moving averages"></canvas>
       </div>
-      <div class="benchmark-chart"><canvas id="qqqChart" role="img" aria-label="QQQ chart with moving averages"></canvas></div>
-      <div class="benchmark-legend"><span><span class="swatch line" style="background:#4a3aa7"></span>20-day SMA</span><span><span class="swatch line" style="background:#d85a30"></span>50-day SMA</span><span><span class="swatch line" style="background:#eda100"></span>T2108</span><span><span class="swatch line" style="background:#0f766e"></span>FMP NASI</span><span><span class="swatch dash" style="border-color:#e34948"></span>20 / 80 zones</span></div>
+      <div class="benchmark-legend">
+        <span><span class="swatch line" style="background:#4a3aa7"></span>20-day SMA</span>
+        <span><span class="swatch line" style="background:#d85a30"></span>50-day SMA</span>
+        <span><span class="swatch line" style="background:#eda100"></span>T2108</span>
+        <span><span class="swatch line" style="background:#0f766e"></span>FMP NASI</span>
+        <span><span class="swatch dash" style="border-color:#e34948"></span>20 / 80 zones</span>
+      </div>
     </div>
-  </section>
-</div>
 
-<div class="evidence-grid">
-  <section class="panel evidence-panel">
-    <div class="breadth-head"><p class="panel-label" style="margin:0">Breadth ratios (dashed reference = 1, up days equal down days)</p><span class="breadth-read" id="breadthRead">Assessing breadth impulse…</span></div>
-    <div class="chart-wrap"><canvas id="ratioChart" role="img" aria-label="Five-day and ten-day breadth ratios"></canvas></div>
-    <div class="legend" style="margin-top:8px;margin-bottom:0"><span><span class="swatch line" style="background:#1baf7a"></span>5-day ratio</span><span><span class="swatch dash" style="border-color:#e34948"></span>10-day ratio</span></div>
-  </section>
-  <section class="panel evidence-panel">
-    <div class="breadth-head"><p class="panel-label" style="margin:0">Quarterly breadth (stocks moving 25%+ over the quarter)</p><span class="breadth-read" id="quarterlyRead">Assessing structural breadth…</span></div>
-    <div class="chart-wrap"><canvas id="quarterlyChart" role="img" aria-label="Stocks up and down twenty-five percent or more over the quarter"></canvas></div>
-    <div class="legend" style="margin-top:8px;margin-bottom:0"><span><span class="swatch line" style="background:#1baf7a"></span>Up 25%+</span><span><span class="swatch line" style="background:#e34948"></span>Down 25%+</span></div>
-  </section>
-</div>
-
-
-<section class="panel institutional-panel" id="institutionalBreadthPanel" aria-labelledby="institutionalBreadthTitle">
-  <div class="institutional-head">
-    <div>
-      <div class="benchmark-kicker">Independent internal-market confirmation</div>
-      <div class="institutional-title" id="institutionalBreadthTitle">FMP Nasdaq Institutional Breadth Engine</div>
-      <div class="institutional-subtitle">Proprietary FMP-derived Nasdaq breadth series · McClellan Oscillator · Summation Index · risk and signal layer</div>
-    </div>
-    <span class="engine-feed-status" id="breadthEngineFeedStatus">Loading published breadth feeds…</span>
-  </div>
-
-  <div class="institutional-grid">
-    <div class="institutional-card" id="engineHealthCard"><div class="label">Breadth health</div><div class="value" id="engineHealth">—</div><div class="sub" id="engineHealthSub">0–100 composite</div></div>
-    <div class="institutional-card" id="engineRiskCard"><div class="label">Risk mode</div><div class="value" id="engineRisk">—</div><div class="sub">Internal positioning mode</div></div>
-    <div class="institutional-card" id="engineSignalCard"><div class="label">Signal</div><div class="value" id="engineSignal">—</div><div class="sub">Breadth switch / warning</div></div>
-    <div class="institutional-card" id="engineRegimeCard"><div class="label">Trend / regime</div><div class="value" id="engineRegime">—</div><div class="sub">Intermediate internal structure</div></div>
-    <div class="institutional-card" id="engineMomentumCard"><div class="label">Momentum</div><div class="value" id="engineMomentum">—</div><div class="sub">Short-term breadth impulse</div></div>
-    <div class="institutional-card" id="engineQualityCard"><div class="label">Data quality</div><div class="value" id="engineQuality">—</div><div class="sub" id="engineQualitySub">Eligible universe coverage</div></div>
-  </div>
-
-  <div class="nasi-metrics">
-    <div class="nasi-metric"><span>FMP NASI</span><strong id="engineNasi">—</strong></div>
-    <div class="nasi-metric"><span>NASI 50 SMA</span><strong id="engineNasiSma">—</strong></div>
-    <div class="nasi-metric"><span>NASI vs SMA</span><strong id="engineNasiDistance">—</strong></div>
-    <div class="nasi-metric"><span>McClellan Oscillator</span><strong id="engineOscillator">—</strong></div>
-  </div>
-
-  <div class="nasi-chart-wrap"><canvas id="nasiChart" role="img" aria-label="FMP Nasdaq McClellan Summation Index with fifty-day moving average"></canvas></div>
-  <div class="legend" style="margin-top:8px;margin-bottom:0"><span><span class="swatch line" style="background:#111827"></span>FMP NASI</span><span><span class="swatch line" style="background:#2a78d6"></span>50-day SMA</span><span><span class="swatch dash" style="border-color:#898781"></span>Zero reference</span></div>
-  <div class="engine-guidance" id="engineGuidance"><strong>Institutional breadth guidance:</strong> Waiting for the published FMP breadth engine.</div>
-  <div class="engine-source">This is an independently calculated FMP-derived breadth model and is not the official StockCharts $NASI series.</div>
-</section>
-
-<div class="danger-grid">
-  <section class="danger-panel">
-    <div class="danger-attached" id="spyDangerPanel" style="border-top:none;">
-      <div class="danger-head"><div class="danger-title"><span style="color:#eda100;font-weight:800">⚠</span><span class="panel-label" style="margin:0">SPY DANGER SIGNALS (<span id="spyDangerCount">0</span>)</span></div><span id="spyDangerBadge" style="padding:3px 10px;border-radius:100px;font-size:11px;font-family:'JetBrains Mono',monospace;font-weight:700;background:rgba(27,175,122,.15);color:#1baf7a">0 Active — Healthy</span></div>
+    <div class="danger-attached" id="spyDangerPanel">
+      <div class="danger-head">
+        <div class="danger-title">
+          <span style="color:#eda100;font-weight:800">⚠</span>
+          <span class="panel-label" style="margin:0">SPY DANGER SIGNALS (<span id="spyDangerCount">0</span>)</span>
+        </div>
+        <span id="spyDangerBadge" style="padding:3px 10px;border-radius:100px;font-size:11px;font-family:'JetBrains Mono',monospace;font-weight:700;background:rgba(27,175,122,.15);color:#1baf7a">0 Active — Healthy</span>
+      </div>
       <ul id="spyDangerList" class="danger-list"><li style="color:#898781;font-style:italic">Scanning for active signals...</li></ul>
     </div>
   </section>
-  <section class="danger-panel">
-    <div class="danger-attached" id="qqqDangerPanel" style="border-top:none;">
-      <div class="danger-head"><div class="danger-title"><span style="color:#eda100;font-weight:800">⚠</span><span class="panel-label" style="margin:0">QQQ DANGER SIGNALS (<span id="qqqDangerCount">0</span>)</span></div><span id="qqqDangerBadge" style="padding:3px 10px;border-radius:100px;font-size:11px;font-family:'JetBrains Mono',monospace;font-weight:700;background:rgba(27,175,122,.15);color:#1baf7a">0 Active — Healthy</span></div>
+
+  <section class="benchmark-module" id="qqqBenchmarkModule">
+    <div class="benchmark-chart-panel">
+      <div class="benchmark-head">
+        <div>
+          <div class="benchmark-kicker">Growth / leadership benchmark</div>
+          <div class="benchmark-title">QQQ Market Health</div>
+          <div class="benchmark-read neutral" id="qqqBenchmarkRead">Assessing leadership…</div>
+        </div>
+        <div class="benchmark-stats" id="qqqStats"></div>
+      </div>
+      <div class="benchmark-chart">
+        <canvas id="qqqChart" role="img" aria-label="QQQ chart with moving averages"></canvas>
+      </div>
+      <div class="benchmark-legend">
+        <span><span class="swatch line" style="background:#4a3aa7"></span>20-day SMA</span>
+        <span><span class="swatch line" style="background:#d85a30"></span>50-day SMA</span>
+        <span><span class="swatch line" style="background:#eda100"></span>T2108</span>
+        <span><span class="swatch line" style="background:#0f766e"></span>FMP NASI</span>
+        <span><span class="swatch dash" style="border-color:#e34948"></span>20 / 80 zones</span>
+      </div>
+    </div>
+
+    <div class="benchmark-subchart institutional-panel institutional-inline" id="institutionalBreadthPanel" aria-labelledby="institutionalBreadthTitle">
+      <div class="institutional-head">
+        <div>
+          <div class="benchmark-kicker">Nasdaq internal confirmation</div>
+          <div class="institutional-title" id="institutionalBreadthTitle">Institutional Breadth Confirmation</div>
+          <div class="institutional-subtitle">Compact NASI, McClellan and risk confirmation for the QQQ decision workflow.</div>
+          <a class="engine-link" href="nasi_institutional_command_center.html">Open full NASI Command Center ↗</a>
+        </div>
+        <span class="engine-feed-status" id="breadthEngineFeedStatus">Loading published breadth feeds…</span>
+      </div>
+
+      <div class="institutional-grid">
+        <div class="institutional-card" id="engineHealthCard"><div class="label">Breadth health</div><div class="value" id="engineHealth">—</div><div class="sub" id="engineHealthSub">0–100 composite</div></div>
+        <div class="institutional-card" id="engineRiskCard"><div class="label">Risk mode</div><div class="value" id="engineRisk">—</div><div class="sub">Internal positioning mode</div></div>
+        <div class="institutional-card" id="engineSignalCard"><div class="label">Signal</div><div class="value" id="engineSignal">—</div><div class="sub">Breadth switch / warning</div></div>
+        <div class="institutional-card" id="engineRegimeCard"><div class="label">Trend / regime</div><div class="value" id="engineRegime">—</div><div class="sub">Intermediate internal structure</div></div>
+        <div class="institutional-card" id="engineMomentumCard"><div class="label">Momentum</div><div class="value" id="engineMomentum">—</div><div class="sub">Short-term breadth impulse</div></div>
+        <div class="institutional-card" id="engineQualityCard"><div class="label">Data quality</div><div class="value" id="engineQuality">—</div><div class="sub" id="engineQualitySub">Eligible universe coverage</div></div>
+      </div>
+
+      <div class="nasi-metrics">
+        <div class="nasi-metric"><span>FMP NASI</span><strong id="engineNasi">—</strong></div>
+        <div class="nasi-metric"><span>NASI 50 SMA</span><strong id="engineNasiSma">—</strong></div>
+        <div class="nasi-metric"><span>NASI vs SMA</span><strong id="engineNasiDistance">—</strong></div>
+        <div class="nasi-metric"><span>McClellan Oscillator</span><strong id="engineOscillator">—</strong></div>
+      </div>
+
+      <div class="nasi-chart-wrap">
+        <canvas id="nasiChart" role="img" aria-label="FMP Nasdaq McClellan Summation Index with fifty-day moving average"></canvas>
+      </div>
+      <div class="legend" style="margin-top:8px;margin-bottom:0">
+        <span><span class="swatch line" style="background:#111827"></span>FMP NASI</span>
+        <span><span class="swatch line" style="background:#2a78d6"></span>50-day SMA</span>
+        <span><span class="swatch dash" style="border-color:#898781"></span>Zero reference</span>
+      </div>
+      <div class="engine-guidance" id="engineGuidance"><strong>Institutional breadth guidance:</strong> Waiting for the published FMP breadth engine.</div>
+    </div>
+
+    <div class="danger-attached" id="qqqDangerPanel">
+      <div class="danger-head">
+        <div class="danger-title">
+          <span style="color:#eda100;font-weight:800">⚠</span>
+          <span class="panel-label" style="margin:0">QQQ DANGER SIGNALS (<span id="qqqDangerCount">0</span>)</span>
+        </div>
+        <span id="qqqDangerBadge" style="padding:3px 10px;border-radius:100px;font-size:11px;font-family:'JetBrains Mono',monospace;font-weight:700;background:rgba(27,175,122,.15);color:#1baf7a">0 Active — Healthy</span>
+      </div>
       <ul id="qqqDangerList" class="danger-list"><li style="color:#898781;font-style:italic">Scanning for active signals...</li></ul>
     </div>
   </section>
 </div>
+
+<section class="panel breadth-evidence-panel" id="breadthEvidencePanel">
+  <div class="breadth-evidence-head">
+    <div class="benchmark-kicker">Stockbee participation evidence</div>
+    <div class="benchmark-title">Breadth Impulse × Quarterly Structure</div>
+    <div class="institutional-subtitle">Both charts share one synchronized date scale. The visible horizontal axis appears only beneath quarterly breadth.</div>
+  </div>
+
+  <div class="breadth-stack">
+    <div class="breadth-subchart">
+      <div class="breadth-head">
+        <p class="panel-label" style="margin:0">Breadth ratios (dashed reference = 1, up days equal down days)</p>
+        <span class="breadth-read" id="breadthRead">Assessing breadth impulse…</span>
+      </div>
+      <div class="chart-wrap"><canvas id="ratioChart" role="img" aria-label="Five-day and ten-day breadth ratios"></canvas></div>
+      <div class="legend" style="margin-top:8px;margin-bottom:0">
+        <span><span class="swatch line" style="background:#1baf7a"></span>5-day ratio</span>
+        <span><span class="swatch dash" style="border-color:#e34948"></span>10-day ratio</span>
+      </div>
+    </div>
+
+    <div class="breadth-subchart quarterly">
+      <div class="breadth-head">
+        <p class="panel-label" style="margin:0">Quarterly breadth (stocks moving 25%+ over the quarter)</p>
+        <span class="breadth-read" id="quarterlyRead">Assessing structural breadth…</span>
+      </div>
+      <div class="chart-wrap"><canvas id="quarterlyChart" role="img" aria-label="Stocks up and down twenty-five percent or more over the quarter"></canvas></div>
+      <div class="legend" style="margin-top:8px;margin-bottom:0">
+        <span><span class="swatch line" style="background:#1baf7a"></span>Up 25%+</span>
+        <span><span class="swatch line" style="background:#e34948"></span>Down 25%+</span>
+      </div>
+    </div>
+  </div>
+</section>
 
 <script>
 // ---- Seed data: last known-good snapshot ----
@@ -510,6 +581,80 @@ const commonX = {
   grid: { display: false },
   ticks: { color: '#898781', maxRotation: 0, autoSkip: true, maxTicksLimit: 8, font: { size: 10 } }
 };
+
+const hiddenCommonX = {
+  type: 'category',
+  grid: { display: false },
+  border: { display: false },
+  ticks: { display: false }
+};
+
+const synchronizedCursorPlugin = {
+  id: 'synchronizedCursor',
+  afterDraw(chart) {
+    const index = chart.$syncIndex;
+    if (index == null || !chart.scales?.x) return;
+    const x = chart.scales.x.getPixelForValue(index);
+    const area = chart.chartArea;
+    if (!Number.isFinite(x) || !area) return;
+    const ctx = chart.ctx;
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(x, area.top);
+    ctx.lineTo(x, area.bottom);
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 3]);
+    ctx.strokeStyle = 'rgba(44,62,80,.62)';
+    ctx.stroke();
+    ctx.restore();
+  }
+};
+Chart.register(synchronizedCursorPlugin);
+
+function linkChartGroup(charts) {
+  const valid = charts.filter(Boolean);
+  if (valid.length < 2) return;
+
+  const updateGroup = index => {
+    valid.forEach(chart => {
+      chart.$syncIndex = index;
+      const active = index == null
+        ? []
+        : chart.data.datasets
+            .map((dataset, datasetIndex) =>
+              dataset.data[index] != null ? { datasetIndex, index } : null
+            )
+            .filter(Boolean);
+
+      chart.setActiveElements(active);
+      chart.tooltip.setActiveElements(
+        active,
+        index == null
+          ? { x: 0, y: 0 }
+          : { x: chart.scales.x.getPixelForValue(index), y: chart.chartArea.top }
+      );
+      chart.update('none');
+    });
+  };
+
+  valid.forEach(source => {
+    const canvas = source.canvas;
+    if (canvas.dataset.syncHoverBound === '1') return;
+    canvas.dataset.syncHoverBound = '1';
+
+    canvas.addEventListener('mousemove', event => {
+      const points = source.getElementsAtEventForMode(
+        event,
+        'index',
+        { intersect: false },
+        false
+      );
+      if (points.length) updateGroup(points[0].index);
+    });
+
+    canvas.addEventListener('mouseleave', () => updateGroup(null));
+  });
+}
 
 function parseRows(rawRows) {
   const out = [];
@@ -804,30 +949,87 @@ function formatEngineNumber(value, decimals=0, signed=false) {
 function renderNasiChart(rows) {
   const canvas = document.getElementById('nasiChart');
   if (!canvas) return;
-  const labels = rows.map(row => displayIsoDate(row.date));
-  const datasets = [
-    { label:'FMP NASI', data:rows.map(row => row.nasi), borderColor:'#111827', pointRadius:0, borderWidth:2, tension:.12, segment:{ borderColor:ctx => ctx.p1.parsed.y >= ctx.p0.parsed.y ? '#111827' : '#e34948' } },
-    { label:'NASI 50 SMA', data:rows.map(row => row.nasi50), borderColor:'#2a78d6', pointRadius:0, borderWidth:1.8, tension:.12 },
-    { label:'Zero', data:rows.map(() => 0), borderColor:'#898781', borderDash:[4,3], pointRadius:0, borderWidth:1 }
-  ];
-  const options = { responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false}, plugins:{ legend:{display:false}, tooltip:{callbacks:{label:ctx => `${ctx.dataset.label}: ${ctx.parsed.y == null ? '—' : Number(ctx.parsed.y).toFixed(0)}`}} }, scales:{ x:{...commonX}, y:{ beginAtZero:false, grid:{color:'#ecebe6'}, ticks:{font:{size:10},color:'#898781'} } } };
-  if (!nasiChart) nasiChart = new Chart(canvas, { type:'line', data:{labels,datasets}, options });
-  else { nasiChart.data.labels = labels; nasiChart.data.datasets = datasets; nasiChart.update(); }
-}
 
+  const labels = currentData.map(row => row.date).concat(['','','']);
+  const snapshots = currentData.map(row => breadthSnapshotForDate(row.date));
+  const pad = values => values.concat([null, null, null]);
+
+  const datasets = [
+    {
+      label:'FMP NASI',
+      data:pad(snapshots.map(row => row && Number.isFinite(row.nasi) ? row.nasi : null)),
+      borderColor:'#111827',
+      pointRadius:0,
+      borderWidth:2,
+      tension:.12,
+      spanGaps:true,
+      segment:{borderColor:ctx => ctx.p1.parsed.y >= ctx.p0.parsed.y ? '#111827' : '#e34948'}
+    },
+    {
+      label:'NASI 50 SMA',
+      data:pad(snapshots.map(row => row && Number.isFinite(row.nasi50) ? row.nasi50 : null)),
+      borderColor:'#2a78d6',
+      pointRadius:0,
+      borderWidth:1.8,
+      tension:.12,
+      spanGaps:true
+    },
+    {
+      label:'Zero',
+      data:pad(currentData.map(() => 0)),
+      borderColor:'#898781',
+      borderDash:[4,3],
+      pointRadius:0,
+      borderWidth:1
+    }
+  ];
+
+  const options = {
+    responsive:true,
+    maintainAspectRatio:false,
+    interaction:{mode:'index',intersect:false},
+    plugins:{
+      legend:{display:false},
+      tooltip:{
+        callbacks:{
+          label:ctx => `${ctx.dataset.label}: ${ctx.parsed.y == null ? '—' : Number(ctx.parsed.y).toFixed(0)}`
+        }
+      }
+    },
+    scales:{
+      x:symbol==='QQQ'?hiddenCommonX:commonX,
+      y:{
+        beginAtZero:false,
+        grid:{color:'#ecebe6'},
+        ticks:{font:{size:10},color:'#898781'}
+      }
+    }
+  };
+
+  if (!nasiChart) {
+    nasiChart = new Chart(canvas, {type:'line',data:{labels,datasets},options});
+  } else {
+    nasiChart.data.labels = labels;
+    nasiChart.data.datasets = datasets;
+    nasiChart.options = options;
+    nasiChart.update();
+  }
+
+  linkChartGroup([qqqChart, nasiChart]);
+}
 function renderInstitutionalBreadth() {
   const panel = document.getElementById('institutionalBreadthPanel');
   if (!panel) return;
   const selectedDate = currentData.length ? currentData.at(-1).date : null;
   const snapshot = breadthSnapshotForDate(selectedDate);
   if (!snapshot) {
-    panel.className = 'panel institutional-panel';
+    panel.className = 'benchmark-subchart institutional-panel institutional-inline';
     document.getElementById('engineGuidance').innerHTML = `<strong>Institutional breadth guidance:</strong> ${breadthEngineLoadError || 'No FMP breadth observation is available for the selected date.'}`;
     renderNasiChart([]);
     return;
   }
   const tone = engineTone(snapshot);
-  panel.className = `panel institutional-panel tone-${tone === 'pos' ? 'bull' : tone === 'neg' ? 'bear' : 'warn'}`;
+  panel.className = `benchmark-subchart institutional-panel institutional-inline tone-${tone === 'pos' ? 'bull' : tone === 'neg' ? 'bear' : 'warn'}`;
 
   document.getElementById('engineHealth').textContent = formatEngineNumber(snapshot.healthScore, 0);
   document.getElementById('engineHealthSub').textContent = `As of ${snapshot.date} · 0–100 composite`;
@@ -1032,7 +1234,7 @@ function buildOrUpdateCharts() {
   if(!chartsBuilt){
     spyChart=new Chart(document.getElementById('spyChart'),{data:{labels,datasets:benchmarkDatasets('SPY').datasets},options:chartOptions('SPY')});
     qqqChart=new Chart(document.getElementById('qqqChart'),{data:{labels,datasets:benchmarkDatasets('QQQ').datasets},options:chartOptions('QQQ')});
-    ratioChart=new Chart(document.getElementById('ratioChart'),{type:'line',data:{labels,datasets:[{label:'5 day ratio',data:currentData.map(d=>d.r5),borderColor:'#1baf7a',pointRadius:0,borderWidth:2,tension:.15},{label:'10 day ratio',data:currentData.map(d=>d.r10),borderColor:'#e34948',borderDash:[5,3],pointRadius:0,borderWidth:2,tension:.15},{label:'Ratio = 1',data:currentData.map(()=>1),borderColor:'#898781',borderWidth:1,borderDash:[2,3],pointRadius:0}]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false}},scales:{x:commonX,y:{beginAtZero:true,grid:{color:'#ecebe6'},ticks:{font:{size:10},color:'#898781'}}}}});
+    ratioChart=new Chart(document.getElementById('ratioChart'),{type:'line',data:{labels,datasets:[{label:'5 day ratio',data:currentData.map(d=>d.r5),borderColor:'#1baf7a',pointRadius:0,borderWidth:2,tension:.15},{label:'10 day ratio',data:currentData.map(d=>d.r10),borderColor:'#e34948',borderDash:[5,3],pointRadius:0,borderWidth:2,tension:.15},{label:'Ratio = 1',data:currentData.map(()=>1),borderColor:'#898781',borderWidth:1,borderDash:[2,3],pointRadius:0}]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false}},scales:{x:hiddenCommonX,y:{beginAtZero:true,grid:{color:'#ecebe6'},ticks:{font:{size:10},color:'#898781'}}}}});
     quarterlyChart=new Chart(document.getElementById('quarterlyChart'),{type:'line',data:{labels,datasets:[{label:'Up 25%+',data:currentData.map(d=>d.up25q),borderColor:'#1baf7a',backgroundColor:'rgba(27,175,122,.08)',fill:true,pointRadius:0,borderWidth:2,tension:.15},{label:'Down 25%+',data:currentData.map(d=>d.down25q),borderColor:'#e34948',backgroundColor:'rgba(227,73,72,.06)',fill:true,pointRadius:0,borderWidth:2,tension:.15}]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${Number(ctx.parsed.y).toLocaleString()}`}}},scales:{x:commonX,y:{beginAtZero:false,grid:{color:'#ecebe6'},ticks:{font:{size:10},color:'#898781',callback:v=>Number(v).toLocaleString()}}}}});
     chartsBuilt=true;
   } else {
@@ -1041,6 +1243,7 @@ function buildOrUpdateCharts() {
     quarterlyChart.data.labels=labels;quarterlyChart.data.datasets[0].data=currentData.map(d=>d.up25q);quarterlyChart.data.datasets[1].data=currentData.map(d=>d.down25q);quarterlyChart.update();
   }
   updateBenchmarkStats('SPY'); updateBenchmarkStats('QQQ');
+  linkChartGroup([ratioChart, quarterlyChart]);
 }
 
 let dangerCounts = { spy: 0, qqq: 0 };
