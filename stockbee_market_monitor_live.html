@@ -993,7 +993,7 @@ function renderNasiChart(rows) {
       }
     },
     scales:{
-      x:hiddenCommonX,
+      x:commonX,
       y:{
         beginAtZero:false,
         grid:{color:'#ecebe6'},
@@ -1011,44 +1011,94 @@ function renderNasiChart(rows) {
     nasiChart.update();
   }
 
+  linkChartGroup([qqqChart, nasiChart]);
 }
 function renderInstitutionalBreadth() {
   const panel = document.getElementById('institutionalBreadthPanel');
   if (!panel) return;
-  const selectedDate = currentData.length ? currentData.at(-1).date : null;
+
+  const selectedDate = currentData.length
+    ? currentData.at(-1).date
+    : null;
+
   const snapshot = breadthSnapshotForDate(selectedDate);
+
   if (!snapshot) {
-    panel.className = 'benchmark-subchart institutional-panel institutional-inline';
-    document.getElementById('engineGuidance').innerHTML = `<strong>Institutional breadth guidance:</strong> ${breadthEngineLoadError || 'No FMP breadth observation is available for the selected date.'}`;
+    panel.className =
+      'benchmark-subchart institutional-panel institutional-inline';
+
+    const guidance =
+      document.getElementById('engineGuidance');
+
+    if (guidance) {
+      guidance.innerHTML =
+        `<strong>Institutional breadth guidance:</strong> ${
+          breadthEngineLoadError ||
+          'No FMP breadth observation is available for the selected date.'
+        }`;
+    }
+
     renderNasiChart([]);
     return;
   }
+
   const tone = engineTone(snapshot);
-  panel.className = `benchmark-subchart institutional-panel institutional-inline tone-${tone === 'pos' ? 'bull' : tone === 'neg' ? 'bear' : 'warn'}`;
 
-  document.getElementById('engineHealth').textContent = formatEngineNumber(snapshot.healthScore, 0);
-  document.getElementById('engineHealthSub').textContent = `As of ${snapshot.date} · 0–100 composite`;
-  document.getElementById('engineRisk').textContent = snapshot.riskMode || '—';
-  document.getElementById('engineSignal').textContent = snapshot.signal || '—';
-  document.getElementById('engineRegime').textContent = snapshot.regime || '—';
-  document.getElementById('engineMomentum').textContent = snapshot.momentum || '—';
-  document.getElementById('engineQuality').textContent = Number.isFinite(snapshot.dataQuality) ? `${(snapshot.dataQuality*100).toFixed(1)}%` : '—';
-  document.getElementById('engineQualitySub').textContent = `${formatEngineNumber(snapshot.eligible)} eligible stocks`;
-  document.getElementById('engineNasi').textContent = formatEngineNumber(snapshot.nasi, 0, true);
-  document.getElementById('engineNasiSma').textContent = formatEngineNumber(snapshot.nasi50, 0, true);
-  document.getElementById('engineNasiDistance').textContent = formatEngineNumber(snapshot.nasiVs50, 0, true);
-  document.getElementById('engineOscillator').textContent = formatEngineNumber(snapshot.oscillator, 1, true);
-  document.getElementById('engineGuidance').innerHTML = `<strong>Institutional breadth guidance:</strong> ${snapshot.guidance || 'No tactical guidance supplied.'} <span style="color:#898781">Risk mode: ${snapshot.riskMode || '—'} · Signal: ${snapshot.signal || '—'} · A/D ratio: ${formatEngineNumber(snapshot.adRatio,2)}.</span>`;
+  panel.className =
+    `benchmark-subchart institutional-panel institutional-inline tone-${
+      tone === 'pos'
+        ? 'bull'
+        : tone === 'neg'
+          ? 'bear'
+          : 'warn'
+    }`;
 
-  setInstitutionalCardTone('engineHealthCard', tone);
-  setInstitutionalCardTone('engineRiskCard', tone);
-  setInstitutionalCardTone('engineSignalCard', tone);
-  setInstitutionalCardTone('engineRegimeCard', tone);
-  setInstitutionalCardTone('engineMomentumCard', snapshot.oscillator > 0 ? 'pos' : snapshot.oscillator < 0 ? 'neg' : 'warn');
-  setInstitutionalCardTone('engineQualityCard', snapshot.dataQuality >= .97 ? 'pos' : snapshot.dataQuality >= .90 ? 'warn' : 'neg');
-  renderNasiChart(breadthRowsThroughSelectedDate());
+  const setText = (id, value) => {
+    const element = document.getElementById(id);
+    if (element) element.textContent = value;
+  };
+
+  setText(
+    'engineNasi',
+    formatEngineNumber(snapshot.nasi, 0, true)
+  );
+
+  setText(
+    'engineNasiSma',
+    formatEngineNumber(snapshot.nasi50, 0, true)
+  );
+
+  setText(
+    'engineNasiDistance',
+    formatEngineNumber(snapshot.nasiVs50, 0, true)
+  );
+
+  setText(
+    'engineOscillator',
+    formatEngineNumber(snapshot.oscillator, 1, true)
+  );
+
+  const guidance =
+    document.getElementById('engineGuidance');
+
+  if (guidance) {
+    guidance.innerHTML =
+      `<strong>Institutional breadth guidance:</strong> ${
+        snapshot.guidance ||
+        'No tactical guidance supplied.'
+      } ` +
+      `<span style="color:#898781">` +
+      `As of ${snapshot.date} · ` +
+      `Risk mode: ${snapshot.riskMode || '—'} · ` +
+      `Signal: ${snapshot.signal || '—'} · ` +
+      `A/D ratio: ${formatEngineNumber(snapshot.adRatio, 2)}.` +
+      `</span>`;
+  }
+
+  renderNasiChart(
+    breadthRowsThroughSelectedDate()
+  );
 }
-
 function applyInstitutionalBreadthDecisionLayer(today) {
   const snapshot = breadthSnapshotForDate(today?.date);
   if (!snapshot) return;
