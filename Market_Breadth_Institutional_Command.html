@@ -1,10 +1,11 @@
-<!doctype html>
-<html lang="en" data-theme="light">
+<!DOCTYPE html>
+
+<html data-theme="light" lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="color-scheme" content="light dark">
-<title>Market Breadth Institutional Command 4.3</title>
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1" name="viewport"/>
+<meta content="light dark" name="color-scheme"/>
+<title>Market Breadth Institutional Command 4.4</title>
 <style>
 :root{
   --bg:#f2f5f9;--panel:#ffffff;--panel2:#f7f9fc;--ink:#132033;--muted:#657189;--line:#dbe3ee;
@@ -51,190 +52,150 @@ footer{padding:12px;text-align:center;color:var(--muted);font:600 9px var(--mono
 <body>
 <div class="app">
 <header class="topbar">
-  <div class="topbar-inner">
-    <div class="brand">
-      <div class="eyebrow">Cross-Universe Participation · Leadership · Fragility · Risk Budget</div>
-      <h1>Market Breadth Institutional Command 4.3</h1>
-      <div class="subline" id="subline">Cache-first institutional synthesis · sector context + thematic leadership</div>
-    </div>
-    <div class="actions">
-      <button class="btn primary" id="refreshBtn">↻ Refresh Live Data</button>
-      <button class="btn" id="settingsBtn">Settings</button>
-      <div class="theme-switch"><button id="lightBtn">Light</button><button id="darkBtn">Dark</button></div>
-    </div>
-  </div>
-  <div class="statusbar warn" id="statusBar"><span id="statusText">Preparing dashboard…</span><span id="statusRight">One API call · no page-to-page scraping</span></div>
+<div class="topbar-inner">
+<div class="brand">
+<div class="eyebrow">Cross-Universe Participation · Leadership · Fragility · Risk Budget</div>
+<h1>Market Breadth Institutional Command 4.4</h1>
+<div class="subline" id="subline">Cache-first institutional synthesis · sector context + thematic leadership</div>
+</div>
+<div class="actions">
+<button class="btn primary" id="refreshBtn">↻ Refresh Live Data</button>
+<button class="btn" id="settingsBtn">Settings</button>
+<div class="theme-switch"><button id="lightBtn">Light</button><button id="darkBtn">Dark</button></div>
+</div>
+</div>
+<div class="statusbar warn" id="statusBar"><span id="statusText">Preparing dashboard…</span><span id="statusRight">One API call · no page-to-page scraping</span></div>
 </header>
-
 <div class="timebar">
-  <button class="btn icon" id="prevBtn">◀</button>
-  <button class="btn small" id="playBtn">▶ Play</button>
-  <button class="btn icon" id="nextBtn">▶</button>
-  <input id="timeSlider" type="range" min="0" max="0" value="0">
-  <input id="dateInput" type="date">
-  <div class="time-read" id="timeRead">Latest</div>
+<button class="btn icon" id="prevBtn">◀</button>
+<button class="btn small" id="playBtn">▶ Play</button>
+<button class="btn icon" id="nextBtn">▶</button>
+<input id="timeSlider" max="0" min="0" type="range" value="0"/>
+<input id="dateInput" type="date"/>
+<div class="time-read" id="timeRead">Latest</div>
 </div>
-
 <main class="grid">
-  <section class="span12 master-strip">
-    <div class="master-cell"><div class="metric-kicker">Canonical Regime</div><div class="metric-main" id="mRegime">—</div><div class="metric-sub" id="mRegimeSub">Unified regime engine</div></div>
-    <div class="master-cell"><div class="metric-kicker">CIO Master Score</div><div class="metric-main score-big" id="mScore">—</div><div class="metric-sub" id="mScoreSub">0–100</div></div>
-    <div class="master-cell"><div class="metric-kicker">Risk Budget</div><div class="metric-main" id="mBudget">—</div><div class="metric-sub" id="mBudgetSub">Portfolio exposure range</div></div>
-    <div class="master-cell"><div class="metric-kicker">Participation</div><div class="metric-main" id="mParticipation">—</div><div class="metric-sub" id="mParticipationSub">S&P 50DMA breadth</div></div>
-    <div class="master-cell"><div class="metric-kicker">Leadership</div><div class="metric-main" id="mLeadership">—</div><div class="metric-sub" id="mLeadershipSub">Industry/theme density</div></div>
-    <div class="master-cell"><div class="metric-kicker">Fragility Risk</div><div class="metric-main" id="mFragility">—</div><div class="metric-sub" id="mFragilitySub">Active fracture conditions</div></div>
-    <div class="master-cell"><div class="metric-kicker">What Changed</div><div class="metric-main" id="mChange">—</div><div class="metric-sub" id="mChangeSub">1D / 5D score change</div></div>
-  </section>
-
-  <section class="card directive span8" id="directiveCard">
-    <div class="card-head"><div><div class="card-title">CIO Market Directive</div><div class="card-sub">One canonical conclusion · explicit execution rules · historical replay clearly separated</div></div><span class="pill warn" id="directivePill">AWAITING DATA</span></div>
-    <div class="card-body">
-      <div class="directive-title" id="directiveTitle">Waiting for the Market Intelligence API</div>
-      <div class="directive-lead" id="directiveLead">The dashboard will render from one fault-tolerant JSON payload. No RS Radar, Group Momentum or Market Monitor page scraping is used.</div>
-      <div class="directive-grid">
-        <div class="directive-item"><span>Position Size</span><strong id="dirSize">—</strong></div>
-        <div class="directive-item"><span>Setup Standard</span><strong id="dirSetup">—</strong></div>
-        <div class="directive-item"><span>Leadership Focus</span><strong id="dirLeadership">—</strong></div>
-        <div class="directive-item"><span>Primary Risk</span><strong id="dirRisk">—</strong></div>
-      </div>
-      <div class="triggers">
-        <div class="trigger-box"><h4 style="color:var(--green)">Upgrade Triggers</h4><ul id="upgradeList"></ul></div>
-        <div class="trigger-box"><h4 style="color:var(--red)">Downgrade Triggers</h4><ul id="downgradeList"></ul></div>
-      </div>
-    </div>
-  </section>
-
-  <section class="card span4">
-    <div class="card-head"><div><div class="card-title">Data Integrity</div><div class="card-sub">Freshness, completeness and independent source health</div></div><span class="pill" id="integrityPill">0/3</span></div>
-    <div class="card-body">
-      <div class="integrity-grid">
-        <div class="integrity-cell"><span>Selected Date</span><strong id="iDate">—</strong></div>
-        <div class="integrity-cell"><span>Completeness</span><strong id="iComplete">—</strong></div>
-        <div class="integrity-cell"><span>API Mode</span><strong id="iMode">—</strong></div>
-        <div class="integrity-cell"><span>Latency</span><strong id="iLatency">—</strong></div>
-      </div>
-      <div class="source-list" id="sourceList"></div>
-    </div>
-  </section>
-
-  <section class="card span5">
-    <div class="card-head"><div><div class="card-title">Single Score Construction</div><div class="card-sub">One CIO score; missing components are renormalized rather than defaulted</div></div><span class="pill info" id="scorePill">CANONICAL</span></div>
-    <div class="card-body score-layout">
-      <div class="gauge" id="scoreGauge"><div class="gauge-inner"><div><strong id="scoreValue">—</strong><span id="scoreLabel">CIO score</span></div></div></div>
-      <div class="component-list" id="componentList"></div>
-    </div>
-  </section>
-
-  <section class="card span7">
-    <div class="card-head"><div><div class="card-title">Cross-Universe Breadth Structure</div><div class="card-sub">Current S&P constituent participation · sector aggregate · NASDAQ internal confirmation</div></div><span class="pill" id="breadthPill">—</span></div>
-    <div class="card-body">
-      <div class="tile-grid">
-        <div class="tile"><div class="tile-label">S&P Above 20DMA</div><div class="tile-value" id="b20">—</div><div class="tile-note" id="b20n">Tactical participation</div></div>
-        <div class="tile"><div class="tile-label">S&P Above 50DMA</div><div class="tile-value" id="b50">—</div><div class="tile-note" id="b50n">Intermediate participation</div></div>
-        <div class="tile"><div class="tile-label">S&P Above 200DMA</div><div class="tile-value" id="b200">—</div><div class="tile-note" id="b200n">Structural participation</div></div>
-        <div class="tile"><div class="tile-label">Advance / Decline</div><div class="tile-value" id="bad">—</div><div class="tile-note" id="badn">Current-session participation balance</div></div>
-        <div class="tile"><div class="tile-label">New Highs / Lows</div><div class="tile-value" id="bhl">—</div><div class="tile-note" id="bhln">52-week breadth pressure</div></div>
-        <div class="tile"><div class="tile-label">NASDAQ NASI</div><div class="tile-value" id="bnasi">—</div><div class="tile-note" id="bnasin">McClellan summation confirmation</div></div>
-      </div>
-      <div class="readout" id="breadthRead">Awaiting verified breadth data.</div>
-    </div>
-  </section>
-
-  <section class="card span12">
-    <div class="card-head"><div><div class="card-title">S&P &amp; Sector Breadth Confirmation</div><div class="card-sub">Constituent breadth versus sector-ETF aggregate participation</div></div><span class="pill" id="confirmPill">—</span></div>
-    <div class="card-body">
-      <div class="ring-group-title">S&P 500 Current-Constituent Breadth</div>
-      <div class="rings" id="ringsMarket"></div>
-      <div class="ring-group-title" style="margin-top:13px">Sector ETF Aggregate Breadth</div>
-      <div class="rings" id="ringsSector"></div>
-      <div class="readout" id="confirmRead">Awaiting confirmation data.</div>
-    </div>
-  </section>
-
-  <section class="card span12">
-    <div class="card-head"><div><div class="card-title">Breadth Evidence Workbench</div><div class="card-sub">All charts are rendered from the same Market Intelligence API payload</div></div><div class="chart-toolbar" id="chartToolbar"><button data-chart="breadth" class="active">S&P Breadth</button><button data-chart="sector">Sector Breadth</button><button data-chart="price">SPY / QQQ</button><button data-chart="internals">Net Internals</button><button data-chart="volatility">VIX / VVIX</button></div></div>
-    <div class="card-body"><div class="chart-metrics" id="chartMetrics"></div><div class="chart-wrap"><canvas id="mainChart"></canvas></div><div class="chart-legend" id="chartLegend"></div><div class="readout" id="chartRead">Select a diagnostic above.</div></div>
-  </section>
-
-  <section class="card span12">
-    <div class="card-head"><div><div class="card-title">Risk Constraint Suite</div><div class="card-sub">Volatility · distribution pressure · capital allocation · fragility</div></div><span class="pill" id="riskPill">—</span></div>
-    <div class="card-body"><div class="risk-grid">
-      <div class="risk-card"><div class="risk-top"><div class="risk-name">Market Mood</div><span class="pill" id="moodPill">—</span></div><div class="risk-main" id="moodMain">—</div><div class="risk-sub" id="moodSub">VVIX/VIX when available; VIX-only fallback is labelled.</div><div class="risk-metrics"><div class="risk-metric"><span>VIX</span><b id="moodVix">—</b></div><div class="risk-metric"><span>VVIX</span><b id="moodVvix">—</b></div><div class="risk-metric"><span>Ratio</span><b id="moodRatio">—</b></div><div class="risk-metric"><span>Method</span><b id="moodMethod">—</b></div></div></div>
-      <div class="risk-card"><div class="risk-top"><div class="risk-name">Distribution Pressure</div><span class="pill" id="distPill">—</span></div><div class="risk-main" id="distMain">—</div><div class="risk-sub">Rolling 25-session down-volume pressure in SPY and QQQ.</div><div class="risk-metrics"><div class="risk-metric"><span>SPY Count</span><b id="distSpy">—</b></div><div class="risk-metric"><span>QQQ Count</span><b id="distQqq">—</b></div><div class="risk-metric"><span>SPY State</span><b id="distSpyState">—</b></div><div class="risk-metric"><span>QQQ State</span><b id="distQqqState">—</b></div></div></div>
-      <div class="risk-card"><div class="risk-top"><div class="risk-name">Capital Allocation</div><span class="pill" id="capitalPill">—</span></div><div class="risk-main" id="capitalMain">—</div><div class="risk-sub">Macro and factor-relative risk capacity from the private FMP bridge.</div><div class="risk-metrics"><div class="risk-metric"><span>SPY / Gold</span><b id="capGold">—</b></div><div class="risk-metric"><span>Credit</span><b id="capCredit">—</b></div><div class="risk-metric"><span>Momentum / Value</span><b id="capMom">—</b></div><div class="risk-metric"><span>Equal Weight</span><b id="capEqual">—</b></div></div></div>
-      <div class="risk-card"><div class="risk-top"><div class="risk-name">Fragility Monitor</div><span class="pill" id="fragPill">—</span></div><div class="risk-main" id="fragMain">—</div><div class="risk-sub" id="fragSub">Multi-factor fracture conditions across breadth, price, volatility and leadership.</div><div class="risk-metrics"><div class="risk-metric"><span>Active</span><b id="fragActive">—</b></div><div class="risk-metric"><span>Total</span><b id="fragTotal">—</b></div><div class="risk-metric"><span>SPY Trend</span><b id="fragSpy">—</b></div><div class="risk-metric"><span>QQQ Trend</span><b id="fragQqq">—</b></div></div></div>
-    </div></div>
-  </section>
-
-  <section class="card span12">
-    <div class="card-head"><div><div class="card-title">Industry &amp; Theme Rotation Matrix · RRG-Style</div><div class="card-sub">Top thematic groups · cross-sectional relative-strength rank × five-day momentum</div></div><span class="pill info" id="rrgPill">THEME ROTATION</span></div>
-    <div class="card-body rrg-layout">
-      <div class="rrg-canvas"><canvas id="rrgCanvas"></canvas></div>
-      <div class="quadrants">
-        <div class="quad"><h4 style="color:var(--green)">Leading / Expanding</h4><div id="rrgLeading"></div></div>
-        <div class="quad"><h4 style="color:var(--blue)">Improving / Emerging</h4><div id="rrgImproving"></div></div>
-        <div class="quad"><h4 style="color:var(--amber)">Strong / Deteriorating</h4><div id="rrgWeakening"></div></div>
-        <div class="quad"><h4 style="color:var(--red)">Weak / Deteriorating</h4><div id="rrgLagging"></div></div>
-      </div>
-    </div>
-  </section>
-
-  <section class="card span12">
-    <div class="card-head"><div><div class="card-title">Group Momentum Confirmation · Persistence × Acceleration × Multi-Timeframe Alignment</div><div class="card-sub">Confirmation layer between theme rotation and trade selection · current Market Plan fields, no duplicated sector rows</div></div><span class="pill" id="groupMomentumPill">—</span></div>
-    <div class="card-body">
-      <div class="group-summary">
-        <div class="group-stat"><span>Confirmed</span><b id="gmConfirmed">—</b><small>Strong across horizons</small></div>
-        <div class="group-stat"><span>Emerging</span><b id="gmEmerging">—</b><small>Improving but incomplete</small></div>
-        <div class="group-stat"><span>Fading</span><b id="gmFading">—</b><small>Strong RS, weakening impulse</small></div>
-        <div class="group-stat"><span>Average Alignment</span><b id="gmAlignment">—</b><small>Positive signals out of five</small></div>
-        <div class="group-stat"><span>Best Confirmed Group</span><b id="gmBest">—</b><small id="gmBestName">No verified group</small></div>
-      </div>
-      <div class="table-wrap" style="max-height:390px"><table><thead><tr><th>Rank / Group</th><th>1D</th><th>5D</th><th>YTD</th><th>RS Rank</th><th>Thrust</th><th>MTF Alignment</th><th>Persistence Proxy*</th><th>Acceleration</th><th>Confirmation</th><th>State</th></tr></thead><tbody id="groupMomentumBody"></tbody></table></div>
-      <div class="proxy-note">* Persistence is a transparent current-state proxy built from relative-strength rank, RS thrust, YTD trend and proximity to the 52-week high. True historical rank persistence and rank-change will replace this proxy when the Group Momentum history is added to the Market Intelligence API.</div>
-    </div>
-  </section>
-
-  <section class="card span5">
-    <div class="card-head"><div><div class="card-title">Actionable Leadership Density</div><div class="card-sub">How broad and investable current industry/theme leadership is</div></div><span class="pill" id="densityPill">—</span></div>
-    <div class="card-body lead-density">
-      <div class="density-ring" id="densityRing"><div class="density-inner"><div><strong id="densityValue">—</strong><span>Leadership density</span></div></div></div>
-      <div><div class="count-grid"><div class="count-card"><b id="cntLead">—</b><span>Leading</span></div><div class="count-card"><b id="cntImprove">—</b><span>Improving</span></div><div class="count-card"><b id="cntWeak">—</b><span>Weakening</span></div><div class="count-card"><b id="cntLag">—</b><span>Lagging</span></div><div class="count-card"><b id="cntTotal">—</b><span>Total</span></div></div><div class="top-leaders" id="topLeaders"></div></div>
-    </div>
-  </section>
-
-  <section class="card span7">
-    <div class="card-head"><div><div class="card-title">Sector Relative Structure</div><div class="card-sub">Broad sector ETFs · XLY, XLC, XLE, XLI, XLF, XLK and peers</div></div><span class="pill" id="structurePill">11 SECTORS</span></div>
-    <div class="card-body"><div class="table-wrap" style="max-height:350px"><table><thead><tr><th>Sector ETF</th><th>Score</th><th>1D</th><th>5D</th><th>YTD</th><th>RS Rank</th><th>Thrust</th><th>State</th></tr></thead><tbody id="structureBody"></tbody></table></div></div>
-  </section>
-
-  <section class="card span12">
-    <div class="card-head"><div><div class="card-title">Actionable Theme Leadership</div><div class="card-sub">Industry and thematic ETFs only · actionable groups ranked separately from broad sectors</div></div><span class="pill" id="leadTablePill">—</span></div>
-    <div class="card-body"><div class="readout warn" style="margin-bottom:7px">* RS Rank uses the published 1-month RS value when available; otherwise it uses a transparent cross-sectional rank from thrust, 5-day momentum, YTD performance and proximity to the 52-week high.</div><div class="table-wrap"><table><thead><tr><th>Rank / Theme</th><th>Score</th><th>1D</th><th>5D</th><th>YTD</th><th>RS Rank*</th><th>RS Thrust</th><th>Off 52W</th><th>Quadrant</th><th>Action</th></tr></thead><tbody id="leadershipBody"></tbody></table></div></div>
-  </section>
-
-  <section class="card span12">
-    <div class="card-head"><div><div class="card-title">Methodology &amp; Audit</div><div class="card-sub">What is verified, what is current-only and what the score does not claim</div></div><span class="pill info">TRANSPARENT</span></div>
-    <div class="card-body audit-grid">
-      <div class="audit"><h4>Single Data Contract</h4><p>The page makes one cache-first JSONP request to <b>action=intelligence</b>. It does not scrape RS Radar, Group Momentum, Market Monitor or any other HTML page.</p></div>
-      <div class="audit"><h4>Breadth Methodology</h4><p id="auditBreadth">Current-constituent equal-weight participation. Historical membership is not reconstructed, so survivorship bias is disclosed rather than hidden.</p></div>
-      <div class="audit"><h4>Historical Replay</h4><p>Replay uses the verified 65-session S&P breadth cache plus available SPY/QQQ/VIX series. Current thematic leadership and Market Plan internals are not backfilled into prior dates.</p></div>
-    </div>
-  </section>
-</main>
-<footer>Market Breadth Institutional Command 4.3 · cache-first Market Intelligence API · no private FMP key in this HTML · broad sectors define allocation context; industry and thematic groups drive leadership discovery.</footer>
+<section class="span12 master-strip">
+<div class="master-cell"><div class="metric-kicker">Canonical Regime</div><div class="metric-main" id="mRegime">—</div><div class="metric-sub" id="mRegimeSub">Unified regime engine</div></div>
+<div class="master-cell"><div class="metric-kicker">CIO Master Score</div><div class="metric-main score-big" id="mScore">—</div><div class="metric-sub" id="mScoreSub">0–100</div></div>
+<div class="master-cell"><div class="metric-kicker">Risk Budget</div><div class="metric-main" id="mBudget">—</div><div class="metric-sub" id="mBudgetSub">Portfolio exposure range</div></div>
+<div class="master-cell"><div class="metric-kicker">Participation</div><div class="metric-main" id="mParticipation">—</div><div class="metric-sub" id="mParticipationSub">S&amp;P 50DMA breadth</div></div>
+<div class="master-cell"><div class="metric-kicker">Leadership</div><div class="metric-main" id="mLeadership">—</div><div class="metric-sub" id="mLeadershipSub">Industry/theme density</div></div>
+<div class="master-cell"><div class="metric-kicker">Fragility Risk</div><div class="metric-main" id="mFragility">—</div><div class="metric-sub" id="mFragilitySub">Active fracture conditions</div></div>
+<div class="master-cell"><div class="metric-kicker">What Changed</div><div class="metric-main" id="mChange">—</div><div class="metric-sub" id="mChangeSub">1D / 5D score change</div></div>
+</section>
+<section class="card directive span8" id="directiveCard">
+<div class="card-head"><div><div class="card-title">CIO Market Directive</div><div class="card-sub">One canonical conclusion · explicit execution rules · historical replay clearly separated</div></div><span class="pill warn" id="directivePill">AWAITING DATA</span></div>
+<div class="card-body">
+<div class="directive-title" id="directiveTitle">Waiting for the Market Intelligence API</div>
+<div class="directive-lead" id="directiveLead">The dashboard will render from one fault-tolerant JSON payload. No RS Radar, Group Momentum or Market Monitor page scraping is used.</div>
+<div class="directive-grid">
+<div class="directive-item"><span>Position Size</span><strong id="dirSize">—</strong></div>
+<div class="directive-item"><span>Setup Standard</span><strong id="dirSetup">—</strong></div>
+<div class="directive-item"><span>Leadership Focus</span><strong id="dirLeadership">—</strong></div>
+<div class="directive-item"><span>Primary Risk</span><strong id="dirRisk">—</strong></div>
 </div>
+<div class="triggers">
+<div class="trigger-box"><h4 style="color:var(--green)">Upgrade Triggers</h4><ul id="upgradeList"></ul></div>
+<div class="trigger-box"><h4 style="color:var(--red)">Downgrade Triggers</h4><ul id="downgradeList"></ul></div>
+</div>
+</div>
+</section>
+<section class="card span4">
+<div class="card-head"><div><div class="card-title">Data Integrity</div><div class="card-sub">Freshness, completeness and independent source health</div></div><span class="pill" id="integrityPill">0/3</span></div>
+<div class="card-body">
+<div class="integrity-grid">
+<div class="integrity-cell"><span>Selected Date</span><strong id="iDate">—</strong></div>
+<div class="integrity-cell"><span>Completeness</span><strong id="iComplete">—</strong></div>
+<div class="integrity-cell"><span>API Mode</span><strong id="iMode">—</strong></div>
+<div class="integrity-cell"><span>Latency</span><strong id="iLatency">—</strong></div>
+</div>
+<div class="source-list" id="sourceList"></div>
+</div>
+</section>
+<section class="card span5">
+<div class="card-head"><div><div class="card-title">Single Score Construction</div><div class="card-sub">One CIO score; missing components are renormalized rather than defaulted</div></div><span class="pill info" id="scorePill">CANONICAL</span></div>
+<div class="card-body score-layout">
+<div class="gauge" id="scoreGauge"><div class="gauge-inner"><div><strong id="scoreValue">—</strong><span id="scoreLabel">CIO score</span></div></div></div>
+<div class="component-list" id="componentList"></div>
+</div>
+</section>
+<section class="card span7">
+<div class="card-head"><div><div class="card-title">Cross-Universe Breadth Structure</div><div class="card-sub">Current S&amp;P constituent participation · sector aggregate · NASDAQ internal confirmation</div></div><span class="pill" id="breadthPill">—</span></div>
+<div class="card-body">
+<div class="tile-grid">
+<div class="tile"><div class="tile-label">S&amp;P Above 20DMA</div><div class="tile-value" id="b20">—</div><div class="tile-note" id="b20n">Tactical participation</div></div>
+<div class="tile"><div class="tile-label">S&amp;P Above 50DMA</div><div class="tile-value" id="b50">—</div><div class="tile-note" id="b50n">Intermediate participation</div></div>
+<div class="tile"><div class="tile-label">S&amp;P Above 200DMA</div><div class="tile-value" id="b200">—</div><div class="tile-note" id="b200n">Structural participation</div></div>
+<div class="tile"><div class="tile-label">Advance / Decline</div><div class="tile-value" id="bad">—</div><div class="tile-note" id="badn">Current-session participation balance</div></div>
+<div class="tile"><div class="tile-label">New Highs / Lows</div><div class="tile-value" id="bhl">—</div><div class="tile-note" id="bhln">52-week breadth pressure</div></div>
+<div class="tile"><div class="tile-label">NASDAQ NASI</div><div class="tile-value" id="bnasi">—</div><div class="tile-note" id="bnasin">McClellan summation confirmation</div></div>
+</div>
+<div class="readout" id="breadthRead">Awaiting verified breadth data.</div>
+</div>
+</section>
+<section class="card span12">
+<div class="card-head"><div><div class="card-title">S&amp;P &amp; Sector Breadth Confirmation</div><div class="card-sub">Constituent breadth versus sector-ETF aggregate participation</div></div><span class="pill" id="confirmPill">—</span></div>
+<div class="card-body">
+<div class="ring-group-title">S&amp;P 500 Current-Constituent Breadth</div>
+<div class="rings" id="ringsMarket"></div>
+<div class="ring-group-title" style="margin-top:13px">Sector ETF Aggregate Breadth</div>
+<div class="rings" id="ringsSector"></div>
+<div class="readout" id="confirmRead">Awaiting confirmation data.</div>
+</div>
+</section>
+<section class="card span12">
+<div class="card-head"><div><div class="card-title">Breadth Evidence Workbench</div><div class="card-sub">All charts are rendered from the same Market Intelligence API payload</div></div><div class="chart-toolbar" id="chartToolbar"><button class="active" data-chart="breadth">S&amp;P Breadth</button><button data-chart="sector">Sector Breadth</button><button data-chart="price">SPY / QQQ</button><button data-chart="internals">Net Internals</button><button data-chart="volatility">VIX / VVIX</button></div></div>
+<div class="card-body"><div class="chart-metrics" id="chartMetrics"></div><div class="chart-wrap"><canvas id="mainChart"></canvas></div><div class="chart-legend" id="chartLegend"></div><div class="readout" id="chartRead">Select a diagnostic above.</div></div>
+</section>
+<section class="card span12">
+<div class="card-head"><div><div class="card-title">Risk Constraint Suite</div><div class="card-sub">Volatility · distribution pressure · capital allocation · fragility</div></div><span class="pill" id="riskPill">—</span></div>
+<div class="card-body"><div class="risk-grid">
+<div class="risk-card"><div class="risk-top"><div class="risk-name">Market Mood</div><span class="pill" id="moodPill">—</span></div><div class="risk-main" id="moodMain">—</div><div class="risk-sub" id="moodSub">VVIX/VIX when available; VIX-only fallback is labelled.</div><div class="risk-metrics"><div class="risk-metric"><span>VIX</span><b id="moodVix">—</b></div><div class="risk-metric"><span>VVIX</span><b id="moodVvix">—</b></div><div class="risk-metric"><span>Ratio</span><b id="moodRatio">—</b></div><div class="risk-metric"><span>Method</span><b id="moodMethod">—</b></div></div></div>
+<div class="risk-card"><div class="risk-top"><div class="risk-name">Distribution Pressure</div><span class="pill" id="distPill">—</span></div><div class="risk-main" id="distMain">—</div><div class="risk-sub">Rolling 25-session down-volume pressure in SPY and QQQ.</div><div class="risk-metrics"><div class="risk-metric"><span>SPY Count</span><b id="distSpy">—</b></div><div class="risk-metric"><span>QQQ Count</span><b id="distQqq">—</b></div><div class="risk-metric"><span>SPY State</span><b id="distSpyState">—</b></div><div class="risk-metric"><span>QQQ State</span><b id="distQqqState">—</b></div></div></div>
+<div class="risk-card"><div class="risk-top"><div class="risk-name">Capital Allocation</div><span class="pill" id="capitalPill">—</span></div><div class="risk-main" id="capitalMain">—</div><div class="risk-sub">Macro and factor-relative risk capacity from the private FMP bridge.</div><div class="risk-metrics"><div class="risk-metric"><span>SPY / Gold</span><b id="capGold">—</b></div><div class="risk-metric"><span>Credit</span><b id="capCredit">—</b></div><div class="risk-metric"><span>Momentum / Value</span><b id="capMom">—</b></div><div class="risk-metric"><span>Equal Weight</span><b id="capEqual">—</b></div></div></div>
+<div class="risk-card"><div class="risk-top"><div class="risk-name">Fragility Monitor</div><span class="pill" id="fragPill">—</span></div><div class="risk-main" id="fragMain">—</div><div class="risk-sub" id="fragSub">Multi-factor fracture conditions across breadth, price, volatility and leadership.</div><div class="risk-metrics"><div class="risk-metric"><span>Active</span><b id="fragActive">—</b></div><div class="risk-metric"><span>Total</span><b id="fragTotal">—</b></div><div class="risk-metric"><span>SPY Trend</span><b id="fragSpy">—</b></div><div class="risk-metric"><span>QQQ Trend</span><b id="fragQqq">—</b></div></div></div>
+</div></div>
+</section><section class="card span12" id="leadershipConfirmationCard">
+<div class="card-head"><div><div class="card-title">Leadership Confirmation</div><div class="card-sub">Compact risk-context signal only · detailed discovery moved to Leadership Rotation Command Center</div></div><a class="pill info" href="leadership_rotation_command.html" style="text-decoration:none">OPEN ROTATION CENTER →</a></div>
+<div class="card-body">
+<div class="tile-grid">
+<div class="tile"><div class="tile-label">Leadership State</div><div class="tile-value" id="lcState">—</div><div class="tile-note">Broad, selective or narrow</div></div>
+<div class="tile"><div class="tile-label">Leadership Density</div><div class="tile-value" id="lcDensity">—</div><div class="tile-note">Investable themes / total themes</div></div>
+<div class="tile"><div class="tile-label">Leading / Improving</div><div class="tile-value" id="lcPositive">—</div><div class="tile-note">Positive rotation quadrants</div></div>
+<div class="tile"><div class="tile-label">Weakening / Lagging</div><div class="tile-value" id="lcNegative">—</div><div class="tile-note">Deteriorating rotation quadrants</div></div>
+<div class="tile"><div class="tile-label">Top Group</div><div class="tile-value" id="lcTop">—</div><div class="tile-note" id="lcTopNote">Highest verified leadership score</div></div>
+<div class="tile"><div class="tile-label">Risk Interpretation</div><div class="tile-value" id="lcRisk">—</div><div class="tile-note">Leadership confirmation for sizing</div></div>
+</div>
+<div class="readout" id="lcRead">Awaiting leadership confirmation.</div>
+</div>
+</section>
 
+
+
+
+
+<section class="card span12">
+<div class="card-head"><div><div class="card-title">Methodology &amp; Audit</div><div class="card-sub">What is verified, what is current-only and what the score does not claim</div></div><span class="pill info">TRANSPARENT</span></div>
+<div class="card-body audit-grid">
+<div class="audit"><h4>Single Data Contract</h4><p>The page makes one cache-first JSONP request to <b>action=intelligence</b>. It does not scrape RS Radar, Group Momentum, Market Monitor or any other HTML page.</p></div>
+<div class="audit"><h4>Breadth Methodology</h4><p id="auditBreadth">Current-constituent equal-weight participation. Historical membership is not reconstructed, so survivorship bias is disclosed rather than hidden.</p></div>
+<div class="audit"><h4>Historical Replay</h4><p>Replay uses the verified 65-session S&amp;P breadth cache plus available SPY/QQQ/VIX series. Current thematic leadership and Market Plan internals are not backfilled into prior dates.</p></div>
+</div>
+</section>
+</main>
+<footer>Market Breadth Institutional Command 4.4 · cache-first Market Intelligence API · no private FMP key in this HTML · detailed sector, industry and theme discovery is intentionally separated into the Leadership Rotation Command Center.</footer>
+</div>
 <div class="loading" id="loading"><div class="loader-box"><div class="spinner"></div><div class="loader-text" id="loaderText">Loading persistent Market Intelligence cache…</div><div class="loader-sub">A hard timeout prevents an indefinite loading screen.</div></div></div>
 <div class="modal" id="settingsModal"><div class="modal-box"><div class="modal-head"><strong>Dashboard Settings</strong><button class="btn icon" id="closeSettingsBtn">×</button></div><div class="modal-body">
-  <div class="field"><label for="apiUrlInput">Market Intelligence Web App URL</label><input id="apiUrlInput" type="url"><div class="help">Use the production Apps Script URL ending in <b>/exec</b>. The API key remains private in Script Properties.</div></div>
-  <div class="field"><label for="themeSelect">Appearance</label><select id="themeSelect"><option value="light">Light</option><option value="dark">Dark</option></select></div>
-  <div class="field"><label for="timeoutInput">Request timeout (seconds)</label><input id="timeoutInput" type="number" min="15" max="60" step="5"><div class="help">Normal cache reads should finish quickly. Forced refreshes use a separate 120-second rebuild window.</div></div>
+<div class="field"><label for="apiUrlInput">Market Intelligence Web App URL</label><input id="apiUrlInput" type="url"/><div class="help">Use the production Apps Script URL ending in <b>/exec</b>. The API key remains private in Script Properties.</div></div>
+<div class="field"><label for="themeSelect">Appearance</label><select id="themeSelect"><option value="light">Light</option><option value="dark">Dark</option></select></div>
+<div class="field"><label for="timeoutInput">Request timeout (seconds)</label><input id="timeoutInput" max="60" min="15" step="5" type="number"/><div class="help">Normal cache reads should finish quickly. Forced refreshes use a separate 120-second rebuild window.</div></div>
 </div><div class="modal-actions"><button class="btn" id="defaultApiBtn">Use Production URL</button><button class="btn" id="testBtn">Test Endpoint</button><button class="btn primary" id="saveBtn">Save &amp; Reload</button></div></div></div>
-
 <script>
 'use strict';
 const DEFAULT_API='https://script.google.com/macros/s/AKfycbyJJuJBqxzj4YC2OQoZTiPeciYzwKIliGyYdboOCyFUUcl9Xxt587bFdMxK4pQfatqtNA/exec';
-const STORAGE={api:'now.mi.apiUrl',theme:'now.mi.theme',timeout:'now.mi.timeout',payload:'now.mi.v43.lastPayload'};
+const STORAGE={api:'now.mi.apiUrl',theme:'now.mi.theme',timeout:'now.mi.timeout',payload:'now.mi.v44.lastPayload'};
 const state={data:null,sessions:[],selected:0,latest:0,playing:null,chartMode:'breadth',fromCache:false};
 const $=id=>document.getElementById(id);
 const esc=v=>String(v==null?'':v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
@@ -267,7 +228,7 @@ function jsonp(base,params={},timeout=requestTimeout()){
 }
 function savePayload(data){try{localStorage.setItem(STORAGE.payload,JSON.stringify({savedAt:Date.now(),data}))}catch(_){}}
 function readPayload(){try{return JSON.parse(localStorage.getItem(STORAGE.payload)||'null')}catch(_){return null}}
-function setTheme(theme){theme=theme==='dark'?'dark':'light';document.documentElement.dataset.theme=theme;localStorage.setItem(STORAGE.theme,theme);$('lightBtn').classList.toggle('active',theme==='light');$('darkBtn').classList.toggle('active',theme==='dark');if($('themeSelect'))$('themeSelect').value=theme;requestAnimationFrame(()=>{if(state.data){renderMainChart();renderRRGCanvas()}})}
+function setTheme(theme){theme=theme==='dark'?'dark':'light';document.documentElement.dataset.theme=theme;localStorage.setItem(STORAGE.theme,theme);$('lightBtn').classList.toggle('active',theme==='light');$('darkBtn').classList.toggle('active',theme==='dark');if($('themeSelect'))$('themeSelect').value=theme;requestAnimationFrame(()=>{if(state.data){renderMainChart()}})}
 function dateIndex(rows,date){if(!rows?.length)return-1;let lo=0,hi=rows.length-1,ans=-1;while(lo<=hi){const mid=(lo+hi)>>1;if(rows[mid].date<=date){ans=mid;lo=mid+1}else hi=mid-1}return ans}
 function valueAt(rows,date){const i=dateIndex(rows,date);return i>=0?rows[i]:null}
 function sma(values,n){const a=values.slice(-n).filter(finite);return a.length===n?a.reduce((x,y)=>x+Number(y),0)/n:null}
@@ -339,7 +300,8 @@ function smallMultipleChart(canvas,panels,labels,markerIndex){const {ctx,w,h}=pr
 function netInternalsChart(canvas,rows,markerIndex){const labels=rows.map(x=>x.date),ad=rows.map(x=>finite(x.advances)&&finite(x.declines)?x.advances-x.declines:null),hl=rows.map(x=>finite(x.newHighs)&&finite(x.newLows)?x.newHighs-x.newLows:null),max1=Math.max(1,...ad.filter(finite).map(x=>Math.abs(x))),max2=Math.max(1,...hl.filter(finite).map(x=>Math.abs(x)));const panels=[{name:'NET ADVANCE / DECLINE',values:ad,min:-max1,max:max1,color:chartColors().teal},{name:'NET NEW HIGHS / LOWS',values:hl,min:-max2,max:max2,color:chartColors().purple}],{ctx,w,h}=prepCanvas(canvas),c=chartColors(),left=54,right=22,top=10,bottom=24,gap=12,panelH=(h-top-bottom-gap)/2,pw=w-left-right;ctx.clearRect(0,0,w,h);ctx.fillStyle=c.panel2;ctx.fillRect(0,0,w,h);panels.forEach((p,pi)=>{const y0=top+pi*(panelH+gap),x=i=>left+(labels.length<=1?0:i/(labels.length-1)*pw),y=v=>y0+(p.max-v)/(p.max-p.min)*panelH;ctx.fillStyle='rgba(5,150,105,.045)';ctx.fillRect(left,y(p.max),pw,y(0)-y(p.max));ctx.fillStyle='rgba(220,38,38,.045)';ctx.fillRect(left,y(0),pw,y(p.min)-y(0));ctx.strokeStyle=c.line;ctx.beginPath();ctx.moveTo(left,y(0));ctx.lineTo(w-right,y(0));ctx.stroke();ctx.fillStyle=c.muted;ctx.font='800 9px '+getComputedStyle(document.documentElement).getPropertyValue('--mono');ctx.textAlign='left';ctx.fillText(p.name,left+4,y0+12);ctx.textAlign='right';ctx.fillText(finite(p.values.at(-1))?fmt(p.values.at(-1),0):'—',w-right-3,y0+12);ctx.strokeStyle=p.color;ctx.lineWidth=2;ctx.beginPath();let st=false;p.values.forEach((v,i)=>{if(!finite(v)){st=false;return}if(!st){ctx.moveTo(x(i),y(v));st=true}else ctx.lineTo(x(i),y(v))});ctx.stroke();if(finite(markerIndex)){ctx.strokeStyle=c.ink;ctx.setLineDash([3,3]);ctx.beginPath();ctx.moveTo(x(markerIndex),y0);ctx.lineTo(x(markerIndex),y0+panelH);ctx.stroke();ctx.setLineDash([])}});ctx.fillStyle=c.muted;ctx.font='9px '+getComputedStyle(document.documentElement).getPropertyValue('--mono');ctx.textAlign='center';for(let i=0;i<5;i++){const idx=Math.round(i/4*(labels.length-1));ctx.fillText((labels[idx]||'').slice(5),left+idx/(Math.max(1,labels.length-1))*pw,h-7)}}
 function renderMainChart(){if(!state.data)return;const mode=state.chartMode,c=chartColors(),canvas=$('mainChart'),sel=state.sessions[state.selected]?.date||state.data.latestCommonDate;let legend=[],read='';if(mode==='breadth'||mode==='sector'){const rows=mode==='breadth'?(state.data.breadth?.sp500||[]):(state.data.breadth?.sectorAggregate||[]),labels=rows.map(x=>x.date),marker=dateIndex(rows,sel),panels=[{name:'TACTICAL · ABOVE 20DMA',values:rows.map(x=>x.above20),color:c.green},{name:'INTERMEDIATE · ABOVE 50DMA',values:rows.map(x=>x.above50),color:c.amber},{name:'STRUCTURAL · ABOVE 200DMA',values:rows.map(x=>x.above200),color:c.blue}];smallMultipleChart(canvas,panels,labels,marker);const last=latest(rows)||{},prior=rows.length>=6?rows[rows.length-6]:null;$('chartMetrics').innerHTML=metricHtml([{label:'20DMA',value:pct(last.above20,0),color:toneColor(last.above20)},{label:'50DMA',value:pct(last.above50,0),color:toneColor(last.above50)},{label:'200DMA',value:pct(last.above200,0),color:toneColor(last.above200)},{label:'5D 50DMA Δ',value:finite(prior?.above50)&&finite(last.above50)?pct(last.above50-prior.above50,1,true):'—',color:finite(prior?.above50)?toneColor(50+(last.above50-prior.above50)*4):c.muted}]);legend=panels;read=mode==='breadth'?'Three aligned panels separate tactical, intermediate and structural participation. Green/amber/red background zones indicate broad, mixed and weak breadth.':'Sector-ETF participation confirms whether broad-sector allocation agrees with constituent breadth; it does not select themes.'}else if(mode==='internals'){const rows=state.data.breadth?.sp500||[],marker=dateIndex(rows,sel),last=latest(rows)||{};netInternalsChart(canvas,rows,marker);const ad=finite(last.advances)&&finite(last.declines)?last.advances-last.declines:null,hl=finite(last.newHighs)&&finite(last.newLows)?last.newHighs-last.newLows:null;$('chartMetrics').innerHTML=metricHtml([{label:'Advancers',value:fmt(last.advances,0),color:c.green},{label:'Decliners',value:fmt(last.declines,0),color:c.red},{label:'Net A/D',value:finite(ad)?(ad>0?'+':'')+fmt(ad,0):'—',color:finite(ad)?(ad>=0?c.green:c.red):c.muted},{label:'Net High/Low',value:finite(hl)?(hl>0?'+':'')+fmt(hl,0):'—',color:finite(hl)?(hl>=0?c.green:c.red):c.muted}]);legend=[{name:'Positive area = expansion',color:c.green},{name:'Negative area = deterioration',color:c.red}];read='Net participation is easier to interpret than four overlapping raw lines. Values above zero confirm expansion; values below zero warn of deterioration.'}else if(mode==='price'){const a=alignedSeries(['SPY','QQQ']);function norm(v){const first=v.find(finite);return v.map(x=>finite(x)&&finite(first)?Number(x)/Number(first)*100:null)}const spy=norm(a.values.SPY),qqq=norm(a.values.QQQ);lineChart(canvas,[{name:'SPY',values:spy,color:c.blue,width:2.4},{name:'QQQ',values:qqq,color:c.purple,width:2.4}],{labels:a.dates,markerIndex:dateIndex(a.dates.map(date=>({date})),sel),decimals:0});$('chartMetrics').innerHTML=metricHtml([{label:'SPY Indexed',value:fmt(spy.at(-1),1),color:c.blue},{label:'QQQ Indexed',value:fmt(qqq.at(-1),1),color:c.purple},{label:'QQQ–SPY Spread',value:finite(qqq.at(-1))&&finite(spy.at(-1))?pct(qqq.at(-1)-spy.at(-1),1,true):'—',color:c.teal},{label:'Base',value:'100 = start',color:c.muted}]);legend=[{name:'SPY',color:c.blue},{name:'QQQ',color:c.purple}];read='Both benchmarks are indexed to 100 at the start, making relative leadership and divergence immediately visible.'}else{const a=alignedSeries(['^VIX','^VVIX']),v=a.values['^VIX'],vv=a.values['^VVIX'];function norm(z){const f=z.find(finite);return z.map(x=>finite(x)&&finite(f)?Number(x)/Number(f)*100:null)}const vn=norm(v),vvn=norm(vv),ratio=v.map((x,i)=>finite(x)&&finite(vv[i])?vv[i]/x:null);lineChart(canvas,[{name:'VIX indexed',values:vn,color:c.red},{name:'VVIX indexed',values:vvn,color:c.purple},{name:'VVIX/VIX ×50',values:ratio.map(x=>finite(x)?x*50:null),color:c.amber,width:1.6}],{labels:a.dates,markerIndex:dateIndex(a.dates.map(date=>({date})),sel),decimals:0});$('chartMetrics').innerHTML=metricHtml([{label:'VIX',value:fmt(v.at(-1),2),color:c.red},{label:'VVIX',value:fmt(vv.at(-1),2),color:c.purple},{label:'VVIX / VIX',value:finite(ratio.at(-1))?fmt(ratio.at(-1),2):'—',color:c.amber},{label:'Direction',value:finite(vn.at(-1))&&vn.at(-1)>100?'RISING':'CALMING',color:finite(vn.at(-1))&&vn.at(-1)>100?c.red:c.green}]);legend=[{name:'VIX indexed',color:c.red},{name:'VVIX indexed',color:c.purple},{name:'Ratio ×50',color:c.amber}];read='VIX and VVIX are indexed to 100 so their direction is comparable; the ratio line highlights option-market convexity pressure.'}$('chartLegend').innerHTML=legend.map(x=>`<span><i class="legend-dot" style="background:${x.color}"></i>${esc(x.name)}</span>`).join('');$('chartRead').textContent=read}
 function renderRRGCanvas(){if(!state.data)return;const rows=themeRows().filter(x=>finite(x.rsAxis)&&finite(x.momentum)).slice(0,24),{ctx,w,h}=prepCanvas($('rrgCanvas')),c=chartColors(),pad={l:43,r:20,t:20,b:32},pw=w-pad.l-pad.r,ph=h-pad.t-pad.b;ctx.clearRect(0,0,w,h);ctx.fillStyle=c.panel2;ctx.fillRect(0,0,w,h);const x=v=>pad.l+clamp(v,0,100)/100*pw,maxAbs=Math.max(5,...rows.map(r=>Math.abs(Number(r.momentum)))),y=v=>pad.t+(maxAbs-Number(v))/(2*maxAbs)*ph;ctx.strokeStyle=c.line;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x(50),pad.t);ctx.lineTo(x(50),pad.t+ph);ctx.moveTo(pad.l,y(0));ctx.lineTo(pad.l+pw,y(0));ctx.stroke();ctx.fillStyle=c.muted;ctx.font='9px '+getComputedStyle(document.documentElement).getPropertyValue('--mono');ctx.fillText('IMPROVING',pad.l+5,pad.t+12);ctx.fillText('LEADING',x(50)+6,pad.t+12);ctx.fillText('LAGGING',pad.l+5,pad.t+ph-7);ctx.fillText('WEAKENING',x(50)+6,pad.t+ph-7);ctx.textAlign='center';ctx.fillText('CROSS-SECTIONAL RELATIVE STRENGTH RANK →',pad.l+pw/2,h-8);ctx.save();ctx.translate(11,pad.t+ph/2);ctx.rotate(-Math.PI/2);ctx.fillText('5-DAY MOMENTUM →',0,0);ctx.restore();if(!rows.length){ctx.fillStyle=c.muted;ctx.font='12px sans-serif';ctx.textAlign='center';ctx.fillText('No qualifying theme rows',pad.l+pw/2,pad.t+ph/2);return}rows.forEach(r=>{const color=r.quadrant==='LEADING'?c.green:r.quadrant==='IMPROVING'?c.blue:r.quadrant==='WEAKENING'?c.amber:c.red,xx=x(r.rsAxis),yy=y(r.momentum),rad=4+clamp((r.score||50)-30,0,70)/18;ctx.globalAlpha=.82;ctx.fillStyle=color;ctx.beginPath();ctx.arc(xx,yy,rad,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;ctx.fillStyle=c.ink;ctx.font='8px '+getComputedStyle(document.documentElement).getPropertyValue('--mono');ctx.textAlign='left';ctx.fillText(r.ticker,xx+rad+2,yy+3)})}
-function renderSelected(){if(!state.data)return;const s=selectedSnapshot(),prev=state.selected>0?historicalSnapshot(state.sessions[state.selected-1].date):null,d5=state.selected>=5?historicalSnapshot(state.sessions[state.selected-5].date):null,frag=fragility(s);$('timeSlider').value=state.selected;$('dateInput').value=s.date||'';$('timeRead').textContent=state.selected===state.latest?`Latest · ${s.date}`:`Historical replay · ${s.date}`;$('subline').textContent=`${s.date||'—'} · ${state.data.mode||'—'} · ${fmt(state.data.completeness,0)}% complete · one endpoint`;renderMaster(s,prev,d5,frag);renderDirective(s,frag);renderIntegrity(s);renderScore(s);renderBreadth(s);renderConfirmation(s);renderRisk(s,frag);renderRRG();renderGroupMomentum();renderDensity();renderThemeTables();renderMainChart();$('auditBreadth').textContent=`${state.data.breadth?.methodology||'Equal-weight close-based participation.'} ${state.data.breadth?.survivorshipNote||''}`}
+function renderLeadershipConfirmation(){const lead=state.data?.leadership||{},rows=Array.isArray(lead.rows)?lead.rows:(state.data?.themes||[]),q=lead.quadrantCounts||{};const positive=(q.LEADING||0)+(q.IMPROVING||0),negative=(q.WEAKENING||0)+(q.LAGGING||0),density=finite(lead.densityPct)?lead.densityPct:(rows.length?Math.round(rows.filter(x=>['LEADING','CONSTRUCTIVE'].includes(x.state)).length/rows.length*100):null),top=(lead.top&&lead.top[0])||rows.slice().sort((a,b)=>(b.score??-1)-(a.score??-1))[0]||{},stateLabel=lead.state||(!finite(density)?'UNAVAILABLE':density>=55?'BROAD LEADERSHIP':density>=30?'SELECTIVE LEADERSHIP':'NARROW LEADERSHIP'),risk=!finite(density)?'UNVERIFIED':density>=55?'SUPPORTIVE':density>=30?'SELECTIVE':'RESTRICTIVE';$('lcState').textContent=stateLabel;$('lcState').style.color=stateTone(stateLabel)==='good'?'var(--green)':stateTone(stateLabel)==='bad'?'var(--red)':'var(--amber)';$('lcDensity').textContent=pct(density,0);$('lcPositive').textContent=`${positive} / ${rows.length}`;$('lcNegative').textContent=`${negative} / ${rows.length}`;$('lcTop').textContent=top.ticker||'—';$('lcTopNote').textContent=top.name?`${top.name} · score ${fmt(top.score,0)}`:'Highest verified leadership score';$('lcRisk').textContent=risk;$('lcRisk').style.color=risk==='SUPPORTIVE'?'var(--green)':risk==='RESTRICTIVE'?'var(--red)':'var(--amber)';$('lcRead').textContent=!rows.length?'Leadership detail is unavailable. Open the separate Rotation Center after its cache is built.':`${stateLabel}: ${pct(density,0)} of verified themes are investable, with ${positive} in Leading/Improving versus ${negative} in Weakening/Lagging. This card confirms risk capacity only; use the Leadership Rotation Command Center for sector, industry, theme and ETF selection.`;$('lcRead').className=`readout ${risk==='SUPPORTIVE'?'good':risk==='RESTRICTIVE'?'bad':'warn'}`}
+function renderSelected(){if(!state.data)return;const s=selectedSnapshot(),prev=state.selected>0?historicalSnapshot(state.sessions[state.selected-1].date):null,d5=state.selected>=5?historicalSnapshot(state.sessions[state.selected-5].date):null,frag=fragility(s);$('timeSlider').value=state.selected;$('dateInput').value=s.date||'';$('timeRead').textContent=state.selected===state.latest?`Latest · ${s.date}`:`Historical replay · ${s.date}`;$('subline').textContent=`${s.date||'—'} · ${state.data.mode||'—'} · ${fmt(state.data.completeness,0)}% complete · one endpoint`;renderMaster(s,prev,d5,frag);renderDirective(s,frag);renderIntegrity(s);renderScore(s);renderBreadth(s);renderConfirmation(s);renderRisk(s,frag);renderLeadershipConfirmation();renderMainChart();$('auditBreadth').textContent=`${state.data.breadth?.methodology||'Equal-weight close-based participation.'} ${state.data.breadth?.survivorshipNote||''}`}
 function buildSessions(){state.sessions=(state.data?.breadth?.sp500||[]).slice();state.latest=Math.max(0,state.sessions.length-1);state.selected=state.latest;$('timeSlider').min=0;$('timeSlider').max=state.latest;$('timeSlider').value=state.latest}
 function validatePayload(data){if(!data?.ok)throw new Error(data?.error||'The API returned ok:false.');if(data.service!=='Institutional Market Intelligence API'&&!data.regime)throw new Error('The endpoint did not return the Market Intelligence payload. Check action=intelligence routing.');return data}
 async function loadData(force=false){
@@ -365,7 +327,7 @@ async function loadData(force=false){
     }
   }finally{if(force)loading(false)}
 }
-function bind(){document.querySelectorAll('#chartToolbar button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#chartToolbar button').forEach(x=>x.classList.remove('active'));b.classList.add('active');state.chartMode=b.dataset.chart;renderMainChart()});$('refreshBtn').onclick=()=>loadData(true);$('prevBtn').onclick=()=>{state.selected=Math.max(0,state.selected-1);renderSelected()};$('nextBtn').onclick=()=>{state.selected=Math.min(state.latest,state.selected+1);renderSelected()};$('timeSlider').oninput=e=>{state.selected=Number(e.target.value);renderSelected()};$('dateInput').onchange=e=>{const i=dateIndex(state.sessions,e.target.value);if(i>=0){state.selected=i;renderSelected()}};$('playBtn').onclick=()=>{if(state.playing){clearInterval(state.playing);state.playing=null;$('playBtn').textContent='▶ Play';return}if(state.selected>=state.latest)state.selected=0;$('playBtn').textContent='❚❚ Pause';state.playing=setInterval(()=>{if(state.selected>=state.latest){clearInterval(state.playing);state.playing=null;$('playBtn').textContent='▶ Play';return}state.selected++;renderSelected()},650)};$('settingsBtn').onclick=()=>{$('apiUrlInput').value=apiUrl();$('themeSelect').value=document.documentElement.dataset.theme;$('timeoutInput').value=Math.round(requestTimeout(false)/1000);$('settingsModal').classList.add('open')};$('closeSettingsBtn').onclick=()=>$('settingsModal').classList.remove('open');$('settingsModal').onclick=e=>{if(e.target===$('settingsModal'))$('settingsModal').classList.remove('open')};$('defaultApiBtn').onclick=()=>{$('apiUrlInput').value=DEFAULT_API};$('testBtn').onclick=async()=>{const u=$('apiUrlInput').value.trim().replace(/\?.*$/,'');if(!u)return alert('Enter the Web App URL.');try{loading(true,'Testing Market Intelligence endpoint…');const x=await jsonp(u,{action:'intelligence',refresh:'0'},requestTimeout(false));alert(x?.ok&&x?.regime?`Connected: ${x.version} · ${x.mode} · ${x.latestCommonDate} · ${x.themes?.length||0} themes`:(x?.error||'The response was not an intelligence payload.'))}catch(e){alert(e.message)}finally{loading(false)}};$('saveBtn').onclick=()=>{const u=$('apiUrlInput').value.trim().replace(/\?.*$/,'');if(u)localStorage.setItem(STORAGE.api,u);localStorage.setItem(STORAGE.timeout,String(clamp(Number($('timeoutInput').value||25),15,120)));setTheme($('themeSelect').value);$('settingsModal').classList.remove('open');loadData(false)};$('lightBtn').onclick=()=>setTheme('light');$('darkBtn').onclick=()=>setTheme('dark');window.addEventListener('resize',()=>{clearTimeout(window.__resizeTimer);window.__resizeTimer=setTimeout(()=>{renderMainChart();renderRRGCanvas()},120)})}
+function bind(){document.querySelectorAll('#chartToolbar button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#chartToolbar button').forEach(x=>x.classList.remove('active'));b.classList.add('active');state.chartMode=b.dataset.chart;renderMainChart()});$('refreshBtn').onclick=()=>loadData(true);$('prevBtn').onclick=()=>{state.selected=Math.max(0,state.selected-1);renderSelected()};$('nextBtn').onclick=()=>{state.selected=Math.min(state.latest,state.selected+1);renderSelected()};$('timeSlider').oninput=e=>{state.selected=Number(e.target.value);renderSelected()};$('dateInput').onchange=e=>{const i=dateIndex(state.sessions,e.target.value);if(i>=0){state.selected=i;renderSelected()}};$('playBtn').onclick=()=>{if(state.playing){clearInterval(state.playing);state.playing=null;$('playBtn').textContent='▶ Play';return}if(state.selected>=state.latest)state.selected=0;$('playBtn').textContent='❚❚ Pause';state.playing=setInterval(()=>{if(state.selected>=state.latest){clearInterval(state.playing);state.playing=null;$('playBtn').textContent='▶ Play';return}state.selected++;renderSelected()},650)};$('settingsBtn').onclick=()=>{$('apiUrlInput').value=apiUrl();$('themeSelect').value=document.documentElement.dataset.theme;$('timeoutInput').value=Math.round(requestTimeout(false)/1000);$('settingsModal').classList.add('open')};$('closeSettingsBtn').onclick=()=>$('settingsModal').classList.remove('open');$('settingsModal').onclick=e=>{if(e.target===$('settingsModal'))$('settingsModal').classList.remove('open')};$('defaultApiBtn').onclick=()=>{$('apiUrlInput').value=DEFAULT_API};$('testBtn').onclick=async()=>{const u=$('apiUrlInput').value.trim().replace(/\?.*$/,'');if(!u)return alert('Enter the Web App URL.');try{loading(true,'Testing Market Intelligence endpoint…');const x=await jsonp(u,{action:'intelligence',refresh:'0'},requestTimeout(false));alert(x?.ok&&x?.regime?`Connected: ${x.version} · ${x.mode} · ${x.latestCommonDate} · ${x.themes?.length||0} themes`:(x?.error||'The response was not an intelligence payload.'))}catch(e){alert(e.message)}finally{loading(false)}};$('saveBtn').onclick=()=>{const u=$('apiUrlInput').value.trim().replace(/\?.*$/,'');if(u)localStorage.setItem(STORAGE.api,u);localStorage.setItem(STORAGE.timeout,String(clamp(Number($('timeoutInput').value||25),15,120)));setTheme($('themeSelect').value);$('settingsModal').classList.remove('open');loadData(false)};$('lightBtn').onclick=()=>setTheme('light');$('darkBtn').onclick=()=>setTheme('dark');window.addEventListener('resize',()=>{clearTimeout(window.__resizeTimer);window.__resizeTimer=setTimeout(()=>{renderMainChart()},120)})}
 (function init(){bind();setTheme(localStorage.getItem(STORAGE.theme)||'light');const cached=readPayload();if(cached?.data){try{state.data=validatePayload(cached.data);state.fromCache=true;buildSessions();renderSelected();const age=Math.round((Date.now()-cached.savedAt)/60000);setStatus(`Showing saved payload while checking for an update · ${age} minutes old`,'warn','CACHED FIRST PAINT')}catch(_){}}loadData(false)})();
 </script>
 </body>
