@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Daily Market Plan 4.0 · Institutional Portfolio Manager</title>
+<title>Daily Market Plan 4.1 · Institutional Portfolio Manager</title>
 <style>
 :root{
   --bg:#f2f5f9;--panel:#ffffff;--panel2:#f7f9fc;--panel3:#edf2f8;
@@ -90,8 +90,8 @@ tbody td{padding:7px 8px;border-bottom:1px solid var(--line2);text-align:right;w
 <div class="headrow">
 <div>
 <div class="eyebrow">Canonical Portfolio Permission · Risk Budget · Execution Directive</div>
-<div class="title">Daily Market Plan 4.0</div>
-<div class="subtitle" id="subtitle">One endpoint · one interpretation · awaiting live plan payload</div>
+<div class="title">Daily Market Plan 4.1</div>
+<div class="subtitle" id="subtitle">One endpoint · one interpretation · cross-origin-safe JSONP transport</div>
 </div>
 <div class="actions">
 <a class="btn" href="Market_Breadth_Institutional_Command.html">Breadth Command</a>
@@ -186,10 +186,10 @@ tbody td{padding:7px 8px;border-bottom:1px solid var(--line2);text-align:right;w
 
 <section class="card span12"><div class="card-head"><div><div class="card-title">Methodology & Handoff</div><div class="card-sub">Daily Plan decides how much risk; Rotation decides where; SATA / Price Structure decides when.</div></div><span class="pill good">ONE SOURCE OF TRUTH</span></div><div class="card-body"><div class="note">This page performs no competing market-regime calculations. It renders the canonical <b>action=plan</b> payload produced by the Daily Market Plan Engine. Refresh Live Data requests a server rebuild; normal visits use the persistent institutional cache.</div></div></section>
 </main>
-<footer class="footer">DAILY MARKET PLAN 4.0 · CANONICAL DAILY PLAN ENGINE · NO LEGACY GOOGLE SHEET DEPENDENCY</footer>
+<footer class="footer">DAILY MARKET PLAN 4.1 · CANONICAL DAILY PLAN ENGINE · CANONICAL JSONP DELIVERY · NO LEGACY SHEET DEPENDENCY</footer>
 </div>
 
-<div class="loading" id="loading"><div class="loading-box"><div class="spinner"></div><div class="loading-title" id="loadingTitle">Loading Daily Market Plan Engine…</div><div class="loading-note" id="loadingNote">Cache-first plan request</div></div></div>
+<div class="loading" id="loading"><div class="loading-box"><div class="spinner"></div><div class="loading-title" id="loadingTitle">Loading Daily Market Plan Engine…</div><div class="loading-note" id="loadingNote">Cache-first JSONP plan request</div></div></div>
 
 <script>
 const API_URL='https://script.google.com/macros/s/AKfycbyJJuJBqxzj4YC2OQoZTiPeciYzwKIliGyYdboOCyFUUcl9Xxt587bFdMxK4pQfatqtNA/exec';
@@ -207,7 +207,54 @@ function num(v,d=0){const x=n(v);return Number.isFinite(x)?x.toFixed(d):'—'}
 function scoreColor(v){const x=n(v);return x>=65?'var(--green)':x>=45?'var(--amber)':'var(--red)'}
 function stateClass(v){const s=String(v||'').toUpperCase();return /ON|STRONG|HEALTHY|CALM|STABLE|CONTAINED|RISK-ON/.test(s)?'good':/OFF|CRITICAL|BROKEN|STRESSED|RISK-OFF|DETERIORATION|BELOW ZERO/.test(s)?'bad':'warn'}
 function showLoading(open,title,note){$('loading').classList.toggle('open',open);if(title)$('loadingTitle').textContent=title;if(note)$('loadingNote').textContent=note}
-async function fetchPlan(refresh=false){const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),refresh?130000:55000);try{const url=API_URL+'?action=plan'+(refresh?'&refresh=1':'')+'&cb='+Date.now();const res=await fetch(url,{cache:'no-store',signal:ctrl.signal});if(!res.ok)throw new Error('HTTP '+res.status);const json=await res.json();if(!json.ok||json.service!=='Daily Market Plan Engine')throw new Error(json.error||'Invalid Daily Plan payload');return json}finally{clearTimeout(timer)}}
+function fetchPlan(refresh=false){
+  return new Promise((resolve,reject)=>{
+    const cb='__dmpPlanCb_'+Date.now()+'_'+Math.random().toString(36).slice(2);
+    const script=document.createElement('script');
+    const timeoutMs=refresh?130000:55000;
+    let settled=false;
+    const cleanup=()=>{
+      try{delete window[cb]}catch{}
+      if(script.parentNode)script.parentNode.removeChild(script);
+    };
+    const timer=setTimeout(()=>{
+      if(settled)return;
+      settled=true;
+      cleanup();
+      reject(new Error('Daily Plan request timed out'));
+    },timeoutMs);
+
+    window[cb]=payload=>{
+      if(settled)return;
+      settled=true;
+      clearTimeout(timer);
+      cleanup();
+      if(!payload||payload.ok!==true||payload.service!=='Daily Market Plan Engine'){
+        reject(new Error(payload?.error||'Invalid Daily Plan payload'));
+        return;
+      }
+      resolve(payload);
+    };
+
+    script.onerror=()=>{
+      if(settled)return;
+      settled=true;
+      clearTimeout(timer);
+      cleanup();
+      reject(new Error('Daily Plan JSONP request failed'));
+    };
+
+    const params=[
+      'action=plan',
+      'callback='+encodeURIComponent(cb),
+      'cb='+Date.now()
+    ];
+    if(refresh)params.push('refresh=1');
+    script.src=API_URL+'?'+params.join('&');
+    script.async=true;
+    document.head.appendChild(script);
+  });
+}
 function saveCache(){try{localStorage.setItem(CACHE_KEY,JSON.stringify({ts:Date.now(),payload:plan}))}catch{}}
 function loadCache(){try{const x=JSON.parse(localStorage.getItem(CACHE_KEY)||'null');if(x&&x.payload&&x.payload.ok){plan=x.payload;return x}}catch{}return null}
 
@@ -334,10 +381,10 @@ function renderAll(){
   renderSources();renderTape();renderDirective();renderPermission();renderComponents();renderMacro();renderBreadth();renderLeadership();renderFragility();renderTriggers();
   $('subtitle').textContent=(plan.latestCommonDate||'—')+' · Daily Plan Engine '+(plan.version||'—')+' · '+(plan.completeness??'—')+'% source completeness';
   $('statusLeft').innerHTML='<span class="ok">'+esc(plan.mode||'LIVE')+'</span> · canonical plan loaded';
-  $('statusRight').textContent='Generated '+(plan.generatedAt||'—')+' · '+(plan.servedFrom||'—');
+  $('statusRight').textContent='Generated '+(plan.generatedAt||'—')+' · '+(plan.servedFrom||'—')+' · JSONP';
 }
 async function loadPlan(refresh=false){
-  showLoading(true,refresh?'Rebuilding Daily Market Plan Engine…':'Loading Daily Market Plan Engine…',refresh?'Fresh Intelligence + Rotation + Breadth + Specialist Inputs':'Persistent cache-first plan request');
+  showLoading(true,refresh?'Rebuilding Daily Market Plan Engine…':'Loading Daily Market Plan Engine…',refresh?'Fresh Intelligence + Rotation + Breadth + Specialist Inputs':'Persistent cache-first JSONP request');
   try{
     plan=await fetchPlan(refresh);saveCache();renderAll();
   }catch(err){
