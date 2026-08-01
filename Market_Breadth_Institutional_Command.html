@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="light dark">
-<title>Market Breadth Institutional Command 3.0</title>
+<title>Market Breadth Institutional Command 4.0</title>
 <style>
 :root{
   --bg:#f2f5f9;--panel:#ffffff;--panel2:#f7f9fc;--ink:#132033;--muted:#657189;--line:#dbe3ee;
@@ -51,7 +51,7 @@ footer{padding:12px;text-align:center;color:var(--muted);font:600 9px var(--mono
   <div class="topbar-inner">
     <div class="brand">
       <div class="eyebrow">Cross-Universe Participation · Leadership · Fragility · Risk Budget</div>
-      <h1>Market Breadth Institutional Command 3.0</h1>
+      <h1>Market Breadth Institutional Command 4.0</h1>
       <div class="subline" id="subline">Single-endpoint institutional synthesis · awaiting Market Intelligence API</div>
     </div>
     <div class="actions">
@@ -197,26 +197,26 @@ footer{padding:12px;text-align:center;color:var(--muted);font:600 9px var(--mono
   <section class="card span12">
     <div class="card-head"><div><div class="card-title">Methodology &amp; Audit</div><div class="card-sub">What is verified, what is current-only and what the score does not claim</div></div><span class="pill info">TRANSPARENT</span></div>
     <div class="card-body audit-grid">
-      <div class="audit"><h4>Single Data Contract</h4><p>The page makes one JSONP request to <b>action=intelligence</b>. It does not scrape RS Radar, Group Momentum, Market Monitor or any other HTML page.</p></div>
+      <div class="audit"><h4>Single Data Contract</h4><p>The page makes one cache-first JSONP request to <b>action=intelligence</b>. It does not scrape RS Radar, Group Momentum, Market Monitor or any other HTML page.</p></div>
       <div class="audit"><h4>Breadth Methodology</h4><p id="auditBreadth">Current-constituent equal-weight participation. Historical membership is not reconstructed, so survivorship bias is disclosed rather than hidden.</p></div>
       <div class="audit"><h4>Historical Replay</h4><p>Replay uses the verified 65-session S&P breadth cache plus available SPY/QQQ/VIX series. Current thematic leadership and Market Plan internals are not backfilled into prior dates.</p></div>
     </div>
   </section>
 </main>
-<footer>Market Breadth Institutional Command 3.0 · one Market Intelligence API call · no private FMP key in this HTML · broad sector breadth is confirmation; industry and thematic groups drive leadership discovery.</footer>
+<footer>Market Breadth Institutional Command 4.0 · cache-first Market Intelligence API · no private FMP key in this HTML · broad sector breadth is confirmation; industry and thematic groups drive leadership discovery.</footer>
 </div>
 
-<div class="loading" id="loading"><div class="loader-box"><div class="spinner"></div><div class="loader-text" id="loaderText">Loading Market Intelligence API…</div><div class="loader-sub">A hard timeout prevents an indefinite loading screen.</div></div></div>
+<div class="loading" id="loading"><div class="loader-box"><div class="spinner"></div><div class="loader-text" id="loaderText">Loading persistent Market Intelligence cache…</div><div class="loader-sub">A hard timeout prevents an indefinite loading screen.</div></div></div>
 <div class="modal" id="settingsModal"><div class="modal-box"><div class="modal-head"><strong>Dashboard Settings</strong><button class="btn icon" id="closeSettingsBtn">×</button></div><div class="modal-body">
   <div class="field"><label for="apiUrlInput">Market Intelligence Web App URL</label><input id="apiUrlInput" type="url"><div class="help">Use the production Apps Script URL ending in <b>/exec</b>. The API key remains private in Script Properties.</div></div>
   <div class="field"><label for="themeSelect">Appearance</label><select id="themeSelect"><option value="light">Light</option><option value="dark">Dark</option></select></div>
-  <div class="field"><label for="timeoutInput">Request timeout (seconds)</label><input id="timeoutInput" type="number" min="15" max="120" step="5"><div class="help">The dashboard falls back to the last saved payload when the endpoint exceeds this limit.</div></div>
+  <div class="field"><label for="timeoutInput">Request timeout (seconds)</label><input id="timeoutInput" type="number" min="15" max="60" step="5"><div class="help">Normal cache reads should finish quickly. Forced refreshes use a separate 120-second rebuild window.</div></div>
 </div><div class="modal-actions"><button class="btn" id="defaultApiBtn">Use Production URL</button><button class="btn" id="testBtn">Test Endpoint</button><button class="btn primary" id="saveBtn">Save &amp; Reload</button></div></div></div>
 
 <script>
 'use strict';
 const DEFAULT_API='https://script.google.com/macros/s/AKfycbyJJuJBqxzj4YC2OQoZTiPeciYzwKIliGyYdboOCyFUUcl9Xxt587bFdMxK4pQfatqtNA/exec';
-const STORAGE={api:'now.mi.apiUrl',theme:'now.mi.theme',timeout:'now.mi.timeout',payload:'now.mi.lastPayload'};
+const STORAGE={api:'now.mi.apiUrl',theme:'now.mi.theme',timeout:'now.mi.timeout',payload:'now.mi.v4.lastPayload'};
 const state={data:null,sessions:[],selected:0,latest:0,playing:null,chartMode:'breadth',fromCache:false};
 const $=id=>document.getElementById(id);
 const esc=v=>String(v==null?'':v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
@@ -233,7 +233,7 @@ function setPill(id,text,cls=''){const el=$(id);el.textContent=text||'—';el.cl
 function setStatus(text,cls='warn',right){$('statusText').textContent=text;$('statusBar').className=`statusbar ${cls}`;if(right)$('statusRight').textContent=right}
 function loading(on,text){$('loading').classList.toggle('open',on);if(text)$('loaderText').textContent=text}
 function apiUrl(){return (localStorage.getItem(STORAGE.api)||DEFAULT_API).replace(/\?.*$/,'')}
-function requestTimeout(){return clamp(Number(localStorage.getItem(STORAGE.timeout)||55),15,120)*1000}
+function requestTimeout(force=false){const saved=Number(localStorage.getItem(STORAGE.timeout)||25);return (force?Math.max(120,saved):clamp(saved,15,60))*1000}
 function jsonp(base,params={},timeout=requestTimeout()){
   return new Promise((resolve,reject)=>{
     const cb=`__mi_cb_${Date.now()}_${Math.random().toString(36).slice(2)}`;
@@ -293,8 +293,30 @@ function renderRRGCanvas(){if(!state.data)return;const rows=themeRows().filter(x
 function renderSelected(){if(!state.data)return;const s=selectedSnapshot(),prev=state.selected>0?historicalSnapshot(state.sessions[state.selected-1].date):null,d5=state.selected>=5?historicalSnapshot(state.sessions[state.selected-5].date):null,frag=fragility(s);$('timeSlider').value=state.selected;$('dateInput').value=s.date||'';$('timeRead').textContent=state.selected===state.latest?`Latest · ${s.date}`:`Historical replay · ${s.date}`;$('subline').textContent=`${s.date||'—'} · ${state.data.mode||'—'} · ${fmt(state.data.completeness,0)}% complete · one endpoint`;renderMaster(s,prev,d5,frag);renderDirective(s,frag);renderIntegrity(s);renderScore(s);renderBreadth(s);renderConfirmation(s);renderRisk(s,frag);renderRRG();renderDensity();renderThemeTables();renderMainChart();$('auditBreadth').textContent=`${state.data.breadth?.methodology||'Equal-weight close-based participation.'} ${state.data.breadth?.survivorshipNote||''}`}
 function buildSessions(){state.sessions=(state.data?.breadth?.sp500||[]).slice();state.latest=Math.max(0,state.sessions.length-1);state.selected=state.latest;$('timeSlider').min=0;$('timeSlider').max=state.latest;$('timeSlider').value=state.latest}
 function validatePayload(data){if(!data?.ok)throw new Error(data?.error||'The API returned ok:false.');if(data.service!=='Institutional Market Intelligence API'&&!data.regime)throw new Error('The endpoint did not return the Market Intelligence payload. Check action=intelligence routing.');return data}
-async function loadData(force=false){loading(true,force?'Refreshing all Market Intelligence sources…':'Loading Market Intelligence API…');setStatus(force?'Requesting a fresh unified payload…':'Loading one unified API payload…','warn',`Hard timeout ${Math.round(requestTimeout()/1000)}s`);try{const data=validatePayload(await jsonp(apiUrl(),{action:'intelligence',refresh:force?'1':'0'},requestTimeout()));state.data=data;state.fromCache=false;savePayload(data);buildSessions();renderSelected();const ok=Object.values(data.sourceStatus||{}).filter(x=>x.ok).length,total=Object.keys(data.sourceStatus||{}).length;setStatus(`Synthesis complete · ${ok}/${total} sources live · common date ${data.latestCommonDate||'—'}`,data.mode==='LIVE'?'ok':'warn',`${data.version||'—'} · ${fmt(data.elapsedMs,0)} ms`)}catch(err){const cached=readPayload();if(cached?.data){state.data=validatePayload(cached.data);state.fromCache=true;buildSessions();renderSelected();const age=Math.round((Date.now()-cached.savedAt)/60000);setStatus(`Live request failed: ${err.message} Showing the last saved payload (${age} minutes old).`,'warn','CACHED FALLBACK')}else{setStatus(`Unable to load Market Intelligence API: ${err.message}`,'err','No cached payload');$('directiveTitle').textContent='API unavailable';$('directiveLead').textContent='Open Settings, verify the /exec Web App URL, and test the endpoint.'}}finally{loading(false)}}
-function bind(){document.querySelectorAll('#chartToolbar button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#chartToolbar button').forEach(x=>x.classList.remove('active'));b.classList.add('active');state.chartMode=b.dataset.chart;renderMainChart()});$('refreshBtn').onclick=()=>loadData(true);$('prevBtn').onclick=()=>{state.selected=Math.max(0,state.selected-1);renderSelected()};$('nextBtn').onclick=()=>{state.selected=Math.min(state.latest,state.selected+1);renderSelected()};$('timeSlider').oninput=e=>{state.selected=Number(e.target.value);renderSelected()};$('dateInput').onchange=e=>{const i=dateIndex(state.sessions,e.target.value);if(i>=0){state.selected=i;renderSelected()}};$('playBtn').onclick=()=>{if(state.playing){clearInterval(state.playing);state.playing=null;$('playBtn').textContent='▶ Play';return}if(state.selected>=state.latest)state.selected=0;$('playBtn').textContent='❚❚ Pause';state.playing=setInterval(()=>{if(state.selected>=state.latest){clearInterval(state.playing);state.playing=null;$('playBtn').textContent='▶ Play';return}state.selected++;renderSelected()},650)};$('settingsBtn').onclick=()=>{$('apiUrlInput').value=apiUrl();$('themeSelect').value=document.documentElement.dataset.theme;$('timeoutInput').value=Math.round(requestTimeout()/1000);$('settingsModal').classList.add('open')};$('closeSettingsBtn').onclick=()=>$('settingsModal').classList.remove('open');$('settingsModal').onclick=e=>{if(e.target===$('settingsModal'))$('settingsModal').classList.remove('open')};$('defaultApiBtn').onclick=()=>{$('apiUrlInput').value=DEFAULT_API};$('testBtn').onclick=async()=>{const u=$('apiUrlInput').value.trim().replace(/\?.*$/,'');if(!u)return alert('Enter the Web App URL.');try{loading(true,'Testing Market Intelligence endpoint…');const x=await jsonp(u,{action:'intelligence',refresh:'0'},requestTimeout());alert(x?.ok&&x?.regime?`Connected: ${x.version} · ${x.mode} · ${x.latestCommonDate} · ${x.themes?.length||0} themes`:(x?.error||'The response was not an intelligence payload.'))}catch(e){alert(e.message)}finally{loading(false)}};$('saveBtn').onclick=()=>{const u=$('apiUrlInput').value.trim().replace(/\?.*$/,'');if(u)localStorage.setItem(STORAGE.api,u);localStorage.setItem(STORAGE.timeout,String(clamp(Number($('timeoutInput').value||55),15,120)));setTheme($('themeSelect').value);$('settingsModal').classList.remove('open');loadData(false)};$('lightBtn').onclick=()=>setTheme('light');$('darkBtn').onclick=()=>setTheme('dark');window.addEventListener('resize',()=>{clearTimeout(window.__resizeTimer);window.__resizeTimer=setTimeout(()=>{renderMainChart();renderRRGCanvas()},120)})}
+async function loadData(force=false){
+  const hasPaint=!!state.data;
+  if(force) loading(true,'Refreshing Market Intelligence cache…');
+  setStatus(force?'Refreshing the server-side intelligence cache…':hasPaint?'Checking the persistent API cache in the background…':'Loading the persistent Market Intelligence cache…','warn',force?'Fresh rebuild · up to 120s':'Cache-first request');
+  try{
+    const data=validatePayload(await jsonp(apiUrl(),{action:'intelligence',refresh:force?'1':'0'},requestTimeout(force)));
+    state.data=data;state.fromCache=data.servedFrom==='persistent-cache';savePayload(data);buildSessions();renderSelected();
+    const ok=Object.values(data.sourceStatus||{}).filter(x=>x.ok).length,total=Object.keys(data.sourceStatus||{}).length;
+    const source=data.servedFrom==='persistent-cache'?'SERVER CACHE':force?'FRESH REBUILD':'LIVE';
+    setStatus(`Synthesis ready · ${ok}/${total} sources live · common date ${data.latestCommonDate||'—'}`,data.mode==='LIVE'?'ok':'warn',`${source} · ${data.version||'—'} · ${fmt(data.elapsedMs,0)} ms`);
+  }catch(err){
+    const cached=readPayload();
+    if(cached?.data){
+      state.data=validatePayload(cached.data);state.fromCache=true;buildSessions();renderSelected();
+      const age=Math.round((Date.now()-cached.savedAt)/60000);
+      setStatus(`API check failed: ${err.message} The saved dashboard remains usable (${age} minutes old).`,'warn','BROWSER CACHE');
+    }else{
+      setStatus(`Unable to load Market Intelligence API: ${err.message}`,'err','No cached payload');
+      $('directiveTitle').textContent='API unavailable';
+      $('directiveLead').textContent='First build the persistent API cache by running rebuildMarketIntelligencePayloadCache() in Apps Script, deploy a new version, then reload this page.';
+    }
+  }finally{if(force)loading(false)}
+}
+function bind(){document.querySelectorAll('#chartToolbar button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#chartToolbar button').forEach(x=>x.classList.remove('active'));b.classList.add('active');state.chartMode=b.dataset.chart;renderMainChart()});$('refreshBtn').onclick=()=>loadData(true);$('prevBtn').onclick=()=>{state.selected=Math.max(0,state.selected-1);renderSelected()};$('nextBtn').onclick=()=>{state.selected=Math.min(state.latest,state.selected+1);renderSelected()};$('timeSlider').oninput=e=>{state.selected=Number(e.target.value);renderSelected()};$('dateInput').onchange=e=>{const i=dateIndex(state.sessions,e.target.value);if(i>=0){state.selected=i;renderSelected()}};$('playBtn').onclick=()=>{if(state.playing){clearInterval(state.playing);state.playing=null;$('playBtn').textContent='▶ Play';return}if(state.selected>=state.latest)state.selected=0;$('playBtn').textContent='❚❚ Pause';state.playing=setInterval(()=>{if(state.selected>=state.latest){clearInterval(state.playing);state.playing=null;$('playBtn').textContent='▶ Play';return}state.selected++;renderSelected()},650)};$('settingsBtn').onclick=()=>{$('apiUrlInput').value=apiUrl();$('themeSelect').value=document.documentElement.dataset.theme;$('timeoutInput').value=Math.round(requestTimeout(false)/1000);$('settingsModal').classList.add('open')};$('closeSettingsBtn').onclick=()=>$('settingsModal').classList.remove('open');$('settingsModal').onclick=e=>{if(e.target===$('settingsModal'))$('settingsModal').classList.remove('open')};$('defaultApiBtn').onclick=()=>{$('apiUrlInput').value=DEFAULT_API};$('testBtn').onclick=async()=>{const u=$('apiUrlInput').value.trim().replace(/\?.*$/,'');if(!u)return alert('Enter the Web App URL.');try{loading(true,'Testing Market Intelligence endpoint…');const x=await jsonp(u,{action:'intelligence',refresh:'0'},requestTimeout(false));alert(x?.ok&&x?.regime?`Connected: ${x.version} · ${x.mode} · ${x.latestCommonDate} · ${x.themes?.length||0} themes`:(x?.error||'The response was not an intelligence payload.'))}catch(e){alert(e.message)}finally{loading(false)}};$('saveBtn').onclick=()=>{const u=$('apiUrlInput').value.trim().replace(/\?.*$/,'');if(u)localStorage.setItem(STORAGE.api,u);localStorage.setItem(STORAGE.timeout,String(clamp(Number($('timeoutInput').value||25),15,120)));setTheme($('themeSelect').value);$('settingsModal').classList.remove('open');loadData(false)};$('lightBtn').onclick=()=>setTheme('light');$('darkBtn').onclick=()=>setTheme('dark');window.addEventListener('resize',()=>{clearTimeout(window.__resizeTimer);window.__resizeTimer=setTimeout(()=>{renderMainChart();renderRRGCanvas()},120)})}
 (function init(){bind();setTheme(localStorage.getItem(STORAGE.theme)||'light');const cached=readPayload();if(cached?.data){try{state.data=validatePayload(cached.data);state.fromCache=true;buildSessions();renderSelected();const age=Math.round((Date.now()-cached.savedAt)/60000);setStatus(`Showing saved payload while checking for an update · ${age} minutes old`,'warn','CACHED FIRST PAINT')}catch(_){}}loadData(false)})();
 </script>
 </body>
