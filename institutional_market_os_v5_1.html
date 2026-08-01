@@ -405,10 +405,34 @@ function renderSectorTable(){
     <td>${pct(x.stage2Pct,0)}</td><td>${pct(x.stage3Pct,0)}</td><td>${pct(x.stage4Pct,0)}</td>
   </tr>`).join('');
 }
-function leaderCard(step,x){if(!x)return `<div class="leader"><div class="leader-step">${step}</div><div class="leader-name">—</div></div>`;
-  const sec=(participation.sectorLatest||[]).find(s=>String(s.sector||'').toLowerCase()===String(x.name||x.parentSector||'').toLowerCase());
-  const confirm=sec?`${pct(sec.advancePct,0)} advancing · ${pct(sec.above50Pct,0)} above 50DMA · S2 ${pct(sec.stage2Pct,0)}`:'Participation confirmation unavailable';
-  return `<div class="leader"><div class="leader-step">${step}</div><div class="leader-name">${esc(x.ticker)} · ${esc(x.name)}</div><div class="leader-meta">${esc(x.parentSector||x.type||'')} · ${esc(x.stage||'—')} · ${esc(x.quadrant||'—')}</div><div class="leader-stats"><div class="leader-stat"><span>SCORE</span><b>${num(x.leadershipScore,0)}</b></div><div class="leader-stat"><span>5D</span><b class="${n(x.return5)>=0?'positive':'negative'}">${pct(x.return5,1)}</b></div><div class="leader-stat"><span>RS</span><b>${num(x.rsScore,0)}</b></div><div class="leader-stat"><span>ACTION</span><b>${esc(x.state||'—')}</b></div></div><div class="leader-confirm">${esc(confirm)}</div></div>`}</div><div class="leader-name">—</div></div>`;return `<div class="leader"><div class="leader-step">${step}</div><div class="leader-name">${esc(x.ticker)} · ${esc(x.name)}</div><div class="leader-meta">${esc(x.parentSector||x.type||'')} · ${esc(x.stage||'—')} · ${esc(x.quadrant||'—')}</div><div class="leader-stats"><div class="leader-stat"><span>SCORE</span><b>${num(x.leadershipScore,0)}</b></div><div class="leader-stat"><span>5D</span><b class="${n(x.return5)>=0?'positive':'negative'}">${pct(x.return5,1)}</b></div><div class="leader-stat"><span>RS</span><b>${num(x.rsScore,0)}</b></div><div class="leader-stat"><span>ACTION</span><b>${esc(x.state||'—')}</b></div></div></div>`}
+function leaderCard(step,x){
+  if(!x){
+    return `<div class="leader"><div class="leader-step">${step}</div><div class="leader-name">—</div></div>`;
+  }
+
+  const sectorName = x.name || x.parentSector || '';
+  const sec = (participation.sectorLatest || []).find(s =>
+    String(s.sector || '').toLowerCase() === String(sectorName).toLowerCase()
+  );
+
+  const confirm = sec
+    ? `${pct(sec.advancePct,0)} advancing · ${pct(sec.above50Pct,0)} above 50DMA · S2 ${pct(sec.stage2Pct,0)}`
+    : 'Participation confirmation unavailable';
+
+  return `<div class="leader">
+    <div class="leader-step">${step}</div>
+    <div class="leader-name">${esc(x.ticker)} · ${esc(x.name)}</div>
+    <div class="leader-meta">${esc(x.parentSector||x.type||'')} · ${esc(x.stage||'—')} · ${esc(x.quadrant||'—')}</div>
+    <div class="leader-stats">
+      <div class="leader-stat"><span>SCORE</span><b>${num(x.leadershipScore,0)}</b></div>
+      <div class="leader-stat"><span>5D</span><b class="${n(x.return5)>=0?'positive':'negative'}">${pct(x.return5,1)}</b></div>
+      <div class="leader-stat"><span>RS</span><b>${num(x.rsScore,0)}</b></div>
+      <div class="leader-stat"><span>ACTION</span><b>${esc(x.state||'—')}</b></div>
+    </div>
+    <div class="leader-confirm">${esc(confirm)}</div>
+  </div>`;
+}
+
 function renderLeadership(){const l=plan.leadership||{};$('leadershipGrid').innerHTML=leaderCard('1 · SECTOR',l.bestSector)+leaderCard('2 · INDUSTRY',l.bestIndustry)+leaderCard('3 · THEME',l.bestTheme)}
 function renderPlaybook(){
   const d=plan.directive||{},p=plan.portfolioPlan||{},i=participation.interpretation||{},best=plan.leadership?.bestTheme;
