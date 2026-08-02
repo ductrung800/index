@@ -261,6 +261,14 @@ a{color:inherit}.app{min-width:1180px}.topnav{height:38px;background:var(--panel
 const API_URL='https://script.google.com/macros/s/AKfycbyJJuJBqxzj4YC2OQoZTiPeciYzwKIliGyYdboOCyFUUcl9Xxt587bFdMxK4pQfatqtNA/exec';
 const CACHE_KEY='institutionalMarketOSV5';
 const $=id=>document.getElementById(id);
+function put(id,value){
+  const el=$(id);
+  if(el) el.textContent=value===undefined||value===null?'—':String(value);
+}
+function setClass(id,value){
+  const el=$(id);
+  if(el) el.className=value;
+}
 let plan=null,participation=null;
 
 function n(v){if(v===null||v===undefined||v==='')return NaN;if(typeof v==='number')return Number.isFinite(v)?v:NaN;const x=Number(String(v).replace(/[,%]/g,''));return Number.isFinite(x)?x:NaN}
@@ -336,33 +344,39 @@ function renderTape(){
   }
 }
 function renderDirective(){
-  const d=plan.directive||{},p=plan.portfolioPlan||{};
+  const d=plan?.directive||{};
   const overlay=deriveConsistencyOverlay();
-  const part=participation.interpretation||{};
+  const part=participation?.interpretation||{};
 
-  $('directiveTitle').textContent=overlay.active
-    ? 'DEFENSIVE ROTATION / INTERNAL DETERIORATION'
-    : label(d.title);
+  put('directiveTitle',
+    overlay.active
+      ? 'DEFENSIVE ROTATION / INTERNAL DETERIORATION'
+      : label(d.title)
+  );
 
-  $('directiveCopy').textContent=overlay.active
-    ? 'Index permission remains positive, but Nasdaq internals, Stockbee-style breadth/distribution evidence and broad participation are simultaneously deteriorating. Treat the permitted risk ceiling as a maximum, not the recommended target.'
-    : label(d.summary);
+  put('directiveCopy',
+    overlay.active
+      ? 'Index permission remains positive, but Nasdaq internals, Stockbee-style breadth/distribution evidence and broad participation are simultaneously deteriorating. Treat the permitted risk ceiling as a maximum, not the recommended target.'
+      : label(d.summary)
+  );
 
-  $('directivePill').textContent=overlay.executionMode;
-  $('directivePill').className='pill '+(overlay.active?'bad':stateClass(d.executionMode));
+  put('directivePill',overlay.executionMode);
+  setClass('directivePill','pill '+(overlay.active?'bad':stateClass(d.executionMode)));
 
-  $('positionSize').textContent=overlay.positionSize;
-  $('setupStandard').textContent=overlay.setupStandard;
-  $('leadershipFocus').textContent=label(d.leadershipFocus);
-  $('primaryRisk').textContent=overlay.primaryRisk;
-  $('targetExposure').textContent=overlay.recommendedExposure;
-  $('cashTarget').textContent=overlay.cashTarget;
-  $('newPositions').textContent=overlay.newPositions;
-  $('addWinners').textContent=overlay.addWinners;
+  put('positionSize',overlay.positionSize);
+  put('setupStandard',overlay.setupStandard);
+  put('leadershipFocus',label(d.leadershipFocus));
+  put('primaryRisk',overlay.primaryRisk);
+  put('targetExposure',overlay.recommendedExposure);
+  put('cashTarget',overlay.cashTarget);
+  put('newPositions',overlay.newPositions);
+  put('addWinners',overlay.addWinners);
 
-  $('todayObjective').textContent=overlay.active
-    ? `Preserve capital while index permission remains ON. Use only verified leaders, reduced size and controlled-risk entries. ${part.summary||''}`
-    : (d.summary||'')+' '+(part.summary||'');
+  put('todayObjective',
+    overlay.active
+      ? `Preserve capital while index permission remains ON. Use only verified leaders, reduced size and controlled-risk entries. ${part.summary||''}`
+      : `${d.summary||''} ${part.summary||''}`.trim()
+  );
 }
 function renderScores(){
   const labels={breadth:'Breadth',trend:'Trend',distribution:'Distribution',nasi:'NASI',capitalAllocation:'Capital Allocation',leadership:'Leadership',volatility:'Volatility',fragility:'Fragility'};
@@ -575,11 +589,42 @@ function renderTriggers(){
   $('upgradeTriggers').innerHTML=(plan.directive?.upgradeTriggers||[]).map(x=>'<li>'+esc(x)+'</li>').join('');
   $('downgradeTriggers').innerHTML=(plan.directive?.downgradeTriggers||[]).map(x=>'<li>'+esc(x)+'</li>').join('');
 }
+function runRenderer(name,fn){
+  try{
+    fn();
+    return null;
+  }catch(err){
+    console.error(name,err);
+    return `${name}: ${err?.message||err}`;
+  }
+}
 function renderAll(){
-  renderHealth();renderTape();renderDirective();renderScores();renderMacro();renderParticipation();renderStages();renderSectorTable();renderLeadership();renderPlaybook();renderTriggers();
-  $('subtitle').textContent=`${plan.latestCommonDate||'—'} · Daily Plan ${plan.version||'—'} · Participation ${participation.version||'—'} · ${participation.audit?.latestCoveragePct||'—'}% coverage`;
-  $('statusLeft').innerHTML=`<span class="ok">LIVE</span> · Market OS loaded`;
-  $('statusRight').textContent=`Plan ${plan.generatedAt||'—'} · Participation ${participation.generatedAt||'—'}`;
+  const errors=[];
+  [
+    ['Source Health',renderHealth],
+    ['Executive Tape',renderTape],
+    ['CIO Directive',renderDirective],
+    ['Scoreboard',renderScores],
+    ['Macro',renderMacro],
+    ['Participation',renderParticipation],
+    ['Stages',renderStages],
+    ['Sector Matrix',renderSectorTable],
+    ['Leadership',renderLeadership],
+    ['Playbook',renderPlaybook],
+    ['Triggers',renderTriggers]
+  ].forEach(([name,fn])=>{
+    const error=runRenderer(name,fn);
+    if(error) errors.push(error);
+  });
+
+  put('subtitle',`${plan?.latestCommonDate||'—'} · Daily Plan ${plan?.version||'—'} · Participation ${participation?.version||'—'} · ${participation?.audit?.latestCoveragePct||'—'}% coverage`);
+
+  if(errors.length){
+    $('statusLeft').innerHTML=`<span class="warn">PARTIAL LOAD</span> · ${esc(errors.join(' | '))}`;
+  }else{
+    $('statusLeft').innerHTML=`<span class="ok">LIVE</span> · Market OS loaded`;
+  }
+  put('statusRight',`Plan ${plan?.generatedAt||'—'} · Participation ${participation?.generatedAt||'—'}`);
 }
 async function loadAll(refresh=false){
   showLoading(true,refresh?'Refreshing Market OS…':'Loading Market OS…',refresh?'Rebuilding plan and participation engines':'Cache-first JSONP delivery');
