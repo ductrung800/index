@@ -1,0 +1,569 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Institutional Morning Briefing v1.0</title>
+<style>
+:root{
+  --bg:#edf2f7;--panel:#fff;--panel2:#f5f8fc;--line:#d1dce8;--line2:#e6edf4;
+  --ink:#112238;--muted:#687990;--navy:#173b63;--navy2:#245687;
+  --green:#0c9b70;--teal:#0f958a;--blue:#2c80bf;--amber:#ca8615;--red:#d84c63;
+  --shadow:0 3px 16px rgba(25,47,72,.08);
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+html[data-theme="dark"]{
+  --bg:#09131f;--panel:#111d2b;--panel2:#172638;--line:#2b3d54;--line2:#213248;
+  --ink:#eef5fb;--muted:#a7b7ca;--navy:#132d4c;--navy2:#1b4876;
+  --green:#39ca98;--teal:#31c7b7;--blue:#61ade0;--amber:#efad43;--red:#f16b7f;
+  --shadow:none;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;font-size:13px}
+.app{min-width:1180px}
+.topnav{height:38px;background:var(--panel);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:18px;padding:0 16px;white-space:nowrap;overflow:hidden}
+.topnav a{height:38px;display:flex;align-items:center;color:var(--muted);text-decoration:none;font:800 8px var(--mono);letter-spacing:.08em}
+.topnav a.active{color:var(--teal);border-bottom:3px solid var(--teal)}
+.header{padding:16px 18px;background:linear-gradient(135deg,var(--panel),var(--panel2));border-bottom:1px solid var(--line)}
+.headrow{display:flex;justify-content:space-between;gap:20px;align-items:flex-start}
+.eyebrow{font:800 8px var(--mono);letter-spacing:.17em;text-transform:uppercase;color:var(--teal)}
+.title{font-size:28px;font-weight:950;line-height:1.05;margin:6px 0 5px}
+.subtitle{font:9px var(--mono);color:var(--muted)}
+.actions{display:flex;gap:8px}
+.btn{border:1px solid var(--line);border-radius:8px;background:var(--panel2);color:var(--ink);padding:9px 12px;font:800 8px var(--mono);cursor:pointer;text-decoration:none}
+.btn.primary{background:var(--teal);border-color:var(--teal);color:#fff}
+.statusbar{display:flex;justify-content:space-between;padding:7px 18px;background:var(--panel2);border-bottom:1px solid var(--line);font:8px var(--mono);color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:10px;padding:10px}
+.span12{grid-column:span 12}.span8{grid-column:span 8}.span7{grid-column:span 7}.span6{grid-column:span 6}.span5{grid-column:span 5}.span4{grid-column:span 4}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);overflow:hidden}
+.card-head{min-height:46px;padding:10px 12px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:10px;align-items:flex-start;background:linear-gradient(180deg,var(--panel),var(--panel2))}
+.card-title{font:900 9px var(--mono);letter-spacing:.13em;text-transform:uppercase}
+.card-sub{font-size:8px;color:var(--muted);margin-top:4px}
+.card-body{padding:12px}
+.pill{border:1px solid var(--line);border-radius:999px;padding:4px 8px;font:900 7px var(--mono);white-space:nowrap;color:var(--muted)}
+.good{color:var(--green)}.warn{color:var(--amber)}.bad{color:var(--red)}.muted{color:var(--muted)}
+.pill.good{background:color-mix(in srgb,var(--green) 12%,transparent)}
+.pill.warn{background:color-mix(in srgb,var(--amber) 12%,transparent)}
+.pill.bad{background:color-mix(in srgb,var(--red) 12%,transparent)}
+.hero{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:10px;padding:10px}
+.hero-box{min-height:122px;border:1px solid var(--line);border-radius:12px;background:var(--panel2);padding:16px;position:relative;overflow:hidden}
+.hero-box.primary{background:linear-gradient(135deg,var(--navy),var(--navy2));border:none;color:#fff}
+.hero-box.primary:after{content:"";position:absolute;width:160px;height:160px;border:1px solid rgba(255,255,255,.12);border-radius:50%;right:-50px;top:-60px}
+.hero-label{font:900 8px var(--mono);letter-spacing:.11em;text-transform:uppercase;opacity:.72}
+.hero-value{font-size:25px;font-weight:950;line-height:1.04;margin-top:10px}
+.hero-note{font-size:9px;line-height:1.45;margin-top:9px;color:var(--muted)}
+.primary .hero-note{color:rgba(255,255,255,.8)}
+.brief-shell{display:grid;grid-template-columns:1.45fr .55fr;gap:10px}
+.brief-main{background:linear-gradient(135deg,var(--navy),var(--navy2));border-radius:11px;color:#fff;padding:18px;min-height:235px}
+.brief-kicker{font:900 8px var(--mono);letter-spacing:.13em;text-transform:uppercase;opacity:.72}
+.brief-title{font-size:29px;font-weight:950;line-height:1.05;margin-top:8px}
+.brief-copy{font-size:11px;line-height:1.65;margin-top:10px;color:rgba(255,255,255,.82)}
+.brief-points{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
+.brief-point{border:1px solid rgba(255,255,255,.18);border-radius:8px;background:rgba(255,255,255,.06);padding:10px}
+.brief-point span{font:800 7px var(--mono);opacity:.72}
+.brief-point b{display:block;margin-top:5px;font-size:12px}
+.snapshot{border:1px solid var(--line);border-radius:11px;background:var(--panel2);padding:13px}
+.snapshot-title{font:900 8px var(--mono);letter-spacing:.1em;text-transform:uppercase}
+.snapshot-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:11px}
+.snapshot-cell{border:1px solid var(--line);border-radius:8px;background:var(--panel);padding:10px}
+.snapshot-cell span{font:800 7px var(--mono);color:var(--muted)}
+.snapshot-cell b{display:block;margin-top:5px;font-size:14px}
+.change-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
+.change{border:1px solid var(--line);border-radius:10px;background:var(--panel2);padding:11px}
+.change-top{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.change-name{font:900 8px var(--mono);text-transform:uppercase;color:var(--muted)}
+.change-value{font-size:18px;font-weight:950;margin-top:8px}
+.change-note{font-size:8px;color:var(--muted);line-height:1.45;margin-top:6px}
+.lens-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
+.lens{border:1px solid var(--line);border-radius:10px;background:var(--panel2);padding:12px}
+.lens-head{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.lens-title{font:900 8px var(--mono);text-transform:uppercase}
+.lens-value{font-size:16px;font-weight:950;margin-top:9px}
+.lens-copy{font-size:8px;line-height:1.5;color:var(--muted);margin-top:7px}
+.track{height:8px;border-radius:999px;background:var(--line);overflow:hidden;margin-top:9px}
+.fill{height:100%;border-radius:999px}
+.play-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.play{border:1px solid var(--line);border-radius:11px;background:var(--panel2);padding:14px;min-height:155px}
+.play.buy{border-top:4px solid var(--green)}.play.enter{border-top:4px solid var(--amber)}.play.avoid{border-top:4px solid var(--red)}.play.manage{border-top:4px solid var(--blue)}
+.play h4{margin:0;font:900 9px var(--mono);text-transform:uppercase}
+.play p{margin:10px 0 0;color:var(--muted);font-size:10px;line-height:1.62}
+.leaders{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.leader{border:1px solid var(--line);border-radius:10px;background:var(--panel2);padding:12px}
+.leader-step{font:800 7px var(--mono);color:var(--muted)}
+.leader-name{font-size:17px;font-weight:950;margin-top:6px}
+.leader-meta{font-size:8px;color:var(--muted);margin-top:7px}
+.leader-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
+.leader-stat{border:1px solid var(--line);border-radius:7px;background:var(--panel);padding:7px}
+.leader-stat span{font:800 6px var(--mono);color:var(--muted)}
+.leader-stat b{display:block;margin-top:4px;font-size:10px}
+.checklist{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.check-panel{border:1px solid var(--line);border-radius:10px;background:var(--panel2);padding:12px}
+.check-panel h4{margin:0 0 9px;font:900 9px var(--mono)}
+.check-panel ul{margin:0;padding-left:18px;line-height:1.8;color:var(--muted)}
+.source-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.source{border:1px solid var(--line);border-radius:9px;background:var(--panel2);padding:10px}
+.source-top{display:flex;justify-content:space-between;gap:6px}
+.source-name{font:900 8px var(--mono);text-transform:uppercase}
+.source-meta{font-size:7px;color:var(--muted);line-height:1.45;margin-top:6px}
+.footer{text-align:center;padding:16px;color:var(--muted);font:8px var(--mono)}
+.loading{position:fixed;inset:0;background:rgba(8,15,24,.42);display:none;align-items:center;justify-content:center;z-index:30}
+.loading.open{display:flex}.loading-box{width:340px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px;text-align:center}
+.spinner{width:30px;height:30px;border:3px solid var(--line);border-top-color:var(--teal);border-radius:50%;margin:0 auto 10px;animation:spin .9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-title{font-weight:950}.loading-note{font:8px var(--mono);color:var(--muted);margin-top:6px}
+@media(max-width:1350px){.app{min-width:1060px}.hero{grid-template-columns:repeat(2,1fr)}.brief-shell{grid-template-columns:1fr}.change-grid,.lens-grid,.play-grid{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<div class="app">
+<nav class="topnav">
+<a class="active" href="institutional_morning_briefing_v1.html">MORNING BRIEF</a>
+<a href="institutional_market_os_v5_4.html">MARKET OS</a>
+<a href="stockbee_market_monitor_live.html">STOCKBEE</a>
+<a href="nasi_institutional_command_center.html">NASDAQ BREADTH</a>
+<a href="Capital_Allocation_Regime.html">CAPITAL ALLOCATION</a>
+<a href="leadership_rotation_command.html">LEADERSHIP</a>
+<a href="Market_Breadth_Institutional_Command.html">BREADTH COMMAND</a>
+<a href="PortfolioManagement.html">PORTFOLIO</a>
+</nav>
+
+<header class="header">
+<div class="headrow">
+<div>
+<div class="eyebrow">Institutional Decision Brief · Regime · Breadth · Leadership · Risk</div>
+<div class="title">Institutional Morning Briefing v1.0</div>
+<div class="subtitle" id="subtitle">Loading canonical Daily Plan and FMP breadth evidence…</div>
+</div>
+<div class="actions">
+<a class="btn" href="institutional_market_os_v5_4.html">Open Market OS</a>
+<button class="btn primary" id="refreshBtn">↻ Refresh Live Data</button>
+<button class="btn" id="themeBtn">Dark</button>
+</div>
+</div>
+</header>
+
+<div class="statusbar">
+<div id="statusLeft">Initializing morning briefing…</div>
+<div id="statusRight">No payload loaded</div>
+</div>
+
+<section class="card" style="margin:10px 10px 0">
+<div class="hero">
+<div class="hero-box primary">
+<div class="hero-label">Canonical Market State</div>
+<div class="hero-value" id="regime">—</div>
+<div class="hero-note" id="regimeNote">Unified portfolio posture</div>
+</div>
+<div class="hero-box">
+<div class="hero-label">Recommended Exposure</div>
+<div class="hero-value" id="exposure">—</div>
+<div class="hero-note" id="cash">Cash target —</div>
+</div>
+<div class="hero-box">
+<div class="hero-label">Execution Mode</div>
+<div class="hero-value" id="execution">—</div>
+<div class="hero-note" id="positionSize">Position size —</div>
+</div>
+<div class="hero-box">
+<div class="hero-label">Decision Confidence</div>
+<div class="hero-value" id="confidence">—</div>
+<div class="hero-note" id="confidenceNote">Evidence alignment</div>
+</div>
+</div>
+</section>
+
+<main class="grid">
+
+<section class="card span12">
+<div class="card-head">
+<div><div class="card-title">CIO Morning Brief</div><div class="card-sub">One actionable conclusion before reviewing individual setups</div></div>
+<span class="pill" id="briefPill">AWAITING DATA</span>
+</div>
+<div class="card-body">
+<div class="brief-shell">
+<div class="brief-main">
+<div class="brief-kicker">Today’s Portfolio Instruction</div>
+<div class="brief-title" id="briefTitle">Waiting for live market evidence</div>
+<div class="brief-copy" id="briefCopy">The briefing will combine index permission, FMP Nasdaq breadth, S&P participation, distribution and leadership.</div>
+<div class="brief-points">
+<div class="brief-point"><span>PRIMARY OPPORTUNITY</span><b id="opportunity">—</b></div>
+<div class="brief-point"><span>PRIMARY RISK</span><b id="primaryRisk">—</b></div>
+<div class="brief-point"><span>INVALIDATION</span><b id="invalidation">—</b></div>
+</div>
+</div>
+<div class="snapshot">
+<div class="snapshot-title">Portfolio Snapshot</div>
+<div class="snapshot-grid">
+<div class="snapshot-cell"><span>BUY SWITCH</span><b id="buySwitch">—</b></div>
+<div class="snapshot-cell"><span>WEEKLY SIGNAL</span><b id="weeklySignal">—</b></div>
+<div class="snapshot-cell"><span>MAX POSITION</span><b id="maxPosition">—</b></div>
+<div class="snapshot-cell"><span>RISK / TRADE</span><b id="riskTrade">—</b></div>
+<div class="snapshot-cell"><span>LEADERSHIP</span><b id="leadershipState">—</b></div>
+<div class="snapshot-cell"><span>FRAGILITY</span><b id="fragility">—</b></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<section class="card span12">
+<div class="card-head"><div><div class="card-title">What Changed Since Yesterday</div><div class="card-sub">Latest breadth and participation deltas; unavailable comparisons are stated explicitly</div></div><span class="pill" id="changePill">SESSION CHANGE</span></div>
+<div class="card-body"><div class="change-grid" id="changeGrid"></div></div>
+</section>
+
+<section class="card span12">
+<div class="card-head"><div><div class="card-title">Four-Lens Decision Map</div><div class="card-sub">Macro permission, trend permission, internal breadth and leadership conviction</div></div></div>
+<div class="card-body"><div class="lens-grid" id="lensGrid"></div></div>
+</section>
+
+<section class="card span12">
+<div class="card-head"><div><div class="card-title">Swing Trading Playbook</div><div class="card-sub">Multi-day to multi-week execution guidance</div></div></div>
+<div class="card-body"><div class="play-grid">
+<div class="play buy"><h4 class="good">BUY</h4><p id="whatToBuy">—</p></div>
+<div class="play enter"><h4 class="warn">ENTER</h4><p id="howToEnter">—</p></div>
+<div class="play avoid"><h4 class="bad">AVOID</h4><p id="whatToAvoid">—</p></div>
+<div class="play manage"><h4>MANAGE</h4><p id="riskManagement">—</p></div>
+</div></div>
+</section>
+
+<section class="card span7">
+<div class="card-head"><div><div class="card-title">Leadership Focus</div><div class="card-sub">Best verified sector, industry and theme from the canonical Daily Plan</div></div><a class="pill good" href="leadership_rotation_command.html">OPEN ROTATION</a></div>
+<div class="card-body"><div class="leaders" id="leaderGrid"></div></div>
+</section>
+
+<section class="card span5">
+<div class="card-head"><div><div class="card-title">Breadth Confirmation</div><div class="card-sub">FMP Nasdaq internals and S&P participation</div></div></div>
+<div class="card-body">
+<div class="snapshot-grid">
+<div class="snapshot-cell"><span>FMP NASI</span><b id="nasi">—</b></div>
+<div class="snapshot-cell"><span>NASI VS 50 SMA</span><b id="nasiSpread">—</b></div>
+<div class="snapshot-cell"><span>MCCLELLAN</span><b id="mcclellan">—</b></div>
+<div class="snapshot-cell"><span>NASDAQ A/D</span><b id="nasdaqAd">—</b></div>
+<div class="snapshot-cell"><span>S&P ADVANCE %</span><b id="spAdvance">—</b></div>
+<div class="snapshot-cell"><span>S&P >50DMA</span><b id="spAbove50">—</b></div>
+</div>
+</div>
+</section>
+
+<section class="card span12">
+<div class="card-head"><div><div class="card-title">Upgrade & Downgrade Checklist</div><div class="card-sub">Conditions that justify changing exposure rather than reacting emotionally</div></div></div>
+<div class="card-body"><div class="checklist">
+<div class="check-panel"><h4 class="good">UPGRADE EXPOSURE WHEN</h4><ul id="upgradeList"></ul></div>
+<div class="check-panel"><h4 class="bad">DOWNGRADE EXPOSURE WHEN</h4><ul id="downgradeList"></ul></div>
+</div></div>
+</section>
+
+<section class="card span12">
+<details>
+<summary style="cursor:pointer;padding:10px 12px;font:900 8px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)">System Diagnostics · Source Freshness</summary>
+<div class="card-body"><div class="source-grid" id="sourceGrid"></div></div>
+</details>
+</section>
+
+</main>
+
+<footer class="footer">INSTITUTIONAL MORNING BRIEFING v1.0 · DAILY PLAN 1.1 + PARTICIPATION 2.2 · FMP NASDAQ BREADTH ONLY</footer>
+</div>
+
+<div class="loading" id="loading"><div class="loading-box"><div class="spinner"></div><div class="loading-title" id="loadingTitle">Loading Morning Brief…</div><div class="loading-note" id="loadingNote">Canonical plan + participation JSONP</div></div></div>
+
+<script>
+const API_URL='https://script.google.com/macros/s/AKfycbyJJuJBqxzj4YC2OQoZTiPeciYzwKIliGyYdboOCyFUUcl9Xxt587bFdMxK4pQfatqtNA/exec';
+const CACHE_KEY='institutionalMorningBriefV1';
+const $=id=>document.getElementById(id);
+let plan=null,participation=null;
+
+function put(id,v){const el=$(id);if(el)el.textContent=v===undefined||v===null||v===''?'—':String(v)}
+function n(v){if(v===null||v===undefined||v==='')return NaN;if(typeof v==='number')return Number.isFinite(v)?v:NaN;const x=Number(String(v).replace(/[,%]/g,''));return Number.isFinite(x)?x:NaN}
+function num(v,d=0){const x=n(v);return Number.isFinite(x)?x.toFixed(d):'—'}
+function pct(v,d=0){const x=n(v);return Number.isFinite(x)?x.toFixed(d)+'%':'—'}
+function signed(v,d=0){const x=n(v);return Number.isFinite(x)?(x>0?'+':'')+x.toFixed(d):'—'}
+function label(v,f='—'){if(v===null||v===undefined||v==='')return f;if(typeof v==='string'||typeof v==='number'||typeof v==='boolean')return String(v);return v.label||v.state||v.name||f}
+function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+function path(o,keys){let x=o;for(const k of keys){if(x==null)return undefined;x=x[k]}return x}
+function firstFinite(){for(const v of arguments){const x=n(v);if(Number.isFinite(x))return x}return NaN}
+function firstText(){for(const v of arguments){if(v!==null&&v!==undefined&&String(v).trim()!=='')return String(v)}return ''}
+function clamp(v,a=0,b=100){const x=n(v);return Number.isFinite(x)?Math.max(a,Math.min(b,x)):0}
+function stateClass(v){const s=String(v||'').toUpperCase();return /ON|STRONG|HEALTHY|CALM|STABLE|CONTAINED|SUPPORTIVE|EXPANDING|BROAD|BULLISH/.test(s)?'good':/OFF|CRITICAL|BROKEN|STRESSED|DETERIORATION|BELOW|DECLINE|RESTRICTIVE/.test(s)?'bad':'warn'}
+function scoreColor(v){const x=n(v);return x>=65?'var(--green)':x>=45?'var(--amber)':'var(--red)'}
+function showLoading(open,title,note){$('loading').classList.toggle('open',open);if(title)$('loadingTitle').textContent=title;if(note)$('loadingNote').textContent=note}
+
+function jsonp(action,refresh=false,timeoutMs=70000){
+  return new Promise((resolve,reject)=>{
+    const cb='__brief_'+action.replace(/\W/g,'')+'_'+Date.now()+'_'+Math.random().toString(36).slice(2);
+    const s=document.createElement('script');let settled=false;
+    const cleanup=()=>{try{delete window[cb]}catch{};if(s.parentNode)s.parentNode.removeChild(s)};
+    const timer=setTimeout(()=>{if(settled)return;settled=true;cleanup();reject(new Error(action+' request timed out'))},timeoutMs);
+    window[cb]=payload=>{if(settled)return;settled=true;clearTimeout(timer);cleanup();if(!payload||payload.ok!==true){reject(new Error(payload?.error||action+' returned invalid payload'));return}resolve(payload)};
+    s.onerror=()=>{if(settled)return;settled=true;clearTimeout(timer);cleanup();reject(new Error(action+' JSONP request failed'))};
+    const q=['action='+encodeURIComponent(action),'callback='+encodeURIComponent(cb)];
+    if(refresh)q.push('refresh=1');
+    s.src=API_URL+'?'+q.join('&');s.async=true;document.head.appendChild(s);
+  });
+}
+function saveCache(){try{localStorage.setItem(CACHE_KEY,JSON.stringify({ts:Date.now(),plan,participation}))}catch{}}
+function loadCache(){try{const x=JSON.parse(localStorage.getItem(CACHE_KEY)||'null');if(x?.plan?.ok&&x?.participation?.ok){plan=x.plan;participation=x.participation;return true}}catch{}return false}
+
+function latestParticipationRows(){
+  const candidates=[
+    participation?.sessions,
+    participation?.history,
+    participation?.sp500,
+    participation?.series
+  ];
+  for(const arr of candidates){
+    if(Array.isArray(arr)&&arr.length)return arr;
+  }
+  return [];
+}
+function latestPair(){
+  const arr=latestParticipationRows().slice();
+  if(arr.length<2)return [participation?.latest||null,null];
+  arr.sort((a,b)=>String(a.date||a.asOf||'').localeCompare(String(b.date||b.asOf||'')));
+  return [arr[arr.length-1],arr[arr.length-2]];
+}
+function metricFrom(row,paths){
+  for(const keys of paths){
+    const v=path(row,keys);
+    if(Number.isFinite(n(v)))return n(v);
+  }
+  return NaN;
+}
+function delta(current,prior){
+  return Number.isFinite(current)&&Number.isFinite(prior)?current-prior:NaN;
+}
+function changeCard(name,current,prior,unit,note){
+  const d=delta(current,prior);
+  const cls=Number.isFinite(d)?(d>0?'good':d<0?'bad':'warn'):'muted';
+  const display=Number.isFinite(current)?(unit==='%'?pct(current,1):num(current,unit==='ratio'?2:0)):'—';
+  const change=Number.isFinite(d)?((d>0?'+':'')+d.toFixed(unit==='%'?1:unit==='ratio'?2:0)+(unit==='%'?' pts':'')):'Prior session unavailable';
+  return `<div class="change"><div class="change-top"><div class="change-name">${esc(name)}</div><span class="pill ${cls}">${esc(change)}</span></div><div class="change-value">${display}</div><div class="change-note">${esc(note)}</div></div>`;
+}
+
+function deriveState(){
+  const p=plan||{};
+  const latest=participation?.latest||{};
+  const ad=latest.advanceDecline||{};
+  const vp=latest.volumeParticipation||{};
+  const ma=latest.movingAverages||{};
+  const hl=latest.highLow?.d20||{};
+  const st=latest.stageAnalysis||{};
+  const nasi=p.sentiment?.nasi||{};
+
+  const breadthScore=firstFinite(p.components?.breadth,participation?.interpretation?.score,50);
+  const trendScore=firstFinite(p.components?.trend,50);
+  const leadershipScore=firstFinite(p.leadership?.score,p.components?.leadership,50);
+  const macroScore=firstFinite(p.components?.capitalAllocation,50);
+  const fragilityScore=firstFinite(p.components?.fragility,50);
+  const completeness=firstFinite(p.completeness,participation?.audit?.latestCoveragePct,100);
+  const evidenceAverage=(breadthScore+trendScore+leadershipScore+macroScore+fragilityScore)/5;
+  const confidence=Math.round(evidenceAverage*.75+clamp(completeness)*.25);
+
+  const nasiCurrent=firstFinite(nasi.current);
+  const nasi50=firstFinite(nasi.sma50);
+  const nasiSpread=firstFinite(nasi.spread,nasiCurrent-nasi50);
+  const advancePct=firstFinite(ad.advancePct);
+  const volumePct=firstFinite(vp.upParticipationPct);
+  const above50=firstFinite(ma.above50Pct);
+  const stage2=firstFinite(st.stage2?.pct);
+  const stage4=firstFinite(st.stage4?.pct);
+  const net20=firstFinite(hl.netHighs);
+
+  const breadthConstructive=
+    (Number.isFinite(advancePct)&&advancePct>=55) +
+    (Number.isFinite(volumePct)&&volumePct>=55) +
+    (Number.isFinite(above50)&&above50>=55) +
+    (Number.isFinite(net20)&&net20>0) >= 3;
+
+  const cumulativeUnconfirmed=
+    Number.isFinite(nasiCurrent)&&Number.isFinite(nasi50)&&
+    (nasiCurrent<0 || nasiCurrent<nasi50);
+
+  const leadershipNarrow=leadershipScore<45;
+  const distributionState=firstText(p.distribution?.state,p.directive?.distributionState,p.fragility?.distributionState,'WATCH');
+  const distBad=/CRITICAL|ELEVATED|PRESSURE|BREAKDOWN/i.test(distributionState);
+
+  let regime=label(p.regime?.label,p.regime?.state||'—');
+  let execution=label(p.directive?.executionMode,p.portfolioPlan?.executionMode||'SELECTIVE');
+  let exposure=label(p.portfolioPlan?.targetExposure,p.riskBudget?.range||'—');
+  let cash=label(p.portfolioPlan?.cashTarget,'—');
+  let posture='SELECTIVE RISK-ON / BREADTH REPAIR';
+
+  if(!breadthConstructive&&distBad){
+    posture='DEFENSIVE ROTATION / INTERNAL DETERIORATION';
+  }else if(breadthConstructive&&cumulativeUnconfirmed){
+    posture='SELECTIVE RISK-ON / CONFIRMATION PENDING';
+  }else if(breadthConstructive&&!leadershipNarrow&&!cumulativeUnconfirmed){
+    posture='CONSTRUCTIVE RISK-ON / BROADENING';
+  }
+
+  return {
+    regime,posture,execution,exposure,cash,confidence,
+    breadthScore,trendScore,leadershipScore,macroScore,fragilityScore,
+    breadthConstructive,cumulativeUnconfirmed,leadershipNarrow,distBad,
+    advancePct,volumePct,above50,stage2,stage4,nasiCurrent,nasi50,nasiSpread,
+    distributionState
+  };
+}
+
+function lensCard(title,value,score,copy){
+  return `<div class="lens"><div class="lens-head"><div class="lens-title">${esc(title)}</div><span class="pill ${stateClass(value)}">${esc(value)}</span></div><div class="lens-value">${num(score,0)} / 100</div><div class="track"><div class="fill" style="width:${clamp(score)}%;background:${scoreColor(score)}"></div></div><div class="lens-copy">${esc(copy)}</div></div>`;
+}
+function leaderCard(step,x){
+  if(!x)return `<div class="leader"><div class="leader-step">${esc(step)}</div><div class="leader-name">—</div></div>`;
+  return `<div class="leader"><div class="leader-step">${esc(step)}</div><div class="leader-name">${esc(x.ticker||'—')} · ${esc(x.name||'—')}</div><div class="leader-meta">${esc(x.parentSector||x.type||'')} · ${esc(x.stage||'—')} · ${esc(x.quadrant||'—')}</div><div class="leader-stats"><div class="leader-stat"><span>SCORE</span><b>${num(x.leadershipScore,0)}</b></div><div class="leader-stat"><span>5D</span><b class="${n(x.return5)>=0?'good':'bad'}">${pct(x.return5,1)}</b></div><div class="leader-stat"><span>STATE</span><b>${esc(x.state||'—')}</b></div></div></div>`;
+}
+
+function render(){
+  const s=deriveState();
+  const p=plan||{};
+  const latest=participation?.latest||{};
+  const ad=latest.advanceDecline||{};
+  const ma=latest.movingAverages||{};
+  const breadth=p.sentiment?.nasi||{};
+  const fmp=p.fmpNasdaqBreadth||{};
+
+  put('regime',s.posture);
+  put('regimeNote',`${s.regime} · ${s.breadthConstructive?'daily breadth constructive':'daily breadth mixed'} · ${s.cumulativeUnconfirmed?'cumulative confirmation pending':'cumulative confirmation supportive'}`);
+  put('exposure',s.exposure);
+  put('cash','Cash target '+s.cash);
+  put('execution',s.execution);
+  put('positionSize','Position size '+label(p.directive?.positionSize,p.portfolioPlan?.positionSize||'—'));
+  put('confidence',s.confidence+'%');
+  put('confidenceNote',s.confidence>=70?'High evidence alignment':s.confidence>=50?'Moderate evidence alignment':'Low evidence alignment');
+
+  put('briefTitle',s.posture);
+  let brief='';
+  if(s.breadthConstructive&&s.cumulativeUnconfirmed){
+    brief='Short-term participation and momentum have improved, but FMP NASI remains below zero or below its 50 SMA. Keep the Buy Switch permission, deploy selectively, and require verified leadership rather than treating one strong breadth session as a fully repaired market.';
+  }else if(!s.breadthConstructive&&s.distBad){
+    brief='Breadth and distribution are not providing enough confirmation for broad offense. Preserve capital, reduce marginal positions, and restrict new exposure to exceptional relative-strength leaders with tightly defined risk.';
+  }else{
+    brief=label(p.directive?.summary,'Use the canonical risk budget and trade only the strongest verified setups.');
+  }
+  put('briefCopy',brief);
+  put('briefPill',s.execution);
+  $('briefPill').className='pill '+stateClass(s.execution);
+
+  const bestTheme=p.leadership?.bestTheme;
+  put('opportunity',bestTheme?`${bestTheme.ticker} · ${bestTheme.name}`:label(p.directive?.leadershipFocus,'Verified leaders'));
+  put('primaryRisk',label(p.directive?.primaryRisk,`${s.distributionState} · leadership breadth`));
+  put('invalidation',s.cumulativeUnconfirmed?'FMP NASI reclaiming its 50 SMA changes the confirmation state':'Breadth deterioration or Buy Switch OFF');
+
+  put('buySwitch',label(p.buySwitch?.state));
+  put('weeklySignal',label(p.weeklySignal?.state||p.weeklySignal));
+  put('maxPosition',label(p.portfolioPlan?.maxPosition));
+  put('riskTrade',label(p.riskBudget?.riskPerTrade));
+  put('leadershipState',label(p.leadership?.state));
+  put('fragility',label(p.fragility?.state));
+
+  const [cur,prev]=latestPair();
+  const curAd=metricFrom(cur,[['advanceDecline','advancePct'],['advancePct']]);
+  const prevAd=metricFrom(prev,[['advanceDecline','advancePct'],['advancePct']]);
+  const curVol=metricFrom(cur,[['volumeParticipation','upParticipationPct'],['upParticipationPct']]);
+  const prevVol=metricFrom(prev,[['volumeParticipation','upParticipationPct'],['upParticipationPct']]);
+  const cur50=metricFrom(cur,[['movingAverages','above50Pct'],['above50Pct']]);
+  const prev50=metricFrom(prev,[['movingAverages','above50Pct'],['above50Pct']]);
+  const curStage2=metricFrom(cur,[['stageAnalysis','stage2','pct'],['stage2Pct']]);
+  const prevStage2=metricFrom(prev,[['stageAnalysis','stage2','pct'],['stage2Pct']]);
+
+  $('changeGrid').innerHTML=
+    changeCard('Advance Participation',Number.isFinite(curAd)?curAd:s.advancePct,prevAd,'%', 'S&P 500 session participation')+
+    changeCard('Volume Participation',Number.isFinite(curVol)?curVol:s.volumePct,prevVol,'%', 'Up-volume versus down-volume participation')+
+    changeCard('Above 50DMA',Number.isFinite(cur50)?cur50:s.above50,prev50,'%', 'Intermediate structural breadth')+
+    changeCard('Stage 2 Cohort',Number.isFinite(curStage2)?curStage2:s.stage2,prevStage2,'%', 'Advancing-stage participation');
+
+  const macroState=label(p.capitalAllocation?.state,'MIXED / ROTATION');
+  const trendState=label(p.regime?.spyTrend?.state||p.powerTrend?.state,'MIXED');
+  const breadthState=s.breadthConstructive?'SUPPORTIVE':'MIXED / REPAIR';
+  const leadershipState=label(p.leadership?.state,s.leadershipNarrow?'NARROW':'BROADENING');
+
+  $('lensGrid').innerHTML=
+    lensCard('Macro',macroState,s.macroScore,`VIX ${num(p.marketMood?.vix,2)} · Credit ${num(p.capitalAllocation?.creditRatio,2)} · Put/Call ${num(p.sentiment?.putCall,2)}`)+
+    lensCard('Trend',trendState,s.trendScore,`Buy Switch ${label(p.buySwitch?.state)} · Weekly ${label(p.weeklySignal?.state||p.weeklySignal)} · Power Trend ${label(p.powerTrend?.state)}`)+
+    lensCard('Breadth',breadthState,s.breadthScore,`Advance ${pct(s.advancePct,1)} · Volume ${pct(s.volumePct,1)} · >50DMA ${pct(s.above50,1)}`)+
+    lensCard('Leadership',leadershipState,s.leadershipScore,`Best theme ${bestTheme?bestTheme.ticker+' · '+bestTheme.name:'—'} · Stage 2 ${pct(s.stage2,1)} · Stage 4 ${pct(s.stage4,1)}`);
+
+  const positionSize=label(p.directive?.positionSize,p.portfolioPlan?.positionSize||'reduced size');
+  const setupStandard=label(p.directive?.setupStandard,p.portfolioPlan?.setupStandard||'A-quality only');
+  put('whatToBuy',`Verified leaders only${bestTheme?' — especially '+bestTheme.ticker+' / '+bestTheme.name:''}. Favor sectors and themes with positive participation, strong relative strength and Stage 2 support.`);
+  put('howToEnter',`Use ${positionSize}. Apply ${setupStandard}. Prefer pullbacks, tight pivots and confirmation entries over broad breakout chasing.`);
+  put('whatToAvoid',`Avoid weak sectors, marginal breakouts, extended names and large Stage 3/4 exposure while cumulative FMP NASI confirmation remains ${s.cumulativeUnconfirmed?'incomplete':'supportive'}.`);
+  put('riskManagement',`Target exposure ${s.exposure}, cash ${s.cash}, max position ${label(p.portfolioPlan?.maxPosition)}, risk per trade ${label(p.riskBudget?.riskPerTrade)}. Add only when breadth and price confirm.`);
+
+  $('leaderGrid').innerHTML=
+    leaderCard('1 · SECTOR',p.leadership?.bestSector)+
+    leaderCard('2 · INDUSTRY',p.leadership?.bestIndustry)+
+    leaderCard('3 · THEME',p.leadership?.bestTheme);
+
+  put('nasi',num(breadth.current,2));
+  put('nasiSpread',signed(breadth.spread,2));
+  put('mcclellan',signed(firstFinite(fmp.mcclellanOscillator,path(p,['sentiment','mcclellanOscillator'])),1));
+  put('nasdaqAd',num(firstFinite(fmp.advanceDeclineRatio,path(p,['sentiment','advanceDeclineRatio'])),2));
+  put('spAdvance',pct(ad.advancePct,1));
+  put('spAbove50',pct(ma.above50Pct,1));
+
+  const upgrade=(p.directive?.upgradeTriggers||[
+    'FMP NASI reclaims zero and its 50 SMA',
+    'S&P advance and volume participation remain above 55%',
+    'Leadership score broadens above 60',
+    'Distribution pressure falls to contained'
+  ]);
+  const downgrade=(p.directive?.downgradeTriggers||[
+    'Buy Switch turns OFF or Power Trend breaks',
+    'S&P 50DMA breadth falls below 40%',
+    'McClellan rolls negative after failed breadth repair',
+    'Leadership momentum weakens materially'
+  ]);
+  $('upgradeList').innerHTML=upgrade.map(x=>'<li>'+esc(x)+'</li>').join('');
+  $('downgradeList').innerHTML=downgrade.map(x=>'<li>'+esc(x)+'</li>').join('');
+
+  const ss=p.sourceStatus||{};
+  const sources=[
+    ['Market Intelligence',ss.marketIntelligence],
+    ['Rotation',ss.rotation],
+    ['FMP Nasdaq Breadth',ss.fmpNasdaqBreadth],
+    ['Participation',{ok:participation?.ok,asOf:participation?.asOf,detail:'v'+(participation?.version||'—')}],
+    ['Daily Plan',{ok:p.ok,asOf:p.latestCommonDate,detail:'v'+(p.version||'—')}]
+  ];
+  $('sourceGrid').innerHTML=sources.map(([name,x])=>`<div class="source"><div class="source-top"><div class="source-name">${esc(name)}</div><span class="pill ${x?.ok?'good':'bad'}">${x?.ok?'LIVE':'CHECK'}</span></div><div class="source-meta">${esc(x?.asOf||'—')}<br>${esc(x?.detail||'')}</div></div>`).join('');
+
+  const marketDate=firstText(p.latestCommonDate,participation?.asOf,'—');
+  put('subtitle',`Market ${marketDate} · Daily Plan v${p.version||'—'} · Participation v${participation?.version||'—'} · FMP Nasdaq Breadth only`);
+  $('statusLeft').innerHTML=`<span class="good">LIVE</span> · Morning briefing loaded`;
+  put('statusRight',`Market ${marketDate} · Plan ${p.generatedAt||'—'} · Participation ${participation?.generatedAt||'—'}`);
+}
+
+async function loadAll(refresh=false){
+  showLoading(true,refresh?'Refreshing Morning Brief…':'Loading Morning Brief…',refresh?'Requesting refreshed server payloads':'Cache-first JSONP delivery');
+  try{
+    const [p,m]=await Promise.all([
+      jsonp('plan',refresh,refresh?130000:70000),
+      jsonp('participation',refresh,refresh?180000:80000)
+    ]);
+    plan=p;participation=m;saveCache();render();
+  }catch(err){
+    if(loadCache()){
+      render();
+      $('statusLeft').innerHTML=`<span class="warn">CACHED</span> · ${esc(err.message)}`;
+    }else{
+      $('statusLeft').innerHTML=`<span class="bad">BRIEFING ERROR</span> · ${esc(err.message)}`;
+      put('statusRight','No cached payload');
+    }
+  }finally{showLoading(false)}
+}
+
+$('refreshBtn').onclick=()=>loadAll(true);
+$('themeBtn').onclick=()=>{
+  const next=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';
+  document.documentElement.setAttribute('data-theme',next);
+  $('themeBtn').textContent=next==='dark'?'Light':'Dark';
+  localStorage.setItem('morningBriefTheme',next);
+};
+const savedTheme=localStorage.getItem('morningBriefTheme');
+if(savedTheme){document.documentElement.setAttribute('data-theme',savedTheme);$('themeBtn').textContent=savedTheme==='dark'?'Light':'Dark'}
+if(loadCache())render();
+loadAll(false);
+</script>
+</body>
+</html>
