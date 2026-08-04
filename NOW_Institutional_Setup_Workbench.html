@@ -48,12 +48,13 @@ button,input,select,textarea{font:inherit}.app{max-width:1920px;margin:auto;padd
 <header class="panel top">
   <div>
     <div class="eyebrow">Pine Screener Import · Institutional Decision Workflow</div>
-    <h1>NOW Institutional Setup Workbench v4.0</h1>
+    <h1>NOW Institutional Setup Workbench v4.0.2</h1>
     <div class="sub">Market permission → opportunity ranking → chart validation → governed execution</div>
   </div>
   <div class="actions">
     <button class="btn" id="themeBtn">Toggle theme</button>
     <button class="btn" id="refreshBtn">Refresh import</button>
+    <button class="btn danger" id="resetImportsBtn">Reset all imports</button>
     <button class="btn teal" id="marketBtn">Sync Market OS</button>
     <button class="btn primary" id="openTVBtn">Open selected in TradingView</button>
   </div>
@@ -199,6 +200,18 @@ const parseNum=v=>{const m=String(v??'').replace(/,/g,'').match(/-?\d+(?:\.\d+)?
 const truthy=v=>{const n=parseNum(v);if(n!==null)return n>0;return /true|yes|on|pass|ready|active|forming|fire|buy|start|add|hold|protect|trim|exit/i.test(String(v??''))};
 function classForStage(stage){return'b-'+stage.toLowerCase()}
 function readBatchHistory(){try{const x=JSON.parse(localStorage.getItem(BATCHES_KEY)||'[]');return Array.isArray(x)?x.filter(b=>b&&Array.isArray(b.records)&&b.records.length):[]}catch{return[]}}
+async function clearIndexedImports(){
+  return new Promise(resolve=>{try{const q=indexedDB.open('NOWWorkbenchDB',1);q.onupgradeneeded=()=>{if(!q.result.objectStoreNames.contains('imports'))q.result.createObjectStore('imports')};q.onerror=()=>resolve(false);q.onsuccess=()=>{const db=q.result,tx=db.transaction('imports','readwrite'),st=tx.objectStore('imports');st.clear();tx.oncomplete=()=>{db.close();resolve(true)};tx.onerror=()=>{db.close();resolve(false)}}}catch{resolve(false)}})
+}
+async function resetAllImports(){
+  if(!confirm('Reset the complete NOW Workbench import history? This removes all Pine Screener batches and returns the Workbench to a blank state. Market OS policy and theme settings will be preserved.'))return;
+  await clearIndexedImports();
+  [...IMPORT_KEYS,BATCHES_KEY,'now_workbench_batch_view'].forEach(k=>localStorage.removeItem(k));
+  payload=null;allBatches=[];activeBatch=null;stocks=[];filtered=[];selectedIndex=0;
+  populateBatchControls();
+  renderAll();
+  alert('All Pine Screener imports were cleared. The Workbench is now blank and ready for a new scan sequence.');
+}
 async function readIndexedImports(){
   return new Promise(resolve=>{try{const q=indexedDB.open('NOWWorkbenchDB',1);q.onupgradeneeded=()=>{if(!q.result.objectStoreNames.contains('imports'))q.result.createObjectStore('imports')};q.onerror=()=>resolve({latest:null,batches:[]});q.onsuccess=()=>{const db=q.result,tx=db.transaction('imports','readonly'),st=tx.objectStore('imports'),a=st.get('latest'),b=st.get('batches');tx.oncomplete=()=>{const latest=a.result||null,batches=Array.isArray(b.result)?b.result:[];db.close();resolve({latest,batches})};tx.onerror=()=>{db.close();resolve({latest:null,batches:[]})}}}catch{resolve({latest:null,batches:[]})}})
 }
@@ -288,7 +301,7 @@ function saveMarket(){let c={regime:$('fRegime').value.trim(),permission:$('fPer
 ['searchInput','stageFilter','gradeFilter','sortSelect','batchFilter','sourceFilter','universeFilter'].forEach(id=>$(id).addEventListener('input',()=>{selectedIndex=0;if(['batchFilter','sourceFilter'].includes(id))applyBatchSelection();renderAll()}));
 $('prevBtn').onclick=()=>{if(filtered.length){selectedIndex=(selectedIndex-1+filtered.length)%filtered.length;renderDetails();renderList()}};$('nextBtn').onclick=()=>{if(filtered.length){selectedIndex=(selectedIndex+1)%filtered.length;renderDetails();renderList()}};
 $('themeBtn').onclick=()=>{document.documentElement.dataset.theme=document.documentElement.dataset.theme==='dark'?'light':'dark';localStorage.setItem('now_workbench_theme',document.documentElement.dataset.theme);renderDetails()};
-$('refreshBtn').onclick=loadPayload;$('openTVBtn').onclick=()=>{const s=filtered[selectedIndex];if(s)window.open(`https://www.tradingview.com/chart/?symbol=${encodeURIComponent(s.symbol||s.ticker)}`,'_blank')};$('marketBtn').onclick=openMarketModal;$('closeMarket').onclick=closeMarketModal;$('marketModal').onclick=e=>{if(e.target===$('marketModal'))closeMarketModal()};$('saveMarketBtn').onclick=saveMarket;$('clearMarketBtn').onclick=()=>{localStorage.removeItem(MARKET_KEY);marketContext={};closeMarketModal();renderAll()};$('autoDetectBtn').onclick=()=>{const c=autoDetectMarketContext(true);if(c){marketContext=c;openMarketModal()}else alert('No compatible same-origin market context was found. Enter the policy manually or paste JSON from an upstream dashboard.')};document.querySelectorAll('.viewtab').forEach(b=>b.onclick=()=>switchView(b.dataset.view));
+$('refreshBtn').onclick=async()=>{await loadPayload();alert(`Import refreshed: ${stocks.length} active ticker${stocks.length===1?'':'s'} across ${allBatches.length} retained batch${allBatches.length===1?'':'es'}.`)};$('resetImportsBtn').onclick=resetAllImports;$('openTVBtn').onclick=()=>{const s=filtered[selectedIndex];if(s)window.open(`https://www.tradingview.com/chart/?symbol=${encodeURIComponent(s.symbol||s.ticker)}`,'_blank')};$('marketBtn').onclick=openMarketModal;$('closeMarket').onclick=closeMarketModal;$('marketModal').onclick=e=>{if(e.target===$('marketModal'))closeMarketModal()};$('saveMarketBtn').onclick=saveMarket;$('clearMarketBtn').onclick=()=>{localStorage.removeItem(MARKET_KEY);marketContext={};closeMarketModal();renderAll()};$('autoDetectBtn').onclick=()=>{const c=autoDetectMarketContext(true);if(c){marketContext=c;openMarketModal()}else alert('No compatible same-origin market context was found. Enter the policy manually or paste JSON from an upstream dashboard.')};document.querySelectorAll('.viewtab').forEach(b=>b.onclick=()=>switchView(b.dataset.view));
 const savedTheme=localStorage.getItem('now_workbench_theme');if(savedTheme)document.documentElement.dataset.theme=savedTheme;
 loadPayload();
 </script>
