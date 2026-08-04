@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>NOW Institutional Research Terminal v5.2.2.1 Full-Height Watchlist</title>
+<title>NOW Institutional Research Terminal v5.2.2.2 Bounded Watchlist</title>
 <script src="https://unpkg.com/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
 <style>
 :root{
@@ -25,7 +25,7 @@ button,input,select,textarea{font:inherit}.app{max-width:1920px;margin:auto;padd
 .summary{display:grid;grid-template-columns:2fr repeat(5,1fr);gap:7px;margin-top:8px}.summary .tile{min-height:63px}.hero2{background:linear-gradient(135deg,#133d66,#0c6b74);color:#fff;border:0}.hero2 .k,.hero2 .n{color:#d7edf4}
 .section{margin-top:8px;overflow:hidden}.head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;background:var(--panel2);border-bottom:1px solid var(--line)}.head-right{display:flex;align-items:center;gap:7px;flex-wrap:wrap}.viewtabs{display:flex;gap:5px}.viewtab{border:1px solid var(--line);background:var(--panel);color:var(--muted);padding:5px 8px;border-radius:6px;cursor:pointer;font-weight:800}.viewtab.active{background:var(--teal);color:#fff;border-color:transparent}
 .pipeline{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;padding:8px}.stage{padding:8px;text-align:center;border:1px solid var(--line);border-radius:8px;cursor:pointer;background:var(--panel)}.stage:hover,.stage.active{background:var(--panel2)}.stage.active{outline:2px solid var(--teal)}.count{font-size:18px;font-weight:900}.stage small{display:block;color:var(--muted);font-size:9px;margin-top:2px}
-.workspace{display:grid;grid-template-columns:330px minmax(0,1fr);gap:8px;margin-top:8px;align-items:stretch}.workspace>aside{display:flex;flex-direction:column;min-height:0;height:100%}.filters{padding:8px;display:grid;grid-template-columns:1fr 1fr;gap:6px;border-bottom:1px solid var(--line)}.filters input,.filters select{width:100%;padding:7px;border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:7px}.watchlist{flex:1;min-height:0;max-height:none;overflow:auto;overscroll-behavior:contain}.stock{display:grid;grid-template-columns:70px 1fr 54px;gap:7px;padding:9px;border-bottom:1px solid var(--line);cursor:pointer}.stock:hover,.stock.selected{background:var(--panel2)}.ticker{font-weight:900;font-size:13px}.name{font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.score{text-align:right;font-weight:900;font-size:13px}.badge{display:inline-block;padding:2px 6px;border-radius:999px;color:#fff;font-size:8px;font-weight:900}.b-discovery{background:var(--purple)}.b-ready{background:var(--blue)}.b-start,.b-core,.b-add{background:var(--green)}.b-protect{background:var(--amber)}.b-trim,.b-exit{background:var(--red)}.source-chip{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:1px 5px;color:var(--muted);font-size:8px;margin-left:4px}
+.workspace{display:grid;grid-template-columns:330px minmax(0,1fr);gap:8px;margin-top:8px;align-items:start}.workspace>aside{display:flex;flex-direction:column;min-height:0;height:auto;overflow:hidden}.filters{padding:8px;display:grid;grid-template-columns:1fr 1fr;gap:6px;border-bottom:1px solid var(--line)}.filters input,.filters select{width:100%;padding:7px;border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:7px}.watchlist{flex:1;min-height:0;max-height:none;overflow:auto;overscroll-behavior:contain}.stock{display:grid;grid-template-columns:70px 1fr 54px;gap:7px;padding:9px;border-bottom:1px solid var(--line);cursor:pointer}.stock:hover,.stock.selected{background:var(--panel2)}.ticker{font-weight:900;font-size:13px}.name{font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.score{text-align:right;font-weight:900;font-size:13px}.badge{display:inline-block;padding:2px 6px;border-radius:999px;color:#fff;font-size:8px;font-weight:900}.b-discovery{background:var(--purple)}.b-ready{background:var(--blue)}.b-start,.b-core,.b-add{background:var(--green)}.b-protect{background:var(--amber)}.b-trim,.b-exit{background:var(--red)}.source-chip{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:1px 5px;color:var(--muted);font-size:8px;margin-left:4px}
 .chartPanel{height:610px;overflow:hidden}.chartHead{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:var(--panel2);border-bottom:1px solid var(--line)}.chartHead .right{display:flex;gap:6px;align-items:center}#chart{height:568px;position:relative}.chart-empty{height:100%;display:grid;place-items:center;color:var(--muted);padding:30px;text-align:center}.decision-float{position:absolute;right:12px;top:12px;z-index:4;width:210px;background:color-mix(in srgb,var(--panel) 92%,transparent);border:1px solid var(--line);border-radius:9px;backdrop-filter:blur(4px);overflow:hidden}.decision-float h3{margin:0;padding:7px 9px;background:var(--panel2);font-size:10px}.dfrow{display:flex;justify-content:space-between;gap:8px;padding:5px 8px;border-top:1px solid var(--line);font-size:9px}.dfrow b{text-align:right}
 .command{display:grid;grid-template-columns:1.15fr 1.45fr 1.8fr;margin-top:8px;overflow:hidden}.group{border-right:1px solid var(--line)}.group:last-child{border-right:0}.gt{padding:6px;color:#fff;text-align:center;font-weight:900;letter-spacing:.04em}.context .gt{background:var(--blue)}.opportunity .gt{background:var(--teal)}.execution .gt{background:var(--green)}.grid{display:grid;grid-template-columns:repeat(4,1fr)}.cell{padding:7px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);min-height:55px}.cell:nth-child(4n){border-right:0}.cv{font-weight:900;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.origin{font-size:8px;color:var(--muted);margin-top:2px}.origin.imported{color:#66c7e0}.origin.derived{color:#e0b85f}.origin.governed{color:#66d59d}
 .lower{display:grid;grid-template-columns:1.05fr 1fr 1fr;gap:8px;margin-top:8px}.card h3{font-size:11px;margin:0;padding:8px 10px;background:var(--panel2);border-bottom:1px solid var(--line)}.metrics{display:grid;grid-template-columns:1fr 1fr;padding:6px}.metric{padding:7px;border-bottom:1px solid var(--line)}.metric:nth-child(odd){border-right:1px solid var(--line)}.bar{height:5px;background:var(--panel2);border-radius:99px;overflow:hidden;margin-top:5px}.bar span{display:block;height:100%;background:var(--teal)}.check,.planrow{display:flex;justify-content:space-between;gap:8px;padding:7px 10px;border-bottom:1px solid var(--line)}.check span:last-child,.planrow span:last-child{text-align:right}.pass{color:#42cc88;font-weight:900}.warnText{color:#e4aa34;font-weight:900}.fail{color:#ef6977;font-weight:900}
@@ -36,7 +36,7 @@ button,input,select,textarea{font:inherit}.app{max-width:1920px;margin:auto;padd
 .provenance{margin-top:8px;overflow:hidden}.prov-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 11px;background:linear-gradient(90deg,color-mix(in srgb,var(--teal) 35%,var(--panel2)),var(--panel2));border-bottom:1px solid var(--line)}.prov-title{font-size:13px;font-weight:900}.prov-meta{display:flex;gap:6px;flex-wrap:wrap}.prov-chip{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:3px 7px;font-size:9px}.prov-body{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;padding:8px}.prov-stat{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:7px 9px}.prov-stat b{display:block;font-size:13px;margin-top:2px}.adapter-registry{margin-top:8px;overflow:hidden}.adapter-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px;padding:8px}.adapter-card{border:1px solid var(--line);background:var(--panel2);border-radius:9px;padding:8px}.adapter-card.active{border-color:var(--teal);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--teal) 35%,transparent)}.adapter-card .name{font-weight:900;font-size:10px}.adapter-card .status{font-size:8px;color:var(--muted);margin-top:2px}.adapter-card .count{font-size:18px;font-weight:950;margin-top:4px}.adapter-card .signals{font-size:8px;color:var(--muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}@media(max-width:1200px){.adapter-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(max-width:760px){.adapter-grid{grid-template-columns:1fr}}
 .source-badges{display:flex;gap:4px;flex-wrap:wrap;margin-top:3px}.scan-badge{display:inline-block;padding:2px 5px;border-radius:999px;background:color-mix(in srgb,var(--teal) 35%,var(--panel2));border:1px solid color-mix(in srgb,var(--teal) 55%,var(--line));font-size:7.5px;font-weight:900;color:var(--text)}.scan-badge.latest{background:color-mix(in srgb,var(--amber) 40%,var(--panel2));border-color:var(--amber)}
 @media(max-width:1400px){.market,.summary{grid-template-columns:repeat(4,1fr)}.hero,.hero2{grid-column:span 2}.workspace{grid-template-columns:300px minmax(0,1fr)}.grid{grid-template-columns:repeat(3,1fr)}.cell:nth-child(4n){border-right:1px solid var(--line)}.cell:nth-child(3n){border-right:0}}
-@media(max-width:1100px){.workspace{grid-template-columns:1fr}.workspace>aside{height:auto}.watchlist{flex:none;max-height:420px}.command,.lower{grid-template-columns:1fr}.market,.summary{grid-template-columns:repeat(2,1fr)}.hero,.hero2{grid-column:span 2}.source-links{grid-template-columns:1fr 1fr}}
+@media(max-width:1100px){.workspace{grid-template-columns:1fr}.workspace>aside{height:auto!important}.watchlist{flex:none;max-height:420px}.command,.lower{grid-template-columns:1fr}.market,.summary{grid-template-columns:repeat(2,1fr)}.hero,.hero2{grid-column:span 2}.source-links{grid-template-columns:1fr 1fr}}
 @media(max-width:700px){.prov-body{grid-template-columns:1fr 1fr}.top{align-items:flex-start;flex-direction:column}.market,.summary{grid-template-columns:1fr}.hero,.hero2{grid-column:span 1}.pipeline{grid-template-columns:repeat(2,1fr)}.filters,.form{grid-template-columns:1fr}.source-links{grid-template-columns:1fr}.decision-float{display:none}}
 
 .intel-strip{display:grid;grid-template-columns:repeat(7,1fr);gap:7px;margin-top:8px}.intel-card{padding:8px 10px}.intel-card .v{font-size:15px}.tableView,.ledgerView{display:none;margin-top:8px}.tableView.active,.ledgerView.active{display:block}.institutional-table,.ledger-table{width:100%;border-collapse:collapse;min-width:1250px}.institutional-table th,.institutional-table td,.ledger-table th,.ledger-table td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}.institutional-table th,.ledger-table th{position:sticky;top:0;background:var(--panel2);z-index:2;color:var(--muted);font-size:8px;text-transform:uppercase}.table-wrap{overflow:auto;max-height:780px}.institutional-table tr{cursor:pointer}.institutional-table tr:hover{background:var(--panel2)}.universe-chip{display:inline-block;padding:2px 5px;border-radius:999px;background:var(--panel3);border:1px solid var(--line);font-size:8px}.scan-history{display:grid;gap:6px;padding:8px}.history-row{display:grid;grid-template-columns:140px 1fr 90px;gap:8px;padding:7px;border:1px solid var(--line);border-radius:7px;background:var(--panel2)}.source-dist{display:flex;gap:5px;flex-wrap:wrap;padding:8px}.source-dist .prov-chip{cursor:pointer}.source-dist .prov-chip:hover{border-color:var(--teal)}@media(max-width:1100px){.intel-strip{grid-template-columns:repeat(2,1fr)}}
@@ -51,7 +51,7 @@ button,input,select,textarea{font:inherit}.app{max-width:1920px;margin:auto;padd
 <header class="panel top">
   <div>
     <div class="eyebrow">Institutional Research Terminal · Modular Foundation</div>
-    <h1>NOW Institutional Research Terminal v5.2.2.1 Full-Height Watchlist</h1>
+    <h1>NOW Institutional Research Terminal v5.2.2.2 Bounded Watchlist</h1>
     <div class="sub">Market permission → opportunity ranking → chart validation → governed execution</div>
   </div>
   <div class="actions">
@@ -170,7 +170,7 @@ button,input,select,textarea{font:inherit}.app{max-width:1920px;margin:auto;padd
   </div>
 </section>
 
-<div class="footer">v5.2.2.1 · Full-height watchlist layout.  Verified Pine provenance with modular Adapter Registry. Structure Pivot and VCS normalization are active alongside Darvas, NOW, Donchian, EMA Squeeze, The Strat, FTFC/AVWAP and RS/Volume detection. Ticker Operating System. Persistent cumulative scan ledger. New imports merge into the active universe, preserve multi-scan provenance and never silently remove earlier candidates. Browser-calculated chart metrics and market governance are supporting decision layers and never rewrite the raw screener record.</div>
+<div class="footer">v5.2.2.2 · Bounded watchlist layout.  Verified Pine provenance with modular Adapter Registry. Structure Pivot and VCS normalization are active alongside Darvas, NOW, Donchian, EMA Squeeze, The Strat, FTFC/AVWAP and RS/Volume detection. Ticker Operating System. Persistent cumulative scan ledger. New imports merge into the active universe, preserve multi-scan provenance and never silently remove earlier candidates. Browser-calculated chart metrics and market governance are supporting decision layers and never rewrite the raw screener record.</div>
 </div>
 
 <div class="modal" id="marketModal" aria-hidden="true">
@@ -497,5 +497,30 @@ $('refreshBtn').onclick=async()=>{await loadPayload();alert(`Import refreshed: $
 const savedTheme=localStorage.getItem('now_workbench_theme');if(savedTheme)document.documentElement.dataset.theme=savedTheme;
 loadPayload();
 </script>
+
+<script>
+(function(){
+  const syncWatchlistHeight=()=>{
+    const ws=document.querySelector('.desk.active .workspace')||document.querySelector('#deskView .workspace');
+    if(!ws) return;
+    const aside=ws.querySelector(':scope > aside');
+    const main=ws.querySelector(':scope > main');
+    if(!aside||!main) return;
+    if(window.innerWidth<=1100){ aside.style.height='auto'; return; }
+    aside.style.height=Math.ceil(main.getBoundingClientRect().height)+'px';
+  };
+  window.addEventListener('load',syncWatchlistHeight);
+  window.addEventListener('resize',syncWatchlistHeight);
+  const boot=()=>{
+    const main=document.querySelector('#deskView .workspace > main');
+    if(main && 'ResizeObserver' in window){ new ResizeObserver(syncWatchlistHeight).observe(main); }
+    document.addEventListener('toggle',syncWatchlistHeight,true);
+    setTimeout(syncWatchlistHeight,0);
+    setTimeout(syncWatchlistHeight,300);
+  };
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
+})();
+</script>
+
 </body>
 </html>
