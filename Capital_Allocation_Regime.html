@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Capital Allocation Regime | NOW Dashboard</title>
+  <title>Capital Allocation Regime</title>
   <meta name="description" content="Institutional macro backdrop and equity factor leadership dashboard." />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   <style>
@@ -298,7 +298,7 @@
     <div class="page-head">
       <div>
         <h1>Capital Allocation Regime</h1>
-        <div class="subtitle">Macro Backdrop · Cross-Asset Preference · Equity Factor Leadership</div>
+        <div class="subtitle">Macro Backdrop · Cross-Asset Preference · Equity Factor Leadership · Nasdaq internals sourced only from the FMP Nasdaq Breadth Engine</div>
       </div>
       <div class="updated"><div id="updatedText">Data source not connected</div><div id="asOfText">Latest completed EOD</div></div>
     </div>
@@ -675,7 +675,7 @@
     $('macroScore').textContent=`${m.macroScore>0?'+':''}${m.macroScore}`; $('factorScore').textContent=`${m.factorScore>0?'+':''}${m.factorScore}`;
     $('transitionRisk').textContent=m.transitionRisk; $('transitionRiskNote').textContent=m.transitionRisk==='High'?'Near a regime boundary':'Structural signal currently stable';
     $('macroRatioValue').textContent=fmt(m.p,4); $('macroRatioChange').textContent=fmtPct(m.r1); $('macroRatioChange').className=`chart-meta ${signClass(m.r1)}`;
-    $('regimeSynthesis').textContent=`Macro: ${m.macroRegime}. Style: ${m.factorRegime}. Participation: ${m.participation} (${m.breadth}/100). Tactical SPX/Gold condition: ${m.tactical}. Portfolio implication: ${guide.posture} with an exposure ceiling of ${guide.exposure}, subject to confirmation from Market Pulse and market breadth.`;
+    $('regimeSynthesis').textContent=`Macro: ${m.macroRegime}. Style: ${m.factorRegime}. Participation: ${m.participation} (${m.breadth}/100). Tactical SPX/Gold condition: ${m.tactical}. Portfolio implication: ${guide.posture} with an exposure ceiling of ${guide.exposure}, subject to confirmation from the canonical FMP Nasdaq Breadth Engine and market participation.`;
     $('playbook').innerHTML=guide.play.map(x=>`<div class="playbook-item">${esc(x)}</div>`).join(''); $('riskList').innerHTML=guide.risks.map(x=>`<div class="playbook-item">${esc(x)}</div>`).join('');
     renderEvidence(m); renderFactorTable(m); renderMacroChart(m); renderFactorCharts(m);
     const hist=regimeHistory(state.selectedIndex);
