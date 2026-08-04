@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>NOW Institutional Research Terminal v5.1 Universal Pine Importer</title>
+<title>NOW Institutional Research Terminal v5.1.1 Darvas Normalization</title>
 <script src="https://unpkg.com/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
 <style>
 :root{
@@ -50,7 +50,7 @@ button,input,select,textarea{font:inherit}.app{max-width:1920px;margin:auto;padd
 <header class="panel top">
   <div>
     <div class="eyebrow">Institutional Research Terminal · Modular Foundation</div>
-    <h1>NOW Institutional Research Terminal v5.1 Universal Pine Importer</h1>
+    <h1>NOW Institutional Research Terminal v5.1.1 Darvas Normalization</h1>
     <div class="sub">Market permission → opportunity ranking → chart validation → governed execution</div>
   </div>
   <div class="actions">
@@ -63,7 +63,7 @@ button,input,select,textarea{font:inherit}.app{max-width:1920px;margin:auto;padd
 </header>
 <nav class="panel v5nav" aria-label="Terminal modules">
   <button class="v5nav-active">Decision Desk</button><button>Scan Ledger</button><button disabled>Research</button><button disabled>Portfolio</button><button disabled>Journal</button><button disabled>Market OS</button>
-  <span class="v5phase">PHASE 2 · UNIVERSAL IMPORTER</span>
+  <span class="v5phase">PHASE 2.1 · DARVAS NORMALIZATION</span>
 </nav>
 
 
@@ -168,7 +168,7 @@ button,input,select,textarea{font:inherit}.app{max-width:1920px;margin:auto;padd
   </div>
 </section>
 
-<div class="footer">v5.1 · Universal Pine Importer. Automatic family and signal detection for NOW, Structure Pivot, Darvas, Donchian, EMA Squeeze, VCS, The Strat, FTFC/AVWAP and RS/Volume. Ticker Operating System. Persistent cumulative scan ledger. New imports merge into the active universe, preserve multi-scan provenance and never silently remove earlier candidates. Browser-calculated chart metrics and market governance are supporting decision layers and never rewrite the raw screener record.</div>
+<div class="footer">v5.1.1 · Universal Pine Importer with Darvas-aware normalization. Automatic family and signal detection for NOW, Structure Pivot, Darvas, Donchian, EMA Squeeze, VCS, The Strat, FTFC/AVWAP and RS/Volume. Ticker Operating System. Persistent cumulative scan ledger. New imports merge into the active universe, preserve multi-scan provenance and never silently remove earlier candidates. Browser-calculated chart metrics and market governance are supporting decision layers and never rewrite the raw screener record.</div>
 </div>
 
 <div class="modal" id="marketModal" aria-hidden="true">
@@ -194,7 +194,7 @@ button,input,select,textarea{font:inherit}.app{max-width:1920px;margin:auto;padd
 (function(global){
 'use strict';
 const NOW=global.NOWTerminal=global.NOWTerminal||{};
-NOW.version='5.1.0-universal-importer';
+NOW.version='5.1.1-darvas-normalization';
 NOW.events=new EventTarget();
 NOW.emit=(name,detail)=>NOW.events.dispatchEvent(new CustomEvent(name,{detail}));
 NOW.on=(name,handler)=>NOW.events.addEventListener(name,e=>handler(e.detail));
@@ -329,11 +329,28 @@ function deriveScore(items,stage,command){let s={DISCOVERY:58,READY:70,START:82,
 function grade(score){return score>=92?'A+':score>=84?'A':score>=74?'B':score>=60?'C':'D'}
 function driverFrom(items){const ordered=[[/premium fire/,'PREMIUM FIRE'],[/squeeze fire(?! fresh)/,'EMA SQUEEZE FIRE'],[/squeeze anticipation/,'EMA SQUEEZE ANTICIPATION'],[/squeeze discovery/,'EMA SQUEEZE DISCOVERY'],[/bullish breakout/,'BULLISH BREAKOUT'],[/bearish breakout/,'BEARISH BREAKOUT'],[/donchian bo|donchian breakout/,'DONCHIAN BREAKOUT'],[/darvas breakout/,'DARVAS BREAKOUT'],[/retest confirmed|darvas retest/,'DARVAS RETEST'],[/2nd pivot break|second pivot break/,'2ND STRUCTURE PIVOT'],[/1st pivot break|first pivot break|pivot break/,'1ST STRUCTURE PIVOT'],[/bullish ftfc/,'BULLISH FTFC'],[/bearish ftfc/,'BEARISH FTFC'],[/hammer/,'THE STRAT HAMMER'],[/shooter/,'THE STRAT SHOOTER'],[/pullback/,'21EMA PULLBACK'],[/reclaim/,'EMA RECLAIM'],[/pivot break/,'STRUCTURE PIVOT'],[/relative strength/,'RELATIVE STRENGTH']];for(const [re,name] of ordered){const x=pick(items,[re],'');if(x.value!==''&&truthy(x.value))return{value:name,origin:'imported',label:x.label}}const raw=pick(items,[/^driver$/,/primary reason/],'');return raw.value!==''?raw:{value:'PINE SCREEN SIGNAL',origin:'derived',label:''}}
 function freshnessFrom(items){const candidates=[[/premium fresh 3/,'≤3 bars'],[/fire fresh 3/,'≤3 bars'],[/anticipation fresh 3/,'≤3 bars'],[/squeeze fresh 3/,'≤3 bars'],[/squeeze fresh 8/,'≤8 bars']];for(const [re,label] of candidates){const x=pick(items,[re],'');if(x.value!==''&&truthy(x.value))return{value:label,origin:'imported',label:x.label}}return{value:'CURRENT ROW',origin:'derived',label:''}}
+function primaryProvenance(stock){return (stock.provenanceList||[])[0]||{} }
+function normalizeFamilyFields(stock){
+  const p=primaryProvenance(stock),family=String(p.scanFamily||'').toUpperCase(),signal=String(p.signalName||'').toUpperCase();
+  stock.primaryFamily=family||'GENERIC PINE';stock.primarySignal=signal||'GENERAL SCREEN';
+  if(family==='DARVAS'){
+    const isBear=/BEARISH/.test(signal),isRetest=/RETEST/.test(signal),isBull=/BULLISH|BREAKOUT/.test(signal)&&!isBear;
+    const driver=isRetest?'DARVAS RETEST':isBear?'DARVAS BEARISH BREAKOUT':'DARVAS BREAKOUT';
+    const setup=isRetest?'RETEST CONFIRMED':isBear?'BEARISH BREAKOUT':'BULLISH BREAKOUT';
+    stock.driver={value:driver,origin:'normalized',label:p.scanLabel||'Darvas adapter'};
+    if(stock.setupType.origin!=='imported')stock.setupType={value:setup,origin:'normalized',label:p.scanLabel||'Darvas adapter'};
+    if(stock.event.origin!=='imported')stock.event={value:isRetest?'DARVAS RETEST':isBear?'DARVAS BEAR BO':'DARVAS BO',origin:'normalized',label:p.scanLabel||'Darvas adapter'};
+    if(stock.darvas.origin!=='imported')stock.darvas={value:setup,origin:'normalized',label:p.scanLabel||'Darvas adapter'};
+    if(stock.next.origin!=='imported')stock.next={value:isRetest?'Validate retest hold and volume response':isBear?'Avoid longs / review downside break':'Validate breakout quality or first retest',origin:'normalized',label:p.scanLabel||'Darvas adapter'};
+    if(stock.trigger.origin!=='imported')stock.trigger={value:isRetest?'RETEST':isBear?'BREAKDOWN':'BREAKOUT',origin:'normalized',label:p.scanLabel||'Darvas adapter'};
+  }
+  return stock;
+}
 function inferUniverse(row){const t=String(row.ticker||row.symbol||'').toUpperCase(),txt=String(row.rowText||'')+' '+Object.entries(row.columns||{}).map(x=>x.join(' ')).join(' ');if(/leveraged|2x|3x|ultra|bull 2x|bear 2x/i.test(txt)||/^(TQQQ|SQQQ|SOXL|SOXS|UPRO|SPXL|SPXS|NVDL|MUU|AMZU|SNXX|BITX|QLD|SSO)$/.test(t))return'Leveraged ETFs';if(/ ETF|exchange traded|ishares|proshares|direxion|vaneck|spdr/i.test(txt))return'ETFs';if(/theme|thematic/i.test(txt))return'Themes';return'Imported Pine'}
 function makeStock(row){const items=columnIndex(row.columns),command=commandInfo(items,row.rowText||''),stageInfo=stageFromSignals(items,row.rowText||'',command),scoreInfo=importedScore(items)||deriveScore(items,stageInfo.stage,command);const driver=driverFrom(items);const allText=[row.ticker,row.symbol,row.rowText,...items.map(x=>`${x.label} ${x.value}`)].join(' ');
   const stock={...row,items,allText,universe:inferUniverse(row),rawCommand:command,rawStage:stageInfo.stage,stageOrigin:stageInfo.origin,score:scoreInfo.value,scoreOrigin:scoreInfo.origin,scoreLabel:scoreInfo.label,grade:grade(scoreInfo.value),driver,freshness:freshnessFrom(items)};
   stock.permission=pick(items,[/permission/,/market gate/]);stock.trend=pick(items,[/^trend$/,/trend 0 100/,/trend score/]);stock.weekly=pick(items,[/weekly/]);stock.sponsor=pick(items,[/sponsor/,/avwap/]);stock.rs=pick(items,[/^rs$/,/leadership/,/relative strength/]);stock.liquidity=pick(items,[/liquidity/]);stock.state=pick(items,[/^state$/,/lifecycle/],stageInfo.stage);stock.trigger=pick(items,[/trigger/],'WAIT');stock.checks=pick(items,[/checks/,/validation/],'—');stock.location=pick(items,[/location/,/entry location/],'—');stock.pivot=pick(items,[/pivot price/,/^pivot$/,/distance from pivot/],'—');stock.squeeze=pick(items,[/premium fire/,/squeeze fire/,/squeeze anticipation/,/squeeze discovery/,/^squeeze$/],'OFF');stock.darvas=pick(items,[/darvas/],'—');stock.risk=pick(items,[/risk action/,/^risk$/,/warning severity/],'—');stock.confidence=pick(items,[/confidence/],Math.round(stock.score)+'%');stock.stop=pick(items,[/^stop$/,/stop level/],'—');stock.next=pick(items,[/^next$/,/next action/],'Review chart');stock.entry=pick(items,[/^entry$/,/entry price/],'—');stock.target1=pick(items,[/target 1/,/^t1$/,/tp1/],'—');stock.target2=pick(items,[/target 2/,/^t2$/,/tp2/],'—');stock.allocation=pick(items,[/allocation percent/,/^alloc$/,/position size/],'—');stock.progress=pick(items,[/progress/],'—');stock.positionOwned=signal(items,[/position owned/,/owned position/]);stock.warning=pick(items,[/warning/,/damage veto/],'—');stock.extension=pick(items,[/atr extension/,/distance to sma50/],'—');stock.setupType=pick(items,[/setup type/,/primary setup/],driver.value);stock.event=pick(items,[/^event$/,/event code/],'—');stock.volume=pick(items,[/relative volume/,/rvol/],'—');stock.adr=pick(items,[/adr/],'—');
-  stock.provenanceList=row._provenanceList||[row._provenance].filter(Boolean);stock.scanSources=[...new Set(stock.provenanceList.map(p=>p.scanLabel).filter(Boolean))];stock.batchIds=stock.provenanceList.map(p=>p.batchId).filter(Boolean);stock.allText+=' '+stock.scanSources.join(' ');return stock}
+  stock.provenanceList=row._provenanceList||[row._provenance].filter(Boolean);stock.scanSources=[...new Set(stock.provenanceList.map(p=>p.scanLabel).filter(Boolean))];stock.batchIds=stock.provenanceList.map(p=>p.batchId).filter(Boolean);stock.allText+=' '+stock.scanSources.join(' ');normalizeFamilyFields(stock);stock.allText+=' '+[stock.primaryFamily,stock.primarySignal,stock.driver.value,stock.setupType.value,stock.event.value].join(' ');return stock}
 function loadMarketContext(){try{marketContext=JSON.parse(localStorage.getItem(MARKET_KEY)||'{}')||{}}catch{marketContext={}}if(!marketContext.regime)marketContext=autoDetectMarketContext(false)||{};applyGovernance()}
 function flattenObject(obj,prefix='',out={}){if(!obj||typeof obj!=='object')return out;for(const [k,v] of Object.entries(obj)){const key=normalize(prefix?`${prefix} ${k}`:k);if(v&&typeof v==='object'&&!Array.isArray(v))flattenObject(v,key,out);else if(['string','number','boolean'].includes(typeof v))out[key]=v}return out}
 function findFlat(flat,patterns){for(const p of patterns){const k=Object.keys(flat).find(x=>p.test(x));if(k)return flat[k]}return''}
@@ -353,7 +370,7 @@ function riskRank(s){return{EXIT:5,TRIM:4,PROTECT:3,AVOID:2,HOLD:1}[s.governed?.
 function renderList(){const q=$('searchInput').value.trim().toLowerCase(),stage=$('stageFilter').value,g=$('gradeFilter').value,sort=$('sortSelect').value,u=$('universeFilter')?.value||'';filtered=stocks.filter(s=>(!q||s.allText.toLowerCase().includes(q)||s.driver.value.toLowerCase().includes(q))&&(!stage||s.rawStage===stage)&&(!g||s.grade===g)&&(!u||s.universe===u));if(sort==='ticker')filtered.sort((a,b)=>a.ticker.localeCompare(b.ticker));else if(sort==='risk')filtered.sort((a,b)=>riskRank(b)-riskRank(a)||b.score-a.score);else filtered.sort((a,b)=>b.score-a.score);selectedIndex=Math.min(selectedIndex,Math.max(0,filtered.length-1));$('watchCount').textContent=`${filtered.length} names`;$('watchlist').innerHTML=filtered.length?filtered.map((s,i)=>`<div class="stock ${i===selectedIndex?'selected':''}" data-i="${i}"><div><div class="ticker">${esc(s.ticker)}</div><span class="badge ${classForStage(s.rawStage)}">${s.rawStage}</span></div><div><div class="name">${esc(s.symbol||s.ticker)}</div><div class="n">${esc(s.governed.command)} · ${esc(s.driver.value)}</div><div class="source-badges">${(s.scanSources||[]).slice(0,3).map((x,j)=>`<span class="scan-badge ${(s.provenanceList?.[j]?.isLatest)?'latest':''}">${esc(x)}</span>`).join('')}</div></div><div class="score">${Math.round(s.score)}<div class="n">${s.grade}</div></div></div>`).join(''):'<div class="chart-empty">No imported candidates match this filter.</div>';document.querySelectorAll('.stock').forEach(el=>el.onclick=()=>{selectedIndex=Number(el.dataset.i);renderDetails();renderList()})}
 function fieldCell(label,field,sub=''){const f=typeof field==='object'?field:{value:field,origin:'derived'};return`<div class="cell"><div class="k">${esc(label)}</div><div class="cv" title="${esc(f.value)}">${esc(f.value)}</div><div class="origin ${esc(f.origin||'derived')}">${esc((f.origin||'derived').toUpperCase())}${sub?` · ${esc(sub)}`:''}</div></div>`}
 function renderCommandTables(s){$('contextGrid').innerHTML=[fieldCell('Market',marketContext.regime||'UNSYNCED','policy'),fieldCell('Permission',s.permission),fieldCell('Trend',s.trend),fieldCell('Weekly',s.weekly),fieldCell('Sponsor',s.sponsor),fieldCell('RS',s.rs),fieldCell('Liquidity',s.liquidity),fieldCell('ADR',s.adr) ].join('');$('opportunityGrid').innerHTML=[fieldCell('State',s.state),fieldCell('Trigger',s.trigger),fieldCell('Checks',s.checks),fieldCell('Location',s.location),fieldCell('Pivot',s.pivot),fieldCell('Squeeze',s.squeeze),fieldCell('Darvas',s.darvas),fieldCell('Driver',s.driver),fieldCell('Freshness',s.freshness),fieldCell('Setup',s.setupType),fieldCell('Event',s.event),fieldCell('Extension',s.extension)].join('');$('executionGrid').innerHTML=[fieldCell('Raw command',{value:s.rawCommand.name,origin:s.rawCommand.origin}),fieldCell('Governed',{value:s.governed.command,origin:'governed'}),fieldCell('Stage',{value:s.rawStage,origin:s.stageOrigin}),fieldCell('Progress',s.progress),fieldCell('Allocation',{value:s.governed.allocation,origin:'governed'}),fieldCell('Risk',s.risk),fieldCell('Confidence',s.confidence),fieldCell('Stop',s.stop),fieldCell('Entry',s.entry),fieldCell('Target 1',s.target1),fieldCell('Target 2',s.target2),fieldCell('Next',s.next)].join('')}
-function validationRows(s){const rows=[['Pine command imported',s.rawCommand.origin==='imported'],['Trend context imported',s.trend.origin==='imported'],['Weekly permission imported',s.weekly.origin==='imported'],['RS / leadership imported',s.rs.origin==='imported'],['Squeeze state imported',s.squeeze.origin==='imported'],['Pivot / Darvas imported',s.pivot.origin==='imported'||s.darvas.origin==='imported'],['Risk control imported',s.risk.origin==='imported'||s.stop.origin==='imported'],['Market policy synced',!!(marketContext.regime||marketContext.permission)]];return rows}
+function validationRows(s){const darvasAdapter=s.primaryFamily==='DARVAS';const rows=[['Pine command imported',s.rawCommand.origin==='imported'],['Trend context imported',s.trend.origin==='imported'],['Weekly permission imported',s.weekly.origin==='imported'],['RS / leadership imported',s.rs.origin==='imported'],['Squeeze state imported',s.squeeze.origin==='imported'],['Pivot / Darvas recognized',s.pivot.origin==='imported'||s.darvas.origin==='imported'||s.darvas.origin==='normalized'||darvasAdapter],['Family adapter applied',!!s.primaryFamily&&s.primaryFamily!=='GENERIC PINE'],['Risk control imported',s.risk.origin==='imported'||s.stop.origin==='imported'],['Market policy synced',!!(marketContext.regime||marketContext.permission)]];return rows}
 function renderPlan(s){const rows=[['Raw Pine command',s.rawCommand.name],['Governed command',s.governed.command],['Market policy',s.governed.level],['Suggested allocation',s.governed.allocation],['Primary driver',s.driver.value],['Stop',s.stop.value],['Next action',s.next.value],['Governance reason',s.governed.reason]];$('plan').innerHTML=rows.map(([a,b])=>`<div class="planrow"><b>${esc(a)}</b><span>${esc(b)}</span></div>`).join('')}
 function renderRaw(s){const rows=Object.entries(s.columns||{});$('rawFields').innerHTML=rows.length?`<table class="rawtable">${rows.map(([k,v])=>`<tr><th>${esc(k)}</th><td>${esc(v)}</td></tr>`).join('')}</table>`:'<div class="chart-empty">No column data was captured for this row.</div>'}
 function ema(data,p){const out=[];if(!data.length)return out;const k=2/(p+1);let v=data[0].close;data.forEach((b,i)=>{v=i?v+(b.close-v)*k:b.close;if(i>=p-1)out.push({time:b.time,value:v})});return out}
