@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Institutional Morning Briefing v3.0 — Bloomberg First Page</title>
+<title>Institutional Morning Briefing v3.1 — Bloomberg First Page</title>
 <style>
 :root{
   --bg:#edf2f7;--panel:#fff;--panel2:#f5f8fc;--line:#d1dce8;--line2:#e6edf4;
@@ -226,7 +226,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,
 <div class="headrow">
 <div>
 <div class="eyebrow">Institutional Decision Brief · Regime · Breadth · Leadership · Risk</div>
-<div class="title">Institutional Morning Briefing v3.0 — Bloomberg First Page</div>
+<div class="title">Institutional Morning Briefing v3.1 — Bloomberg First Page</div>
 <div class="subtitle" id="subtitle">Loading canonical Daily Plan and FMP breadth evidence…</div>
 </div>
 <div class="actions">
@@ -383,14 +383,14 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,
 
 </main>
 
-<footer class="footer">INSTITUTIONAL MORNING BRIEFING v3.0 · BLOOMBERG FIRST PAGE · DAILY PLAN 1.1 + PARTICIPATION 2.2 · FMP NASDAQ BREADTH ONLY</footer>
+<footer class="footer">INSTITUTIONAL MORNING BRIEFING v3.1 · BLOOMBERG FIRST PAGE · DAILY PLAN 1.1 + PARTICIPATION 2.2 · FMP NASDAQ BREADTH ONLY</footer>
 </div>
 
 <div class="loading" id="loading"><div class="loading-box"><div class="spinner"></div><div class="loading-title" id="loadingTitle">Loading Morning Brief…</div><div class="loading-note" id="loadingNote">Canonical plan + participation JSONP</div></div></div>
 
 <script>
 const API_URL='https://script.google.com/macros/s/AKfycbyJJuJBqxzj4YC2OQoZTiPeciYzwKIliGyYdboOCyFUUcl9Xxt587bFdMxK4pQfatqtNA/exec';
-const CACHE_KEY='institutionalMorningBriefV3';
+const CACHE_KEY='institutionalMorningBriefV31';
 const $=id=>document.getElementById(id);
 let plan=null,participation=null;
 
@@ -609,6 +609,14 @@ function render(){
   $('briefPill').className='pill '+stateClass(s.execution);
 
   const bestTheme=p.leadership?.bestTheme;
+  const positionSize=label(
+    p.directive?.positionSize,
+    p.portfolioPlan?.positionSize||'reduced size'
+  );
+  const setupStandard=label(
+    p.directive?.setupStandard,
+    p.portfolioPlan?.setupStandard||'A-quality only'
+  );
   const reasons=[
     ['TREND',label(p.buySwitch?.state),'Buy Switch permission'],
     ['BREADTH',s.breadthConstructive?'IMPROVING':'MIXED',`Advance ${pct(s.advancePct,1)}`],
@@ -710,8 +718,6 @@ function render(){
     directionCard('Stage 2',Number.isFinite(curStage2)?curStage2:s.stage2,prevStage2,'%', 'Advancing-stage cohort');
 
 
-  const positionSize=label(p.directive?.positionSize,p.portfolioPlan?.positionSize||'reduced size');
-  const setupStandard=label(p.directive?.setupStandard,p.portfolioPlan?.setupStandard||'A-quality only');
   const sectors=sectorNamesByState();
   const buyItems=[
     p.leadership?.bestTheme?.name,
