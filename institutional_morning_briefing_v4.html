@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Institutional Morning Briefing v4.1 — CIO Dashboard</title>
+<title>Institutional Morning Briefing v4.2 — CIO Dashboard</title>
 <style>
 :root{
   --bg:#edf2f7;--panel:#fff;--panel2:#f5f8fc;--line:#d1dce8;--line2:#e6edf4;
@@ -360,6 +360,97 @@ body{font-size:15px}
   .triple-list,.procon ul,.check-panel ul{font-size:10px}
 }
 
+
+/* v4.2 density + readability rebalance */
+.card-head{min-height:46px;padding:10px 13px}
+.card-body{padding:12px}
+.grid{gap:9px;padding:9px}
+.card{border-radius:10px}
+
+.card-title{font-size:11px}
+.card-sub{font-size:10px}
+.pill{font-size:9px}
+
+.direction-grid{gap:7px}
+.direction{padding:12px;min-height:82px}
+.direction-label{font-size:10px}
+.direction-arrow{font-size:28px}
+.direction-copy{font-size:10px}
+
+.matrix{gap:6px}
+.matrix-item,.matrix-score{padding:10px;min-height:78px}
+.matrix-item .icon{font-size:23px}
+.matrix-item .name{font-size:9px}
+.matrix-item .detail{font-size:10px}
+.matrix-score{font-size:30px}
+
+.triple-grid{gap:8px}
+.triple-card{padding:14px;min-height:145px}
+.triple-title{font-size:10px}
+.triple-main{font-size:27px}
+.triple-list{font-size:12px;line-height:1.65;margin-top:8px}
+
+.action-strip{gap:6px}
+.action-cell{padding:11px;min-height:72px}
+.action-cell span{font-size:9px}
+.action-cell b{font-size:16px}
+
+.shopping-grid{gap:8px}
+.shopping{padding:14px;min-height:145px}
+.shopping h4{font-size:11px}
+.shopping-items{margin-top:9px}
+.shopping-tag{font-size:10px;padding:7px 10px}
+.shopping-note{font-size:11px;line-height:1.5;margin-top:9px}
+.play{padding:13px;min-height:auto}
+.play h4{font-size:11px}
+.play p{font-size:12px;line-height:1.55}
+
+.leaders{gap:8px}
+.leader{padding:12px;min-height:132px}
+.leader-step{font-size:9px}
+.leader-name{font-size:21px}
+.leader-meta{font-size:10px}
+.leader-stats{margin-top:8px}
+.leader-stat{padding:6px}
+.leader-stat span{font-size:8px}
+.leader-stat b{font-size:12px}
+
+.snapshot-grid{gap:6px}
+.snapshot-cell{padding:10px;min-height:66px}
+.snapshot-cell span{font-size:9px}
+.snapshot-cell b{font-size:18px}
+
+.procon-grid{gap:8px}
+.procon{padding:13px;min-height:125px}
+.procon h4{font-size:11px}
+.procon ul,.check-panel ul{font-size:12px;line-height:1.65}
+
+.checklist{gap:8px}
+.check-panel{padding:13px;min-height:130px}
+.check-panel h4{font-size:11px}
+
+.decision-tree{padding:2px 0}
+.tree-node{padding:12px 14px;min-width:140px}
+.tree-node span{font-size:9px}
+.tree-node b{font-size:14px}
+
+.source-grid{gap:6px}
+.source{padding:9px}
+.source-name{font-size:9px}
+.source-meta{font-size:9px}
+
+/* reduce excessive whitespace in lower sections */
+.card.span7 .card-body,
+.card.span5 .card-body{min-height:0}
+.card.span12 .card-body{min-height:0}
+
+@media(max-width:1500px){
+  .card-title{font-size:10px}
+  .card-sub{font-size:9px}
+  .triple-main{font-size:24px}
+  .leader-name{font-size:18px}
+}
+
 </style>
 </head>
 <body>
@@ -379,7 +470,7 @@ body{font-size:15px}
 <div class="headrow">
 <div>
 <div class="eyebrow">Institutional Decision Brief · Regime · Breadth · Leadership · Risk</div>
-<div class="title">Institutional Morning Briefing v4.1 — CIO Dashboard</div>
+<div class="title">Institutional Morning Briefing v4.2 — CIO Dashboard</div>
 <div class="subtitle" id="subtitle">Loading canonical Daily Plan and FMP breadth evidence…</div>
 </div>
 <div class="actions">
@@ -554,14 +645,14 @@ body{font-size:15px}
 <div style="display:none"><div id="marketClockStage"></div><div id="marketClockBar"></div><div id="marketClockNote"></div><div id="evidenceRows"></div><div id="decisionTree"></div><div id="bullProbability"></div><div id="bullProbCell"></div><div id="bearProbCell"></div><div id="convictionRow"></div></div>
 </main>
 
-<footer class="footer">INSTITUTIONAL MORNING BRIEFING v4.1 · CIO DASHBOARD · DAILY PLAN 1.1 + PARTICIPATION 2.2 · FMP NASDAQ BREADTH ONLY</footer>
+<footer class="footer">INSTITUTIONAL MORNING BRIEFING v4.2 · CIO DASHBOARD · DAILY PLAN 1.1 + PARTICIPATION 2.2 · FMP NASDAQ BREADTH ONLY</footer>
 </div>
 
 <div class="loading" id="loading"><div class="loading-box"><div class="spinner"></div><div class="loading-title" id="loadingTitle">Loading Morning Brief…</div><div class="loading-note" id="loadingNote">Canonical plan + participation JSONP</div></div></div>
 
 <script>
 const API_URL='https://script.google.com/macros/s/AKfycbyJJuJBqxzj4YC2OQoZTiPeciYzwKIliGyYdboOCyFUUcl9Xxt587bFdMxK4pQfatqtNA/exec';
-const CACHE_KEY='institutionalMorningBriefV41';
+const CACHE_KEY='institutionalMorningBriefV42';
 const $=id=>document.getElementById(id);
 let plan=null,participation=null;
 
