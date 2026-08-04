@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NASDAQ Breadth & NASI Command Center</title>
+<title>NASI</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <style>
@@ -146,12 +146,12 @@
         </div>
         <span class="pill" id="spyTrendBadge">—</span>
       </div>
-      <div class="primary-read">Candlestick · adjusted NASI · NASI 50-day SMA</div>
+      <div class="primary-read">Candlestick · FMP NASI · NASI 50-day SMA</div>
       <div class="combined-chart-stack">
         <div>
           <div class="chartbox benchmark-chart"><canvas id="spyNasiChart"></canvas></div>
           <div class="legend">
-            <span><i class="line" style="background:#0f766e"></i>Adjusted NASI</span>
+            <span><i class="line" style="background:#0f766e"></i>FMP NASI</span>
             <span><i class="line" style="background:#2f6fde"></i>NASI 50-day SMA</span>
             <span><i class="line" style="background:#999"></i>NASI zero</span>
           </div>
@@ -192,12 +192,12 @@
         </div>
         <span class="pill" id="qqqTrendBadge">—</span>
       </div>
-      <div class="primary-read" id="qqqRead">Candlestick · adjusted NASI · NASI 50-day SMA · exact Stockbee QQQ series</div>
+      <div class="primary-read" id="qqqRead">Candlestick · FMP NASI · NASI 50-day SMA · exact Stockbee QQQ series</div>
       <div class="combined-chart-stack">
         <div>
           <div class="chartbox benchmark-chart"><canvas id="qqqNasiChart"></canvas></div>
           <div class="legend">
-            <span><i class="line" style="background:#0f766e"></i>Adjusted NASI</span>
+            <span><i class="line" style="background:#0f766e"></i>FMP NASI</span>
             <span><i class="line" style="background:#2f6fde"></i>NASI 50-day SMA</span>
             <span><i class="line" style="background:#999"></i>NASI zero</span>
           </div>
@@ -236,7 +236,7 @@
 
 
 
-<section class="panel"><div class="panelhead"><div><div class="label">Calibration layer</div><div class="title">Optional official-level alignment</div></div><span class="pill" id="calBadge">Uncalibrated</span></div><div class="calibration"><div><label>Anchor date<input id="anchorDate" type="date"></label></div><div><label>Official NASI at anchor<input id="anchorValue" type="number" step="0.01" placeholder="e.g. -222"></label></div><div><label>Current offset<input id="offsetDisplay" type="number" readonly></label></div><div style="display:flex;align-items:end;gap:7px"><button class="btn" id="applyCal">Apply calibration</button><button class="btn" id="resetCal">Reset</button></div></div><div class="note" style="margin-top:9px">Optional only. Enter an official StockCharts NASI value for a known date to shift the entire proprietary NASI series by one constant offset. This changes the displayed level and its 50-day SMA, but does not change the McClellan Oscillator, slopes, turning points or divergences. Leave uncalibrated when you only care about direction, trend and signals.</div></section>
+<section class="panel"><div class="panelhead"><div><div class="label">Canonical source</div><div class="title">FMP Nasdaq Breadth Engine</div></div><span class="pill bull">FMP ONLY</span></div><div class="note">Manual NASI calibration and legacy spreadsheet inputs are disabled. All NASI, 50 SMA, McClellan, RANA, participation and risk signals come directly from the published FMP-derived breadth engine.</div></section>
 <section class="panel"><div class="panelhead"><div><div class="label">Recent audit</div><div class="title">Latest breadth observations</div></div><button class="btn" id="refresh">Refresh feeds</button></div><div class="tablewrap"><table><thead><tr><th>Date</th><th>Adv</th><th>Dec</th><th>A/D</th><th>RANA</th><th>Osc</th><th>NASI</th><th>50 SMA</th><th>Health</th><th>Risk</th><th>Signal</th></tr></thead><tbody id="tbody"></tbody></table></div><div class="source">Data source: published FMP-derived MARKET_BREADTH_ENGINE and MARKET_BREADTH_LATEST feeds. This is an independent proprietary series, not the official StockCharts $NASI.</div></section>
 <div class="footer">Educational decision-support system · not financial advice</div>
 </div>
@@ -245,7 +245,7 @@ const PUB='https://docs.google.com/spreadsheets/d/e/2PACX-1vQJgJsQkbBX3USosTbGEO
 const GIDS=['1906345525','1126999134'];
 const STOCKBEE_SHEET_ID='1O6OhS7ciA8zwfycBfGPbP2fWJnR0pn2UUvFZVDP9jpE';
 const STOCKBEE_URLS=[`https://docs.google.com/spreadsheets/d/${STOCKBEE_SHEET_ID}/pub?output=csv&_=${Date.now()}`,`https://docs.google.com/spreadsheets/d/${STOCKBEE_SHEET_ID}/gviz/tq?tqx=out:csv&_=${Date.now()}`];
-let rows=[],metrics={},priceByDate={},idx=-1,timer=null,offset=Number(localStorage.getItem('nasiCalibrationOffset')||0),anchorDateSaved=localStorage.getItem('nasiAnchorDate')||'',anchorValueSaved=localStorage.getItem('nasiAnchorValue')||'';
+let rows=[],metrics={},priceByDate={},idx=-1,timer=null,offset=0;
 let spyNasiChart=null,qqqNasiChart=null,oscChart=null,adChart=null,ranaChart=null,adRatioChart=null;
 let liveEtfData={SPY:{},QQQ:{}};
 const n=v=>{const x=Number(String(v??'').replace(/,/g,'').replace(/%/g,'').trim());return Number.isFinite(x)?x:null};
@@ -408,9 +408,7 @@ async function load(){
     if(!hist.length){setStatus('err','Breadth feed unavailable · '+errors.slice(-2).join(' | '));return}
     rows=hist; metrics=latest; idx=rows.length-1;
     document.getElementById('slider').max=rows.length-1;
-    document.getElementById('anchorDate').value=anchorDateSaved;
-    document.getElementById('anchorValue').value=anchorValueSaved;
-    render();
+        render();
     setStatus('ok',`${rows.length} breadth sessions loaded · ${priceCount?priceCount+' benchmark records linked':'benchmark price overlay unavailable'} · ${directEtfCount?'direct SPY/QQQ OHLC active':'Stockbee sheet fallback active'} · latest ${rows.at(-1).date}`);
   }catch(e){
     console.error(e);
@@ -419,7 +417,7 @@ async function load(){
 }
 function setStatus(k,t){const e=document.getElementById('status');e.className='status '+k;e.textContent=t}
 function val(r,key){if(r[key]!=null)return r[key];const m={health:'breadth health score',risk:'risk mode',signal:'signal',regime:'breadth trend regime',momentum:'breadth momentum',guidance:'tactical guidance'};return metrics[m[key]]??''}
-function adjusted(r){return {...r,adjNasi:r.nasi+offset,adj50:r.nasi50==null?null:r.nasi50+offset}}
+function adjusted(r){return {...r,adjNasi:r.nasi,adj50:r.nasi50}}
 function tone(r){const risk=String(val(r,'risk')).toUpperCase(),signal=String(val(r,'signal')).toUpperCase(),health=Number(val(r,'health'));if(risk.includes('OFF')||signal.includes('BREAK')||signal.includes('SELL')||health<35)return'bear';if(risk.includes('ON')&&health>=70)return'bull';return'warn'}
 function fmt(x,d=0,s=false){if(x==null||!Number.isFinite(Number(x)))return'—';const v=Number(x);return(s&&v>0?'+':'')+v.toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d})}
 function smaSeries(values,period){const out=new Array(values.length).fill(null);for(let i=period-1;i<values.length;i++){const w=values.slice(i-period+1,i+1);if(w.every(Number.isFinite))out[i]=w.reduce((a,b)=>a+b,0)/period;}return out}
@@ -488,7 +486,7 @@ function renderDiagnostics(r,history,t){
   document.getElementById('adRatioBadge').textContent=ratio>=1?'Advancers leading':'Decliners leading';
   document.getElementById('adRatioBadge').className='pill '+(ratio>=1?'bull':'bear');
 }
-function render(){if(!rows.length)return;const r=adjusted(rows[idx]),t=tone(r),history=rows.slice(0,idx+1).map(adjusted);document.getElementById('decision').className='panel decision '+t;document.getElementById('decisionTitle').textContent=t==='bear'?'Defensive internal breadth':t==='bull'?'Constructive internal breadth':'Transitional internal breadth';const risk=val(r,'risk')||'—',signal=val(r,'signal')||'—';document.getElementById('riskPill').textContent=risk;document.getElementById('riskPill').className='pill '+t;document.getElementById('signalPill').textContent=signal;document.getElementById('asof').textContent='As of '+r.date;document.getElementById('selectedLabel').textContent=r.date;document.getElementById('slider').value=idx;document.getElementById('dateInput').value=r.date;document.getElementById('startDate').textContent=rows[0].date;document.getElementById('endDate').textContent=rows.at(-1).date;document.getElementById('prev').disabled=idx===0;document.getElementById('next').disabled=idx===rows.length-1;const health=Number(val(r,'health'));const dist=r.adj50==null?null:r.adjNasi-r.adj50;const five=history.length>5?r.adjNasi-history.at(-6).adjNasi:null;document.getElementById('metrics').innerHTML=[['Breadth health',`${fmt(health)} <span class="health-context ${health>=65?'bull':health<40?'bear':'warn'}">${health>=80?'Strong':health>=65?'Healthy':health>=45?'Transitional':health>=35?'Weak':'Critical'}</span>`,'0–100 composite',health>=65?'pos':health<40?'neg':'warnText'],['Adjusted NASI',fmt(r.adjNasi,0,true),'Calibrated cumulative breadth',r.adjNasi>=0?'pos':'neg'],['NASI vs 50 SMA',fmt(dist,0,true),'Trend confirmation',dist>=0?'pos':'neg'],['McClellan Osc',fmt(r.osc,1,true),'Short-term breadth impulse',r.osc>=0?'pos':'neg'],['5-day NASI change',fmt(five,0,true),'Slope / momentum',five>=0?'pos':'neg'],['A/D ratio',fmt(r.dec? r.adv/r.dec:null,2),'Daily participation',r.adv>r.dec?'pos':'neg'],['Eligible universe',fmt(r.eligible),'Data breadth',''],['Data quality',r.quality!=null?fmt(r.quality>1?r.quality:r.quality*100,1)+'%':'—','Coverage','']].map(x=>`<div class="metric"><span>${x[0]}</span><strong class="${x[3]}">${x[1]}</strong><small>${x[2]}</small></div>`).join('');const guide=val(r,'guidance')||`${val(r,'regime')||'Breadth regime unavailable'} · ${val(r,'momentum')||'Momentum unavailable'}`;document.getElementById('guidance').innerHTML=`<strong>Portfolio guidance:</strong> ${guide}`;document.getElementById('spyTrendBadge').textContent=val(r,'regime')||'—';document.getElementById('spyTrendBadge').className='pill '+t;document.getElementById('qqqTrendBadge').textContent=val(r,'regime')||'—';document.getElementById('qqqTrendBadge').className='pill '+t;document.getElementById('oscBadge').textContent=r.osc>=0?'Positive impulse':'Negative impulse';document.getElementById('oscBadge').className='pill '+(r.osc>=0?'bull':'bear');renderInterpretation(r,history,t);const net=(r.adv||0)-(r.dec||0),adRatio=r.dec?r.adv/r.dec:null,partTone=net>=0?'bull':'bear';document.getElementById('participationBadge').textContent=net>=0?'Net advancing':'Net declining';document.getElementById('participationBadge').className='pill '+partTone;document.getElementById('participationStats').innerHTML=`<div class="pstat"><span>Advances</span><strong class="pos">${fmt(r.adv)}</strong></div><div class="pstat"><span>Declines</span><strong class="neg">${fmt(r.dec)}</strong></div><div class="pstat"><span>Net A−D</span><strong class="${net>=0?'pos':'neg'}">${fmt(net,0,true)}</strong></div><div class="pstat"><span>A/D ratio</span><strong class="${adRatio>=1?'pos':'neg'}">${fmt(adRatio,2)}</strong></div>`;renderDiagnostics(r,history,t);renderCharts(history);renderTable(history.slice(-15).reverse());updateCalBadge()}
+function render(){if(!rows.length)return;const r=adjusted(rows[idx]),t=tone(r),history=rows.slice(0,idx+1).map(adjusted);document.getElementById('decision').className='panel decision '+t;document.getElementById('decisionTitle').textContent=t==='bear'?'Defensive internal breadth':t==='bull'?'Constructive internal breadth':'Transitional internal breadth';const risk=val(r,'risk')||'—',signal=val(r,'signal')||'—';document.getElementById('riskPill').textContent=risk;document.getElementById('riskPill').className='pill '+t;document.getElementById('signalPill').textContent=signal;document.getElementById('asof').textContent='As of '+r.date;document.getElementById('selectedLabel').textContent=r.date;document.getElementById('slider').value=idx;document.getElementById('dateInput').value=r.date;document.getElementById('startDate').textContent=rows[0].date;document.getElementById('endDate').textContent=rows.at(-1).date;document.getElementById('prev').disabled=idx===0;document.getElementById('next').disabled=idx===rows.length-1;const health=Number(val(r,'health'));const dist=r.adj50==null?null:r.adjNasi-r.adj50;const five=history.length>5?r.adjNasi-history.at(-6).adjNasi:null;document.getElementById('metrics').innerHTML=[['Breadth health',`${fmt(health)} <span class="health-context ${health>=65?'bull':health<40?'bear':'warn'}">${health>=80?'Strong':health>=65?'Healthy':health>=45?'Transitional':health>=35?'Weak':'Critical'}</span>`,'0–100 composite',health>=65?'pos':health<40?'neg':'warnText'],['FMP NASI',fmt(r.adjNasi,0,true),'Calibrated cumulative breadth',r.adjNasi>=0?'pos':'neg'],['NASI vs 50 SMA',fmt(dist,0,true),'Trend confirmation',dist>=0?'pos':'neg'],['McClellan Osc',fmt(r.osc,1,true),'Short-term breadth impulse',r.osc>=0?'pos':'neg'],['5-day NASI change',fmt(five,0,true),'Slope / momentum',five>=0?'pos':'neg'],['A/D ratio',fmt(r.dec? r.adv/r.dec:null,2),'Daily participation',r.adv>r.dec?'pos':'neg'],['Eligible universe',fmt(r.eligible),'Data breadth',''],['Data quality',r.quality!=null?fmt(r.quality>1?r.quality:r.quality*100,1)+'%':'—','Coverage','']].map(x=>`<div class="metric"><span>${x[0]}</span><strong class="${x[3]}">${x[1]}</strong><small>${x[2]}</small></div>`).join('');const guide=val(r,'guidance')||`${val(r,'regime')||'Breadth regime unavailable'} · ${val(r,'momentum')||'Momentum unavailable'}`;document.getElementById('guidance').innerHTML=`<strong>Portfolio guidance:</strong> ${guide}`;document.getElementById('spyTrendBadge').textContent=val(r,'regime')||'—';document.getElementById('spyTrendBadge').className='pill '+t;document.getElementById('qqqTrendBadge').textContent=val(r,'regime')||'—';document.getElementById('qqqTrendBadge').className='pill '+t;document.getElementById('oscBadge').textContent=r.osc>=0?'Positive impulse':'Negative impulse';document.getElementById('oscBadge').className='pill '+(r.osc>=0?'bull':'bear');renderInterpretation(r,history,t);const net=(r.adv||0)-(r.dec||0),adRatio=r.dec?r.adv/r.dec:null,partTone=net>=0?'bull':'bear';document.getElementById('participationBadge').textContent=net>=0?'Net advancing':'Net declining';document.getElementById('participationBadge').className='pill '+partTone;document.getElementById('participationStats').innerHTML=`<div class="pstat"><span>Advances</span><strong class="pos">${fmt(r.adv)}</strong></div><div class="pstat"><span>Declines</span><strong class="neg">${fmt(r.dec)}</strong></div><div class="pstat"><span>Net A−D</span><strong class="${net>=0?'pos':'neg'}">${fmt(net,0,true)}</strong></div><div class="pstat"><span>A/D ratio</span><strong class="${adRatio>=1?'pos':'neg'}">${fmt(adRatio,2)}</strong></div>`;renderDiagnostics(r,history,t);renderCharts(history);renderTable(history.slice(-15).reverse());updateCalBadge()}
 function benchmarkVisibleSlice(symbol,h){
   const key=symbol==='SPY'?'spy':'qqq';
   const firstValid=h.findIndex(row=>Number.isFinite(priceByDate[row.date]?.[key]));
@@ -531,7 +529,7 @@ function renderBenchmarkNasiChart(symbol,h,chart,id){
 
   const datasets=[
     {type:'bar',label:symbol,data:pad(exactOhlc.map(o=>o?[o.o,o.c]:null)),ohlc:paddedOhlc,isCandle:true,backgroundColor:candleColors,borderColor:candleBorders,borderWidth:1.1,borderSkipped:false,barPercentage:.68,categoryPercentage:.92,yAxisID:'yPrice'},
-    {type:'line',label:'Adjusted NASI',data:pad(visible.map(r=>r.adjNasi)),borderColor:'#0f766e',pointRadius:0,borderWidth:2,tension:.12,yAxisID:'y',segment:{borderColor:c=>c.p1.parsed.y>=c.p0.parsed.y?'#0f766e':'#d74747'}},
+    {type:'line',label:'FMP NASI',data:pad(visible.map(r=>r.adjNasi)),borderColor:'#0f766e',pointRadius:0,borderWidth:2,tension:.12,yAxisID:'y',segment:{borderColor:c=>c.p1.parsed.y>=c.p0.parsed.y?'#0f766e':'#d74747'}},
     {type:'line',label:'NASI 50 SMA',data:pad(visible.map(r=>r.adj50)),borderColor:'#2f6fde',pointRadius:0,borderWidth:1.7,tension:.12,yAxisID:'y'},
     {type:'line',label:'NASI Zero',data:pad(visible.map(()=>0)),borderColor:'#999',borderDash:[4,3],pointRadius:0,borderWidth:1,yAxisID:'y'}
   ];
@@ -715,7 +713,7 @@ function renderCharts(h){
 
   spyNasiChart=renderBenchmarkNasiChart('SPY',h,spyNasiChart,'spyNasiChart');
   qqqNasiChart=renderBenchmarkNasiChart('QQQ',h,qqqNasiChart,'qqqNasiChart');
-  document.getElementById('qqqRead').textContent='Candlestick · adjusted NASI · NASI 50-day SMA · exact Stockbee QQQ series';
+  document.getElementById('qqqRead').textContent='Candlestick · FMP NASI · NASI 50-day SMA · exact Stockbee QQQ series';
 
   // SPY middle: McClellan Oscillator, with hidden x labels.
   const oscLabels=spyRows.map(r=>r.date).concat(['','','','']);
@@ -1024,6 +1022,6 @@ function linkChartPair(topChart,bottomChart){
 }
 
 function renderTable(list){document.getElementById('tbody').innerHTML=list.map(r=>`<tr><td>${r.date}</td><td>${fmt(r.adv)}</td><td>${fmt(r.dec)}</td><td>${fmt(r.dec?r.adv/r.dec:null,2)}</td><td>${fmt(r.rana,1,true)}</td><td>${fmt(r.osc,1,true)}</td><td>${fmt(r.adjNasi,0,true)}</td><td>${fmt(r.adj50,0,true)}</td><td>${fmt(Number(val(r,'health')))}</td><td>${val(r,'risk')||'—'}</td><td>${val(r,'signal')||'—'}</td></tr>`).join('')}
-function updateCalBadge(){const b=document.getElementById('calBadge');document.getElementById('offsetDisplay').value=offset.toFixed(2);b.textContent=offset?'Calibrated':'Uncalibrated';b.className='pill '+(offset?'bull':'')}
+function updateCalBadge(){const b=document.getElementById('calBadge');b.textContent=offset?'Calibrated':'Uncalibrated';b.className='pill '+(offset?'bull':'')}
 document.getElementById('prev').onclick=()=>{if(idx>0){idx--;render()}};document.getElementById('next').onclick=()=>{if(idx<rows.length-1){idx++;render()}};document.getElementById('latest').onclick=()=>{idx=rows.length-1;render()};document.getElementById('slider').oninput=e=>{idx=Number(e.target.value);render()};document.getElementById('dateInput').onchange=e=>{const d=e.target.value;let i=rows.findIndex(r=>r.date>=d);idx=i<0?rows.length-1:i;render()};document.getElementById('play').onclick=()=>{if(timer){clearInterval(timer);timer=null;document.getElementById('play').textContent='▶ Play';return}if(idx===rows.length-1)idx=0;document.getElementById('play').textContent='Ⅱ Pause';timer=setInterval(()=>{if(idx>=rows.length-1){clearInterval(timer);timer=null;document.getElementById('play').textContent='▶ Play';return}idx++;render()},450)};document.getElementById('refresh').onclick=load;document.getElementById('applyCal').onclick=()=>{const d=document.getElementById('anchorDate').value,v=n(document.getElementById('anchorValue').value);const r=rows.find(x=>x.date===d);if(!r||v==null){alert('Choose a valid anchor date and official NASI value.');return}offset=v-r.nasi;localStorage.setItem('nasiCalibrationOffset',offset);localStorage.setItem('nasiAnchorDate',d);localStorage.setItem('nasiAnchorValue',v);render()};document.getElementById('resetCal').onclick=()=>{offset=0;localStorage.removeItem('nasiCalibrationOffset');localStorage.removeItem('nasiAnchorDate');localStorage.removeItem('nasiAnchorValue');document.getElementById('anchorDate').value='';document.getElementById('anchorValue').value='';render()};load();
 </script></body></html>
