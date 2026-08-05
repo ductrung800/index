@@ -1332,7 +1332,7 @@
 
 
     // =====================================================================
-    // FMP UNIFIED DATA ADAPTER v2.3
+    // FMP UNIFIED DATA ADAPTER v2.4.1
     // Canonical source: Leadership Rotation Command API (action=rotation)
     // Yahoo fallback is disabled; last valid FMP cache is the only fallback.
     // =====================================================================
@@ -1355,11 +1355,14 @@
                 err ? reject(err) : resolve(payload);
             }
 
-            // The deployed Apps Script action=rotation-jsonp returns the exact callback below.
+            // Use the standard Apps Script JSONP path already proven by Morning Market OS.
+            // Do not append timestamp/cache-buster parameters: this deployment has shown
+            // intermittent 404 redirects when extra query parameters are present.
             window[cb] = payload => finish(null, payload);
             script.async = true;
+            script.referrerPolicy = 'no-referrer';
             script.onerror = () => finish(new Error('Rotation JSONP script failed to load'));
-            script.src = `${FMP_ROTATION_API_URL}?action=rotation-jsonp`;
+            script.src = `${FMP_ROTATION_API_URL}?action=rotation&callback=${encodeURIComponent(cb)}`;
             document.head.appendChild(script);
         });
     }
