@@ -52,7 +52,7 @@ th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}tb
 <body>
 <div class="shell">
   <div class="topbar">
-    <div><div class="eyebrow">NOW Institutional Portfolio OS · Phase 1</div><h1>Portfolio Command Center</h1><div class="sub" id="metaLine">Connecting to live portfolio sheet…</div></div>
+    <div><div class="eyebrow">NOW Institutional Portfolio OS · Phase 1.1 · Exposure Taxonomy</div><h1>Portfolio Command Center</h1><div class="sub" id="metaLine">Connecting to live portfolio sheet…</div></div>
     <div class="actions"><button class="btn" id="themeBtn">Light</button><button class="btn primary" id="refreshBtn">↻ Refresh Live Data</button></div>
   </div>
 
@@ -106,22 +106,60 @@ th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}tb
     <div class="panel">
       <div class="table-tools"><input id="search" placeholder="Search ticker or company…"><select id="statusFilter"><option value="OPEN">Open positions</option><option value="ALL">All records</option><option value="CLOSED">Closed only</option><option value="ACTION">Action required</option></select></div>
       <div class="table-wrap"><table><thead><tr>
-        <th>Ticker</th><th>Company</th><th>Status</th><th>Action</th><th>Weight</th><th>Shares</th><th>Entry</th><th>Last</th><th>P/L</th><th>P/L %</th><th>Days</th><th>Value</th><th>ATR%</th><th>vs SMA50</th><th>Trend</th><th>Stop</th><th>Stop %</th><th>Risk $</th><th>Risk % NAV</th><th>Sector</th><th>Industry</th>
+        <th>Ticker</th><th>Company</th><th>Status</th><th>Action</th><th>Exposure Basis</th><th>Weight</th><th>Shares</th><th>Entry</th><th>Last</th><th>P/L</th><th>P/L %</th><th>Days</th><th>Value</th><th>ATR%</th><th>vs SMA50</th><th>Trend</th><th>Stop</th><th>Stop %</th><th>Risk $</th><th>Risk % NAV</th><th>Sector</th><th>Industry</th>
       </tr></thead><tbody id="positionRows"></tbody></table></div>
     </div>
   </section>
 
   <section class="view" id="journal">
     <div class="panel"><div class="panel-head"><div class="section-title">Closed Trade Journal</div><span class="sub" id="journalCount"></span></div>
-      <div class="table-wrap"><table><thead><tr><th>Ticker</th><th>Company</th><th>Purchased</th><th>Exit Date</th><th>Entry</th><th>Exit</th><th>Realized P/L</th><th>Realized %</th><th>Days</th><th>Sector</th><th>Industry</th></tr></thead><tbody id="journalRows"></tbody></table></div>
+      <div class="table-wrap"><table><thead><tr><th>Ticker</th><th>Company</th><th>Exposure Basis</th><th>Purchased</th><th>Exit Date</th><th>Entry</th><th>Exit</th><th>Realized P/L</th><th>Realized %</th><th>Days</th><th>Sector</th><th>Industry</th></tr></thead><tbody id="journalRows"></tbody></table></div>
     </div>
   </section>
-  <div class="footer">NOW Portfolio Command Center · Portfolio data translated into exposure, risk and action · For informational purposes only.</div>
+  <div class="footer">NOW Portfolio Command Center · Economic-exposure taxonomy applied to ETFs · Portfolio data translated into exposure, risk and action · For informational purposes only.</div>
 </div>
 
 <script>
 const CSV_URL='https://docs.google.com/spreadsheets/d/e/2PACX-1vTvDsxwxJSatKaMzAUsdAGJT4ZhtiRQ0iHbyihBL9DOje7r4oVibcxYDOs-NYz3lBEXrevKMwq8duaH/pub?gid=2081359794&single=true&output=csv';
 let positions=[],charts={},summary={};
+
+const ETF_EXPOSURE_MAP = {
+  // Open leveraged / thematic products — classify by economic exposure, not legal wrapper.
+  MUU:  {sector:'Technology', industry:'Semiconductors & Semiconductor Equipment', underlying:'Micron Technology (MU)', direction:'Bull', leverage:'2x'},
+  LABU: {sector:'Health Care', industry:'Biotechnology', underlying:'S&P Biotechnology Select Industry Index', direction:'Bull', leverage:'3x'},
+  SOXS: {sector:'Technology', industry:'Semiconductors & Semiconductor Equipment', underlying:'NYSE Semiconductor Index', direction:'Inverse', leverage:'-3x'},
+  DPST: {sector:'Financials', industry:'Regional Banks', underlying:'S&P Regional Banks Select Industry Index', direction:'Bull', leverage:'3x'},
+  GDXU: {sector:'Materials', industry:'Gold & Precious Metals Mining', underlying:'Gold Miners Index', direction:'Bull', leverage:'3x'},
+  PLTU: {sector:'Technology', industry:'Application Software', underlying:'Palantir Technologies (PLTR)', direction:'Bull', leverage:'2x'},
+  SPCX: {sector:'Industrials', industry:'Aerospace & Defense', underlying:'SpaceX', direction:'Bull', leverage:'2x'},
+
+  // Common journal / previously held products.
+  AGQ:  {sector:'Materials', industry:'Silver', underlying:'Silver bullion', direction:'Bull', leverage:'2x'},
+  AMDL: {sector:'Technology', industry:'Semiconductors & Semiconductor Equipment', underlying:'Advanced Micro Devices (AMD)', direction:'Bull', leverage:'2x'},
+  SNXX: {sector:'Technology', industry:'Semiconductors & Semiconductor Equipment', underlying:'Semiconductor equity basket', direction:'Bull', leverage:'2x'},
+  ETHA: {sector:'Digital Assets', industry:'Ethereum', underlying:'Ether', direction:'Long', leverage:'1x'}
+};
+
+function applyExposureTaxonomy(p){
+  const x=ETF_EXPOSURE_MAP[String(p.ticker||'').toUpperCase()];
+  p.sheetSector=p.sector;
+  p.sheetIndustry=p.industry;
+  p.underlying='';
+  p.direction='';
+  p.leverage='';
+  if(x){
+    p.sector=x.sector;
+    p.industry=x.industry;
+    p.underlying=x.underlying||'';
+    p.direction=x.direction||'';
+    p.leverage=x.leverage||'';
+    p.taxonomySource='Exposure override';
+  }else{
+    p.taxonomySource='Sheet classification';
+  }
+  return p;
+}
+
 
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const num=v=>{if(v===null||v===undefined)return 0;const s=String(v).replace(/[$,%\s,]/g,'').replace(/[()]/g,'');let n=parseFloat(s);if(!isFinite(n))return 0;if(String(v).includes('('))n=-n;return n};
@@ -187,6 +225,7 @@ function buildPositions(rows){
     p.status=p.exitDate?'CLOSED':'OPEN';
     if(!p.value&&p.status==='OPEN')p.value=p.shares*p.last;
     p.instrument=classifyETF(p.ticker,p.company,p.sector,p.industry);
+    applyExposureTaxonomy(p);
     p.trend=[p.ma10,p.ma20,p.ma50,p.ma10w,p.ma40w].map(x=>String(x).includes('▲')?1:String(x).includes('▼')?-1:0).reduce((a,b)=>a+b,0);
     p.riskDollar=p.status==='OPEN'&&p.stop2>0?Math.max(0,(p.last-p.stop2)*p.shares):0;
     out.push(p);
@@ -269,8 +308,8 @@ function renderTables(){
   const q=$('#search').value.toLowerCase(),f=$('#statusFilter').value;
   let arr=positions.filter(p=>(p.ticker+' '+p.company).toLowerCase().includes(q));
   if(f==='OPEN')arr=arr.filter(p=>p.status==='OPEN');if(f==='CLOSED')arr=arr.filter(p=>p.status==='CLOSED');if(f==='ACTION')arr=arr.filter(p=>['EXIT','REDUCE','PROTECT'].includes(actionFor(p).label));
-  $('#positionRows').innerHTML=arr.map(p=>{const a=actionFor(p);return `<tr><td><a class="tickerlink" target="_blank" href="https://www.tradingview.com/chart/?symbol=${encodeURIComponent(p.ticker)}">${esc(p.ticker)}</a></td><td>${esc(p.company)}</td><td><span class="pill ${p.status==='OPEN'?'p-hold':'p-closed'}">${p.status}</span></td><td><span class="pill ${a.cls}">${a.label}</span></td><td>${per(p.weight)}</td><td>${p.shares}</td><td>${money2(p.entry)}</td><td>${money2(p.last)}</td><td class="${p.pl>=0?'green':'red'}">${money(p.pl)}</td><td class="${p.plPct>=0?'green':'red'}">${per(p.plPct)}</td><td>${p.days||''}</td><td>${money(p.value)}</td><td>${per(p.atrPct)}</td><td class="${p.sma50Pct>=0?'green':'red'}">${per(p.sma50Pct)}</td><td>${trendText(p)}</td><td>${money2(p.stop2)}</td><td>${per(p.stopPct)}</td><td>${money(p.riskDollar)}</td><td>${per(summary.nav?p.riskDollar/summary.nav:0)}</td><td>${esc(p.sector)}</td><td>${esc(p.industry)}</td></tr>`}).join('');
-  $('#journalRows').innerHTML=summary.closed.map(p=>`<tr><td class="tickerlink">${esc(p.ticker)}</td><td>${esc(p.company)}</td><td>${esc(p.purchased)}</td><td>${esc(p.exitDate)}</td><td>${money2(p.entry)}</td><td>${money2(p.exitPrice)}</td><td class="${p.realizedPL>=0?'green':'red'}">${money(p.realizedPL)}</td><td class="${p.realizedPct>=0?'green':'red'}">${per(p.realizedPct)}</td><td>${p.days}</td><td>${esc(p.sector)}</td><td>${esc(p.industry)}</td></tr>`).join('');
+  $('#positionRows').innerHTML=arr.map(p=>{const a=actionFor(p);return `<tr><td><a class="tickerlink" target="_blank" href="https://www.tradingview.com/chart/?symbol=${encodeURIComponent(p.ticker)}">${esc(p.ticker)}</a></td><td>${esc(p.company)}</td><td><span class="pill ${p.status==='OPEN'?'p-hold':'p-closed'}">${p.status}</span></td><td><span class="pill ${a.cls}">${a.label}</span></td><td>${esc(p.underlying||p.instrument)}</td><td>${per(p.weight)}</td><td>${p.shares}</td><td>${money2(p.entry)}</td><td>${money2(p.last)}</td><td class="${p.pl>=0?'green':'red'}">${money(p.pl)}</td><td class="${p.plPct>=0?'green':'red'}">${per(p.plPct)}</td><td>${p.days||''}</td><td>${money(p.value)}</td><td>${per(p.atrPct)}</td><td class="${p.sma50Pct>=0?'green':'red'}">${per(p.sma50Pct)}</td><td>${trendText(p)}</td><td>${money2(p.stop2)}</td><td>${per(p.stopPct)}</td><td>${money(p.riskDollar)}</td><td>${per(summary.nav?p.riskDollar/summary.nav:0)}</td><td>${esc(p.sector)}</td><td>${esc(p.industry)}</td></tr>`}).join('');
+  $('#journalRows').innerHTML=summary.closed.map(p=>`<tr><td class="tickerlink">${esc(p.ticker)}</td><td>${esc(p.company)}</td><td>${esc(p.underlying||p.instrument)}</td><td>${esc(p.purchased)}</td><td>${esc(p.exitDate)}</td><td>${money2(p.entry)}</td><td>${money2(p.exitPrice)}</td><td class="${p.realizedPL>=0?'green':'red'}">${money(p.realizedPL)}</td><td class="${p.realizedPct>=0?'green':'red'}">${per(p.realizedPct)}</td><td>${p.days}</td><td>${esc(p.sector)}</td><td>${esc(p.industry)}</td></tr>`).join('');
   $('#journalCount').textContent=summary.closed.length+' closed records';
 }
 async function load(){
