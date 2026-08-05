@@ -1395,39 +1395,73 @@
 
 
     // =====================================================================
-    // FMP UNIFIED DATA ADAPTER v2.4.1
+    // FMP UNIFIED DATA ADAPTER v2.5.1
     // Canonical source: Leadership Rotation Command API (action=rotation)
     // Yahoo fallback is disabled; last valid FMP cache is the only fallback.
     // =====================================================================
     const FMP_ROTATION_API_URL = 'https://script.google.com/macros/s/AKfycbyJJuJBqxzj4YC2OQoZTiPeciYzwKIliGyYdboOCyFUUcl9Xxt587bFdMxK4pQfatqtNA/exec';
     let ROTATION_PAYLOAD = null;
 
-    function jsonpRotation_(timeoutMs = 45000) {
+    function loadJsonpScript_(url, callbackName, timeoutMs = 30000) {
         return new Promise((resolve, reject) => {
-            const cb = '__RS_RADAR_ROTATION_CALLBACK__';
             const script = document.createElement('script');
             let settled = false;
-            const timer = setTimeout(() => finish(new Error('Rotation API timed out after 45 seconds')), timeoutMs);
+            const timer = setTimeout(() => finish(new Error(`JSONP timed out: ${url}`)), timeoutMs);
 
             function finish(err, payload) {
                 if (settled) return;
                 settled = true;
                 clearTimeout(timer);
-                try { delete window[cb]; } catch(e) { window[cb] = undefined; }
+                try { delete window[callbackName]; } catch(e) { window[callbackName] = undefined; }
                 if (script.parentNode) script.parentNode.removeChild(script);
                 err ? reject(err) : resolve(payload);
             }
 
-            // Use the standard Apps Script JSONP path already proven by Morning Market OS.
-            // Do not append timestamp/cache-buster parameters: this deployment has shown
-            // intermittent 404 redirects when extra query parameters are present.
-            window[cb] = payload => finish(null, payload);
+            window[callbackName] = payload => finish(null, payload);
             script.async = true;
             script.referrerPolicy = 'no-referrer';
-            script.onerror = () => finish(new Error('Rotation JSONP script failed to load'));
-            script.src = `${FMP_ROTATION_API_URL}?action=rotation&callback=${encodeURIComponent(cb)}`;
+            script.onerror = () => finish(new Error(`JSONP script failed: ${url}`));
+            script.src = url;
             document.head.appendChild(script);
         });
+    }
+
+    async function jsonpRotation_(timeoutMs = 45000) {
+        // Apps Script occasionally rejects one JSONP route while the deployment itself
+        // remains healthy. Try both supported routes before using the last valid cache.
+        const attempts = [
+            {
+                name: 'standard rotation JSONP',
+                callback: '__RS_RADAR_ROTATION_CALLBACK__',
+                url: `${FMP_ROTATION_API_URL}?action=rotation&callback=__RS_RADAR_ROTATION_CALLBACK__`
+            },
+            {
+                name: 'fixed rotation-jsonp route',
+                callback: '__RS_RADAR_ROTATION_CALLBACK__',
+                url: `${FMP_ROTATION_API_URL}?action=rotation-jsonp`
+            },
+            {
+                name: 'standard rotation JSONP retry',
+                callback: '__RS_RADAR_ROTATION_CALLBACK__',
+                url: `${FMP_ROTATION_API_URL}?action=rotation&callback=__RS_RADAR_ROTATION_CALLBACK__`
+            }
+        ];
+
+        const errors = [];
+        for (let i = 0; i < attempts.length; i++) {
+            const attempt = attempts[i];
+            try {
+                if (i > 0) await new Promise(r => setTimeout(r, 1200));
+                const payload = await loadJsonpScript_(attempt.url, attempt.callback, Math.min(timeoutMs, 30000));
+                if (!payload || payload.ok !== true) {
+                    throw new Error(payload && payload.error ? payload.error : 'Rotation payload was not valid');
+                }
+                return payload;
+            } catch (err) {
+                errors.push(`${attempt.name}: ${err && err.message ? err.message : err}`);
+            }
+        }
+        throw new Error(errors.join(' | '));
     }
 
     function rotationRowToRadar_(row) {
