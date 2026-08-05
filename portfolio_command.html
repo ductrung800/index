@@ -1,0 +1,460 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Portfolio Command v1.0 — Market OS Risk Control</title>
+<style>
+:root{
+  --bg:#05080c;--panel:#0b1118;--panel2:#101923;--panel3:#15212d;--line:#253647;
+  --ink:#f1f6fa;--muted:#8fa3b7;--green:#35e59a;--amber:#f3b84b;--red:#ff647a;
+  --blue:#55afff;--teal:#36d6c2;--shadow:0 14px 42px rgba(0,0,0,.28);
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace
+}
+html[data-theme="light"]{
+  --bg:#edf2f6;--panel:#fff;--panel2:#f6f9fb;--panel3:#eef3f7;--line:#cdd8e2;
+  --ink:#172536;--muted:#687b8f;--green:#0b9b6f;--amber:#bd7b0d;--red:#d6485d;
+  --blue:#287fbd;--teal:#0e9488;--shadow:0 10px 28px rgba(33,52,70,.10)
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+button,input,select{font:inherit}
+.shell{min-height:100vh}
+.topbar{
+  position:sticky;top:0;z-index:50;display:grid;grid-template-columns:auto 1fr auto;gap:14px;
+  align-items:center;padding:10px 14px;background:var(--panel);border-bottom:1px solid var(--line)
+}
+.brand{display:flex;align-items:center;gap:10px;min-width:230px}
+.logo{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;background:linear-gradient(135deg,var(--teal),var(--blue));font:950 14px var(--mono);color:#fff}
+.brand b{display:block;font-size:16px}.brand span{display:block;font:800 8px var(--mono);letter-spacing:.13em;color:var(--muted);text-transform:uppercase}
+.context{display:grid;grid-template-columns:repeat(6,minmax(105px,1fr));gap:7px}
+.ctx{border:1px solid var(--line);border-radius:8px;background:var(--panel2);padding:7px 9px;min-width:0}
+.ctx span{display:block;font:900 8px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.ctx b{display:block;margin-top:4px;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.actions{display:flex;gap:7px}
+.btn{border:1px solid var(--line);border-radius:8px;background:var(--panel2);color:var(--ink);padding:8px 11px;font:900 9px var(--mono);letter-spacing:.06em;text-transform:uppercase;cursor:pointer;text-decoration:none}
+.btn.primary{background:var(--teal);border-color:var(--teal);color:#fff}
+.statusbar{display:flex;justify-content:space-between;gap:12px;padding:7px 14px;border-bottom:1px solid var(--line);font:9px var(--mono);color:var(--muted);background:var(--panel)}
+.tabs{display:flex;gap:6px;padding:12px 14px 0}
+.tab{border:1px solid var(--line);border-bottom:none;border-radius:9px 9px 0 0;background:var(--panel2);color:var(--muted);padding:9px 14px;font:900 9px var(--mono);letter-spacing:.11em;text-transform:uppercase;cursor:pointer}
+.tab.active{background:var(--panel);color:var(--ink);position:relative}.tab.active:after{content:"";position:absolute;left:10px;right:10px;bottom:0;height:2px;background:var(--teal)}
+.main{padding:0 14px 16px}
+.workspace{display:none;border:1px solid var(--line);border-radius:0 11px 11px 11px;background:var(--panel);min-height:calc(100vh - 145px);overflow:hidden;box-shadow:var(--shadow)}
+.workspace.active{display:block}
+.head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;padding:16px 18px;border-bottom:1px solid var(--line);background:var(--panel2)}
+.head h1{margin:0;font-size:22px}.head p{margin:5px 0 0;color:var(--muted);font-size:12px}
+.badge{border:1px solid var(--line);border-radius:999px;padding:5px 8px;font:900 9px var(--mono);color:var(--muted)}
+.good{color:var(--green)!important}.warn{color:var(--amber)!important}.bad{color:var(--red)!important}.blue{color:var(--blue)!important}
+
+.command-layout{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(360px,.75fr)}
+.command-main{padding:24px 28px;border-right:1px solid var(--line);min-height:620px}
+.command-side{padding:16px;background:var(--panel2)}
+.kicker{font:950 9px var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--teal)}
+.verdict{font-size:62px;line-height:.94;font-weight:950;letter-spacing:-.05em;margin-top:14px;max-width:950px}
+.verdict-copy{font-size:15px;line-height:1.65;color:var(--muted);max-width:900px;margin-top:18px}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:22px}
+.metric{border:1px solid var(--line);border-radius:9px;background:var(--panel2);padding:12px}
+.metric span{display:block;font:900 8px var(--mono);letter-spacing:.11em;text-transform:uppercase;color:var(--muted)}
+.metric b{display:block;font-size:20px;margin-top:7px}
+.directive{margin-top:12px;border:1px solid var(--line);border-radius:9px;background:var(--panel2);padding:13px}
+.directive span{font:900 8px var(--mono);letter-spacing:.11em;text-transform:uppercase;color:var(--muted)}
+.directive b{display:block;margin-top:7px;font-size:16px;line-height:1.5}
+.side-card{border:1px solid var(--line);border-radius:9px;background:var(--panel);padding:14px;margin-bottom:10px}
+.side-card h3{margin:0;font-size:15px}.side-card p{margin:8px 0 0;color:var(--muted);font-size:12px;line-height:1.55}
+.gate{font-size:31px;font-weight:950;line-height:1.05;margin-top:8px}
+.progress-row{margin-top:12px}.progress-head{display:flex;justify-content:space-between;font:900 9px var(--mono)}
+.track{height:11px;border-radius:999px;background:var(--line);overflow:hidden;margin-top:6px}.fill{height:100%;border-radius:999px}
+.reason-list{margin:10px 0 0;padding-left:18px;color:var(--muted);font-size:12px;line-height:1.75}
+
+.queue-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:16px}
+.queue{border:1px solid var(--line);border-top:4px solid var(--line);border-radius:10px;background:var(--panel2);min-height:380px;overflow:hidden}
+.queue.defend{border-top-color:var(--amber)}.queue.trim{border-top-color:var(--red)}.queue.hold{border-top-color:var(--green)}.queue.exit{border-top-color:#c448ff}
+.queue h2{margin:0;padding:13px 14px;border-bottom:1px solid var(--line);font-size:19px}
+.queue-list{padding:8px}
+.queue-item{border:1px solid var(--line);border-radius:8px;background:var(--panel);padding:10px;margin-bottom:7px}
+.queue-item .row{display:flex;justify-content:space-between;gap:10px}.ticker{font-size:18px;font-weight:950}
+.queue-item small{color:var(--muted)}.queue-item p{margin:7px 0 0;color:var(--muted);font-size:11px;line-height:1.45}
+.queue-empty{padding:18px;color:var(--muted);font-size:12px}
+
+.exposure-layout{display:grid;grid-template-columns:.8fr 1.2fr}
+.exposure-side{padding:16px;border-right:1px solid var(--line);background:var(--panel2)}
+.exposure-main{padding:16px}
+.block{border:1px solid var(--line);border-radius:10px;background:var(--panel);padding:14px;margin-bottom:10px}
+.block h3{margin:0 0 11px;font-size:15px}
+.bar-item{display:grid;grid-template-columns:150px 1fr 70px;gap:10px;align-items:center;margin:9px 0;font-size:12px}
+.bar{height:10px;background:var(--line);border-radius:999px;overflow:hidden}.bar i{display:block;height:100%;background:var(--blue);border-radius:999px}
+.big-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.big-stat{border:1px solid var(--line);border-radius:8px;background:var(--panel2);padding:11px}
+.big-stat span{display:block;font:900 8px var(--mono);color:var(--muted);text-transform:uppercase}.big-stat b{display:block;margin-top:6px;font-size:18px}
+
+.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:10px}
+table{width:100%;border-collapse:collapse;min-width:1450px}
+th,td{padding:9px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap;font-size:11px}
+th{position:sticky;top:0;background:var(--panel3);font:900 8px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);z-index:2}
+th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}
+td:first-child{font-weight:950;font-size:13px}.status-pill{padding:3px 6px;border-radius:999px;border:1px solid var(--line);font:900 8px var(--mono)}
+tr:hover td{background:var(--panel2)}
+
+.alignment-layout{display:grid;grid-template-columns:1fr 1fr}
+.alignment-main,.alignment-side{padding:16px}.alignment-main{border-right:1px solid var(--line)}
+.align-score{font-size:62px;font-weight:950;letter-spacing:-.04em}
+.align-table{margin-top:12px;display:grid;gap:8px}
+.align-row{display:grid;grid-template-columns:140px 1fr auto;gap:10px;align-items:center;border:1px solid var(--line);border-radius:8px;background:var(--panel2);padding:11px}
+.align-row span{font:900 8px var(--mono);text-transform:uppercase;color:var(--muted)}
+.source-config{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:10px}.source-config input{border:1px solid var(--line);border-radius:8px;background:var(--panel2);color:var(--ink);padding:9px 10px;font:11px var(--mono)}
+.loading{position:fixed;inset:0;z-index:100;background:rgba(3,6,9,.78);display:none;align-items:center;justify-content:center}
+.loading.show{display:flex}.loading-box{display:flex;align-items:center;gap:12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);padding:16px 18px;box-shadow:var(--shadow)}
+.spinner{width:22px;height:22px;border:3px solid var(--line);border-top-color:var(--teal);border-radius:50%;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+#sourceFrame{position:fixed;width:1px;height:1px;opacity:0;pointer-events:none;left:-20px;top:-20px}
+@media(max-width:1450px){.context{grid-template-columns:repeat(3,1fr)}.command-layout,.exposure-layout,.alignment-layout{grid-template-columns:1fr}.command-main,.exposure-side,.alignment-main{border-right:none;border-bottom:1px solid var(--line)}.queue-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:850px){.topbar{grid-template-columns:1fr}.context{grid-template-columns:repeat(2,1fr)}.queue-grid,.metrics{grid-template-columns:1fr}.verdict{font-size:44px}}
+</style>
+</head>
+<body>
+<div class="shell">
+  <header class="topbar">
+    <div class="brand"><div class="logo">PC</div><div><b>Portfolio Command</b><span>Market OS Risk Control</span></div></div>
+    <div class="context">
+      <div class="ctx"><span>Market State</span><b id="ctxRegime">—</b></div>
+      <div class="ctx"><span>Target Exposure</span><b id="ctxTarget">—</b></div>
+      <div class="ctx"><span>Actual Exposure</span><b id="ctxActual">—</b></div>
+      <div class="ctx"><span>Cash</span><b id="ctxCash">—</b></div>
+      <div class="ctx"><span>Open Risk</span><b id="ctxRisk">—</b></div>
+      <div class="ctx"><span>Capacity Gate</span><b id="ctxGate">—</b></div>
+    </div>
+    <div class="actions">
+      <a class="btn" href="institutional_morning_briefing_v8.html">Morning OS</a>
+      <button class="btn primary" id="refreshBtn">Refresh Live</button>
+      <button class="btn" id="themeBtn">Light</button>
+    </div>
+  </header>
+  <div class="statusbar"><div id="statusLeft">Waiting for portfolio and Daily Plan…</div><div id="statusRight">—</div></div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="command">1 · Command</button>
+    <button class="tab" data-tab="queues">2 · Action Queue</button>
+    <button class="tab" data-tab="holdings">3 · Holdings & Exposure</button>
+    <button class="tab" data-tab="alignment">4 · Alignment</button>
+  </div>
+
+  <main class="main">
+    <section class="workspace active" id="ws-command">
+      <div class="head"><div><h1>Portfolio Command</h1><p>Does the current portfolio obey the Market OS risk permission?</p></div><span class="badge" id="commandBadge">AWAITING DATA</span></div>
+      <div class="command-layout">
+        <div class="command-main">
+          <div class="kicker">New Trade Capacity</div>
+          <div class="verdict" id="gateVerdict">Loading portfolio</div>
+          <div class="verdict-copy" id="gateSummary">Reading the existing Portfolio Management page and canonical Daily Plan.</div>
+          <div class="metrics">
+            <div class="metric"><span>Current Exposure</span><b id="mExposure">—</b></div>
+            <div class="metric"><span>Target Ceiling</span><b id="mCeiling">—</b></div>
+            <div class="metric"><span>Exposure Gap</span><b id="mGap">—</b></div>
+            <div class="metric"><span>Required Reduction</span><b id="mReduction">—</b></div>
+          </div>
+          <div class="directive"><span>Today’s Portfolio Order</span><b id="portfolioOrder">—</b></div>
+          <div class="directive"><span>Before Opening Another Trade</span><b id="beforeTrade">—</b></div>
+        </div>
+        <aside class="command-side">
+          <div class="side-card"><h3>Risk Capacity</h3><div class="gate" id="capacityText">—</div><p id="capacityCopy">—</p></div>
+          <div class="side-card">
+            <h3>Portfolio Utilization</h3>
+            <div class="progress-row"><div class="progress-head"><span>Exposure vs ceiling</span><b id="utilLabel">—</b></div><div class="track"><div class="fill" id="utilFill" style="background:var(--red);width:0%"></div></div></div>
+            <div class="progress-row"><div class="progress-head"><span>Top-3 concentration</span><b id="top3Label">—</b></div><div class="track"><div class="fill" id="top3Fill" style="background:var(--amber);width:0%"></div></div></div>
+            <div class="progress-row"><div class="progress-head"><span>Leadership alignment</span><b id="alignLabel">—</b></div><div class="track"><div class="fill" id="alignFill" style="background:var(--green);width:0%"></div></div></div>
+          </div>
+          <div class="side-card"><h3>Why the Gate Is Set</h3><ul class="reason-list" id="gateReasons"></ul></div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="workspace" id="ws-queues">
+      <div class="head"><div><h1>Action Queue</h1><p>Positions sorted by the action they require today.</p></div><span class="badge" id="queueBadge">—</span></div>
+      <div class="queue-grid">
+        <div class="queue defend"><h2 class="warn">DEFEND</h2><div class="queue-list" id="qDefend"></div></div>
+        <div class="queue trim"><h2 class="bad">TRIM</h2><div class="queue-list" id="qTrim"></div></div>
+        <div class="queue hold"><h2 class="good">HOLD</h2><div class="queue-list" id="qHold"></div></div>
+        <div class="queue exit"><h2 style="color:#c448ff">EXIT / INVALID</h2><div class="queue-list" id="qExit"></div></div>
+      </div>
+    </section>
+
+    <section class="workspace" id="ws-holdings">
+      <div class="head"><div><h1>Holdings & Exposure</h1><p>Concentration, open risk and the full position ledger.</p></div><span class="badge" id="holdingsBadge">—</span></div>
+      <div class="exposure-layout">
+        <aside class="exposure-side">
+          <div class="block"><h3>Portfolio Snapshot</h3><div class="big-stats">
+            <div class="big-stat"><span>Total Assets</span><b id="sAssets">—</b></div>
+            <div class="big-stat"><span>Open P/L</span><b id="sPnl">—</b></div>
+            <div class="big-stat"><span>Cash</span><b id="sCash">—</b></div>
+            <div class="big-stat"><span>Open Positions</span><b id="sOpen">—</b></div>
+          </div></div>
+          <div class="block"><h3>Sector Concentration</h3><div id="sectorBars"></div></div>
+          <div class="block"><h3>Largest Positions</h3><div id="positionBars"></div></div>
+        </aside>
+        <div class="exposure-main"><div class="table-wrap"><table>
+          <thead><tr><th>Ticker</th><th>Company</th><th>Sector</th><th>Industry</th><th>Weight</th><th>Shares</th><th>Entry</th><th>Last</th><th>1D</th><th>P/L</th><th>P/L %</th><th>Status</th><th>Days</th><th>Value</th><th>ATR %</th><th>vs 50MA</th><th>Stop</th><th>Max Return</th><th>R:R</th><th>Command</th></tr></thead>
+          <tbody id="holdingRows"></tbody>
+        </table></div></div>
+      </div>
+    </section>
+
+    <section class="workspace" id="ws-alignment">
+      <div class="head"><div><h1>Market OS Alignment</h1><p>Compare owned risk with the current regime, preferred leadership and exposure mandate.</p></div><span class="badge" id="alignmentBadge">—</span></div>
+      <div class="alignment-layout">
+        <div class="alignment-main">
+          <div class="kicker">Alignment Score</div><div class="align-score" id="alignmentScore">—</div>
+          <div class="align-table" id="alignmentRows"></div>
+        </div>
+        <aside class="alignment-side">
+          <div class="side-card"><h3>Preferred Leadership</h3><p id="preferredLeadership">—</p></div>
+          <div class="side-card"><h3>Portfolio Mismatch</h3><p id="mismatchText">—</p></div>
+          <div class="side-card"><h3>Data Source</h3><p>The command page reads your existing Portfolio Management page through a same-origin hidden frame, then combines it with the canonical Daily Plan API.</p>
+            <div class="source-config"><input id="sourceInput" value="PortfolioManagement.html" aria-label="Portfolio source page"><button class="btn" id="saveSourceBtn">Load</button></div>
+          </div>
+          <div class="side-card"><h3>Source Health</h3><p id="sourceHealth">—</p></div>
+        </aside>
+      </div>
+    </section>
+  </main>
+</div>
+
+<iframe id="sourceFrame" title="Portfolio source"></iframe>
+<div class="loading" id="loading"><div class="loading-box"><div class="spinner"></div><div><b id="loadingTitle">Loading</b><div id="loadingNote" style="margin-top:3px;color:var(--muted);font-size:11px">Reading portfolio data</div></div></div></div>
+
+<script>
+'use strict';
+const PLAN_API='https://script.google.com/macros/s/AKfycbyJJuJBqxzj4YC2OQoZTiPeciYzwKIliGyYdboOCyFUUcl9Xxt587bFdMxK4pQfatqtNA/exec';
+const SOURCE_KEY='portfolioCommandSourceV1';
+const CACHE_KEY='portfolioCommandCacheV1';
+const $=id=>document.getElementById(id);
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num=v=>{const m=String(v??'').replace(/,/g,'').match(/-?\d+(?:\.\d+)?/);return m?Number(m[0]):null};
+const pct=v=>Number.isFinite(v)?`${v.toFixed(1)}%`:'—';
+const money=v=>Number.isFinite(v)?new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0}).format(v):'—';
+const clamp=v=>Math.max(0,Math.min(100,Number(v)||0));
+const norm=s=>String(s??'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+const put=(id,v)=>{const e=$(id);if(e)e.textContent=v??'—'};
+let plan=null, portfolio=null;
+
+function showLoading(title,note){put('loadingTitle',title);put('loadingNote',note);$('loading').classList.add('show')}
+function hideLoading(){$('loading').classList.remove('show')}
+function jsonp(url,timeout=25000){
+  return new Promise((resolve,reject)=>{
+    const cb='pc_cb_'+Date.now()+'_'+Math.random().toString(36).slice(2);
+    const script=document.createElement('script');
+    const timer=setTimeout(()=>done(new Error('Daily Plan timeout')),timeout);
+    function done(err,data){clearTimeout(timer);delete window[cb];script.remove();err?reject(err):resolve(data)}
+    window[cb]=data=>done(null,data);
+    script.onerror=()=>done(new Error('Daily Plan JSONP failed'));
+    script.src=url+(url.includes('?')?'&':'?')+'callback='+encodeURIComponent(cb)+'&cb='+Date.now();
+    document.head.appendChild(script);
+  });
+}
+function parseRange(text){
+  const a=String(text||'').match(/(-?\d+(?:\.\d+)?)\s*[–-]\s*(-?\d+(?:\.\d+)?)/);
+  return a?[Number(a[1]),Number(a[2])]:[null,null];
+}
+function findSummary(doc,label){
+  const target=norm(label);
+  const nodes=[...doc.querySelectorAll('body *')].filter(el=>el.children.length===0&&norm(el.textContent)===target);
+  for(const n of nodes){
+    const parent=n.parentElement;
+    if(!parent)continue;
+    const texts=[...parent.querySelectorAll('*')].filter(x=>x.children.length===0).map(x=>x.textContent.trim()).filter(Boolean);
+    const candidate=texts.find(x=>norm(x)!==target&&/[-$%\d]/.test(x));
+    if(candidate)return candidate;
+    const next=n.nextElementSibling?.textContent?.trim();if(next)return next;
+  }
+  return '';
+}
+function tableAdapter(doc){
+  const tables=[...doc.querySelectorAll('table')];
+  let chosen=null, headers=[];
+  for(const t of tables){
+    const hs=[...t.querySelectorAll('thead th')].map(x=>x.textContent.trim());
+    const n=hs.map(norm);
+    if(n.some(x=>x==='ticker')&&n.some(x=>x.includes('p l'))){chosen=t;headers=hs;break}
+  }
+  if(!chosen)return null;
+  const keys=headers.map(h=>{
+    const n=norm(h);
+    if(n==='ticker')return'ticker';if(n.includes('company'))return'company';if(n==='sector')return'sector';if(n==='industry')return'industry';
+    if(n.includes('weight'))return'weight';if(n==='shares')return'shares';if(n==='cost')return'cost';if(n.includes('purchased'))return'purchased';
+    if(n==='entry')return'entry';if(n==='last')return'last';if(n.includes('chg'))return'daily';if(n==='p l')return'pnl';if(n.includes('p l')&&n.includes('%'))return'pnlPct';
+    if(n==='status')return'status';if(n.includes('realized'))return'realized';if(n==='days')return'days';if(n==='value')return'value';if(n.includes('atr'))return'atr';
+    if(n.includes('vs 50'))return'vs50';if(n.includes('stop'))return'stop';if(n.includes('max return'))return'maxReturn';if(n.includes('reward')||n==='r r')return'rr';
+    if(n.includes('trend'))return'trend';return n.replace(/\s+/g,'_')
+  });
+  const rows=[...chosen.querySelectorAll('tbody tr')].map(tr=>{
+    const cells=[...tr.children].map(td=>td.textContent.trim());
+    const r={};keys.forEach((k,i)=>r[k]=cells[i]??'');
+    return r;
+  }).filter(r=>r.ticker);
+  return {headers,rows};
+}
+async function readPortfolioSource(){
+  const source=localStorage.getItem(SOURCE_KEY)||'PortfolioManagement.html';
+  $('sourceInput').value=source;
+  const frame=$('sourceFrame');
+  return new Promise((resolve,reject)=>{
+    const deadline=Date.now()+30000;
+    let timer;
+    function inspect(){
+      try{
+        const doc=frame.contentDocument;
+        if(!doc)throw new Error('No source document');
+        const adapted=tableAdapter(doc);
+        if(adapted&&adapted.rows.length){
+          clearInterval(timer);
+          const rows=adapted.rows.map(r=>({
+            ...r,
+            weight:num(r.weight),shares:num(r.shares),entry:num(r.entry),last:num(r.last),daily:num(r.daily),
+            pnl:num(r.pnl),pnlPct:num(r.pnlPct),days:num(r.days),value:num(r.value),atr:num(r.atr),
+            vs50:num(r.vs50),stop:num(r.stop),maxReturn:num(r.maxReturn),rr:num(r.rr),
+            status:String(r.status||'').toUpperCase()
+          }));
+          const assets=num(findSummary(doc,'TOTAL ASSETS')) ?? rows.filter(r=>r.status==='OPEN').reduce((s,r)=>s+(r.value||0),0);
+          const cash=num(findSummary(doc,'CASH %'));
+          const openPnl=num(findSummary(doc,'OPEN PROFIT / LOSS')) ?? rows.filter(r=>r.status==='OPEN').reduce((s,r)=>s+(r.pnl||0),0);
+          resolve({source,rows,assets,cashPct:cash,openPnl,loadedAt:new Date().toISOString()});
+        }else if(Date.now()>deadline){clearInterval(timer);reject(new Error('Portfolio table did not become available'))}
+      }catch(e){if(Date.now()>deadline){clearInterval(timer);reject(e)}}
+    }
+    frame.onload=()=>{timer=setInterval(inspect,500);inspect()};
+    frame.src=source+(source.includes('?')?'&':'?')+'pc='+Date.now();
+  });
+}
+function classify(row,maxPos){
+  const belowStop=Number.isFinite(row.last)&&Number.isFinite(row.stop)&&row.last<=row.stop;
+  const nearStop=Number.isFinite(row.last)&&Number.isFinite(row.stop)&&row.last>row.stop&&((row.last-row.stop)/row.last*100)<=3;
+  const oversized=Number.isFinite(row.weight)&&Number.isFinite(maxPos)&&row.weight>maxPos;
+  if(belowStop||row.pnlPct<=-18)return {action:'EXIT',reason:belowStop?'Price is at or below the active stop.':'Loss exceeds the portfolio damage threshold.'};
+  if(oversized||row.atr>=15||row.pnlPct<=-10)return {action:'TRIM',reason:oversized?'Position exceeds the Market OS maximum position size.':row.atr>=15?'ATR extension is too high for the current regime.':'Loss requires risk reduction.'};
+  if(nearStop||row.pnlPct<0)return {action:'DEFEND',reason:nearStop?'Price is close to the active stop.':'Position is below entry and needs a defense plan.'};
+  return {action:'HOLD',reason:'Position remains profitable and has not violated the active stop.'};
+}
+function derive(){
+  const rows=portfolio.rows||[];
+  const open=rows.filter(r=>r.status==='OPEN');
+  const assets=portfolio.assets||open.reduce((s,r)=>s+(r.value||0),0);
+  const cashPct=Number.isFinite(portfolio.cashPct)?portfolio.cashPct:Math.max(0,100-open.reduce((s,r)=>s+(r.weight||0),0));
+  const actualExposure=Math.max(0,100-cashPct);
+  const [floor,ceiling]=parseRange(plan?.riskBudget?.targetExposure||plan?.riskBudget?.range||plan?.regime?.riskBudget||'');
+  const maxRange=parseRange(plan?.portfolioPlan?.maxPosition||plan?.riskBudget?.maxPosition||'');
+  const maxPos=Number.isFinite(maxRange[1])?maxRange[1]:7;
+  const targetCeiling=Number.isFinite(ceiling)?ceiling:50;
+  const targetFloor=Number.isFinite(floor)?floor:30;
+  const targetCashLow=Math.max(0,100-targetCeiling);
+  const exposureGap=actualExposure-targetCeiling;
+  const reductionValue=Math.max(0,assets*exposureGap/100);
+  const openRiskDollars=open.reduce((s,r)=>s+(Number.isFinite(r.last)&&Number.isFinite(r.stop)&&Number.isFinite(r.shares)?Math.max(0,(r.last-r.stop)*r.shares):0),0);
+  const openRiskPct=assets?openRiskDollars/assets*100:0;
+  const sorted=[...open].sort((a,b)=>(b.weight||0)-(a.weight||0));
+  const top1=sorted[0]?.weight||0,top3=sorted.slice(0,3).reduce((s,r)=>s+(r.weight||0),0);
+  const preferred=[plan?.leadership?.bestSector,plan?.leadership?.bestIndustry,plan?.leadership?.bestTheme].filter(Boolean);
+  const prefTokens=preferred.flatMap(x=>[x.ticker,x.name]).filter(Boolean).map(norm);
+  const aligned=open.filter(r=>prefTokens.some(t=>norm(`${r.sector} ${r.industry} ${r.ticker} ${r.company}`).includes(t)));
+  const alignedWeight=aligned.reduce((s,r)=>s+(r.weight||0),0);
+  const alignment=actualExposure?alignedWeight/actualExposure*100:0;
+  const queues={DEFEND:[],TRIM:[],HOLD:[],EXIT:[]};
+  open.forEach(r=>{const c=classify(r,maxPos);r.command=c.action;r.commandReason=c.reason;queues[c.action].push(r)});
+  const reasons=[];
+  if(exposureGap>2)reasons.push(`Exposure is ${pct(exposureGap)} above the Market OS ceiling.`);
+  if(cashPct<targetCashLow-2)reasons.push(`Cash is below the implied ${pct(targetCashLow)} minimum reserve.`);
+  if(top1>maxPos)reasons.push(`Largest position is ${pct(top1)} versus a ${pct(maxPos)} maximum.`);
+  if(top3>55)reasons.push(`Top-three concentration is elevated at ${pct(top3)}.`);
+  if(openRiskPct>4)reasons.push(`Stop-based open risk is elevated at ${pct(openRiskPct)} of assets.`);
+  if(alignment<40)reasons.push(`Only ${pct(alignment)} of exposure aligns with preferred leadership.`);
+  const blocked=reasons.length>=2||exposureGap>5||top1>maxPos+3;
+  return {rows,open,assets,cashPct,actualExposure,targetFloor,targetCeiling,targetCashLow,maxPos,exposureGap,reductionValue,openRiskDollars,openRiskPct,top1,top3,alignment,alignedWeight,preferred,queues,reasons,blocked};
+}
+function renderBars(elId,items){
+  const max=Math.max(1,...items.map(x=>x.value));
+  $(elId).innerHTML=items.length?items.map(x=>`<div class="bar-item"><span>${esc(x.name)}</span><div class="bar"><i style="width:${clamp(x.value/max*100)}%"></i></div><b>${pct(x.value)}</b></div>`).join(''):'<div style="color:var(--muted);font-size:12px">No data.</div>';
+}
+function renderQueue(id,rows){
+  $(id).innerHTML=rows.length?rows.map(r=>`<div class="queue-item"><div class="row"><div><div class="ticker">${esc(r.ticker)}</div><small>${esc(r.company||r.industry||'')}</small></div><b class="${(r.pnlPct||0)>=0?'good':'bad'}">${pct(r.pnlPct)}</b></div><p>${esc(r.commandReason)}</p></div>`).join(''):'<div class="queue-empty">No positions in this queue.</div>';
+}
+function render(){
+  const d=derive();
+  const regime=plan?.regime?.label||plan?.regime||'—';
+  const target=`${d.targetFloor.toFixed(0)}–${d.targetCeiling.toFixed(0)}%`;
+  const gate=d.blocked?'BLOCKED':'AVAILABLE';
+  put('ctxRegime',regime);put('ctxTarget',target);put('ctxActual',pct(d.actualExposure));put('ctxCash',pct(d.cashPct));put('ctxRisk',pct(d.openRiskPct));put('ctxGate',gate);
+  $('ctxGate').className=d.blocked?'bad':'good';
+
+  put('commandBadge',d.blocked?'NEW RISK BLOCKED':'CAPACITY AVAILABLE');
+  put('gateVerdict',d.blocked?'REDUCE RISK BEFORE ADDING':'NEW RISK CAPACITY AVAILABLE');
+  $('gateVerdict').className='verdict '+(d.blocked?'bad':'good');
+  put('gateSummary',d.blocked
+    ?`The portfolio is not fully aligned with the current ${target} Market OS exposure mandate. Existing concentration and risk must be reduced before another position is opened.`
+    :`The portfolio is within the current ${target} exposure mandate. New trades remain conditional on verified leadership, setup quality and available risk capacity.`);
+  put('mExposure',pct(d.actualExposure));put('mCeiling',pct(d.targetCeiling));put('mGap',(d.exposureGap>=0?'+':'')+pct(d.exposureGap));put('mReduction',money(d.reductionValue));
+  put('portfolioOrder',d.blocked?`Trim or exit the highest-risk positions first. Restore cash toward ${pct(d.targetCashLow)} and reduce exposure toward ${pct(d.targetCeiling)}.`:`Maintain exposure inside ${target}. Add only verified leaders and preserve the cash reserve.`);
+  put('beforeTrade',d.blocked?`Free approximately ${money(d.reductionValue)} of exposure and resolve the TRIM / EXIT queues before adding new capital.`:'Confirm the new trade fits preferred leadership, stays below the maximum position size and does not push exposure above the ceiling.');
+  put('capacityText',gate);$('capacityText').className='gate '+(d.blocked?'bad':'good');
+  put('capacityCopy',d.blocked?'Portfolio constraints override the Buy Switch. Market permission does not equal available portfolio capacity.':'Market permission and portfolio capacity are currently aligned.');
+  put('utilLabel',`${pct(d.actualExposure)} / ${pct(d.targetCeiling)}`);$('utilFill').style.width=clamp(d.actualExposure/d.targetCeiling*100)+'%';
+  put('top3Label',pct(d.top3));$('top3Fill').style.width=clamp(d.top3)+'%';
+  put('alignLabel',pct(d.alignment));$('alignFill').style.width=clamp(d.alignment)+'%';
+  $('gateReasons').innerHTML=(d.reasons.length?d.reasons:['No material portfolio-capacity breach detected.']).map(x=>`<li>${esc(x)}</li>`).join('');
+
+  renderQueue('qDefend',d.queues.DEFEND);renderQueue('qTrim',d.queues.TRIM);renderQueue('qHold',d.queues.HOLD);renderQueue('qExit',d.queues.EXIT);
+  put('queueBadge',`${d.open.length} OPEN · ${d.queues.TRIM.length+d.queues.EXIT.length} REDUCE / EXIT`);
+
+  put('sAssets',money(d.assets));put('sPnl',money(portfolio.openPnl));$('sPnl').className=(portfolio.openPnl||0)>=0?'good':'bad';put('sCash',pct(d.cashPct));put('sOpen',String(d.open.length));
+  const sectorMap={};d.open.forEach(r=>sectorMap[r.sector||'Unclassified']=(sectorMap[r.sector||'Unclassified']||0)+(r.weight||0));
+  renderBars('sectorBars',Object.entries(sectorMap).map(([name,value])=>({name,value})).sort((a,b)=>b.value-a.value));
+  renderBars('positionBars',d.open.map(r=>({name:r.ticker,value:r.weight||0})).sort((a,b)=>b.value-a.value).slice(0,8));
+  $('holdingRows').innerHTML=d.rows.map(r=>`<tr><td>${esc(r.ticker)}</td><td>${esc(r.company)}</td><td>${esc(r.sector)}</td><td>${esc(r.industry)}</td><td>${pct(r.weight)}</td><td>${r.shares??'—'}</td><td>${r.entry??'—'}</td><td>${r.last??'—'}</td><td class="${(r.daily||0)>=0?'good':'bad'}">${pct(r.daily)}</td><td class="${(r.pnl||0)>=0?'good':'bad'}">${money(r.pnl)}</td><td class="${(r.pnlPct||0)>=0?'good':'bad'}">${pct(r.pnlPct)}</td><td><span class="status-pill">${esc(r.status)}</span></td><td>${r.days??'—'}</td><td>${money(r.value)}</td><td>${pct(r.atr)}</td><td class="${(r.vs50||0)>=0?'good':'bad'}">${pct(r.vs50)}</td><td>${r.stop??'—'}</td><td>${pct(r.maxReturn)}</td><td>${Number.isFinite(r.rr)?r.rr.toFixed(2):'—'}</td><td class="${r.command==='EXIT'||r.command==='TRIM'?'bad':r.command==='DEFEND'?'warn':'good'}">${esc(r.command||'CLOSED')}</td></tr>`).join('');
+  put('holdingsBadge',`${d.rows.length} TOTAL · ${d.open.length} OPEN`);
+
+  put('alignmentScore',pct(d.alignment));$('alignmentScore').className='align-score '+(d.alignment>=60?'good':d.alignment>=40?'warn':'bad');
+  const alignRows=[
+    ['Exposure mandate',`${pct(d.actualExposure)} actual vs ${target}`,d.exposureGap<=2?'PASS':'MISMATCH'],
+    ['Cash reserve',`${pct(d.cashPct)} actual vs ≥ ${pct(d.targetCashLow)}`,d.cashPct>=d.targetCashLow-2?'PASS':'MISMATCH'],
+    ['Largest position',`${pct(d.top1)} actual vs ≤ ${pct(d.maxPos)}`,d.top1<=d.maxPos?'PASS':'MISMATCH'],
+    ['Top-three concentration',pct(d.top3),d.top3<=55?'PASS':'CROWDED'],
+    ['Leadership alignment',pct(d.alignment),d.alignment>=50?'PASS':'LOW']
+  ];
+  $('alignmentRows').innerHTML=alignRows.map(r=>`<div class="align-row"><span>${esc(r[0])}</span><b>${esc(r[1])}</b><strong class="${r[2]==='PASS'?'good':r[2]==='LOW'?'warn':'bad'}">${esc(r[2])}</strong></div>`).join('');
+  put('preferredLeadership',d.preferred.length?d.preferred.map(x=>`${x.ticker||''} ${x.name||''}`.trim()).join(' · '):'No preferred leadership hierarchy was supplied by the Daily Plan.');
+  put('mismatchText',d.blocked?`HIGH mismatch. Actual exposure is ${pct(d.actualExposure)}, versus a ${target} mandate. ${d.queues.TRIM.length+d.queues.EXIT.length} open positions currently require reduction or exit review.`:`Portfolio is broadly inside mandate. Continue monitoring concentration and leadership alignment.`);
+  put('alignmentBadge',d.blocked?'MISMATCH HIGH':'ALIGNED / CONDITIONAL');
+  put('sourceHealth',`Portfolio source: ${portfolio.source} · ${portfolio.rows.length} rows · loaded ${new Date(portfolio.loadedAt).toLocaleString()}. Daily Plan: ${plan?.version||'—'} · market ${plan?.latestCommonDate||'—'}.`);
+
+  $('statusLeft').innerHTML=`<span class="good">LIVE</span> · Portfolio and Daily Plan synchronized`;
+  put('statusRight',`Portfolio ${new Date(portfolio.loadedAt).toLocaleTimeString()} · Market ${plan?.latestCommonDate||'—'}`);
+  try{localStorage.setItem(CACHE_KEY,JSON.stringify({plan,portfolio}))}catch{}
+}
+async function loadAll(){
+  showLoading('Refreshing Portfolio Command','Reading holdings and Market OS risk limits');
+  try{
+    const [p,port]=await Promise.all([
+      jsonp(PLAN_API+'?action=plan'),
+      readPortfolioSource()
+    ]);
+    if(!p?.ok)throw new Error(p?.error||'Daily Plan unavailable');
+    plan=p;portfolio=port;render();
+  }catch(e){
+    console.error(e);
+    const cached=JSON.parse(localStorage.getItem(CACHE_KEY)||'null');
+    if(cached?.plan&&cached?.portfolio){plan=cached.plan;portfolio=cached.portfolio;render();$('statusLeft').innerHTML=`<span class="warn">CACHE</span> · ${esc(e.message)}`}
+    else{$('statusLeft').innerHTML=`<span class="bad">ERROR</span> · ${esc(e.message)}`;alert('Portfolio Command error: '+e.message)}
+  }finally{hideLoading()}
+}
+document.querySelectorAll('.tab').forEach(btn=>btn.onclick=()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===btn));
+  document.querySelectorAll('.workspace').forEach(x=>x.classList.toggle('active',x.id==='ws-'+btn.dataset.tab));
+});
+document.addEventListener('keydown',e=>{if(['1','2','3','4'].includes(e.key)){document.querySelectorAll('.tab')[Number(e.key)-1]?.click()}});
+$('refreshBtn').onclick=loadAll;
+$('themeBtn').onclick=()=>{
+  const next=document.documentElement.dataset.theme==='dark'?'light':'dark';
+  document.documentElement.dataset.theme=next;$('themeBtn').textContent=next==='dark'?'Light':'Dark';localStorage.setItem('portfolioCommandTheme',next)
+};
+$('saveSourceBtn').onclick=()=>{localStorage.setItem(SOURCE_KEY,$('sourceInput').value.trim()||'PortfolioManagement.html');loadAll()};
+const savedTheme=localStorage.getItem('portfolioCommandTheme')||'dark';document.documentElement.dataset.theme=savedTheme;$('themeBtn').textContent=savedTheme==='dark'?'Light':'Dark';
+loadAll();
+</script>
+</body>
+</html>
