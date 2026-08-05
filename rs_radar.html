@@ -612,7 +612,7 @@
 
         <!-- Center: Scatter Plot -->
         <div class="panel">
-            <div class="panel-header">RS Momentum Map (Sectors)</div>
+            <div class="panel-header">Multi-Universe Relative Rotation Matrix — Sectors</div>
             <div class="chart-container">
                 <canvas id="scatterChart"></canvas>
             </div>
@@ -621,16 +621,17 @@
                 <span class="legend-item"><span class="legend-dot" style="background:#38bdf8"></span>Improving</span>
                 <span class="legend-item"><span class="legend-dot" style="background:#d29922"></span>Weakening</span>
                 <span class="legend-item"><span class="legend-dot" style="background:#f85149"></span>Lagging</span>
-                <span class="legend-note">Bubble size = RS score · X = relative strength · Y = 1W RS momentum</span>
+                <span class="legend-note">Quadrants centered at RS 50 / momentum 0 · bubble size = leadership score · ticker labels always shown</span>
             </div>
         </div>
 
         <!-- Center Right: Line Chart -->
         <div class="panel">
-            <div class="panel-header">RS Performance Trend (Sectors, 60D)</div>
+            <div class="panel-header">Canonical Sector RS Trajectories — 60D</div>
             <div class="chart-container">
                 <canvas id="lineChart"></canvas>
             </div>
+            <div class="legend-note" style="padding:4px 10px 8px;">Solid = actual canonical daily series when supplied by Rotation API · dashed = canonical 60D/20D/5D/1D anchor trajectory for sectors without full history.</div>
         </div>
 
         <!-- Right: Heatmap -->
@@ -1533,11 +1534,76 @@
         miniCharts.inds = new Chart(document.getElementById('miniChartInd'), {type:'bar',data:{labels:STATE.industries.map(s=>s.ticker),datasets:[{data:STATE.industries.map(s=>s.rs),backgroundColor:STATE.industries.map(s=>s.pos==='Leaders'||s.pos==='Improving'?'#3fb950':'#f85149')}]},options:miniOptions});
         const score = Math.max(0,Math.min(100,Number(ROTATION_PAYLOAD?.regime?.score||50)));
         miniCharts.gauge = new Chart(document.getElementById('gaugeConfidence'), {type:'doughnut',data:{datasets:[{data:[score,100-score],backgroundColor:[score>=65?'#3fb950':score>=40?'#d29922':'#f85149','rgba(139,148,158,.12)'],borderWidth:0,cutout:'80%'}]},options:miniOptions});
-        scatterChart = new Chart(document.getElementById('scatterChart'), {type:'bubble',data:{datasets:[{data:STATE.sectors.map(s=>({x:s.rs,y:s.mom,r:Math.max(6,s.rs/7),ticker:s.ticker,label:s.name,quadrant:s.pos})),backgroundColor:ctx=>({Leaders:'#3fb950',Improving:'#38bdf8',Weakening:'#d29922',Laggards:'#f85149'}[ctx.raw?.quadrant]||'#58a6ff')}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{title:i=>i[0]?`${i[0].raw.ticker} — ${i[0].raw.label}`:'',label:c=>[`Position: ${c.raw.quadrant}`,`RS score: ${c.raw.x}`,`Momentum: ${Number(c.raw.y).toFixed(1)}`]}}},scales:{x:{min:0,max:100,title:{display:true,text:'FMP RS SCORE'}},y:{title:{display:true,text:'ROTATION MOMENTUM'}}}}});
+        const qColors = {Leaders:'#2fbf8f',Improving:'#3b82f6',Weakening:'#d89a24',Laggards:'#ef5b63'};
+        const quadrantBackgroundPlugin = {
+            id:'radarQuadrants',
+            beforeDraw(chart){
+                const {ctx, chartArea:{left,right,top,bottom}, scales:{x,y}} = chart;
+                const x0=x.getPixelForValue(50), y0=y.getPixelForValue(0);
+                ctx.save();
+                ctx.fillStyle='rgba(47,191,143,.055)'; ctx.fillRect(x0,top,right-x0,y0-top);
+                ctx.fillStyle='rgba(59,130,246,.050)'; ctx.fillRect(left,top,x0-left,y0-top);
+                ctx.fillStyle='rgba(216,154,36,.050)'; ctx.fillRect(x0,y0,right-x0,bottom-y0);
+                ctx.fillStyle='rgba(239,91,99,.045)'; ctx.fillRect(left,y0,x0-left,bottom-y0);
+                ctx.strokeStyle='rgba(120,135,155,.55)'; ctx.lineWidth=1;
+                ctx.beginPath(); ctx.moveTo(x0,top); ctx.lineTo(x0,bottom); ctx.moveTo(left,y0); ctx.lineTo(right,y0); ctx.stroke();
+                ctx.font="700 10px 'JetBrains Mono', monospace";
+                ctx.fillStyle=qColors.Improving; ctx.fillText('IMPROVING',left+12,top+17);
+                ctx.fillStyle=qColors.Leaders; ctx.fillText('LEADING',x0+12,top+17);
+                ctx.fillStyle=qColors.Laggards; ctx.fillText('LAGGING',left+12,bottom-10);
+                ctx.fillStyle=qColors.Weakening; ctx.fillText('WEAKENING',x0+12,bottom-10);
+                ctx.restore();
+            },
+            afterDatasetsDraw(chart){
+                const {ctx}=chart, meta=chart.getDatasetMeta(0), data=chart.data.datasets[0].data;
+                ctx.save(); ctx.textAlign='center'; ctx.textBaseline='middle';
+                meta.data.forEach((pt,i)=>{
+                    const r=data[i]; if(!r) return;
+                    ctx.font="800 10px 'JetBrains Mono', monospace";
+                    ctx.fillStyle=document.documentElement.getAttribute('data-theme')==='dark'?'#f2f6fc':'#152033';
+                    ctx.fillText(r.ticker,pt.x,pt.y);
+                });
+                ctx.restore();
+            }
+        };
+        scatterChart = new Chart(document.getElementById('scatterChart'), {
+            type:'bubble',
+            data:{datasets:[{
+                data:STATE.sectors.map(s=>({x:s.rs,y:s.mom,r:Math.max(12,Math.min(24,8+(Number(s.sourceRow?.leadershipScore||s.rs)/8))),ticker:s.ticker,label:s.name,quadrant:s.pos,score:s.sourceRow?.leadershipScore||s.rs})),
+                backgroundColor:ctx=>qColors[ctx.raw?.quadrant]||'#58a6ff',
+                borderColor:ctx=>qColors[ctx.raw?.quadrant]||'#58a6ff',borderWidth:1.5
+            }]},
+            options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:14,right:12,bottom:6,left:8}},plugins:{legend:{display:false},tooltip:{callbacks:{title:i=>i[0]?`${i[0].raw.ticker} — ${i[0].raw.label}`:'',label:c=>[`Quadrant: ${c.raw.quadrant}`,`RS score: ${c.raw.x}`,`5D momentum: ${Number(c.raw.y).toFixed(1)}`,`Leadership: ${Math.round(c.raw.score)}`]}}},scales:{x:{min:0,max:100,title:{display:true,text:'CROSS-SECTIONAL RS SCORE'},grid:{color:'rgba(120,135,155,.12)'}},y:{suggestedMin:Math.min(-10,...STATE.sectors.map(s=>s.mom))-3,suggestedMax:Math.max(10,...STATE.sectors.map(s=>s.mom))+3,title:{display:true,text:'5-DAY ROTATION MOMENTUM'},grid:{color:'rgba(120,135,155,.12)'}}}},
+            plugins:[quadrantBackgroundPlugin]
+        });
+
         const sectorSet = new Set(STATE.sectors.map(s=>s.ticker));
-        const trend = (ROTATION_PAYLOAD?.trendSeries||[]).filter(x=>sectorSet.has(x.ticker)).slice(0,11);
-        const labels = [...new Set(trend.flatMap(x=>(x.points||[]).map(p=>p.date)))].sort();
-        lineChart = new Chart(document.getElementById('lineChart'), {type:'line',data:{labels,datasets:trend.map((x,i)=>({label:`${x.ticker} · ${x.name}`,data:labels.map(d=>x.points?.find(p=>p.date===d)?.value??null),borderWidth:2,pointRadius:0,tension:.25,spanGaps:true}))},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{boxWidth:10,font:{size:10}}}},scales:{x:{display:false},y:{title:{display:true,text:'RELATIVE INDEX (BASE 100)'}}}}});
+        const actualMap = new Map((ROTATION_PAYLOAD?.trendSeries||[]).filter(x=>sectorSet.has(x.ticker)).map(x=>[x.ticker,x]));
+        const labels = Array.from({length:61},(_,i)=>i-60);
+        function anchorTrajectory(s){
+            const anchors=[[-60,100],[-20,100+Number(s.d3m||0)],[-5,100+Number(s.d3m||0)+Number(s.d1m||0)],[-1,100+Number(s.d3m||0)+Number(s.d1m||0)+Number(s.d1w||0)],[0,100+Number(s.d3m||0)+Number(s.d1m||0)+Number(s.d1w||0)+Number(s.d1d||0)]];
+            return labels.map(day=>{
+                let a=anchors[0],b=anchors[1];
+                for(let i=1;i<anchors.length;i++){ if(day<=anchors[i][0]){a=anchors[i-1];b=anchors[i];break;} }
+                const t=(day-a[0])/(b[0]-a[0]||1); return +(a[1]+(b[1]-a[1])*Math.max(0,Math.min(1,t))).toFixed(2);
+            });
+        }
+        const palette=['#2fbf8f','#3b82f6','#ef5b63','#60a5fa','#d89a24','#dc525b','#4b5563','#8b95a5','#f97316','#9b7cf8','#c3ccd7'];
+        const datasets=STATE.sectors.map((s,i)=>{
+            const actual=actualMap.get(s.ticker);
+            let data, isActual=false;
+            if(actual?.points?.length>=20){
+                const pts=actual.points.slice(-61); const first=Number(pts[0]?.value)||100;
+                data=Array(Math.max(0,61-pts.length)).fill(null).concat(pts.map(p=>+(Number(p.value)/first*100).toFixed(2)));
+                isActual=true;
+            } else data=anchorTrajectory(s);
+            return {label:`${s.ticker} · ${s.name}`,data,borderColor:palette[i%palette.length],backgroundColor:palette[i%palette.length],borderWidth:isActual?2.3:1.5,borderDash:isActual?[]:[5,4],pointRadius:0,tension:.22,spanGaps:true,metaActual:isActual};
+        });
+        const endpointLabels={id:'endpointLabels',afterDatasetsDraw(chart){const {ctx,chartArea}=chart;ctx.save();ctx.font="700 9px 'JetBrains Mono', monospace";ctx.textBaseline='middle';chart.data.datasets.forEach((ds,i)=>{const meta=chart.getDatasetMeta(i);const pts=meta.data;if(!pts.length)return;const p=pts[pts.length-1];if(!p||p.skip)return;ctx.fillStyle=ds.borderColor;ctx.fillText(ds.label.split(' · ')[0],Math.min(p.x+5,chartArea.right-25),p.y);});ctx.restore();}};
+        lineChart = new Chart(document.getElementById('lineChart'), {
+            type:'line',data:{labels,datasets},
+            options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'nearest',intersect:false},plugins:{legend:{position:'top',align:'start',labels:{boxWidth:18,usePointStyle:true,pointStyle:'line',font:{size:10},generateLabels(chart){return chart.data.datasets.map((d,i)=>({text:`${d.label}${d.metaActual?'':' · anchor'}`,strokeStyle:d.borderColor,fillStyle:d.borderColor,lineDash:d.borderDash,datasetIndex:i,hidden:!chart.isDatasetVisible(i)}));}}},tooltip:{callbacks:{title:items=>items.length?`Session ${items[0].label}`:'',label:c=>`${c.dataset.label}: ${Number(c.parsed.y).toFixed(1)}`}}},scales:{x:{display:false},y:{title:{display:true,text:'RELATIVE INDEX · BASE 100'},grid:{color:'rgba(120,135,155,.14)'}}}},plugins:[endpointLabels]
+        });
     }
 
     window.onload = () => {
