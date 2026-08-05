@@ -449,6 +449,34 @@
         }
 
     </style>
+
+<style id="embeddedWorkspaceStyles">
+html.embedded body{
+  padding:0 !important;
+  min-height:100%;
+  background:var(--bg-color);
+}
+html.embedded .header{
+  display:none !important;
+}
+html.embedded .dashboard-container{
+  width:100% !important;
+  max-width:none !important;
+  margin:0 !important;
+  padding:10px 12px 18px !important;
+}
+html.embedded #loadingOverlay{
+  position:fixed;
+}
+html.embedded .grid-kpi{
+  margin-top:0 !important;
+}
+html.embedded .footer,
+html.embedded footer{
+  display:none !important;
+}
+</style>
+
 </head>
 <body>
 <div id="loadingOverlay">
@@ -1726,5 +1754,29 @@
 
     document.addEventListener('DOMContentLoaded', initSortableTables_);
 </script>
+
+<script id="embeddedWorkspaceBridge">
+(function(){
+  const params = new URLSearchParams(location.search);
+  if(params.get('embedded') === '1'){
+    document.documentElement.classList.add('embedded');
+    const requestedTheme = params.get('theme');
+    if(requestedTheme === 'dark' || requestedTheme === 'light'){
+      document.documentElement.setAttribute('data-theme', requestedTheme);
+      try{ localStorage.setItem('rsRadarTheme', requestedTheme); }catch(_){}
+    }
+  }
+
+  window.addEventListener('message', function(event){
+    if(event.origin !== location.origin) return;
+    const msg = event.data || {};
+    if(msg.type === 'LEADERSHIP_THEME' && (msg.theme === 'dark' || msg.theme === 'light')){
+      if(typeof window.setTheme === 'function') window.setTheme(msg.theme);
+      else document.documentElement.setAttribute('data-theme', msg.theme);
+    }
+  });
+})();
+</script>
+
 </body>
 </html>
