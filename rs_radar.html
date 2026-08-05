@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sector & Industry RS Radar — Institutional Suite</title>
+    <title>Sector & Industry RS Radar — FMP Unified v2.1</title>
     
     <!-- Inter Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1331,7 +1331,7 @@
 
 
     // =====================================================================
-    // FMP UNIFIED DATA ADAPTER v2.0
+    // FMP UNIFIED DATA ADAPTER v2.1
     // Canonical source: Leadership Rotation Command API (action=rotation)
     // Yahoo is retained only as an emergency fallback.
     // =====================================================================
@@ -1340,18 +1340,28 @@
 
     function jsonpRotation_(timeoutMs = 30000) {
         return new Promise((resolve, reject) => {
-            const cb = '__rsRadarRotation_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+            const cb = '__RS_RADAR_ROTATION_CALLBACK__';
             const script = document.createElement('script');
-            const timer = setTimeout(() => cleanup(new Error('Rotation API timed out')), timeoutMs);
-            function cleanup(err, payload) {
+            let settled = false;
+            const timer = setTimeout(() => finish(new Error('Rotation API timed out')), timeoutMs);
+
+            function finish(err, payload) {
+                if (settled) return;
+                settled = true;
                 clearTimeout(timer);
                 try { delete window[cb]; } catch(e) { window[cb] = undefined; }
                 script.remove();
                 err ? reject(err) : resolve(payload);
             }
-            window[cb] = payload => cleanup(null, payload);
-            script.onerror = () => cleanup(new Error('Rotation API network error'));
-            script.src = `${FMP_ROTATION_API_URL}?action=rotation&callback=${encodeURIComponent(cb)}&_=${Date.now()}`;
+
+            window[cb] = payload => finish(null, payload);
+            script.onerror = () => finish(new Error('Rotation API network error'));
+
+            // IMPORTANT: this Apps Script deployment has previously returned 404
+            // when arbitrary secondary query parameters were appended. Therefore
+            // the page uses one stable action parameter only. The API action
+            // rotation-jsonp must emit: __RS_RADAR_ROTATION_CALLBACK__(payload)
+            script.src = `${FMP_ROTATION_API_URL}?action=rotation-jsonp`;
             document.head.appendChild(script);
         });
     }
