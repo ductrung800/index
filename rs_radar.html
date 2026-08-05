@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sector & Industry RS Radar — FMP Unified v2.1</title>
+    <title>Sector & Group RS Radar — FMP Unified v2.6</title>
     
     <!-- Inter Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -689,10 +689,10 @@
             </div>
         </div>
 
-        <!-- Unified Industry RS Matrix -->
+        <!-- Unified Canonical Group RS Matrix -->
         <div class="panel">
-            <div class="panel-header"><span>Industry RS Matrix</span><span id="industryCountLabel">15 groups</span></div>
-            <div class="industry-controls" aria-label="Industry position filters">
+            <div class="panel-header"><span>Canonical Group RS Matrix</span><span id="industryCountLabel">expanded groups</span></div>
+            <div class="industry-controls" aria-label="Group position filters">
                 <button class="industry-filter active" data-filter="All" onclick="setIndustryFilter('All', this)">All</button>
                 <button class="industry-filter" data-filter="Leaders" onclick="setIndustryFilter('Leaders', this)">Leaders</button>
                 <button class="industry-filter" data-filter="Improving" onclick="setIndustryFilter('Improving', this)">Improving</button>
@@ -703,9 +703,12 @@
                 <table class="data-table" id="industryRsTable">
                     <thead>
                         <tr>
-                            <th>Industry</th>
+                            <th>Group</th>
                             <th>Ticker</th>
+                            <th>Type</th>
                             <th>RS Score<br><span style="font-size:9px;text-transform:none">(within universe)</span></th>
+                            <th>RS Thrust<br><span style="font-size:9px;text-transform:none">(1W pctile)</span></th>
+                            <th>1-Mth RS<br><span style="font-size:9px;text-transform:none">(pctile)</span></th>
                             <th>1D Δ</th>
                             <th>1W Δ</th>
                             <th>1M Δ</th>
@@ -723,7 +726,7 @@
     </div>
     
     <div style="text-align: center; color: var(--text-muted); font-size: 11px; margin-top: 16px;">
-        Canonical source: FMP Leadership Rotation Command API &nbsp;|&nbsp; RS Score = institutional leadership score / relative-strength score &nbsp;|&nbsp; Yahoo proxy used only as emergency fallback
+        Canonical source: FMP Leadership Rotation Command API v1.4 &nbsp;|&nbsp; RS Score = institutional leadership score / relative-strength score &nbsp;|&nbsp; Canonical FMP only · last valid cache used during transient transport failure
     </div>
 
 </div>
@@ -968,7 +971,10 @@
             <tr>
                 <td style="font-weight:600">${item.name}</td>
                 <td class="tabular-nums text-secondary" style="font-weight:700">${item.ticker}</td>
+                <td class="text-secondary">${item.groupType}</td>
                 <td class="tabular-nums">${item.rs}</td>
+                <td class="tabular-nums">${item.rsThrust1W}</td>
+                <td class="tabular-nums">${item.rs1mPct}</td>
                 <td class="${getColorClass(item.d1d)} tabular-nums">${formatSign(item.d1d.toFixed(1))}</td>
                 <td class="${getColorClass(item.d1w)} tabular-nums">${formatSign(item.d1w.toFixed(1))}</td>
                 <td class="${getColorClass(item.d1m)} tabular-nums">${formatSign(item.d1m.toFixed(1))}</td>
@@ -1495,6 +1501,12 @@
             state: row.state || '',
             rank: row.rank,
             persistenceSessions: row.persistenceSessions || 0,
+            groupType: String(row.type || 'INDUSTRY').replace(/_/g, ' '),
+            rsThrust1W: Number.isFinite(Number(row.rsThrust1W)) ? Number(row.rsThrust1W)
+                : Number.isFinite(Number(row.thrustScore)) ? Number(row.thrustScore) : 0,
+            rs1mPct: Number.isFinite(Number(row.rs1mPct)) ? Number(row.rs1mPct)
+                : Number.isFinite(Number(row.published?.rs1m)) ? Number(row.published.rs1m) : 0,
+            liquidityTier: row.liquidityTier || '',
             sourceRow: row
         };
     }
@@ -1540,7 +1552,14 @@
 
         ROTATION_PAYLOAD = payload;
         STATE.sectors = (payload.universes.sectors || []).map(rotationRowToRadar_).sort((a,b)=>b.rs-a.rs);
-        STATE.industries = (payload.universes.industries || []).map(rotationRowToRadar_).sort((a,b)=>b.rs-a.rs);
+        const groupRows = []
+            .concat(payload.universes.industries || [])
+            .concat(payload.universes.themes || []);
+        const seenGroups = new Set();
+        STATE.industries = groupRows
+            .filter(row => row && row.ticker && !seenGroups.has(row.ticker) && seenGroups.add(row.ticker))
+            .map(rotationRowToRadar_)
+            .sort((a,b)=>b.rs-a.rs);
 
         if (!STATE.sectors.length || !STATE.industries.length) {
             stream.textContent = 'ERROR · Canonical FMP universes are empty';
