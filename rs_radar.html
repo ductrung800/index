@@ -1331,7 +1331,7 @@
 
 
     // =====================================================================
-    // FMP UNIFIED DATA ADAPTER v2.1
+    // FMP UNIFIED DATA ADAPTER v2.2
     // Canonical source: Leadership Rotation Command API (action=rotation)
     // Yahoo is retained only as an emergency fallback.
     // =====================================================================
@@ -1357,11 +1357,10 @@
             window[cb] = payload => finish(null, payload);
             script.onerror = () => finish(new Error('Rotation API network error'));
 
-            // IMPORTANT: this Apps Script deployment has previously returned 404
-            // when arbitrary secondary query parameters were appended. Therefore
-            // the page uses one stable action parameter only. The API action
-            // rotation-jsonp must emit: __RS_RADAR_ROTATION_CALLBACK__(payload)
-            script.src = `${FMP_ROTATION_API_URL}?action=rotation-jsonp`;
+            // IMPORTANT: this Apps Script deployment should receive only the required action and callback parameters.
+            // No timestamp or cache-buster parameter is appended. The existing doGet/output_ handler
+            // wraps the rotation payload using p.callback.
+            script.src = `${FMP_ROTATION_API_URL}?action=rotation&callback=${encodeURIComponent(cb)}`;
             document.head.appendChild(script);
         });
     }
