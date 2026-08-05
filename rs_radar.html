@@ -451,27 +451,6 @@
     </style>
 </head>
 <body>
-
-    <!-- APP TABS -->
-    <div class="app-tabs">
-      <a href="index.html">Market Dashboard</a>
-      <a href="MarketCommandCenter.html">Market Command Center</a>
-      <a href="Institutional_PM_Updated_Fullscreen.html">Institutional Update</a>
-      <a href="market_breadth.html">Market Breadth</a>
-      <a href="rs_radar.html" class="active">RS Radar</a>
-      <a href="MarketRegime.html">Market Regime</a>
-      <a href="stockbee_market_monitor_live.html">Stockbee Monitor</a>
-      <a href="sata_watchlist_dashboard.html">SATA Chart</a>
-      <a href="PowerList.html">Power List</a>
-      <a href="liquid_leaders.html">Liquid Leaders</a>
-      <a href="group_momentum.html">Group Momentum</a>
-      <a href="PriceStructure.html">Price Structure</a>
-      <a href="StageAnalysis.html">Stage Analysis</a>
-      <a href="tv_watchlist.html">TradingView Watchlist</a>
-      <a href="PortfolioManagement.html">Portfolio Management</a>
-      <a href="Playbook.html">Playbook</a>
-    </div>
-
 <div id="loadingOverlay">
     <div class="spinner"></div>
     <div style="font-size: 11px; text-transform: uppercase; font-weight: 700; color: var(--color-neutral); letter-spacing: 1px;" id="loadStatus">Initializing Live Feeds...</div>
@@ -482,7 +461,7 @@
     <!-- HEADER -->
     <header class="header">
         <div class="header-title">
-            <h1>Sector & Industry RS Radar</h1>
+            <h1>Sector & Industry RS Radar 2.6.1</h1>
             <p>FMP Relative Strength • Rotation • Persistence • Leadership</p>
         </div>
         <div class="header-controls">
@@ -534,14 +513,14 @@
         <!-- KPI 2 -->
         <div class="panel">
             <div class="panel-header">Sectors Beating SPY (1M & 3M)</div>
-            <div class="kpi-value"><span id="kpiSectorsOut">0</span> <span style="font-size: 20px; color: var(--text-secondary);">/ 11</span></div>
+            <div class="kpi-value"><span id="kpiSectorsOut">0</span> <span id="kpiSectorsDenom" style="font-size: 20px; color: var(--text-secondary);">/ 11</span></div>
             <div class="mini-chart-container"><canvas id="miniChartSectors"></canvas></div>
         </div>
 
         <!-- KPI 3 -->
         <div class="panel">
             <div class="panel-header">Industries Beating SPY (1M & 3M)</div>
-            <div class="kpi-value"><span id="kpiIndsOut">0</span> <span style="font-size: 20px; color: var(--text-secondary);">/ 15</span></div>
+            <div class="kpi-value"><span id="kpiIndsOut">0</span> <span id="kpiIndsDenom" style="font-size: 20px; color: var(--text-secondary);">/ 15</span></div>
             <div class="mini-chart-container"><canvas id="miniChartInd"></canvas></div>
         </div>
 
@@ -689,9 +668,9 @@
             </div>
         </div>
 
-        <!-- Unified Canonical Group RS Matrix -->
+        <!-- Unified Canonical Group RS Matrix · Expanded Universe -->
         <div class="panel">
-            <div class="panel-header"><span>Canonical Group RS Matrix</span><span id="industryCountLabel">expanded groups</span></div>
+            <div class="panel-header"><span>Canonical Group RS Matrix · Expanded Universe</span><span id="industryCountLabel">expanded groups</span></div>
             <div class="industry-controls" aria-label="Group position filters">
                 <button class="industry-filter active" data-filter="All" onclick="setIndustryFilter('All', this)">All</button>
                 <button class="industry-filter" data-filter="Leaders" onclick="setIndustryFilter('Leaders', this)">Leaders</button>
@@ -1477,8 +1456,12 @@
         const d1w = Number(row.relative5 ?? row.return5 ?? row.published?.p5d ?? 0) || 0;
         const d1m = Number(row.relative20 ?? row.return20 ?? row.published?.rs1m ?? 0) || 0;
         const d3m = Number(row.relative60 ?? row.return60 ?? 0) || 0;
-        const mom = Number.isFinite(Number(row.scoreDelta5)) ? Number(row.scoreDelta5)
-            : Number.isFinite(Number(row.momentumScore)) ? (Number(row.momentumScore)-50)/10 : d1w;
+        const mom = Number.isFinite(Number(row.relative5)) ? Number(row.relative5)
+            : Number.isFinite(Number(row.return5)) ? Number(row.return5)
+            : Number.isFinite(Number(row.published?.p5d)) ? Number(row.published.p5d)
+            : Number.isFinite(Number(row.scoreDelta5)) ? Number(row.scoreDelta5)
+            : Number.isFinite(Number(row.momentumScore)) ? (Number(row.momentumScore)-50)/10
+            : d1w;
         const breadth = Number.isFinite(Number(row.confirmationPct)) ? Math.round(Number(row.confirmationPct))
             : Math.round(([row.above20,row.above50,row.above200].filter(Boolean).length / 3) * 100);
         const q = String(row.quadrant || '').toUpperCase();
@@ -1614,9 +1597,15 @@
         const industries = STATE.industries;
         const secsOut = sectors.filter(s => s.d1m > 0 && s.d3m > 0).length;
         const indsOut = industries.filter(s => s.d1m > 0 && s.d3m > 0).length;
+        const sectorDenom = sectors.length || 0;
+        const groupDenom = industries.length || 0;
         const avgRS = Math.round(average(sectors.map(s=>s.rs)));
         document.getElementById('kpiSectorsOut').textContent = secsOut;
         document.getElementById('kpiIndsOut').textContent = indsOut;
+        const sectorDenomEl = document.getElementById('kpiSectorsDenom');
+        const groupDenomEl = document.getElementById('kpiIndsDenom');
+        if (sectorDenomEl) sectorDenomEl.textContent = `/ ${sectorDenom}`;
+        if (groupDenomEl) groupDenomEl.textContent = `/ ${groupDenom}`;
         document.getElementById('kpiAvgStr').textContent = avgRS;
         document.getElementById('kpiAvgStrSub').textContent = 'average FMP RS score';
         const avgMom = average(sectors.map(s=>s.mom));
