@@ -386,6 +386,12 @@
         .industry-filter.active{color:var(--color-neutral);border-color:var(--color-neutral);background:rgba(88,166,255,.08)}
         .table-scroll{overflow:auto;width:100%;max-height:430px}
         .table-scroll .data-table{min-width:900px}
+        .data-table th.sortable { cursor:pointer; user-select:none; position:relative; padding-right:18px; }
+        .data-table th.sortable:hover { color:var(--accent); background:var(--hover-bg); }
+        .data-table th.sortable::after { content:"↕"; position:absolute; right:5px; opacity:.35; font-size:10px; }
+        .data-table th.sortable[data-sort-dir="asc"]::after { content:"▲"; opacity:.9; }
+        .data-table th.sortable[data-sort-dir="desc"]::after { content:"▼"; opacity:.9; }
+
         .heatmap-tabs{display:flex;gap:12px;margin-bottom:10px;border-bottom:1px solid var(--panel-border)}
         .heatmap-tab{padding:0 0 7px;background:none;color:var(--text-secondary);font:700 9px var(--font-mono);text-transform:uppercase;border-bottom:2px solid transparent}
         .heatmap-tab.active{color:var(--color-neutral);border-bottom-color:var(--color-neutral)}
@@ -641,10 +647,10 @@
                 <button class="heatmap-tab active" id="heatmapSectorTab" onclick="setHeatmapUniverse('sectors')">Sectors</button>
                 <button class="heatmap-tab" id="heatmapIndustryTab" onclick="setHeatmapUniverse('industries')">Industries</button>
             </div>
-            <table class="data-table">
+            <table class="data-table" id="heatmapTable">
                 <thead>
                     <tr>
-                        <th></th>
+                        <th>Name</th>
                         <th style="text-align: center;">RS Score</th>
                         <th style="text-align: center;">1W Δ</th>
                     </tr>
@@ -662,7 +668,7 @@
         <div class="panel">
             <div class="panel-header">Sector RS Table</div>
             <div style="overflow-x: auto;">
-                <table class="data-table">
+                <table class="data-table" id="sectorRsTable">
                     <thead>
                         <tr>
                             <th>Sector</th>
@@ -694,7 +700,7 @@
                 <button class="industry-filter" data-filter="Laggards" onclick="setIndustryFilter('Laggards', this)">Laggards</button>
             </div>
             <div class="table-scroll">
-                <table class="data-table">
+                <table class="data-table" id="industryRsTable">
                     <thead>
                         <tr>
                             <th>Industry</th>
@@ -939,6 +945,7 @@
             `;
         });
         tbody.innerHTML = tHtml;
+        reapplyTableSort_(document.getElementById('sectorRsTable'));
         populateHeatmap();
     }
 
@@ -974,6 +981,7 @@
         `).join('');
         const count = document.getElementById('industryCountLabel');
         if (count) count.textContent = `${rows.length} of ${STATE.industries.length} groups`;
+        reapplyTableSort_(document.getElementById('industryRsTable'));
     }
 
     function setIndustryFilter(filter, button) {
@@ -1001,8 +1009,63 @@
                 <td class="heatmap-cell" style="background-color:${getHeatmapColor(item.rs + item.d1w * 2, isDark)};color:#fff">${formatSign(item.d1w.toFixed(1))}</td>
             </tr>
         `).join('');
+        reapplyTableSort_(document.getElementById('heatmapTable'));
     }
 
+    function parseSortableValue_(text) {
+        const raw = String(text || '').trim().replace(/,/g, '');
+        if (!raw) return {type:'text', value:''};
+        const normalized = raw.replace(/[+%]/g, '').replace(/[↑]/g, '1').replace(/[↓]/g, '-1').replace(/[→]/g, '0');
+        const numeric = Number(normalized);
+        if (Number.isFinite(numeric)) return {type:'number', value:numeric};
+        return {type:'text', value:raw.toLowerCase()};
+    }
+
+    function sortTableDOM_(table, colIndex, direction) {
+        if (!table || !table.tBodies.length) return;
+        const tbody = table.tBodies[0];
+        const rows = Array.from(tbody.rows);
+        const dir = direction === 'asc' ? 1 : -1;
+        rows.sort((a,b) => {
+            const av = parseSortableValue_(a.cells[colIndex]?.innerText);
+            const bv = parseSortableValue_(b.cells[colIndex]?.innerText);
+            if (av.type === 'number' && bv.type === 'number') return (av.value - bv.value) * dir;
+            return String(av.value).localeCompare(String(bv.value), undefined, {numeric:true, sensitivity:'base'}) * dir;
+        });
+        rows.forEach(row => tbody.appendChild(row));
+        table.querySelectorAll('thead th').forEach((th,i) => {
+            th.removeAttribute('data-sort-dir');
+            th.setAttribute('aria-sort','none');
+            if (i === colIndex) {
+                th.setAttribute('data-sort-dir', direction);
+                th.setAttribute('aria-sort', direction === 'asc' ? 'ascending' : 'descending');
+            }
+        });
+        table.dataset.sortCol = String(colIndex);
+        table.dataset.sortDir = direction;
+    }
+
+    function reapplyTableSort_(table) {
+        if (!table || table.dataset.sortCol == null) return;
+        sortTableDOM_(table, Number(table.dataset.sortCol), table.dataset.sortDir || 'asc');
+    }
+
+    function initSortableTables_() {
+        document.querySelectorAll('table.data-table').forEach(table => {
+            table.querySelectorAll('thead th').forEach((th, colIndex) => {
+                th.classList.add('sortable');
+                th.tabIndex = 0;
+                th.title = 'Sort this column';
+                const activate = () => {
+                    const same = Number(table.dataset.sortCol) === colIndex;
+                    const next = same && table.dataset.sortDir === 'desc' ? 'asc' : 'desc';
+                    sortTableDOM_(table, colIndex, next);
+                };
+                th.addEventListener('click', activate);
+                th.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activate(); } });
+            });
+        });
+    }
 
     function average(values) {
         const clean = values.filter(v => Number.isFinite(v));
@@ -1618,6 +1681,8 @@
         
         fetchLiveData(); // Start trickle fetch
     };
+
+    document.addEventListener('DOMContentLoaded', initSortableTables_);
 </script>
 </body>
 </html>
