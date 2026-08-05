@@ -448,35 +448,10 @@
             .chart-container { min-height: 300px; }
         }
 
-    </style>
-
-<style id="embeddedWorkspaceStyles">
-html.embedded body{
-  padding:0 !important;
-  min-height:100%;
-  background:var(--bg-color);
-}
-html.embedded .header{
-  display:none !important;
-}
-html.embedded .dashboard-container{
-  width:100% !important;
-  max-width:none !important;
-  margin:0 !important;
-  padding:10px 12px 18px !important;
-}
-html.embedded #loadingOverlay{
-  position:fixed;
-}
-html.embedded .grid-kpi{
-  margin-top:0 !important;
-}
-html.embedded .footer,
-html.embedded footer{
-  display:none !important;
-}
+    
+.data-table tr.sector-selected td{background:color-mix(in srgb,var(--accent-blue) 14%,transparent)!important}
+.rank-dual-note{font-size:9px;color:var(--text-muted);margin-top:8px;line-height:1.45}
 </style>
-
 </head>
 <body>
 <div id="loadingOverlay">
@@ -549,6 +524,7 @@ html.embedded footer{
         <div class="panel">
             <div class="panel-header">Industries Beating SPY (1M & 3M)</div>
             <div class="kpi-value"><span id="kpiIndsOut">0</span> <span id="kpiIndsDenom" style="font-size: 20px; color: var(--text-secondary);">/ 15</span></div>
+            <div class="kpi-subtext" id="kpiGroupBreadthSub">Group leadership breadth</div>
             <div class="mini-chart-container"><canvas id="miniChartInd"></canvas></div>
         </div>
 
@@ -570,7 +546,7 @@ html.embedded footer{
 
         <!-- KPI 6 -->
         <div class="panel">
-            <div class="panel-header">RS Momentum</div>
+            <div class="panel-header">Sector RS Momentum</div>
             <div class="kpi-value" style="font-size: 24px; line-height: 1.8;" id="kpiMom">--</div>
             <div class="kpi-subtext" id="kpiMomSub">--</div>
             <div class="mini-chart-container"><canvas id="miniChartMom"></canvas></div>
@@ -594,13 +570,13 @@ html.embedded footer{
             </div>
             
             <div class="rank-section">
-                <div class="rank-section-title text-up">Daily Top 3</div>
-                <div id="dailyTop3"></div>
+                <div class="rank-section-title text-up">Equity / Theme Leaders</div>
+                <div id="equityTop3"></div>
             </div>
 
             <div class="rank-section">
-                <div class="rank-section-title text-up">Weekly Top 3</div>
-                <div id="weeklyTop3"></div>
+                <div class="rank-section-title text-warning">Commodity / Macro Leaders</div>
+                <div id="macroTop3"></div>
             </div>
 
             <div class="rank-section">
@@ -640,7 +616,7 @@ html.embedded footer{
 
         <!-- Center Right: Line Chart -->
         <div class="panel">
-            <div class="panel-header">Canonical Sector RS Trajectories — 60D</div>
+            <div class="panel-header"><span>Canonical Sector RS Trajectories — 60D</span><span id="selectedSectorLabel" style="color:var(--accent-blue)">Selected: top leader</span></div>
             <div class="chart-container">
                 <canvas id="lineChart"></canvas>
             </div>
@@ -765,6 +741,7 @@ html.embedded footer{
 
     // Chart instances
     let scatterChart = null;
+    let selectedSectorTicker = null;
     let lineChart = null;
     let miniCharts = {};
 
@@ -1440,14 +1417,6 @@ html.embedded footer{
     }
 
     async function jsonpRotation_(timeoutMs = 45000) {
-        if (document.documentElement.classList.contains('embedded')) {
-            try {
-                const cached = JSON.parse(localStorage.getItem('rs-radar-fmp-cache-v3') || 'null');
-                if (cached?.payload?.ok === true && cached.payload.universes) {
-                    return cached.payload;
-                }
-            } catch (_) {}
-        }
         // Apps Script occasionally rejects one JSONP route while the deployment itself
         // remains healthy. Try both supported routes before using the last valid cache.
         const attempts = [
@@ -1616,8 +1585,13 @@ html.embedded footer{
     function renderFromRotation_() {
         const allGroups = [...STATE.sectors, ...STATE.industries];
         const sortBy = (arr, key, asc=false) => [...arr].sort((a,b)=>asc ? a[key]-b[key] : b[key]-a[key]);
-        populateRankList('dailyTop3', sortBy(allGroups,'d1d').slice(0,3).map(x=>({name:x.name,tk:x.ticker,score:x.rs,chg:x.d1d})), 'top');
-        populateRankList('weeklyTop3', sortBy(allGroups,'d1w').slice(0,3).map(x=>({name:x.name,tk:x.ticker,score:x.rs,chg:x.d1w})), 'top');
+        const macroTypes = new Set(['COMMODITY','MACRO','COUNTRY','FACTOR']);
+        const macroTickers = new Set(['GLD','GDX','GDXJ','SLV','SIL','SILJ','PALL','PLTM','URA','TAN','LIT','FCG','GNR','WOOD','COPX','EWZ','FXI','GXC','KWEB','CHIQ']);
+        const isMacro = x => macroTypes.has(String(x.groupType||'').toUpperCase()) || macroTickers.has(x.ticker);
+        const equityGroups = STATE.industries.filter(x=>!isMacro(x));
+        const macroGroups = STATE.industries.filter(isMacro);
+        populateRankList('equityTop3', sortBy(equityGroups.length?equityGroups:allGroups,'d1w').slice(0,3).map(x=>({name:x.name,tk:x.ticker,score:x.rs,chg:x.d1w})), 'top');
+        populateRankList('macroTop3', sortBy(macroGroups.length?macroGroups:allGroups,'d1w').slice(0,3).map(x=>({name:x.name,tk:x.ticker,score:x.rs,chg:x.d1w})), 'top');
         populateRankList('dailyBot3', sortBy(allGroups,'d1d',true).slice(0,3).map(x=>({name:x.name,tk:x.ticker,score:x.rs,chg:x.d1d})), 'bottom');
         populateRankList('weeklyBot3', sortBy(allGroups,'d1w',true).slice(0,3).map(x=>({name:x.name,tk:x.ticker,score:x.rs,chg:x.d1w})), 'bottom');
         populateSectorTable();
@@ -1642,13 +1616,15 @@ html.embedded footer{
         const groupDenomEl = document.getElementById('kpiIndsDenom');
         if (sectorDenomEl) sectorDenomEl.textContent = `/ ${sectorDenom}`;
         if (groupDenomEl) groupDenomEl.textContent = `/ ${groupDenom}`;
+        const groupBreadthSub=document.getElementById('kpiGroupBreadthSub');
+        if(groupBreadthSub) groupBreadthSub.textContent=`Group leadership breadth · ${indsOut}/${groupDenom} positive on 1M & 3M`;
         document.getElementById('kpiAvgStr').textContent = avgRS;
         document.getElementById('kpiAvgStrSub').textContent = 'average FMP RS score';
         const avgMom = average(sectors.map(s=>s.mom));
         const momEl = document.getElementById('kpiMom');
         momEl.textContent = avgMom >= 0 ? 'IMPROVING' : 'WEAKENING';
         momEl.className = `kpi-value ${getColorClass(avgMom)}`;
-        document.getElementById('kpiMomSub').textContent = `${formatSign(avgMom.toFixed(1))} rotation momentum`;
+        document.getElementById('kpiMomSub').textContent = `${formatSign(avgMom.toFixed(1))} average sector 5D RS momentum`;
         const leaders = sectors.filter(s=>s.pos==='Leaders' || s.pos==='Improving').length;
         const concPct = Number(regime?.sectors?.pct ?? Math.round(leaders/sectors.length*100));
         const concEl = document.getElementById('kpiConc');
@@ -1668,7 +1644,25 @@ html.embedded footer{
         try { localStorage.setItem('rs-radar-state', JSON.stringify({updatedAt:p.generatedAt||new Date().toISOString(),asOf:p.asOf,globalRegime:regime.label,globalScore:score,rotationRegime:regime.label,leaders:sectors.slice(0,3).map(s=>s.name).join(' · '),source:'FMP_ROTATION_API'})); } catch(e) {}
     }
 
+    function selectSector(ticker, scroll=false) {
+        if (!ticker || !STATE.sectors.some(s=>s.ticker===ticker)) return;
+        selectedSectorTicker = ticker;
+        try { localStorage.setItem('rs-radar-selected-sector', ticker); } catch(_) {}
+        const label = document.getElementById('selectedSectorLabel');
+        const row = STATE.sectors.find(s=>s.ticker===ticker);
+        if(label) label.textContent = `Selected: ${ticker} · ${row?.name||''}`;
+        renderCharts();
+        document.querySelectorAll('#sectorTableBody tr[data-sector]').forEach(tr=>{
+            tr.classList.toggle('sector-selected', tr.dataset.sector===ticker);
+        });
+        if(scroll) document.getElementById('lineChart')?.scrollIntoView({behavior:'smooth',block:'center'});
+    }
+
     function renderCharts() {
+        if(!selectedSectorTicker){
+            try { selectedSectorTicker=localStorage.getItem('rs-radar-selected-sector'); } catch(_) {}
+            if(!STATE.sectors.some(s=>s.ticker===selectedSectorTicker)) selectedSectorTicker=STATE.sectors[0]?.ticker||null;
+        }
         if (scatterChart) scatterChart.destroy();
         if (lineChart) lineChart.destroy();
         Object.values(miniCharts).forEach(c=>c?.destroy?.());
@@ -1717,7 +1711,7 @@ html.embedded footer{
                 backgroundColor:ctx=>qColors[ctx.raw?.quadrant]||'#58a6ff',
                 borderColor:ctx=>qColors[ctx.raw?.quadrant]||'#58a6ff',borderWidth:1.5
             }]},
-            options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:14,right:12,bottom:6,left:8}},plugins:{legend:{display:false},tooltip:{callbacks:{title:i=>i[0]?`${i[0].raw.ticker} — ${i[0].raw.label}`:'',label:c=>[`Quadrant: ${c.raw.quadrant}`,`RS score: ${c.raw.x}`,`5D momentum: ${Number(c.raw.y).toFixed(1)}`,`Leadership: ${Math.round(c.raw.score)}`]}}},scales:{x:{min:0,max:100,title:{display:true,text:'CROSS-SECTIONAL RS SCORE'},grid:{color:'rgba(120,135,155,.12)'}},y:{suggestedMin:Math.min(-10,...STATE.sectors.map(s=>s.mom))-3,suggestedMax:Math.max(10,...STATE.sectors.map(s=>s.mom))+3,title:{display:true,text:'5-DAY ROTATION MOMENTUM'},grid:{color:'rgba(120,135,155,.12)'}}}},
+            options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:14,right:12,bottom:6,left:8}},onClick:(evt,els)=>{if(els?.length){const raw=scatterChart.data.datasets[els[0].datasetIndex].data[els[0].index];selectSector(raw.ticker,true)}},plugins:{legend:{display:false},tooltip:{callbacks:{title:i=>i[0]?`${i[0].raw.ticker} — ${i[0].raw.label}`:'',label:c=>[`Quadrant: ${c.raw.quadrant}`,`RS score: ${c.raw.x}`,`5D momentum: ${Number(c.raw.y).toFixed(1)}`,`Leadership: ${Math.round(c.raw.score)}`]}}},scales:{x:{min:0,max:100,title:{display:true,text:'CROSS-SECTIONAL RS SCORE'},grid:{color:'rgba(120,135,155,.12)'}},y:{suggestedMin:Math.min(-10,...STATE.sectors.map(s=>s.mom))-3,suggestedMax:Math.max(10,...STATE.sectors.map(s=>s.mom))+3,title:{display:true,text:'5-DAY ROTATION MOMENTUM'},grid:{color:'rgba(120,135,155,.12)'}}}},
             plugins:[quadrantBackgroundPlugin]
         });
 
@@ -1741,12 +1735,16 @@ html.embedded footer{
                 data=Array(Math.max(0,61-pts.length)).fill(null).concat(pts.map(p=>+(Number(p.value)/first*100).toFixed(2)));
                 isActual=true;
             } else data=anchorTrajectory(s);
-            return {label:`${s.ticker} · ${s.name}`,data,borderColor:palette[i%palette.length],backgroundColor:palette[i%palette.length],borderWidth:isActual?2.3:1.5,borderDash:isActual?[]:[5,4],pointRadius:0,tension:.22,spanGaps:true,metaActual:isActual};
+            const isSelected=s.ticker===selectedSectorTicker;
+            const isTop3=i<3;
+            const base=palette[i%palette.length];
+            const alpha=isSelected?'ff':isTop3?'cc':'38';
+            return {label:`${s.ticker} · ${s.name}`,data,borderColor:base+alpha,backgroundColor:base,borderWidth:isSelected?4:isTop3?2.2:1.1,borderDash:isActual?[]:[5,4],pointRadius:0,tension:.22,spanGaps:true,metaActual:isActual,metaTicker:s.ticker};
         });
-        const endpointLabels={id:'endpointLabels',afterDatasetsDraw(chart){const {ctx,chartArea}=chart;ctx.save();ctx.font="700 9px 'JetBrains Mono', monospace";ctx.textBaseline='middle';chart.data.datasets.forEach((ds,i)=>{const meta=chart.getDatasetMeta(i);const pts=meta.data;if(!pts.length)return;const p=pts[pts.length-1];if(!p||p.skip)return;ctx.fillStyle=ds.borderColor;ctx.fillText(ds.label.split(' · ')[0],Math.min(p.x+5,chartArea.right-25),p.y);});ctx.restore();}};
+        const endpointLabels={id:'endpointLabels',afterDatasetsDraw(chart){const {ctx,chartArea}=chart;ctx.save();ctx.font="700 9px 'JetBrains Mono', monospace";ctx.textBaseline='middle';chart.data.datasets.forEach((ds,i)=>{if(ds.metaTicker!==selectedSectorTicker && i>=3)return;const meta=chart.getDatasetMeta(i);const pts=meta.data;if(!pts.length)return;const p=pts[pts.length-1];if(!p||p.skip)return;ctx.fillStyle=ds.borderColor;ctx.fillText(ds.label.split(' · ')[0],Math.min(p.x+5,chartArea.right-25),p.y);});ctx.restore();}};
         lineChart = new Chart(document.getElementById('lineChart'), {
             type:'line',data:{labels,datasets},
-            options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'nearest',intersect:false},plugins:{legend:{position:'top',align:'start',labels:{boxWidth:18,usePointStyle:true,pointStyle:'line',font:{size:10},generateLabels(chart){return chart.data.datasets.map((d,i)=>({text:`${d.label}${d.metaActual?'':' · anchor'}`,strokeStyle:d.borderColor,fillStyle:d.borderColor,lineDash:d.borderDash,datasetIndex:i,hidden:!chart.isDatasetVisible(i)}));}}},tooltip:{callbacks:{title:items=>items.length?`Session ${items[0].label}`:'',label:c=>`${c.dataset.label}: ${Number(c.parsed.y).toFixed(1)}`}}},scales:{x:{display:false},y:{title:{display:true,text:'RELATIVE INDEX · BASE 100'},grid:{color:'rgba(120,135,155,.14)'}}}},plugins:[endpointLabels]
+            options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'nearest',intersect:false},plugins:{legend:{onClick:(e,item)=>selectSector(lineChart.data.datasets[item.datasetIndex].metaTicker,false),position:'top',align:'start',labels:{boxWidth:18,usePointStyle:true,pointStyle:'line',font:{size:10},generateLabels(chart){return chart.data.datasets.map((d,i)=>({text:`${d.label}${d.metaActual?'':' · anchor'}`,strokeStyle:d.borderColor,fillStyle:d.borderColor,lineDash:d.borderDash,datasetIndex:i,hidden:!chart.isDatasetVisible(i)}));}}},tooltip:{callbacks:{title:items=>items.length?`Session ${items[0].label}`:'',label:c=>`${c.dataset.label}: ${Number(c.parsed.y).toFixed(1)}`}}},scales:{x:{display:false},y:{title:{display:true,text:'RELATIVE INDEX · BASE 100'},grid:{color:'rgba(120,135,155,.14)'}}}},plugins:[endpointLabels]
         });
     }
 
@@ -1762,29 +1760,5 @@ html.embedded footer{
 
     document.addEventListener('DOMContentLoaded', initSortableTables_);
 </script>
-
-<script id="embeddedWorkspaceBridge">
-(function(){
-  const params = new URLSearchParams(location.search);
-  if(params.get('embedded') === '1'){
-    document.documentElement.classList.add('embedded');
-    const requestedTheme = params.get('theme');
-    if(requestedTheme === 'dark' || requestedTheme === 'light'){
-      document.documentElement.setAttribute('data-theme', requestedTheme);
-      try{ localStorage.setItem('rsRadarTheme', requestedTheme); }catch(_){}
-    }
-  }
-
-  window.addEventListener('message', function(event){
-    if(event.origin !== location.origin) return;
-    const msg = event.data || {};
-    if(msg.type === 'LEADERSHIP_THEME' && (msg.theme === 'dark' || msg.theme === 'light')){
-      if(typeof window.setTheme === 'function') window.setTheme(msg.theme);
-      else document.documentElement.setAttribute('data-theme', msg.theme);
-    }
-  });
-})();
-</script>
-
 </body>
 </html>
